@@ -1,0 +1,38 @@
+# Secrets (AGENTS.md rule 8: use SSM Parameter Store, never commit secrets)
+.env
+.env.*
+*.pem
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# CDK
+cdk.out/
+
+# Node (dashboard)
+node_modules/
+dist/
+
+# dbt
+target/
+dbt_packages/
+logs/
+
+# Local data and generated artifacts
+data/
+*.parquet
+*.duckdb
+*.duckdb.wal
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
