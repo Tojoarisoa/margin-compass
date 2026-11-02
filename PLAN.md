@@ -967,7 +967,7 @@ Each milestone ends with a demoable increment and exit criteria. Effort assumes 
 - [x] M0-04 Owner answers the open questions (§19.4)
 - [x] M0-05 Run the verification checklist (§19.3) and record the results in ADRs (`docs/verification/2026-11-02-m0-05.md`; four items left open, see §19.3)
 - [x] M0-06 Write ADR-001…ADR-017 (all accepted; architecture diagrams in `docs/diagrams/`)
-- [ ] M0-07 Harden the AWS account: create it on the **Paid plan** (VER-01), MFA, budgets, Cost Anomaly Detection, OIDC role, Data Exports (FOCUS 1.2); check the Lambda memory quota in Service Quotas (VER-12)
+- [ ] M0-07 Harden the AWS account: create it on the **Paid plan** (VER-01), MFA, budgets, Cost Anomaly Detection, OIDC role, Data Exports (FOCUS 1.2); check the Lambda memory quota in Service Quotas (VER-12) — IaC ready in `infra/` (`mc-shared-foundation`), steps in `docs/runbooks/m0-07-aws-account-setup.md`; awaiting owner deploy
 - [x] M0-08 Write the **BoonCore specification**: tenants, plans, features, model tiers, price catalog v1, contracts, injected-pattern catalog with labels (`docs/booncore-spec.md`, approved 2026-11-02)
 
 **Exit:** budgets live; ADRs accepted; BoonCore specification approved.

@@ -1,0 +1,15 @@
+{
+  "app": "uv run python app.py",
+  "context": {
+    "mc:project": "margin-compass",
+    "mc:owner": "tojoarisoa",
+    "mc:costCenter": "margin-compass",
+    "mc:region": "us-east-1",
+    "mc:githubRepo": "tojoarisoa/margin-compass",
+    "mc:budgetAlertUsd": 3,
+    "mc:budgetLimitUsd": 5,
+    "mc:anomalyThresholdUsd": 1,
+    "mc:existingAnomalyMonitorArn": "",
+    "mc:killSwitchRoleNames": []
+  }
+}
