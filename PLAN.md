@@ -963,7 +963,7 @@ Each milestone ends with a demoable increment and exit criteria. Effort assumes 
 - [ ] M0-05 Run the verification checklist (§19.3) and record the results in ADRs
 - [ ] M0-06 Write ADR-001…ADR-017 (ADR-017 accepted)
 - [ ] M0-07 Harden the AWS account: MFA, budgets, Cost Anomaly Detection, OIDC role, Data Exports (FOCUS)
-- [ ] M0-08 Write the **BoonCore specification**: tenants, plans, features, model tiers, price catalog v1, contracts, injected-pattern catalog with labels
+- [ ] M0-08 Write the **BoonCore specification**: tenants, plans, features, model tiers, price catalog v1, contracts, injected-pattern catalog with labels (draft: `docs/booncore-spec.md`, awaiting approval)
 
 **Exit:** budgets live; ADRs accepted; BoonCore specification approved.
 
