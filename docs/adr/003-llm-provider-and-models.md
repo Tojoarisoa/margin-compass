@@ -1,6 +1,6 @@
 # ADR-003: LLM provider and models: Bedrock on-demand, tiered, behind an abstraction
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-11-03, by the owner)
 - **Date:** 2026-11-02
 - **Related:** PLAN.md §8.7, §11.1, AGENTS.md rules 6–7, VER-05
 

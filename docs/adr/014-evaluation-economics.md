@@ -1,6 +1,6 @@
 # ADR-014: Evaluation economics: replay in CI, live only at pre-release and nightly samples
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-11-03, by the owner)
 - **Date:** 2026-11-02
 - **Related:** PLAN.md §13, AGENTS.md rule 7
 

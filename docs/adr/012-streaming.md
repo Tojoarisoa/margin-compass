@@ -1,6 +1,6 @@
 # ADR-012: Streaming: Lambda Web Adapter behind CloudFront, polling fallback
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-11-03, by the owner)
 - **Date:** 2026-11-02
 - **Related:** PLAN.md §10.1, ADR-006, VER-07, VER-08
 

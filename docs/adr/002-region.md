@@ -1,6 +1,6 @@
 # ADR-002: Region: us-east-1
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-11-03, by the owner)
 - **Date:** 2026-11-02
 - **Related:** PLAN.md §10.2, ADR-003, ADR-008, VER-03, VER-04, VER-05, VER-10
 

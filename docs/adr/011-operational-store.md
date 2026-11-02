@@ -1,6 +1,6 @@
 # ADR-011: Operational store: DynamoDB provisioned, single-table
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-11-03, by the owner)
 - **Date:** 2026-11-02
 - **Related:** PLAN.md §10.1, AGENTS.md rule 2, VER-02, VER-09
 

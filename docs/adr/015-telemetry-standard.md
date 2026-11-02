@@ -1,6 +1,6 @@
 # ADR-015: Telemetry standard: OpenTelemetry GenAI conventions + FOCUS 1.2
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-11-03, by the owner)
 - **Date:** 2026-11-02
 - **Related:** PLAN.md §6.2 Stage 1, ADR-007, VER-10, VER-13
 

@@ -1,6 +1,6 @@
 # ADR-001: Business problem: AI cost-to-serve and gross-margin intelligence
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-11-03, by the owner)
 - **Date:** 2026-11-02
 - **Related:** PLAN.md §1–§4, ADR-017, VER-14
 

@@ -1,6 +1,6 @@
 # ADR-008: Vector store: S3 Vectors + in-Lambda BM25
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-11-03, by the owner)
 - **Date:** 2026-11-02
 - **Related:** PLAN.md §6.2 Stage 5, VER-03
 

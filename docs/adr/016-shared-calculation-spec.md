@@ -1,6 +1,6 @@
 # ADR-016: Shared calculation spec for pricing and lever math
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-11-03, by the owner)
 - **Date:** 2026-11-02
 - **Related:** PLAN.md §9, AGENTS.md rule 15
 

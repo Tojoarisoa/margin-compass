@@ -1,6 +1,6 @@
 # ADR-007: Agent observability: telemetry lake + X-Ray
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-11-03, by the owner)
 - **Date:** 2026-11-02
 - **Related:** PLAN.md §14, AGENTS.md rule 16, VER-02, VER-13
 

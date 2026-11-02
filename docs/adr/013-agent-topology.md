@@ -1,6 +1,6 @@
 # ADR-013: Agent topology: 5 specialists + deterministic nodes, with a fast path
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-11-03, by the owner)
 - **Date:** 2026-11-02
 - **Related:** PLAN.md §8.2–§8.3, AGENTS.md rules 3–4
 

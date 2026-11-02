@@ -966,7 +966,7 @@ Each milestone ends with a demoable increment and exit criteria. Effort assumes 
 - [x] M0-03 Refocus on AI cost-to-serve & margin; rename to Margin Compass (v0.3)
 - [x] M0-04 Owner answers the open questions (§19.4)
 - [x] M0-05 Run the verification checklist (§19.3) and record the results in ADRs (`docs/verification/2026-11-02-m0-05.md`; four items left open, see §19.3)
-- [ ] M0-06 Write ADR-001…ADR-017 (all written; ADR-017 accepted; ADR-001…016 awaiting owner acceptance)
+- [x] M0-06 Write ADR-001…ADR-017 (all accepted; architecture diagrams in `docs/diagrams/`)
 - [ ] M0-07 Harden the AWS account: create it on the **Paid plan** (VER-01), MFA, budgets, Cost Anomaly Detection, OIDC role, Data Exports (FOCUS 1.2); check the Lambda memory quota in Service Quotas (VER-12)
 - [x] M0-08 Write the **BoonCore specification**: tenants, plans, features, model tiers, price catalog v1, contracts, injected-pattern catalog with labels (`docs/booncore-spec.md`, approved 2026-11-02)
 
@@ -1037,7 +1037,7 @@ Each milestone ends with a demoable increment and exit criteria. Effort assumes 
 
 ## 18. Decision Log (ADRs)
 
-Status: all ADRs are written up in `docs/adr/` (2026-11-02). ADR-017 is **accepted**; ADR-001…ADR-016 are **Proposed** until the owner accepts them. An accepted ADR overrides this table. Verification evidence: `docs/verification/2026-11-02-m0-05.md`.
+Status: all ADRs are written up in `docs/adr/` and **accepted** (ADR-017 on 2026-11-02; ADR-001…ADR-016 on 2026-11-03). The accepted ADRs override this table. Verification evidence: `docs/verification/2026-11-02-m0-05.md`.
 
 | ID | Decision | Proposed choice | Alternatives | Rationale |
 | --- | --- | --- | --- | --- |
@@ -1157,6 +1157,7 @@ Status: all ADRs are written up in `docs/adr/` (2026-11-02). ADR-017 is **accept
 | 2026-11-02 | 0.4 | M0-04 closed: owner accepted the recommended answers to §19.4 #1–#6 (keep name; CDK in Python; default CloudFront domain; public rate-limited agent; fresh AWS account; full ~14 weeks with M4 as the guaranteed stop). Compliance constraints from ADR-017 wired into the corpus, AG-07, the contract entity, and §12 | tojoarisoa |
 | 2026-11-02 | 0.4 | M0-08 closed: BoonCore specification approved (`docs/booncore-spec.md`). Adds **F0 Safety Screening** as a fifth feature (F0–F4); telemetry grain hourly for Enterprise, daily otherwise; outcomes stored as tenant × day aggregates + 10% ticket sample + all labeled safety events (§7.5); simulator assumptions accepted as labeled inputs | tojoarisoa |
 | 2026-11-02 | 0.4 | M0-05 closed: VER-01…VER-14 checked and logged (`docs/verification/2026-11-02-m0-05.md`). ADR-001…ADR-016 drafted (Proposed). Changes from verification: Paid plan for the fresh account; FOCUS 1.2; model tiers in ADR-003; OAC payload-hash header in ADR-012; DuckDB-WASM supply-chain controls in ADR-009; ICONIQ inference claim reworded to share of total spend | tojoarisoa |
+| 2026-11-03 | 0.4 | M0-06 closed: owner accepted ADR-001…ADR-016 (ADR-017 already accepted). Architecture diagrams added (`docs/diagrams/`, embedded in the ADRs) | tojoarisoa |
 
 #### v0.3 refocus summary
 
