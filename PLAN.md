@@ -133,6 +133,7 @@ BoonCore is a B2B AI technical-support platform for **medical device and diagnos
 
 | ID | Feature | Cost profile |
 | --- | --- | --- |
+| F0 | **Safety Screening**: screens every ticket for a possible device complaint or patient-harm event and routes positives to the tenant's safety team | Mandatory fixed compliance cost; no lever may weaken it (KPI-08b ≥ 99%) |
 | F1 | **Reply Copilot**: drafts replies to equipment and lab staff from approved manuals and instructions for use | High volume, short prompts |
 | F2 | **Device Troubleshooting Agent**: multi-step agent that reads device error logs and remote-monitoring telemetry, walks through approved service steps, and resolves the ticket remotely or books a field engineer | Most expensive per interaction; long log-heavy prompts; variable steps; retries |
 | F3 | **Service Knowledge Search**: embeddings + retrieval over service manuals, instructions for use, and field safety notices | Embedding and vector costs; re-index spikes on recalls and labeling updates |
@@ -490,7 +491,7 @@ IaC is deployed through GitHub Actions with OIDC (§15). Monitoring uses the tel
 
 ### 7.2 Core entities
 
-The model is built around these entities: **tenant**, **feature** (F1–F4), **model** (tier, provider), **price catalog entry** (effective-dated), **request** (telemetry), **outcome**, **subscription / contract** (including approved-model list, data-residency terms, and severity-based response-time SLAs; ADR-017), **invoice line**, **cost line** (FOCUS), **action**.
+The model is built around these entities: **tenant**, **feature** (F0–F4), **model** (tier, provider), **price catalog entry** (effective-dated), **request** (telemetry), **outcome**, **subscription / contract** (including approved-model list, data-residency terms, and severity-based response-time SLAs; ADR-017), **invoice line**, **cost line** (FOCUS), **action**.
 
 The **cost-to-serve identity** is:
 
@@ -526,8 +527,8 @@ Each gold mart has a contract: owner, SLA, schema, tests, PII classification (no
 
 | Item | Budget |
 | --- | --- |
-| LLM telemetry | Pre-aggregated to tenant × feature × model × **hour** at the generator, plus a 1% raw request sample for drill-downs. About 1.5–3M rows over 18 months |
-| Billing / revenue / outcomes | Under 1M rows each |
+| LLM telemetry | Pre-aggregated at the generator to tenant × feature × model × **hour** for Enterprise tenants and × **day** for Starter and Growth, plus a 1% raw request sample for drill-downs. About 2.8M rows over 18 months (hourly for all tenants would be ≈ 13M; BoonCore spec §10) |
+| Billing / revenue / outcomes | Under 1M rows each. Outcomes: tenant × day aggregates (severity and feature counts as columns) + per-ticket rows for a 10% sample and every labeled safety event, ≈ 0.79M rows |
 | Gold total | ≤ 300 MB Parquet |
 | Largest Lambda job | ≤ 6 GB memory, ≤ 10 min |
 | `publish/` per page | KPI JSON ≤ 200 KB; exploration Parquet ≤ 5 MB; total ≤ 25 MB |
@@ -963,7 +964,7 @@ Each milestone ends with a demoable increment and exit criteria. Effort assumes 
 - [ ] M0-05 Run the verification checklist (§19.3) and record the results in ADRs
 - [ ] M0-06 Write ADR-001…ADR-017 (ADR-017 accepted)
 - [ ] M0-07 Harden the AWS account: MFA, budgets, Cost Anomaly Detection, OIDC role, Data Exports (FOCUS)
-- [ ] M0-08 Write the **BoonCore specification**: tenants, plans, features, model tiers, price catalog v1, contracts, injected-pattern catalog with labels (draft: `docs/booncore-spec.md`, awaiting approval)
+- [x] M0-08 Write the **BoonCore specification**: tenants, plans, features, model tiers, price catalog v1, contracts, injected-pattern catalog with labels (`docs/booncore-spec.md`, approved 2026-11-02)
 
 **Exit:** budgets live; ADRs accepted; BoonCore specification approved.
 
@@ -982,7 +983,7 @@ Each milestone ends with a demoable increment and exit criteria. Effort assumes 
 
 ### M2: Cost-to-Serve Platform (~2 weeks)
 
-- [ ] M2-01 Full simulator: ~400 tenants, F1–F4, 3 tiers, price-catalog changes, full pattern library, 18-month chunked backfill
+- [ ] M2-01 Full simulator: ~400 tenants, F0–F4, 3 tiers, price-catalog changes, full pattern library, 18-month chunked backfill
 - [ ] M2-02 FOCUS infrastructure ingestion + allocation rules → `fct_cost_to_serve`; `fct_unit_cost`, `fct_quality`
 - [ ] M2-03 Semantic metrics, contracts for all marts, data-quality scorecard, lineage
 - [ ] M2-04 PG-1 complete; PG-2 Cost-to-Serve Explorer; PG-8 *Pipeline & Data Health* and *Platform FinOps* tabs; dogfood telemetry (S7)
@@ -1150,6 +1151,7 @@ Status: **Proposed** until written up in `docs/adr/` and accepted.
 | 2026-10-23 | 0.3 | **Refocus and rename**, summarized below | tojoarisoa |
 | 2026-11-02 | 0.4 | Simulated customer renamed Relaywise → **BoonCore**; vertical changed from general customer support to **AI technical support for medical device and diagnostics companies, imaging as flagship** (§2.2): new F1–F4 descriptions, outcome unit (remote resolution), simulated regulatory constraints, five new injected patterns, VER-15; KPI-08 adds a safety-event recall floor of ≥ 99% (also enforced in EV-13), measured by new `fct_quality` columns `safety_events_labeled`, `safety_events_flagged`, and `safety_event_recall`. Closes §19.4 #7. Why: highly profitable tenants and very high ticket value give the largest recoverable margin pool; regulatory constraints showcase quality- and contract-guarded levers; a medtech-wide tenant base keeps ~400 tenants realistic | tojoarisoa |
 | 2026-11-02 | 0.4 | M0-04 closed: owner accepted the recommended answers to §19.4 #1–#6 (keep name; CDK in Python; default CloudFront domain; public rate-limited agent; fresh AWS account; full ~14 weeks with M4 as the guaranteed stop). Compliance constraints from ADR-017 wired into the corpus, AG-07, the contract entity, and §12 | tojoarisoa |
+| 2026-11-02 | 0.4 | M0-08 closed: BoonCore specification approved (`docs/booncore-spec.md`). Adds **F0 Safety Screening** as a fifth feature (F0–F4); telemetry grain hourly for Enterprise, daily otherwise; outcomes stored as tenant × day aggregates + 10% ticket sample + all labeled safety events (§7.5); simulator assumptions accepted as labeled inputs | tojoarisoa |
 
 #### v0.3 refocus summary
 

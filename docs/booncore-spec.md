@@ -1,6 +1,6 @@
 # BoonCore Specification (M0-08)
 
-- **Status:** Draft, awaiting owner approval (M0 exit criterion)
+- **Status:** Approved by the owner on 2026-11-02 (all four items in §12 approved as recommended)
 - **Date:** 2026-11-02
 - **Governs:** `simulator/` (PLAN.md §16), sources S1–S6 (PLAN.md §6.2 Stage 1)
 - **Decisions it implements:** ADR-017 (vertical and regulatory constraints), PLAN.md §2.2, KPI-08(b)
@@ -51,7 +51,7 @@ Tokens are per request, drawn from a log-normal with the given median *(assumpti
 
 | ID | Feature | Requests per ticket | Median input / output tokens | Default tier | Notes |
 | --- | --- | --- | --- | --- | --- |
-| **F0** | **Safety Screening** (proposed, see §10) | 1 | 1,500 / 50 | Mid | Mandatory on every ticket; fixed compliance cost; KPI-08(b) |
+| **F0** | **Safety Screening** | 1 | 1,500 / 50 | Mid | Mandatory on every ticket; fixed compliance cost; KPI-08(b) |
 | F1 | Reply Copilot | 3 | 2,000 / 300 | Mid | High volume, short prompts; cacheable system prompt |
 | F2 | Device Troubleshooting Agent | 40% of tickets × 6 steps | 12,000 / 600 per step (imaging ×1.8) | Frontier | Long log-heavy prompts; retries; outcome = remote resolution |
 | F3 | Service Knowledge Search | 2 | 300 / 0 (embedding) + retrieval | Embedding model | Vector storage is a shared-infra cost line |
@@ -171,14 +171,14 @@ A counterfactual run (same seed, no action) is always produced, for KPI-02.
 | Aggregated telemetry: Enterprise hourly (≈ 3,000 rows/day) + others daily (≈ 2,100 rows/day) | ≈ 2.8M rows / 18 months | 1.5–3M | Yes |
 | Same, but hourly for all tenants | ≈ 13.2M rows | 1.5–3M | **No** (reason for the split grain) |
 | 1% raw request sample | ≈ 0.63M rows | — | Yes |
-| Tickets / outcomes, one row per ticket | ≈ 5.2M rows (392 weekdays × 12,250 + 157 weekend days × 2,450) | < 1M | **No** — see open item 3 |
-| Outcomes, option (a) in open item 3 | ≈ 0.79M rows | < 1M | Yes |
+| Tickets / outcomes, one row per ticket | ≈ 5.2M rows (392 weekdays × 12,250 + 157 weekend days × 2,450) | < 1M | **No** (rejected; see §12 item 3) |
+| Outcomes, approved storage (§12 item 3a) | ≈ 0.79M rows | < 1M | Yes |
 
 ## 11. M1 subset (M1-01)
 
 20 tenants (10 imaging, 10 other; mixed plans), F1 only, tiers `a-small` and `a-mid`, 90 days (2025-08-01 → 2025-10-29), PT-01 only, daily grain, same seed rules and labels.
 
-## 12. Open items for owner approval
+## 12. Owner decisions (approved 2026-11-02, as recommended)
 
 1. **F0 Safety Screening as its own feature.** Recommended: it makes the compliance cost visible in `fct_cost_to_serve` and gives KPI-08(b) a clean home in `fct_quality`. It adds a fifth feature (F0–F4) to `dim_feature`; no mart schema changes.
 2. **Split telemetry grain** (Enterprise hourly, others daily) to stay inside §7.5.
