@@ -38,7 +38,7 @@ Regulation is modeled as **constraints on levers**, never as functionality Margi
 
 - **Positive:** high-value outcome unit (remote resolution, field-engineer visit avoided); the strongest "savings only within quality and safety" demonstration (KPI-08, EV-13); contract-aware agents get real constraints (BAA, residency, response-time SLAs).
 - **Negative:** a fixed compliance cost lowers recoverable margin slightly; more disclaimer and documentation work; the BoonCore specification (M0-08) needs a regulatory section.
-- **Simulator parameters derived from this ADR** (labeled assumptions, not facts): see "Verification results".
+- **Simulator parameters derived from this ADR** (labeled assumptions, not facts): see "What this changes" below.
 
 ## Cost impact
 

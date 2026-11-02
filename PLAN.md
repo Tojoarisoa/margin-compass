@@ -1039,7 +1039,7 @@ Status: all ADRs are written up in `docs/adr/` (2026-11-02). ADR-017 is **accept
 | --- | --- | --- | --- | --- |
 | ADR-001 | Business problem | **AI cost-to-serve & gross-margin intelligence for AI-enabled B2B SaaS** | Generic cloud FinOps (crowded), supply chain, churn only | Specific, current, underserved where cost, telemetry, and revenue meet; measurable margin outcome |
 | ADR-002 | Region | us-east-1 | eu-west-1, eu-west-3 | Bedrock and S3 Vectors availability |
-| ADR-003 | LLM provider & models | Bedrock on-demand behind an abstraction; Ollama locally. Proposed tiers: Nova Micro (fast path), Claude Haiku 5.5 (specialists), Claude Sonnet 5.5 (rare); Titan Embeddings V2 at 512 dims | Direct vendor APIs | Single bill, IAM; prices to be recorded from the console before M1-06 (VER-05 open item) |
+| ADR-003 | LLM provider & models | Bedrock on-demand behind an abstraction; Ollama locally. Small tier: Nova Micro; Mid tier: Claude Haiku 5.5 (or Haiku 4.5 if cheaper per question on the M1-06 replay set); no frontier tier; Titan Embeddings V2 at 512 dims | Direct vendor APIs | Single bill, IAM; prices to be recorded from the console before M1-06 (VER-05 open item) |
 | ADR-004 | Transform engine | DuckDB + dbt in Lambda; Athena optional | Glue ETL, EMR Serverless | $0 at this scale; industry-standard dbt |
 | ADR-005 | IaC | **AWS CDK (Python)**, owner decision 2026-11-02 | CDK (TypeScript), Terraform, SAM | One language across infra, pipelines, ML, and agents |
 | ADR-006 | Networking | No VPC for Lambdas | VPC + NAT or endpoints | Avoids NAT and endpoint costs |

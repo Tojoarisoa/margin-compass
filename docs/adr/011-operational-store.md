@@ -10,19 +10,20 @@ Rate limits, budgets, action records, and agent checkpoints need a serverless st
 
 ## Decision
 
-**DynamoDB in provisioned mode, autoscaling off**: a `core` single table and a `checkpoints` table per environment, total **≤ 25 RCU and ≤ 25 WCU** across all tables. Clients use adaptive retries.
+**DynamoDB in provisioned mode, autoscaling off**: a `core` single table and a `checkpoints` table per environment, total **≤ 25 RCU and ≤ 25 WCU** across all tables **and their GSIs**, in both `dev` and `prod`. Clients use adaptive retries; checkpoints use TTL to cap storage.
 
 ## Alternatives
 
 | Option | Why not |
 | --- | --- |
-| On-demand mode | Pay per request with no free allowance; forbidden |
+| On-demand mode | The free RCU/WCU allowance applies to provisioned capacity; on-demand is forbidden (AGENTS.md rule 2) |
 | RDS / Aurora | Always-on; forbidden |
 
 ## Consequences
 
 - Throttling is possible under bursts; the API returns a friendly retry and the rate limiter keeps load low.
 - AWS's checkpointer example uses on-demand; we deliberately deviate.
+- **Revisit if** throttling shows up in normal (non-abuse) traffic.
 
 ## Cost impact
 

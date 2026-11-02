@@ -24,6 +24,7 @@ Margin Compass targets **AI cost-to-serve and gross margin for AI-enabled B2B Sa
 
 - Every feature must move or explain a margin KPI (AGENTS.md rule 13).
 - Needs joined data (telemetry + billing + revenue + outcomes), supplied by the BoonCore simulator (ADR-017).
+- **Revisit if** primary industry sources (ICONIQ, Harness; before M6-04) contradict the margin-pressure premise.
 
 ## Cost impact
 

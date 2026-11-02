@@ -6,7 +6,7 @@
 
 ## Context
 
-VPC-attached Lambdas reaching AWS APIs need a NAT Gateway or interface endpoints, both of which cost money every hour.
+VPC-attached Lambdas reaching AWS APIs need a NAT Gateway or interface endpoints. Both are billed per hour, so they can't scale to zero.
 
 ## Decision
 
@@ -16,13 +16,14 @@ Lambdas run **outside any VPC**. Access control relies on IAM, CloudFront OAC, a
 
 | Option | Why not |
 | --- | --- |
-| VPC + NAT Gateway | Hourly cost alone exceeds the budget; forbidden |
-| VPC + interface endpoints | Hourly cost per endpoint; forbidden |
+| VPC + NAT Gateway | Billed per hour; forbidden (§11.2) |
+| VPC + interface endpoints | Billed per endpoint per hour; forbidden (§11.2) |
 
 ## Consequences
 
 - No private networking; data stores are reached over AWS APIs with IAM.
 - Function URLs inside a VPC can't stream responses (VER-07), another reason to stay out.
+- **Revisit if** a private-only data store becomes necessary (it would also need its own ADR).
 
 ## Cost impact
 

@@ -11,6 +11,7 @@ Telemetry and billing schemas should be portable to real companies and credible 
 ## Decision
 
 - **LLM telemetry (S1, S7):** OpenTelemetry GenAI attributes, pinned in the S1 data contract as of 2026-11-02: `gen_ai.operation.name`, `gen_ai.provider.name` (`aws.bedrock` for the platform's own calls), `gen_ai.request.model`, `gen_ai.response.model`, `gen_ai.usage.input_tokens`, `gen_ai.usage.output_tokens`, `gen_ai.usage.cache_read.input_tokens`, `gen_ai.usage.cache_write.input_tokens`, `gen_ai.conversation.id`, `gen_ai.agent.name`. One bronze → silver mapping absorbs convention changes.
+- **Project attributes** for fields OTel doesn't define, under an `mc.` prefix: `mc.tenant_id`, `mc.feature_id`, `mc.retry_count`, `mc.agent_step_count`, `mc.outcome_id`, and `mc.run_id`. BoonCore's fictional providers use `gen_ai.provider.name` values `provider_a`, `provider_b`, `provider_c`.
 - **Billing (S2, S7):** **FOCUS 1.2** via AWS Data Exports, Parquet, daily refresh.
 
 ## Alternatives
@@ -24,6 +25,7 @@ Telemetry and billing schemas should be portable to real companies and credible 
 
 - The GenAI conventions are Development stability with no tagged release; expect renames. Re-check before M6.
 - `gen_ai.usage.input_tokens` includes cached tokens; cost pricing must not double-count cache reads.
+- **Revisit** before M6, or when the conventions publish a tagged release.
 
 ## Cost impact
 

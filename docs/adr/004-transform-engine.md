@@ -25,6 +25,7 @@ Gold data is ≤ 300 MB and jobs run nightly. The engine must cost $0 at rest an
 - Same engine locally and in AWS (AGENTS.md rule 12).
 - Jobs must fit 15 minutes and the configured memory.
 - **New accounts have reduced Lambda memory quotas.** Check Service Quotas in M0-07; §7.5 needs up to 6 GB.
+- **Revisit if** a nightly job approaches 10 minutes or 6 GB, or gold data approaches 300 MB.
 
 ## Cost impact
 

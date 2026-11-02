@@ -26,6 +26,7 @@ A **static SPA** on S3 + CloudFront. KPI pages load small JSON snapshots; explor
 
 - Same origin means no CORS configuration.
 - **Open:** wasm bundle size and Parquet range reads through CloudFront; spike in M1-07.
+- **Revisit if** the spike shows range reads fail or the wasm bundle makes first load too slow; fall back to pre-aggregated JSON for those pages.
 
 ## Cost impact
 

@@ -20,10 +20,12 @@ Agent answers should stream to the browser. Python Lambdas don't stream natively
 | --- | --- |
 | WebSockets (API Gateway) | More moving parts and per-message cost |
 | API Gateway REST streaming | Extra service and cost; CloudFront is already the single entry point |
+| Lambda Web Functions | New AWS option for serverless HTTP servers with its own CloudFront OAC setup; pricing and free tier not yet checked. Evaluate in the M1-07 spike |
 
 ## Consequences
 
 - **Open:** end-to-end streaming through an OAC-signed CloudFront origin; spike in M1-07. If it fails, polling becomes the default.
+- **Revisit after** the M1-07 spike.
 
 ## Cost impact
 

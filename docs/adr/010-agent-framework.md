@@ -18,11 +18,13 @@ The agent system needs explicit graphs, durable state, human-in-the-loop interru
 | --- | --- |
 | CrewAI, AutoGen | Less explicit control flow; weaker durable state |
 | Bedrock Agents | Less control over graph, verifier, and replay |
+| Bedrock AgentCore runtime | Another managed service to cost-model (Paid-plan only, VER-01); LangGraph on Lambda already meets the need |
 
 ## Consequences
 
 - The checkpointer package is maintained by the LangChain org, not AWS; pin and review upgrades.
 - Local runs use DynamoDB Local through the saver's `endpoint_url`.
+- **Revisit if** the checkpointer stops being maintained or breaks with a LangGraph major release.
 
 ## Cost impact
 

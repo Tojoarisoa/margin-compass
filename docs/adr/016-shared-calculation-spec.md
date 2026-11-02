@@ -23,6 +23,7 @@ One **calculation spec** in `calc-spec/` defines pricing and lever math, with te
 
 - Any math change starts in `calc-spec/`.
 - The browser implementation runs locally at $0.
+- **Revisit if** keeping two implementations in parity costs more effort than it saves.
 
 ## Cost impact
 
@@ -30,4 +31,4 @@ $0.
 
 ## Verified on
 
-No VER item.
+Not applicable: design decision with no external facts (2026-11-03).

@@ -22,11 +22,12 @@ CI runs **replayed fixtures** only. **Live** evaluations run at pre-release and 
 
 - Reproducible CI at ≈ $0.
 - Fixture drift is caught by the nightly live sample.
+- **Revisit if** nightly samples regularly disagree with replayed results.
 
 ## Cost impact
 
-≈ $0 in CI; nightly sample inside the ≤ $0.50 nightly LLM cap.
+≈ $0 in CI; nightly samples inside the ≤ $0.50/month nightly LLM cap (§11.1).
 
 ## Verified on
 
-No VER item.
+Not applicable: design decision with no external facts (2026-11-03).

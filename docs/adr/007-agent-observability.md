@@ -17,12 +17,14 @@ Structured logs with `run_id` to CloudWatch (7-day retention), traces to **X-Ray
 | Option | Why not |
 | --- | --- |
 | Self-hosted tracing (e.g., Langfuse on ECS) | Always-on compute; forbidden |
-| CloudWatch only | Expensive for long retention |
+| CloudWatch only | Beyond the 5 GB free allowance, long retention costs more than compacted Parquet in S3 |
 
 ## Consequences
 
 - Content never leaves the request path (rule 16).
 - ≤ 10 alarms keeps CloudWatch at $0.
+- The X-Ray free allowance is from a secondary source; confirm on the bill after M1.
+- **Revisit if** trace volume nears the free allowance or a free external tool adds evaluation value.
 
 ## Cost impact
 
