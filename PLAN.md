@@ -714,7 +714,7 @@ Architecture diagrams are generated from code in `docs/diagrams/` and embedded i
 | Config | SSM Parameter Store (Standard) | No Secrets Manager |
 | Observability | CloudWatch Logs (7-day retention), ≤ 10 alarms, X-Ray | Long-term telemetry lives in S3 |
 | Cost governance | Budgets, Cost Anomaly Detection, Data Exports (FOCUS) | Dogfooding + kill switch |
-| CI/CD | GitHub Actions + IAM OIDC | Public repo; no static credentials |
+| CI/CD | GitHub Actions + IAM OIDC | Private repo until launch (M6), then public; Linux runners only (private repos draw on the $12/month GitHub Free allowance); no static credentials |
 
 ### 10.2 Deployment topology
 

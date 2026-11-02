@@ -38,7 +38,7 @@ Facts below were checked on 2026-11-02/03; sources at the end.
    If one is listed with type `DIMENSIONAL`, pass its ARN in step 5 as `-c mc:existingAnomalyMonitorArn=<arn>`.
 2. **Lambda memory quota.** New accounts get reduced quotas (VER-12). In Service Quotas → AWS Lambda, check the function memory and concurrency quotas; the pipeline needs up to 6,144 MB (PLAN.md §7.5). Request an increase if lower.
 3. **Bedrock prices (VER-05 open item).** In the Bedrock console or the AWS Pricing Calculator (us-east-1), read on-demand input/output, cache-read/write, and batch prices for `amazon.nova-micro-v1:0`, `anthropic.claude-haiku-5-5`, `anthropic.claude-haiku-4-5-20251001-v1:0`, and `amazon.titan-embed-text-v2:0`. Send them to be recorded in ADR-003.
-4. **GitHub repository.** The deploy role trusts `repo:tojoarisoa/margin-compass:ref:refs/heads/main` (`mc:githubRepo` in `infra/cdk.json`). Change it if the repository will live elsewhere.
+4. **GitHub repository.** The deploy role trusts `repo:Tojoarisoa/margin-compass:ref:refs/heads/main` (`mc:githubRepo` in `infra/cdk.json`). The match is exact and case-sensitive, so it uses the account's canonical casing. It works the same for a private or public repository.
 
 ### 4. Bootstrap CDK (one time)
 ```bash
