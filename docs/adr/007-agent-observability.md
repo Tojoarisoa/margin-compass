@@ -12,6 +12,12 @@ Agents need traces, token counts, and cost per question without always-on infras
 
 Structured logs with `run_id` to CloudWatch (7-day retention), traces to **X-Ray**, and long-term telemetry compacted to S3 (`telemetry/`) following the OTel GenAI attributes (ADR-015). An external tracing tool is allowed only on a free tier and only with metadata.
 
+### Diagram
+
+![Telemetry flow: logs and traces stay short-lived; compacted Parquet in S3 is the long-term store.](../diagrams/telemetry.png)
+
+*Telemetry flow: logs and traces stay short-lived; compacted Parquet in S3 is the long-term store.* Source: [`docs/diagrams/telemetry.py`](../diagrams/telemetry.py).
+
 ## Alternatives
 
 | Option | Why not |

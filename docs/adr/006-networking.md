@@ -12,6 +12,12 @@ VPC-attached Lambdas reaching AWS APIs need a NAT Gateway or interface endpoints
 
 Lambdas run **outside any VPC**. Access control relies on IAM, CloudFront OAC, and resource policies. No resource requires a VPC.
 
+### Diagram
+
+![No VPC: CloudFront reaches S3 and the Lambda function URL through OAC.](../diagrams/edge.png)
+
+*No VPC: CloudFront reaches S3 and the Lambda function URL through OAC.* Source: [`docs/diagrams/edge.py`](../diagrams/edge.py).
+
 ## Alternatives
 
 | Option | Why not |

@@ -14,6 +14,12 @@ Agent answers should stream to the browser. Python Lambdas don't stream natively
 - The browser client computes the SHA-256 of each POST body and sends it as **`x-amz-content-sha256`** (required by OAC for Lambda).
 - A **polling fallback** (start job, poll status) ships from M1-07 regardless.
 
+### Diagram
+
+![Request path: the browser hashes the POST body; CloudFront signs it with OAC; polling is the fallback.](../diagrams/edge.png)
+
+*Request path: the browser hashes the POST body; CloudFront signs it with OAC; polling is the fallback.* Source: [`docs/diagrams/edge.py`](../diagrams/edge.py).
+
 ## Alternatives
 
 | Option | Why not |

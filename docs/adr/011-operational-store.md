@@ -12,6 +12,12 @@ Rate limits, budgets, action records, and agent checkpoints need a serverless st
 
 **DynamoDB in provisioned mode, autoscaling off**: a `core` single table and a `checkpoints` table per environment, total **≤ 25 RCU and ≤ 25 WCU** across all tables **and their GSIs**, in both `dev` and `prod`. Clients use adaptive retries; checkpoints use TTL to cap storage.
 
+### Diagram
+
+![Both tables share one provisioned capacity budget of 25 RCU / 25 WCU.](../diagrams/agent_state.png)
+
+*Both tables share one provisioned capacity budget of 25 RCU / 25 WCU.* Source: [`docs/diagrams/agent_state.py`](../diagrams/agent_state.py).
+
 ## Alternatives
 
 | Option | Why not |

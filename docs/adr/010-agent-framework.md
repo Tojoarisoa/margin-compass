@@ -12,6 +12,12 @@ The agent system needs explicit graphs, durable state, human-in-the-loop interru
 
 **LangGraph** with the `DynamoDBSaver` checkpointer from `langgraph-checkpoint-aws`, pinned to an exact version, with TTL, gzip compression, and S3 offload for checkpoints over 350 KB.
 
+### Diagram
+
+![Agent state: LangGraph checkpoints in DynamoDB, with large payloads offloaded to S3.](../diagrams/agent_state.png)
+
+*Agent state: LangGraph checkpoints in DynamoDB, with large payloads offloaded to S3.* Source: [`docs/diagrams/agent_state.py`](../diagrams/agent_state.py).
+
 ## Alternatives
 
 | Option | Why not |

@@ -12,6 +12,12 @@ The corpus is small (policies, contracts, playbooks, cards). Retrieval needs ten
 
 **S3 Vectors** with metadata filters (`tenant_id`, `clause_type`, `effective_date`) for semantic search, fused with **BM25** over a small index file loaded in Lambda. LanceDB-on-S3 is the fallback.
 
+### Diagram
+
+![Retrieval: tenant-filtered S3 Vectors search fused with an in-Lambda BM25 index.](../diagrams/retrieval.png)
+
+*Retrieval: tenant-filtered S3 Vectors search fused with an in-Lambda BM25 index.* Source: [`docs/diagrams/retrieval.py`](../diagrams/retrieval.py).
+
 ## Alternatives
 
 | Option | Why not |

@@ -14,6 +14,12 @@ Telemetry and billing schemas should be portable to real companies and credible 
 - **Project attributes** for fields OTel doesn't define, under an `mc.` prefix: `mc.tenant_id`, `mc.feature_id`, `mc.retry_count`, `mc.agent_step_count`, `mc.outcome_id`, and `mc.run_id`. BoonCore's fictional providers use `gen_ai.provider.name` values `provider_a`, `provider_b`, `provider_c`.
 - **Billing (S2, S7):** **FOCUS 1.2** via AWS Data Exports, Parquet, daily refresh.
 
+### Diagram
+
+![Where the OTel GenAI (S1, S7) and FOCUS 1.2 (S2, S7) data enter the lake.](../diagrams/telemetry.png)
+
+*Where the OTel GenAI (S1, S7) and FOCUS 1.2 (S2, S7) data enter the lake.* Source: [`docs/diagrams/telemetry.py`](../diagrams/telemetry.py).
+
 ## Alternatives
 
 | Option | Why not |

@@ -692,6 +692,10 @@ Executive-grade, fast, mobile-friendly, and accessible (WCAG AA). Every number l
 
 ### 10.1 Service map
 
+![System overview](docs/diagrams/overview.png)
+
+Architecture diagrams are generated from code in `docs/diagrams/` and embedded in the relevant ADRs.
+
 | Concern | Service | Notes |
 | --- | --- | --- |
 | Scheduling | EventBridge Scheduler | Schedules in `dev` are off by default |

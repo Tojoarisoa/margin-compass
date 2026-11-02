@@ -15,6 +15,12 @@ A **static SPA** on S3 + CloudFront. KPI pages load small JSON snapshots; explor
 - serve the wasm bundles from our own distribution, not a public CDN;
 - run a dependency audit in CI.
 
+### Diagram
+
+![Dashboard data path: one CloudFront origin serves the app, the self-hosted DuckDB-WASM bundles, and the snapshots.](../diagrams/dashboard.png)
+
+*Dashboard data path: one CloudFront origin serves the app, the self-hosted DuckDB-WASM bundles, and the snapshots.* Source: [`docs/diagrams/dashboard.py`](../diagrams/dashboard.py).
+
 ## Alternatives
 
 | Option | Why not |

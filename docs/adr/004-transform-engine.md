@@ -12,6 +12,12 @@ Gold data is ≤ 300 MB and jobs run nightly. The engine must cost $0 at rest an
 
 **DuckDB + dbt (dbt-duckdb)** in a Lambda **container image**, reading and writing Parquet on S3 via `httpfs` with a credential-chain secret. Extensions are bundled in the image. Athena stays optional for ad-hoc SQL.
 
+### Diagram
+
+![Nightly pipeline: Step Functions runs eight Lambda container jobs over the S3 lake.](../diagrams/pipeline.png)
+
+*Nightly pipeline: Step Functions runs eight Lambda container jobs over the S3 lake.* Source: [`docs/diagrams/pipeline.py`](../diagrams/pipeline.py).
+
 ## Alternatives
 
 | Option | Why not |

@@ -12,6 +12,12 @@ Everything runs in one Region. The Region must offer S3 Vectors and the Bedrock 
 
 Deploy all stacks to **us-east-1**.
 
+### Diagram
+
+![System overview: every service runs in us-east-1.](../diagrams/overview.png)
+
+*System overview: every service runs in us-east-1.* Source: [`docs/diagrams/overview.py`](../diagrams/overview.py).
+
 ## Alternatives
 
 | Option | Why not |

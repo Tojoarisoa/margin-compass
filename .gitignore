@@ -36,3 +36,6 @@ data/
 .DS_Store
 .idea/
 .vscode/
+
+# Local Graphviz environment for docs/diagrams
+.gv-env/

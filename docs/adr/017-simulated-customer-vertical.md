@@ -23,6 +23,23 @@ Regulation is modeled as **constraints on levers**, never as functionality Margi
 5. Routing is limited to providers covered by a BAA, per each tenant's approved-model list; some tenants require EU-only processing.
 6. Every view states: synthetic data, not medical advice, not a validated medical system.
 
+### Diagram: how the regulatory constraints gate an engineering lever
+
+```mermaid
+flowchart TD
+  P["ACT-1 proposal<br/>e.g. route F0 or F2 to a cheaper model"] --> M{"Model on the tenant's<br/>approved-model list (BAA)?"}
+  M -->|no| X1([Rejected: contract])
+  M -->|yes| R{"Meets the tenant's<br/>data-residency terms?"}
+  R -->|no| X2([Rejected: residency])
+  R -->|yes| F{"Safety-event recall<br/>≥ 99%? (KPI-08b)"}
+  F -->|no| X3([Rejected: safety floor])
+  F -->|yes| Q{"Quality ≥ baseline − 1 pt?<br/>(KPI-08a)"}
+  Q -->|no| X4([Rejected: quality guardrail])
+  Q -->|yes| OK(["Eligible: scored in margin $,<br/>sent to Head of AI Platform for approval"])
+```
+
+AG-07 runs the contract and residency checks; the verifier (AG-08) enforces both KPI-08 guardrails (EV-13). Margin Compass sees only metadata, so none of these checks touch ticket content or patient data.
+
 ## Alternatives
 
 | Option | Why not chosen |
