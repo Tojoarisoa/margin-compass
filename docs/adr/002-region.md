@@ -18,6 +18,10 @@ Deploy all stacks to **us-east-1**.
 
 *System overview: every service runs in us-east-1.* Source: [`docs/diagrams/overview.py`](../diagrams/overview.py).
 
+![Operations and cost governance](../diagrams/governance.png)
+
+*Operations and cost governance: three lines of defense against runaway spend (code caps, alarms, Budgets kill switch).* Source: [`docs/diagrams/governance.py`](../diagrams/governance.py).
+
 ## Alternatives
 
 | Option | Why not |

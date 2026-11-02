@@ -7,6 +7,7 @@ AWS Architecture Icons it bundles. AWS permits their use in architecture diagram
 | Diagram | Used in |
 | --- | --- |
 | `overview.png` | ADR-002, PLAN.md §10.1 |
+| `governance.png` | ADR-002 |
 | `pipeline.png` | ADR-004 |
 | `edge.png` | ADR-006, ADR-012 |
 | `telemetry.png` | ADR-007, ADR-015 |
@@ -28,6 +29,8 @@ mamba create -p ./.gv-env -c conda-forge graphviz          # prebuilt; then: exp
 
 docs/diagrams/render.sh
 ```
+
+Rule: every node has at least one labeled connection; if a diagram gets crowded, split it (as overview and governance are).
 
 Change a diagram by editing its script, re-rendering, and committing both the script and the PNG.
 Shared styling lives in `_style.py`.

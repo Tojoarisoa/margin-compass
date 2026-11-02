@@ -1,12 +1,13 @@
-"""System overview (ADR-002). Everything runs in us-east-1; nothing is always on."""
+"""System overview (ADR-002). Everything runs in us-east-1; nothing is always on.
+
+Operations and cost governance are drawn separately in governance.py to keep this readable.
+Rule for every diagram here: each node has at least one labeled connection.
+"""
 
 from diagrams import Cluster, Diagram, Edge
 from diagrams.aws.compute import ECR, Lambda
-from diagrams.aws.cost import Budgets
 from diagrams.aws.database import Dynamodb
-from diagrams.aws.devtools import XRay
-from diagrams.aws.integration import SNS, SQS, EventbridgeScheduler, StepFunctions
-from diagrams.aws.management import Cloudwatch, SystemsManagerParameterStore
+from diagrams.aws.integration import SQS, EventbridgeScheduler, StepFunctions
 from diagrams.aws.ml import Bedrock
 from diagrams.aws.network import CloudFront
 from diagrams.aws.security import IAM, Cognito
@@ -17,58 +18,58 @@ from diagrams.onprem.client import Users
 from _style import diagram_kwargs
 
 with Diagram(**diagram_kwargs("overview", "Margin Compass: system overview (us-east-1)")):
-    users = Users("Reviewers\n& owner")
-    ci = GithubActions("GitHub Actions\n(CDK deploy)")
+    users = Users("Reviewers & owner")
+    ci = GithubActions("GitHub Actions")
 
-    with Cluster("AWS account (Paid plan) — us-east-1"):
-        oidc = IAM("OIDC deploy role")
-        cdn = CloudFront("CloudFront\n(single domain, OAC)")
-        cognito = Cognito("Cognito\n(owner mode, Target)")
+    with Cluster("AWS account (Paid plan), us-east-1"):
+        with Cluster("Deploy"):
+            oidc = IAM("OIDC deploy role\n(no access keys)")
+            images = ECR("ECR (2 images)")
+
+        with Cluster("Edge"):
+            cdn = CloudFront("CloudFront\n(one domain, OAC)")
+            cognito = Cognito("Cognito\n(owner mode)")
 
         with Cluster("Serving"):
-            site = S3("S3 site/ +\npublish/")
-            api = Lambda("Agent API\n(LangGraph, LWA)")
+            site = S3("S3 site/ + publish/")
+            api = Lambda("Agent API\n(LangGraph)")
 
         with Cluster("Nightly pipeline"):
-            sched = EventbridgeScheduler("EventBridge\nScheduler")
-            sfn = StepFunctions("Step Functions\nStandard")
+            sched = EventbridgeScheduler("Scheduler")
+            sfn = StepFunctions("Step Functions")
             jobs = Lambda("Data/ML jobs\n(DuckDB + dbt)")
-            images = ECR("ECR\n(2 images)")
+            dlq = SQS("DLQ")
 
-        with Cluster("Data & state"):
+        with Cluster("Data & models"):
             lake = S3("S3 lake\nbronze/silver/gold")
             vectors = S3("S3 Vectors\n+ BM25 file")
-            ddb = Dynamodb("DynamoDB\n(provisioned ≤ 25 RCU/WCU)")
+            ddb = Dynamodb("DynamoDB\n(≤ 25 RCU/WCU)")
+            bedrock = Bedrock("Bedrock")
 
-        bedrock = Bedrock("Bedrock\n(Nova Micro, Haiku,\nTitan Embeddings)")
+    # Deploy path
+    ci >> Edge(label="assume role (OIDC)") >> oidc
+    oidc >> Edge(label="push images") >> images
+    images >> Edge(label="image") >> jobs
+    images >> Edge(label="image") >> api
 
-        with Cluster("Operate & govern"):
-            cw = Cloudwatch("CloudWatch logs\n+ ≤ 10 alarms")
-            xray = XRay("X-Ray\n(traces)")
-            budgets = Budgets("Budgets + kill switch\n(IAM deny, red dashed)")
-            ssm = SystemsManagerParameterStore("SSM Parameter Store\n(config, no secrets in repo)")
-            dlq = SQS("SQS DLQ")
-            alerts = SNS("SNS alerts")
+    # Request path
+    users >> Edge(label="HTTPS") >> cdn
+    users >> Edge(label="owner sign-in", style="dashed") >> cognito
+    cdn >> Edge(label="pages, snapshots") >> site
+    cdn >> Edge(label="/api") >> api
+    cognito >> Edge(label="owner token", style="dashed") >> api
 
-    users >> cdn
-    cdn >> site
-    cdn >> Edge(label="/api (OAC)") >> api
-    users >> Edge(style="dashed", label="owner sign-in") >> cognito
-    ci >> Edge(label="OIDC, no keys") >> oidc
-
-    sched >> sfn >> jobs
-    images - Edge(style="dotted") - jobs
-    jobs >> lake
+    # Nightly pipeline
+    sched >> Edge(label="nightly") >> sfn
+    sfn >> Edge(label="runs") >> jobs
+    sfn >> Edge(label="failures", style="dashed") >> dlq
+    jobs >> Edge(label="read / write") >> lake
+    jobs >> Edge(label="embed") >> vectors
+    jobs >> Edge(label="embeddings") >> bedrock
     jobs >> Edge(label="publish") >> site
-    jobs >> vectors
-    jobs >> Edge(style="dashed", label="failures") >> dlq
 
-    api >> bedrock
-    jobs >> bedrock
-    api >> vectors
-    api >> lake
-    api >> ddb
-
-    api >> Edge(style="dotted") >> cw
-    cw >> alerts
-    budgets >> Edge(style="dashed", color="#c62828") >> api
+    # Agent dependencies
+    api >> Edge(label="query gold") >> lake
+    api >> Edge(label="retrieve") >> vectors
+    api >> Edge(label="state, limits") >> ddb
+    api >> Edge(label="invoke models") >> bedrock
