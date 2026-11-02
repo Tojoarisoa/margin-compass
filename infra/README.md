@@ -10,6 +10,9 @@ Infrastructure as code for Margin Compass (ADR-005). Nothing is created by hand 
 | `margin_compass_infra/tagging.py` | `project`, `env`, `stage`, `owner`, `cost-center` on every taggable resource |
 | `margin_compass_infra/config.py` | Typed config from `cdk.json` context |
 | `tests/` | Synth-time tests; no AWS account needed |
+| `scripts/preflight.sh` | Read-only checks before deploying (tools, sign-in, existing anomaly monitor, bootstrap, Lambda quotas) |
+| `scripts/deploy-foundation.sh` | Tests, bootstraps if needed, deploys `mc-shared-foundation` (`ALERT_EMAIL=… scripts/deploy-foundation.sh`) |
+| `scripts/activate-cost-tags.sh` | Activates the five mandatory tags as cost allocation tags |
 
 ```bash
 uv sync
