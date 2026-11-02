@@ -1,0 +1,33 @@
+# ADR-007: Agent observability: telemetry lake + X-Ray
+
+- **Status:** Proposed
+- **Date:** 2026-11-02
+- **Related:** PLAN.md §14, AGENTS.md rule 16, VER-02, VER-13
+
+## Context
+
+Agents need traces, token counts, and cost per question without always-on infrastructure and without storing prompt or response content.
+
+## Decision
+
+Structured logs with `run_id` to CloudWatch (7-day retention), traces to **X-Ray**, and long-term telemetry compacted to S3 (`telemetry/`) following the OTel GenAI attributes (ADR-015). An external tracing tool is allowed only on a free tier and only with metadata.
+
+## Alternatives
+
+| Option | Why not |
+| --- | --- |
+| Self-hosted tracing (e.g., Langfuse on ECS) | Always-on compute; forbidden |
+| CloudWatch only | Expensive for long retention |
+
+## Consequences
+
+- Content never leaves the request path (rule 16).
+- ≤ 10 alarms keeps CloudWatch at $0.
+
+## Cost impact
+
+$0 within free allowances.
+
+## Verified on
+
+2026-11-02 (VER-02): CloudWatch 10 alarms / 5 GB logs verified; X-Ray 100k traces recorded per month from a secondary source.

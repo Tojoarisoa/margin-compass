@@ -80,7 +80,7 @@ Read this first. The rest of the document expands each line.
 **The shift.** Software companies are adding generative AI (copilots, autonomous agents, semantic search) to products that were priced for near-zero marginal cost. Every AI interaction now carries a real **inference cost**. Industry analyses report:
 
 - AI-heavy products running gross margins around the **50% range**, compared with the **75–85%** typical of traditional SaaS;
-- inference costs that stay a significant share of revenue as companies scale;
+- inference costs that stay a significant share of total spend as companies scale (≈ 23% at the scaling stage);
 - a rapid move from seat-based pricing toward **consumption- and outcome-based pricing**.
 
 FinOps practitioners now rank AI cost management as their top future priority, and many organizations report that **no one clearly owns AI cost** (sources in §20.2).
@@ -961,9 +961,9 @@ Each milestone ends with a demoable increment and exit criteria. Effort assumes 
 - [x] M0-02 Optimize plan (v0.2)
 - [x] M0-03 Refocus on AI cost-to-serve & margin; rename to Margin Compass (v0.3)
 - [x] M0-04 Owner answers the open questions (§19.4)
-- [ ] M0-05 Run the verification checklist (§19.3) and record the results in ADRs
-- [ ] M0-06 Write ADR-001…ADR-017 (ADR-017 accepted)
-- [ ] M0-07 Harden the AWS account: MFA, budgets, Cost Anomaly Detection, OIDC role, Data Exports (FOCUS)
+- [x] M0-05 Run the verification checklist (§19.3) and record the results in ADRs (`docs/verification/2026-11-02-m0-05.md`; four items left open, see §19.3)
+- [ ] M0-06 Write ADR-001…ADR-017 (all written; ADR-017 accepted; ADR-001…016 awaiting owner acceptance)
+- [ ] M0-07 Harden the AWS account: create it on the **Paid plan** (VER-01), MFA, budgets, Cost Anomaly Detection, OIDC role, Data Exports (FOCUS 1.2); check the Lambda memory quota in Service Quotas (VER-12)
 - [x] M0-08 Write the **BoonCore specification**: tenants, plans, features, model tiers, price catalog v1, contracts, injected-pattern catalog with labels (`docs/booncore-spec.md`, approved 2026-11-02)
 
 **Exit:** budgets live; ADRs accepted; BoonCore specification approved.
@@ -1033,13 +1033,13 @@ Each milestone ends with a demoable increment and exit criteria. Effort assumes 
 
 ## 18. Decision Log (ADRs)
 
-Status: **Proposed** until written up in `docs/adr/` and accepted.
+Status: all ADRs are written up in `docs/adr/` (2026-11-02). ADR-017 is **accepted**; ADR-001…ADR-016 are **Proposed** until the owner accepts them. An accepted ADR overrides this table. Verification evidence: `docs/verification/2026-11-02-m0-05.md`.
 
 | ID | Decision | Proposed choice | Alternatives | Rationale |
 | --- | --- | --- | --- | --- |
 | ADR-001 | Business problem | **AI cost-to-serve & gross-margin intelligence for AI-enabled B2B SaaS** | Generic cloud FinOps (crowded), supply chain, churn only | Specific, current, underserved where cost, telemetry, and revenue meet; measurable margin outcome |
 | ADR-002 | Region | us-east-1 | eu-west-1, eu-west-3 | Bedrock and S3 Vectors availability |
-| ADR-003 | LLM provider & models | Bedrock on-demand, tiered, behind an abstraction; Ollama locally | Direct vendor APIs | Single bill, IAM; models and prices recorded at build time |
+| ADR-003 | LLM provider & models | Bedrock on-demand behind an abstraction; Ollama locally. Proposed tiers: Nova Micro (fast path), Claude Haiku 5.5 (specialists), Claude Sonnet 5.5 (rare); Titan Embeddings V2 at 512 dims | Direct vendor APIs | Single bill, IAM; prices to be recorded from the console before M1-06 (VER-05 open item) |
 | ADR-004 | Transform engine | DuckDB + dbt in Lambda; Athena optional | Glue ETL, EMR Serverless | $0 at this scale; industry-standard dbt |
 | ADR-005 | IaC | **AWS CDK (Python)**, owner decision 2026-11-02 | CDK (TypeScript), Terraform, SAM | One language across infra, pipelines, ML, and agents |
 | ADR-006 | Networking | No VPC for Lambdas | VPC + NAT or endpoints | Avoids NAT and endpoint costs |
@@ -1051,7 +1051,7 @@ Status: **Proposed** until written up in `docs/adr/` and accepted.
 | ADR-012 | Streaming | Lambda Web Adapter behind CloudFront; polling fallback | WebSockets | VER-07 |
 | ADR-013 | Agent topology | 5 specialists + deterministic nodes; fast path | 10 LLM agents | Lower cost and latency |
 | ADR-014 | Evaluation economics | Replay in CI; live at pre-release and in nightly samples | Live on every PR | ~$0, reproducible |
-| ADR-015 | Telemetry standard | OpenTelemetry GenAI semantic conventions for LLM telemetry; FOCUS for billing | Proprietary schemas | Portable to real companies; credible to industry reviewers |
+| ADR-015 | Telemetry standard | OpenTelemetry GenAI semantic conventions (pinned attribute list) for LLM telemetry; **FOCUS 1.2** for billing | Proprietary schemas, FOCUS 1.0 | Portable to real companies; credible to industry reviewers |
 | ADR-016 | Shared calculation spec | One pricing and lever calculation spec, implemented for the browser and the agent tools, with parity tests | Server-side simulation only | Instant interactive simulator at $0, with no disagreement between dashboard and agents |
 | ADR-017 | Simulated customer vertical | **BoonCore: AI technical support for medical device and diagnostics companies, imaging as flagship**; regulation modeled as lever constraints | Generic support, AI coding, infra/security support, fintech, pharma, imaging only | Very profitable tenants and very high ticket value; showcases quality- and safety-guarded levers. **Accepted 2026-11-02**: `docs/adr/017-simulated-customer-vertical.md` |
 
@@ -1085,20 +1085,20 @@ Status: **Proposed** until written up in `docs/adr/` and accepted.
 
 | ID | Verify |
 | --- | --- |
-| VER-01 | AWS Free Plan vs Paid Plan: credits, duration, service restrictions |
-| VER-02 | Always-free allowances: Lambda, Step Functions Standard, DynamoDB (provisioned), CloudFront, CloudWatch, SNS/SQS, EventBridge Scheduler, Cognito, X-Ray |
-| VER-03 | S3 Vectors: pricing, limits, metadata filtering, region |
-| VER-04 | Region choice satisfies VER-03 and VER-05 |
-| VER-05 | Bedrock model catalog, prices, prompt caching, embedding dimensions |
-| VER-06 | AWS Budgets: cost of action-enabled budgets, action types, refresh latency |
-| VER-07 | Lambda response streaming for Python through CloudFront |
-| VER-08 | CloudFront OAC for Lambda Function URLs, including POST bodies |
-| VER-09 | LangGraph DynamoDB checkpointer maturity |
-| VER-10 | AWS Data Exports: FOCUS version, delivery cadence |
-| VER-11 | DuckDB-WASM bundle size; Parquet range reads over CloudFront |
-| VER-12 | dbt-duckdb + S3 access from Lambda; container image size |
-| VER-13 | Current OpenTelemetry GenAI semantic conventions (attribute names, stability status) |
-| VER-14 | Primary sources for the industry statistics in §1 and §20.2 (State of FinOps 2026, ICONIQ State of AI) |
+| VER-01 | AWS Free Plan vs Paid Plan: credits, duration, service restrictions — **Done: choose the Paid plan** (2026-11-02) |
+| VER-02 | Always-free allowances: Lambda, Step Functions Standard, DynamoDB (provisioned), CloudFront, CloudWatch, SNS/SQS, EventBridge Scheduler, Cognito, X-Ray — **Done** (2026-11-02) |
+| VER-03 | S3 Vectors: pricing, limits, metadata filtering, region — **Done** (2026-11-02) |
+| VER-04 | Region choice satisfies VER-03 and VER-05 — **Done: us-east-1** (2026-11-02) |
+| VER-05 | Bedrock model catalog, prices, prompt caching, embedding dimensions — **Done except prices** (open: owner reads them from the console before M1-06) (2026-11-02) |
+| VER-06 | AWS Budgets: cost of action-enabled budgets, action types, refresh latency — **Done; observed refresh latency checked after M0-07** (2026-11-02) |
+| VER-07 | Lambda response streaming for Python through CloudFront — **Done: Python needs Lambda Web Adapter** (2026-11-02) |
+| VER-08 | CloudFront OAC for Lambda Function URLs, including POST bodies — **Done**; streaming through OAC open (spike in M1-07) (2026-11-02) |
+| VER-09 | LangGraph DynamoDB checkpointer maturity — **Done** (2026-11-02) |
+| VER-10 | AWS Data Exports: FOCUS version, delivery cadence — **Done: FOCUS 1.2** (2026-11-02) |
+| VER-11 | DuckDB-WASM bundle size; Parquet range reads over CloudFront — **Partly done**: supply-chain controls added; bundle size and range reads open (spike in M1-07) (2026-11-02) |
+| VER-12 | dbt-duckdb + S3 access from Lambda; container image size — **Done** (2026-11-02) |
+| VER-13 | Current OpenTelemetry GenAI semantic conventions (attribute names, stability status) — **Done** (2026-11-02) |
+| VER-14 | Primary sources for the industry statistics in §1 and §20.2 (State of FinOps 2026, ICONIQ State of AI) — **Done for State of FinOps; ICONIQ and Harness secondary until M6-04** (2026-11-02) |
 | VER-15 | **Done 2026-11-02, see ADR-017 (four items still open there).** BoonCore vertical (§2.2): medical device complaint-handling and vigilance rules, HIPAA BAA requirements for model providers, DICOM de-identification, scope of regulated medical-device software; plus market claims (medtech/imaging profitability, imaging downtime cost, remote monitoring practice) |
 
 ### 19.4 Open questions (owner decides in M0-04)
@@ -1138,7 +1138,7 @@ Status: **Proposed** until written up in `docs/adr/` and accepted.
 - Harness, *State of AI in FinOps 2026*, as reported by [IT Brief UK](https://itbrief.co.uk/story/harness-finds-ai-costs-outpace-governance-in-firms): 52% of respondents say there is no clear owner for AI costs.
 - ICONIQ, *State of AI* (2026), as summarized by [SaaStr](https://www.saastr.com/iconiqs-latest-state-of-ai-report-the-10-most-important-data-points-for-saas-founders) and [Monetizely](https://www.getmonetizely.com/articles/the-economics-of-ai-first-b2b-saas-in-2026-margins-pricing-models-and-profitability):
   - AI-native gross margins around 52%, vs 75–85% for traditional SaaS.
-  - Inference is a material and persistent share of revenue.
+  - Inference is a material and persistent share of **total spend** (≈ 20% pre-launch, ≈ 23% when scaling). Some summaries call it a share of revenue; SaaStr's breakdown indicates spend (VER-14).
   - Consumption-based pricing rose from 19% to 35%; outcome-based pricing from 2% to 18%.
 - [SoftwareSeni](https://www.softwareseni.com/why-ai-gross-margins-are-so-much-lower-than-saas-and-what-that-means-for-your-business/) on AI vs SaaS gross margins.
 
@@ -1152,6 +1152,7 @@ Status: **Proposed** until written up in `docs/adr/` and accepted.
 | 2026-11-02 | 0.4 | Simulated customer renamed Relaywise → **BoonCore**; vertical changed from general customer support to **AI technical support for medical device and diagnostics companies, imaging as flagship** (§2.2): new F1–F4 descriptions, outcome unit (remote resolution), simulated regulatory constraints, five new injected patterns, VER-15; KPI-08 adds a safety-event recall floor of ≥ 99% (also enforced in EV-13), measured by new `fct_quality` columns `safety_events_labeled`, `safety_events_flagged`, and `safety_event_recall`. Closes §19.4 #7. Why: highly profitable tenants and very high ticket value give the largest recoverable margin pool; regulatory constraints showcase quality- and contract-guarded levers; a medtech-wide tenant base keeps ~400 tenants realistic | tojoarisoa |
 | 2026-11-02 | 0.4 | M0-04 closed: owner accepted the recommended answers to §19.4 #1–#6 (keep name; CDK in Python; default CloudFront domain; public rate-limited agent; fresh AWS account; full ~14 weeks with M4 as the guaranteed stop). Compliance constraints from ADR-017 wired into the corpus, AG-07, the contract entity, and §12 | tojoarisoa |
 | 2026-11-02 | 0.4 | M0-08 closed: BoonCore specification approved (`docs/booncore-spec.md`). Adds **F0 Safety Screening** as a fifth feature (F0–F4); telemetry grain hourly for Enterprise, daily otherwise; outcomes stored as tenant × day aggregates + 10% ticket sample + all labeled safety events (§7.5); simulator assumptions accepted as labeled inputs | tojoarisoa |
+| 2026-11-02 | 0.4 | M0-05 closed: VER-01…VER-14 checked and logged (`docs/verification/2026-11-02-m0-05.md`). ADR-001…ADR-016 drafted (Proposed). Changes from verification: Paid plan for the fresh account; FOCUS 1.2; model tiers in ADR-003; OAC payload-hash header in ADR-012; DuckDB-WASM supply-chain controls in ADR-009; ICONIQ inference claim reworded to share of total spend | tojoarisoa |
 
 #### v0.3 refocus summary
 
