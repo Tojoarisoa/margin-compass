@@ -124,3 +124,11 @@ def test_eval_runner_scores_the_scripted_model(gold, tmp_path):
     assert report["passed"] == 5, [q for q in report["questions"] if not q["passed"]]
     replayed = run_eval(gold, "haiku-5-5", mode="replay", eval_dir=eval_dir)
     assert replayed["passed"] == 5 and replayed["cost_usd_total"] == report["cost_usd_total"]
+
+
+@pytest.mark.parametrize("model_key", sorted(p.name for p in (EVAL_DIR / "fixtures").iterdir() if p.is_dir()))
+def test_recorded_fixtures_replay_and_pass(gold, model_key):
+    """M1-06 exit: the 5-question replay evaluation passes on the recorded Bedrock responses ($0, no network)."""
+    report = run_eval(gold, model_key, mode="replay")
+    assert report["passed"] == report["total"] == 5, [q for q in report["questions"] if not q["passed"]]
+    assert report["max_llm_calls"] <= 8 and Decimal(report["cost_usd_per_question"]) <= Decimal("0.01")

@@ -1,0 +1,47 @@
+{
+  "calls": [
+    {
+      "request_sha": "eeb436cd969697652286a2695926848ce81dd6148dd12b4da1e530a315a2fbad",
+      "response": {
+        "content": [
+          {
+            "toolUse": {
+              "input": {
+                "end_date": "2025-08-31",
+                "start_date": "2025-08-01"
+              },
+              "name": "portfolio_margin",
+              "toolUseId": "tooluse_8A8LvFJBXcMdS1v7PIMaiz",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 1290,
+          "outputTokens": 85
+        }
+      }
+    },
+    {
+      "request_sha": "de7643d1d8aea556c94453a0c86369833a4862069917f754998c69e689a4f9be",
+      "response": {
+        "content": [
+          {
+            "text": "The portfolio AI gross margin in August 2025 was **98.73%** [E1]. This represents a gross margin of **$44,957.70** USD on AI revenue of **$45,534.28** USD with a cost to serve of **$576.58** USD [E1]. Note: this data covers Reply Copilot (F1) only [E1]."
+          }
+        ],
+        "stop_reason": "end_turn",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 1516,
+          "outputTokens": 89
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "ag03-v1",
+  "question_id": "q4"
+}

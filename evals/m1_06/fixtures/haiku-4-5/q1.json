@@ -1,0 +1,48 @@
+{
+  "calls": [
+    {
+      "request_sha": "3c7b89fb5bbb2e8cfb3d0adf7e2c808dffcb03e6b4ec3a818b8622c8ef7b4bfa",
+      "response": {
+        "content": [
+          {
+            "toolUse": {
+              "input": {
+                "end_date": "2025-09-30",
+                "start_date": "2025-09-01",
+                "tenant_id": "bc-t0003"
+              },
+              "name": "tenant_margin",
+              "toolUseId": "tooluse_8cDEakJUz5CS3Y9e8MsVQf",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 1297,
+          "outputTokens": 108
+        }
+      }
+    },
+    {
+      "request_sha": "1c528538f7cef8779278212536c3fdda1a35f3d55cbb72a7b5e6ca0c2e9efc94",
+      "response": {
+        "content": [
+          {
+            "text": "For tenant bc-t0003 in September 2025, the AI gross margin was $3,795.76 USD or 98.07% [E1]. This was calculated from AI revenue of $3,870.54 and cost to serve of $74.78 across 7,476 requests. Note: this data covers Reply Copilot (F1) only."
+          }
+        ],
+        "stop_reason": "end_turn",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 1541,
+          "outputTokens": 88
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "ag03-v1",
+  "question_id": "q1"
+}
