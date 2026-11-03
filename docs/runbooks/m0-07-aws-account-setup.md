@@ -1,6 +1,8 @@
 # Runbook: M0-07 AWS account setup and foundation deploy
 
 **Who:** the owner, once per AWS account. **Time:** about 45 minutes of clicking and typing, plus up to 24 hours of waiting for billing data.
+**Progress (2026-11-03):** Parts A–C done (CLI signed in as `mc-admin`). Next: Part D.
+
 **Result:** a fresh AWS account with budgets, a kill switch, anomaly alerts, a daily FOCUS 1.2 bill export, and a GitHub deploy role, all from code (`infra/`). Only your sign-in identity is created by hand.
 
 Tick each box as you go. Every step says where to click, what to type, and what you should see. **Console** links open the AWS console (sign in first); **Docs** links are AWS's own instructions for the same step. If a console link has moved, the docs link shows the current path.
@@ -9,25 +11,25 @@ Tick each box as you go. Every step says where to click, what to type, and what 
 
 ## Part A: Create and secure the account (console, ~20 min)
 
-- [ ] **A1. Sign up on the Paid plan.**
+- [x] **A1. Sign up on the Paid plan.**
   Open the [AWS sign-up page](https://portal.aws.amazon.com/billing/signup). When asked to choose a plan, pick **Paid plan**.
   *Why:* the Free plan closes the account after 6 months (VER-01). The Paid plan still gets Free Tier credits and only charges what you use, and our budget caps everything at $5.
   ✅ You land on the AWS console home page.
 
-- [ ] **A2. Don't join AWS Organizations.** Skip any prompt to create or join an organization; it ends Free Tier credits (VER-01).
+- [x] **A2. Don't join AWS Organizations.** Skip any prompt to create or join an organization; it ends Free Tier credits (VER-01).
 
-- [ ] **A3. Turn on MFA for the root user.**
+- [x] **A3. Turn on MFA for the root user.**
   Console: [IAM → Security credentials](https://console.aws.amazon.com/iam/home#/security_credentials) → **Assign MFA device** → choose an authenticator app or passkey.
   Docs: [Enable MFA for the root user](https://docs.aws.amazon.com/IAM/latest/UserGuide/enable-mfa-for-root.html).
   Do **not** create root access keys.
   ✅ The page shows one MFA device and no access keys.
 
-- [ ] **A4. Let IAM users see billing, and set alternate contacts.** *(still as root)*
+- [x] **A4. Let IAM users see billing, and set alternate contacts.** *(still as root)*
   Console: [Account](https://console.aws.amazon.com/billing/home#/account) → **IAM user and role access to Billing information** → **Edit** → **Activate**. On the same page, fill in **Alternate contacts**.
   Docs: [Activate IAM access to billing](https://docs.aws.amazon.com/cost-management/latest/userguide/control-access-billing.html), [Alternate contacts](https://docs.aws.amazon.com/accounts/latest/reference/manage-acct-update-contact-alternate.html).
   ✅ The setting shows **Activated**.
 
-- [ ] **A5. Create your admin IAM user (no access keys).**
+- [x] **A5. Create your admin IAM user (no access keys).**
   Console: [IAM → Users → Create user](https://console.aws.amazon.com/iam/home#/users/create).
   1. User name: `mc-admin`. Tick **Provide user access to the AWS Management Console**, choose **I want to create an IAM user**, set a password.
   2. Permissions: **Attach policies directly** → `AdministratorAccess` (it includes `SignInLocalDevelopmentAccess`, which `aws login` needs).
@@ -37,7 +39,7 @@ Tick each box as you go. Every step says where to click, what to type, and what 
   Do **not** create access keys; AGENTS.md rule 8 forbids long-lived keys.
   ✅ You're signed in as `mc-admin` with MFA, and [Billing and Cost Management](https://console.aws.amazon.com/costmanagement/home) opens without an access error (thanks to A4). Use this user from now on, never root.
 
-- [ ] **A6. Enable Cost Explorer.** *(as `mc-admin`)*
+- [x] **A6. Enable Cost Explorer.** *(as `mc-admin`)*
   Console: [Cost Explorer](https://console.aws.amazon.com/costmanagement/home#/cost-explorer) → **Launch Cost Explorer** if prompted.
   Docs: [Enabling Cost Explorer](https://docs.aws.amazon.com/cost-management/latest/userguide/ce-enable.html).
   Note: this can automatically create an "AWS services" anomaly monitor. That's fine; the deploy script detects and reuses it.
@@ -47,19 +49,19 @@ Tick each box as you go. Every step says where to click, what to type, and what 
 
 ## Part B: Install the tools on your Mac (~10 min)
 
-- [ ] **B1. AWS CLI 2.32.0 or later** (not installed on this Mac yet).
+- [x] **B1. AWS CLI 2.32.0 or later.** Installed: 2.39.3 (user-local, `~/.local/bin/aws`).
   Docs: [Install or update the AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) (macOS → command-line installer).
   ✅ `aws --version` prints `aws-cli/2.32.0` or higher.
 
-- [ ] **B2. Node.js** for the CDK CLI. Already installed here (`node --version`). Otherwise: [nodejs.org/download](https://nodejs.org/en/download).
+- [x] **B2. Node.js** for the CDK CLI. Already installed here (`node --version`). Otherwise: [nodejs.org/download](https://nodejs.org/en/download).
 
-- [ ] **B3. uv** for Python. Already installed here (`uv --version`). Otherwise: [uv installation](https://docs.astral.sh/uv/getting-started/installation/).
+- [x] **B3. uv** for Python. Already installed here (`uv --version`). Otherwise: [uv installation](https://docs.astral.sh/uv/getting-started/installation/).
 
 ---
 
 ## Part C: Sign in from the terminal, no access keys (~2 min)
 
-- [ ] **C1.** Run:
+- [x] **C1.** Run:
 
   ```bash
   aws login --profile mc-admin
