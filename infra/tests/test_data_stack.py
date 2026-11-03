@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+
 import aws_cdk as cdk
 import pytest
 from aws_cdk.assertions import Annotations, Match, Template
@@ -83,10 +85,46 @@ def test_pipeline_role_only_touches_its_own_resources(synth):
     assert "s3:*" not in actions and not any(a.startswith("s3:PutBucket") for a in actions)
 
 
-def test_no_schedule_yet(synth):
+def test_nightly_schedule_exists_but_is_off_by_default(synth):
+    """PLAN.md §15: schedules in dev are off by default (enable with -c mc:nightlyEnabled=true)."""
     _, t = synth
-    t.resource_count_is("AWS::Scheduler::Schedule", 0)
+    t.resource_count_is("AWS::Scheduler::Schedule", 1)
+    t.has_resource_properties("AWS::Scheduler::Schedule", {"State": "DISABLED", "ScheduleExpression": "cron(0 5 * * ? *)",
+                                                           "Target": {"RetryPolicy": {"MaximumRetryAttempts": 0}}})
     t.resource_count_is("AWS::Events::Rule", 0)
+
+
+def test_nightly_state_machine_is_standard_and_fails_on_a_bad_status(synth):
+    _, t = synth
+    sm = next(iter(t.find_resources("AWS::StepFunctions::StateMachine").values()))["Properties"]
+    assert sm.get("StateMachineType", "STANDARD") == "STANDARD" and sm["StateMachineName"] == "mc-dev-data-nightly"
+    definition = json.dumps(sm["DefinitionString"])
+    assert "PipelineFailed" in definition and "$.status" in definition and "success" in definition
+
+
+def test_scheduler_role_may_only_start_the_nightly_machine(synth):
+    stack, t = synth
+    roles = t.find_resources("AWS::IAM::Role", {"Properties": {"RoleName": "mc-dev-data-nightly-scheduler"}})
+    role_id = next(iter(roles))
+    policies = t.find_resources("AWS::IAM::Policy", {"Properties": {"Roles": [{"Ref": role_id}]}})
+    stmts = [s for p in policies.values() for s in p["Properties"]["PolicyDocument"]["Statement"]]
+    assert {a for s in stmts for a in (s["Action"] if isinstance(s["Action"], list) else [s["Action"]])} == {"states:StartExecution"}
+    assert all(s["Resource"] == {"Ref": next(iter(t.find_resources("AWS::StepFunctions::StateMachine")))} for s in stmts)
+
+
+def test_one_nightly_alarm_to_the_alert_topic(synth):
+    _, t = synth
+    t.resource_count_is("AWS::CloudWatch::Alarm", 1)
+    alarm = next(iter(t.find_resources("AWS::CloudWatch::Alarm").values()))["Properties"]
+    assert "mc-shared-foundation-alerts" in json.dumps(alarm["AlarmActions"]) and alarm["TreatMissingData"] == "notBreaching"
+
+
+def test_nightly_can_be_enabled_by_context():
+    app = cdk.App()
+    env = cdk.Environment(account=ACCOUNT, region="us-east-1")
+    state = StateStack(app, "S2", env_name="dev", env=env)
+    t = Template.from_stack(DataStack(app, "D2", env_name="dev", core_table=state.core, nightly_enabled=True, env=env))
+    t.has_resource_properties("AWS::Scheduler::Schedule", {"State": "ENABLED"})
 
 
 def test_tags_and_guardrails(synth):
@@ -169,4 +207,5 @@ def test_cdk_json_puts_the_pipeline_behind_the_kill_switch():
     from pathlib import Path
 
     ctx = json.loads((Path(__file__).resolve().parents[1] / "cdk.json").read_text())["context"]
-    assert "mc-dev-data-pipeline" in ctx["mc:killSwitchRoleNames"]
+    assert {"mc-dev-data-pipeline", "mc-dev-data-nightly-scheduler"} <= set(ctx["mc:killSwitchRoleNames"])
+    assert ctx["mc:nightlyEnabled"] is False  # PLAN.md §15: dev schedules off by default

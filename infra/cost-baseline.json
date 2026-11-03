@@ -1,0 +1,55 @@
+{
+  "stacks": {
+    "mc-dev-data": {
+      "AWS::CDK::Metadata": 1,
+      "AWS::CloudWatch::Alarm": 1,
+      "AWS::IAM::Policy": 3,
+      "AWS::IAM::Role": 3,
+      "AWS::Lambda::Function": 1,
+      "AWS::Logs::LogGroup": 1,
+      "AWS::S3::Bucket": 1,
+      "AWS::S3::BucketPolicy": 1,
+      "AWS::S3Vectors::Index": 1,
+      "AWS::S3Vectors::VectorBucket": 1,
+      "AWS::Scheduler::Schedule": 1,
+      "AWS::StepFunctions::StateMachine": 1
+    },
+    "mc-dev-state": {
+      "AWS::CDK::Metadata": 1,
+      "AWS::DynamoDB::Table": 1
+    },
+    "mc-dev-web": {
+      "AWS::CDK::Metadata": 1,
+      "AWS::CloudFront::CachePolicy": 1,
+      "AWS::CloudFront::Distribution": 1,
+      "AWS::CloudFront::OriginAccessControl": 3,
+      "AWS::CloudFront::OriginRequestPolicy": 1,
+      "AWS::CloudFront::ResponseHeadersPolicy": 1,
+      "AWS::IAM::Policy": 1,
+      "AWS::IAM::Role": 1,
+      "AWS::Lambda::EventInvokeConfig": 1,
+      "AWS::Lambda::Function": 1,
+      "AWS::Lambda::Permission": 2,
+      "AWS::Lambda::Url": 1,
+      "AWS::Logs::LogGroup": 1
+    },
+    "mc-shared-foundation": {
+      "AWS::BCMDataExports::Export": 1,
+      "AWS::Budgets::Budget": 1,
+      "AWS::Budgets::BudgetsAction": 1,
+      "AWS::CDK::Metadata": 1,
+      "AWS::CE::AnomalyMonitor": 1,
+      "AWS::CE::AnomalySubscription": 1,
+      "AWS::IAM::ManagedPolicy": 1,
+      "AWS::IAM::OIDCProvider": 1,
+      "AWS::IAM::Policy": 2,
+      "AWS::IAM::Role": 2,
+      "AWS::S3::Bucket": 1,
+      "AWS::S3::BucketPolicy": 1,
+      "AWS::SNS::Subscription": 1,
+      "AWS::SNS::Topic": 1,
+      "AWS::SNS::TopicPolicy": 1
+    }
+  },
+  "total_usd": "1.82"
+}

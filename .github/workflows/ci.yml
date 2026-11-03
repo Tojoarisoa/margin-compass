@@ -1,0 +1,204 @@
+# CI (PLAN.md §15) for every PR and push to main; deploys to dev after a green push to main.
+# Supply chain: actions pinned to commit SHAs; uv and npm install from committed lockfiles only.
+# Costs: Linux runners only (private repo minutes); no live LLM calls (ADR-014: replayed fixtures).
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  UV_VERSION: "0.11.16"
+  PYTHON_VERSION: "3.13"
+  NODE_VERSION: "24"
+  RUFF_VERSION: "0.17.3"
+  CDK_CLI: "aws-cdk@2.1147.0"
+  JSII_SILENCE_WARNING_UNTESTED_NODE_VERSION: "1"
+
+jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with: { version: "${{ env.UV_VERSION }}" }
+      - run: uvx "ruff@${RUFF_VERSION}" check .
+
+  python:
+    name: test (${{ matrix.project }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [simulator, ml, rag, pipelines, agents, infra]
+    defaults:
+      run:
+        working-directory: ${{ matrix.project }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "${{ env.UV_VERSION }}"
+          python-version: "${{ env.PYTHON_VERSION }}"
+          enable-cache: true
+          cache-dependency-glob: "${{ matrix.project }}/uv.lock"
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        if: matrix.project == 'infra'
+        with: { node-version: "${{ env.NODE_VERSION }}" }
+      - run: uv sync --frozen
+      - run: uv run pytest -q
+
+  dashboard:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: dashboard
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "${{ env.NODE_VERSION }}"
+          cache: npm
+          cache-dependency-path: dashboard/package-lock.json
+      - run: npm ci --no-fund
+      - run: npm audit --audit-level=moderate
+      - run: npm run build
+
+  replay-eval:
+    name: replay evaluation (M1-06 set)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: agents
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "${{ env.UV_VERSION }}"
+          python-version: "${{ env.PYTHON_VERSION }}"
+          enable-cache: true
+          cache-dependency-glob: "agents/uv.lock"
+      - run: uv sync --frozen
+      - name: Build synthetic gold (simulator m1, seed 42)
+        run: |
+          uv run python - <<'PY'
+          from pathlib import Path
+          from booncore_sim.cli import run as simulate
+          from mc_pipelines.cli import main
+          root = Path("../data/ci")
+          simulate("m1", 42, root / "landing" / "booncore", run_id="ci")
+          raise SystemExit(main(["run", "--landing", str(root / "landing" / "booncore"), "--data-root", str(root), "--ingest-date", "2026-11-04"]))
+          PY
+      - name: Replay every recorded model ($0, no network)
+        run: |
+          set -euo pipefail
+          mkdir -p ../data/ci/evals
+          echo "## Replay evaluation (M1-06)" >> "$GITHUB_STEP_SUMMARY"
+          status=0
+          for dir in ../evals/m1_06/fixtures/*/; do
+            model="$(basename "$dir")"
+            line="$(uv run mc-agents --gold ../data/ci/gold --model "$model" eval --mode replay --out "../data/ci/evals/m1_06-$model.json")" || status=1
+            echo "- \`$model\`: $line" >> "$GITHUB_STEP_SUMMARY"
+          done
+          exit $status
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: replay-eval
+          path: data/ci/evals/
+          retention-days: 14
+
+  cost-gate:
+    name: IaC synth + cost gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: infra
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: { fetch-depth: 0 }
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "${{ env.UV_VERSION }}"
+          python-version: "${{ env.PYTHON_VERSION }}"
+          enable-cache: true
+          cache-dependency-glob: "infra/uv.lock"
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with: { node-version: "${{ env.NODE_VERSION }}" }
+      - run: uv sync --frozen
+      - name: Synth all stacks (offline; the forbidden-resource guard fails the synth)
+        env: { CDK_DEFAULT_ACCOUNT: "000000000000", CDK_DEFAULT_REGION: "us-east-1" }
+        run: npx -y "$CDK_CLI" synth --all -q -c mc:alertEmail=ci@example.com -o cdk.out
+      - name: Cost gate
+        run: |
+          set -o pipefail
+          git show origin/main:infra/cost-baseline.json > /tmp/main-baseline.json 2>/dev/null || echo '{}' > /tmp/main-baseline.json
+          uv run python scripts/cost_gate.py --cdk-out cdk.out --compare /tmp/main-baseline.json | tee -a "$GITHUB_STEP_SUMMARY"
+
+  deploy-dev:
+    name: deploy to dev
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.AWS_DEPLOY_ROLE_ARN != ''
+    needs: [lint, python, dashboard, replay-eval, cost-gate]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    permissions:
+      contents: read
+      id-token: write  # GitHub OIDC -> mc-shared-foundation-github-deploy (main branch only)
+    concurrency:
+      group: deploy-dev
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "${{ env.UV_VERSION }}"
+          python-version: "${{ env.PYTHON_VERSION }}"
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with: { node-version: "${{ env.NODE_VERSION }}" }
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: us-east-1
+          role-session-name: gh-deploy-${{ github.run_id }}
+          mask-aws-account-id: true
+      - name: Deploy stacks (state -> data -> web -> foundation)
+        working-directory: infra
+        env:
+          MC_ALERT_EMAIL: ${{ vars.MC_ALERT_EMAIL }}
+          MC_ANOMALY_MONITOR_ARN: ${{ vars.MC_ANOMALY_MONITOR_ARN }}
+        run: |
+          set -euo pipefail
+          uv sync --frozen
+          CDK_DEFAULT_ACCOUNT="$(aws sts get-caller-identity --query Account --output text)"
+          export CDK_DEFAULT_ACCOUNT CDK_DEFAULT_REGION=us-east-1
+          ctx=(-c "mc:alertEmail=${MC_ALERT_EMAIL}")
+          [[ -n "${MC_ANOMALY_MONITOR_ARN}" ]] && ctx+=(-c "mc:existingAnomalyMonitorArn=${MC_ANOMALY_MONITOR_ARN}")
+          for stack in mc-dev-state mc-dev-data mc-dev-web mc-shared-foundation; do
+            npx -y "$CDK_CLI" deploy "$stack" --exclusively --require-approval never "${ctx[@]}"
+          done
+      - name: Deploy dashboard
+        run: infra/scripts/deploy-dashboard.sh dev
+      - name: Smoke test the public URL
+        run: |
+          set -euo pipefail
+          url="$(aws cloudformation describe-stacks --stack-name mc-dev-web --query "Stacks[0].Outputs[?OutputKey=='Url'].OutputValue" --output text)"
+          for path in / /publish/latest/pg1.json /api/health; do
+            code="$(curl -s -o /dev/null -w '%{http_code}' "$url$path")"
+            echo "$path -> $code"
+            [[ "$code" == 200 ]]
+          done
+          echo "Dev deployed and smoke-tested: $url" >> "$GITHUB_STEP_SUMMARY"

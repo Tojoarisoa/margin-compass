@@ -42,8 +42,9 @@ data_dev = DataStack(
     "mc-dev-data",
     env_name="dev",
     core_table=state_dev.core,
+    nightly_enabled=str(app.node.try_get_context("mc:nightlyEnabled")).lower() == "true",
     env=cdk.Environment(account=account, region=config.region),
-    description="Margin Compass dev data: S3 lake, pipeline Lambda, knowledge vector index (M1-02, M1-05)",
+    description="Margin Compass dev data: S3 lake, pipeline Lambda, knowledge index, nightly run (M1-02, M1-05, M1-08)",
 )
 apply_tags(data_dev, project=config.project, env="dev", stage="data", owner=config.owner, cost_center=config.cost_center)
 

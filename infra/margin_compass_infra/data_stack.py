@@ -16,6 +16,13 @@ from aws_cdk import aws_lambda as lambda_
 from aws_cdk import aws_logs as logs
 from aws_cdk import aws_s3 as s3
 from aws_cdk import aws_s3vectors as s3vectors
+from aws_cdk import aws_cloudwatch as cloudwatch
+from aws_cdk import aws_cloudwatch_actions as cw_actions
+from aws_cdk import aws_scheduler as scheduler
+from aws_cdk import aws_scheduler_targets as scheduler_targets
+from aws_cdk import aws_sns as sns
+from aws_cdk import aws_stepfunctions as sfn
+from aws_cdk import aws_stepfunctions_tasks as tasks
 from constructs import Construct
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -31,9 +38,14 @@ EMBEDDING_DIMENSIONS = 512
 KNOWLEDGE_INDEX_NAME = "kb-titan-v2-512"  # a new embedding model or dimension means a new index
 NON_FILTERABLE_METADATA_KEYS = ["text", "heading"]
 
+# Nightly orchestration (M1-08, PLAN.md §6): EventBridge Scheduler -> Step Functions Standard -> pipeline.
+NIGHTLY_CRON = "cron(0 5 * * ? *)"  # 05:00 UTC; gold is due by 07:00 UTC (§14)
+ALERT_TOPIC_NAME = "mc-shared-foundation-alerts"  # foundation stack (account-wide)
+
 
 class DataStack(cdk.Stack):
-    def __init__(self, scope: Construct, construct_id: str, *, env_name: str, core_table: dynamodb.ITable, **kwargs) -> None:
+    def __init__(self, scope: Construct, construct_id: str, *, env_name: str, core_table: dynamodb.ITable,
+                 nightly_enabled: bool = False, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
         name = lambda resource: f"mc-{env_name}-data-{resource}"  # noqa: E731 - AGENTS.md naming
 
@@ -153,6 +165,60 @@ class DataStack(cdk.Stack):
             },
         )
 
+        self._nightly(name, nightly_enabled)
+
         cdk.CfnOutput(self, "LakeBucket", value=self.lake.bucket_name)
         cdk.CfnOutput(self, "PipelineFunction", value=self.pipeline.function_name)
         cdk.CfnOutput(self, "KnowledgeIndexArn", value=index.attr_index_arn)
+
+    # --- nightly (M1-08) ------------------------------------------------------------------------
+    def _nightly(self, name, enabled: bool) -> None:
+        """One Standard state machine, about 4 transitions per run (free allowance: 4,000 per month).
+
+        Schedules in dev are off by default (PLAN.md §15); enable with `-c mc:nightlyEnabled=true`.
+        The scheduler role is a kill-switch target: the budget action denies it states:StartExecution.
+        """
+        run = tasks.LambdaInvoke(
+            self, "RunPipeline", lambda_function=self.pipeline, payload_response_only=True,
+            payload=sfn.TaskInput.from_object({"run_id": sfn.JsonPath.string_at("$$.Execution.Name")}),
+            task_timeout=sfn.Timeout.duration(cdk.Duration.minutes(12)),
+            retry_on_service_exceptions=True,
+        )
+        failed = sfn.Fail(self, "PipelineFailed", error="PipelineFailed", cause_path=sfn.JsonPath.string_at("$.status"))
+        check = (sfn.Choice(self, "Succeeded?")
+                 .when(sfn.Condition.string_equals("$.status", "success"), sfn.Succeed(self, "Done"))
+                 .otherwise(failed))
+        machine_role = iam.Role(self, "NightlyRole", role_name=name("nightly"),
+                                assumed_by=iam.ServicePrincipal("states.amazonaws.com"),
+                                description="Nightly state machine: invoke the pipeline Lambda.")
+        self.nightly = sfn.StateMachine(
+            self, "Nightly", state_machine_name=name("nightly"), state_machine_type=sfn.StateMachineType.STANDARD,
+            definition_body=sfn.DefinitionBody.from_chainable(run.next(check)), role=machine_role,
+            timeout=cdk.Duration.minutes(20), comment="M1 nightly: simulate -> ingest -> dbt -> train -> embed -> publish",
+        )
+
+        scheduler_role = iam.Role(self, "NightlySchedulerRole", role_name=name("nightly-scheduler"),
+                                  assumed_by=iam.ServicePrincipal("scheduler.amazonaws.com", conditions={
+                                      "StringEquals": {"aws:SourceAccount": self.account}}),
+                                  description="EventBridge Scheduler: start the nightly state machine (kill-switch target).")
+        scheduler.Schedule(
+            self, "NightlySchedule", schedule_name=name("nightly"),
+            schedule=scheduler.ScheduleExpression.expression(NIGHTLY_CRON),
+            target=scheduler_targets.StepFunctionsStartExecution(self.nightly, role=scheduler_role, retry_attempts=0),
+            enabled=enabled, description="Nightly pipeline run (dev schedules are off by default, PLAN.md §15).",
+        )
+
+        # One alarm (of the ≤ 10 in §14): any failed, timed-out, or aborted run e-mails the alert topic.
+        bad = cloudwatch.MathExpression(
+            expression="FILL(f, 0) + FILL(t, 0) + FILL(a, 0)", period=cdk.Duration.hours(1), label="bad runs",
+            using_metrics={"f": self.nightly.metric_failed(), "t": self.nightly.metric_timed_out(), "a": self.nightly.metric_aborted()},
+        )
+        alarm = cloudwatch.Alarm(
+            self, "NightlyFailedAlarm", alarm_name=name("nightly-failed"), metric=bad, threshold=1, evaluation_periods=1,
+            comparison_operator=cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+            treat_missing_data=cloudwatch.TreatMissingData.NOT_BREACHING,
+            alarm_description="The nightly pipeline run failed, timed out, or was aborted. See the Step Functions execution.",
+        )
+        topic = sns.Topic.from_topic_arn(self, "Alerts", f"arn:{cdk.Aws.PARTITION}:sns:{self.region}:{self.account}:{ALERT_TOPIC_NAME}")
+        alarm.add_alarm_action(cw_actions.SnsAction(topic))
+        cdk.CfnOutput(self, "NightlyStateMachine", value=self.nightly.state_machine_arn)

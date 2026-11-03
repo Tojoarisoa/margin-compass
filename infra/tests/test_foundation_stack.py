@@ -96,7 +96,7 @@ def test_budgets_execution_role_can_only_attach_the_kill_switch_policy(default):
     )
 
 
-def test_alert_topic_allows_budgets_and_anomaly_detection_only_from_this_account(default):
+def test_alert_topic_allows_budgets_anomaly_detection_and_alarms_only_from_this_account(default):
     _, t = default
     t.has_resource_properties(
         "AWS::SNS::TopicPolicy",
@@ -106,7 +106,7 @@ def test_alert_topic_allows_budgets_and_anomaly_detection_only_from_this_account
                     [
                         Match.object_like(
                             {
-                                "Principal": {"Service": ["budgets.amazonaws.com", "costalerts.amazonaws.com"]},
+                                "Principal": {"Service": ["budgets.amazonaws.com", "costalerts.amazonaws.com", "cloudwatch.amazonaws.com"]},
                                 "Condition": {"StringEquals": {"aws:SourceAccount": ACCOUNT}},
                             }
                         )
@@ -216,7 +216,7 @@ def test_github_deploy_role_trusts_only_main_branch_of_the_repo(default):
     )
 
 
-def test_github_deploy_role_may_only_assume_cdk_bootstrap_roles(default):
+def test_github_deploy_role_may_only_assume_cdk_bootstrap_roles_and_upload_the_dashboard(default):
     stack, t = default
     role_id = stack.get_logical_id(stack.deploy_role.node.default_child)
     policies = t.find_resources("AWS::IAM::Policy", {"Properties": {"Roles": [{"Ref": role_id}]}})
@@ -227,7 +227,32 @@ def test_github_deploy_role_may_only_assume_cdk_bootstrap_roles(default):
             "Action": "sts:AssumeRole",
             "Effect": "Allow",
             "Resource": f"arn:aws:iam::{ACCOUNT}:role/cdk-hnb659fds-*-{ACCOUNT}-us-east-1",
-        }
+        },
+        {
+            "Sid": "ReadMarginCompassStackOutputs",
+            "Action": "cloudformation:DescribeStacks",
+            "Effect": "Allow",
+            "Resource": f"arn:aws:cloudformation:us-east-1:{ACCOUNT}:stack/mc-*/*",
+        },
+        {
+            "Sid": "ListDashboardPrefix",
+            "Action": "s3:ListBucket",
+            "Condition": {"StringLike": {"s3:prefix": ["site/*", "site/"]}},
+            "Effect": "Allow",
+            "Resource": f"arn:aws:s3:::mc-*-data-lake-{ACCOUNT}",
+        },
+        {
+            "Sid": "WriteDashboardPrefix",
+            "Action": ["s3:PutObject", "s3:DeleteObject"],
+            "Effect": "Allow",
+            "Resource": f"arn:aws:s3:::mc-*-data-lake-{ACCOUNT}/site/*",
+        },
+        {
+            "Sid": "InvalidateDashboard",
+            "Action": "cloudfront:CreateInvalidation",
+            "Effect": "Allow",
+            "Resource": f"arn:aws:cloudfront::{ACCOUNT}:distribution/*",
+        },
     ]
 
 

@@ -131,11 +131,15 @@ Tick each box as you go. Every step says where to click, what to type, and what 
   | Anomaly alerts | [Cost Anomaly Detection](https://console.aws.amazon.com/costmanagement/home#/anomaly-detection/overview) ([docs](https://docs.aws.amazon.com/cost-management/latest/userguide/getting-started-ad.html)) | Subscription `mc-shared-foundation-anomaly-alerts`, immediate, ≥ $1 |
   | Bill export | [Data Exports](https://console.aws.amazon.com/costmanagement/home#/bcm-data-exports) ([docs](https://docs.aws.amazon.com/cur/latest/userguide/what-is-data-exports.html)) | `mc-shared-foundation-focus-1-2`, FOCUS 1.2, Parquet |
 
-- [ ] **G3. Save the deploy role for GitHub.** Copy the `GitHubDeployRoleArn` output and store it as a repository variable (used by CI in M1-08):
+- [ ] **G3. Save the deploy settings for GitHub.** The `deploy to dev` job in `.github/workflows/ci.yml` (M1-08) runs only when these repository variables exist. They are settings, not secrets, and are never committed:
 
   ```bash
-  gh variable set AWS_DEPLOY_ROLE_ARN --repo Tojoarisoa/margin-compass --body "arn:aws:iam::<account>:role/mc-shared-foundation-github-deploy"
+  gh variable set AWS_DEPLOY_ROLE_ARN    --repo Tojoarisoa/margin-compass --body "arn:aws:iam::<account>:role/mc-shared-foundation-github-deploy"
+  gh variable set MC_ALERT_EMAIL         --repo Tojoarisoa/margin-compass --body "you@example.com"
+  gh variable set MC_ANOMALY_MONITOR_ARN --repo Tojoarisoa/margin-compass --body "<existing anomaly monitor ARN, or leave unset>"
   ```
+
+  The deploy role trusts only workflows on `main` of this repository (no environments).
 
 - [ ] **G4. Activate cost allocation tags (after up to 24 hours).** The five tags appear in Billing only after resources carrying them have been billed. Then run:
 

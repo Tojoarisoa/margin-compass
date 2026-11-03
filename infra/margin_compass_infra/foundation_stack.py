@@ -82,6 +82,7 @@ class FoundationStack(cdk.Stack):
                 principals=[
                     iam.ServicePrincipal("budgets.amazonaws.com"),
                     iam.ServicePrincipal("costalerts.amazonaws.com"),
+                    iam.ServicePrincipal("cloudwatch.amazonaws.com"),  # app-stack alarms (M1-08 nightly)
                 ],
                 actions=["sns:Publish"],
                 resources=[topic.topic_arn],
@@ -289,7 +290,7 @@ class FoundationStack(cdk.Stack):
             self,
             "GitHubDeployRole",
             role_name=name("github-deploy"),
-            description=f"Assumed by GitHub Actions on {repo} main; may only assume CDK bootstrap roles.",
+            description=f"Assumed by GitHub Actions on {repo} main: CDK bootstrap roles, dashboard upload, stack outputs.",
             max_session_duration=cdk.Duration.hours(1),
             assumed_by=iam.WebIdentityPrincipal(
                 provider.oidc_provider_arn,
@@ -307,6 +308,28 @@ class FoundationStack(cdk.Stack):
                 actions=["sts:AssumeRole"],
                 resources=[f"arn:aws:iam::{self.account}:role/cdk-hnb659fds-*-{self.account}-{self.region}"],
             )
+        )
+        # M1-08: infra/scripts/deploy-dashboard.sh and the smoke test (read stack outputs, upload site/, invalidate).
+        role.add_to_policy(
+            iam.PolicyStatement(
+                sid="ReadMarginCompassStackOutputs",
+                actions=["cloudformation:DescribeStacks"],
+                resources=[f"arn:aws:cloudformation:{self.region}:{self.account}:stack/mc-*/*"],
+            )
+        )
+        lake = f"arn:aws:s3:::mc-*-data-lake-{self.account}"
+        role.add_to_policy(
+            iam.PolicyStatement(
+                sid="ListDashboardPrefix", actions=["s3:ListBucket"], resources=[lake],
+                conditions={"StringLike": {"s3:prefix": ["site/*", "site/"]}},
+            )
+        )
+        role.add_to_policy(
+            iam.PolicyStatement(sid="WriteDashboardPrefix", actions=["s3:PutObject", "s3:DeleteObject"], resources=[f"{lake}/site/*"])
+        )
+        role.add_to_policy(
+            iam.PolicyStatement(sid="InvalidateDashboard", actions=["cloudfront:CreateInvalidation"],
+                                resources=[f"arn:aws:cloudfront::{self.account}:distribution/*"])
         )
         cdk.CfnOutput(self, "GitHubDeployRoleArn", value=role.role_arn)
         return role

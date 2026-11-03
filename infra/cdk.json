@@ -10,6 +10,11 @@
     "mc:budgetLimitUsd": 5,
     "mc:anomalyThresholdUsd": 1,
     "mc:existingAnomalyMonitorArn": "",
-    "mc:killSwitchRoleNames": ["mc-dev-data-pipeline", "mc-dev-web-api"]
+    "mc:killSwitchRoleNames": [
+      "mc-dev-data-pipeline",
+      "mc-dev-web-api",
+      "mc-dev-data-nightly-scheduler"
+    ],
+    "mc:nightlyEnabled": false
   }
 }
