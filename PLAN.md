@@ -981,9 +981,9 @@ Each milestone ends with a demoable increment and exit criteria. Effort assumes 
 - [x] M1-05 Embed the fair-use policy + 3 contracts; one tenant-filtered retrieval test — `knowledge/`, `rag/`; Titan v2 (512 dims) into S3 Vectors `kb-titan-v2-512` in AWS dev, verified 2026-11-04
 - [x] M1-06 One-node agent (Cost-to-Serve Analyst) + replay evaluation of 5 questions — `agents/`, `evals/m1_06/`; 5/5 on Claude Haiku 4.5 (interim), $0.0043 per question, 2026-11-04
 - [x] M1-07 Publish step + PG-1 v0 on CloudFront + the agent API behind the same distribution — `mc-dev-web` deployed and verified 2026-11-04 (polling API; streaming spike open)
-- [ ] M1-08 Nightly workflow; CI with replay evaluations and a cost gate
+- [x] M1-08 Nightly workflow; CI with replay evaluations and a cost gate — `.github/workflows/ci.yml`, `infra/scripts/cost_gate.py`; nightly state machine verified 2026-11-04 (dev schedule off, §15)
 
-**Exit:** a public URL shows per-tenant margin from the pipeline, and one agent question works end to end. Month-to-date AWS cost < $0.50.
+**Exit:** a public URL shows per-tenant margin from the pipeline, and one agent question works end to end. Month-to-date AWS cost < $0.50. **Status 2026-11-04:** first two met; the cost criterion is unverified until Cost Explorer has data for the account.
 
 ### M2: Cost-to-Serve Platform (~2 weeks)
 
@@ -1166,6 +1166,7 @@ Status: all ADRs are written up in `docs/adr/` and **accepted** (ADR-017 on 2026
 | 2026-11-04 | 0.4 | ADR-003 interim decision (owner): Claude Haiku 4.5 is the Mid default until the account can call Claude Haiku 5.5 (denied after the Anthropic use-case form). Invocation uses `us.` inference profiles (Haiku 4.5 rejects in-region on-demand calls) | tojoarisoa |
 | 2026-11-04 | 0.4 | M1-06 merged: one-node Cost-to-Serve Analyst (AG-03, LangGraph 1.2.19) with deterministic metric tools over gold, evidence-ledger verifier (one revision, then withheld), and per-question caps in code (8 calls, $0.01). Replay evaluation of 5 questions: 5/5 on Claude Haiku 4.5, $0.0043 per question. Open: Haiku 5.5 access (support case) and comparison; daily and monthly $ caps arrive with the agent API (M1-07) | tojoarisoa |
 | 2026-11-04 | 0.4 | M1-07 merged: publish step (`publish/latest/pg1.json`, 15.9 KB); PG-1 v0 dashboard (React, TypeScript, Vite, ECharts; exact pins) on CloudFront; agent API (polling) behind the same distribution via Lambda OAC. Owner-approved caps in DynamoDB: online LLM $0.10/day and $1.50/month, 5/hour and 20/day per visitor, 25/day overall. New stack `mc-dev-web`; API role added to the kill switch; superseded ECR images deleted. Open: ADR-012 streaming spike, ADR-009 DuckDB-WASM spike (M2) | tojoarisoa |
+| 2026-11-04 | 0.4 | M1-08 merged: nightly Step Functions Standard run via EventBridge Scheduler (05:00 UTC; dev schedule kept off by the owner, §15), one failure alarm; CI on every PR (ruff, six Python test suites, dashboard audit and build, replay evaluation, offline synth and cost gate with a committed baseline); deploy to dev on main via OIDC with a smoke test. Deploy role may also read `mc-*` stack outputs, write the lake's `site/` prefix, and invalidate CloudFront. Runbook G3 done. M1 cost exit criterion pending Cost Explorer data | tojoarisoa |
 
 #### v0.3 refocus summary
 
