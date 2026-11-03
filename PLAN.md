@@ -978,7 +978,7 @@ Each milestone ends with a demoable increment and exit criteria. Effort assumes 
 - [x] M1-02 Ingest → silver → `fct_llm_usage_daily`, `fct_revenue_daily`, `fct_tenant_margin`, `agg_exec_kpis` (local and AWS)
 - [x] M1-03 Contracts + cost and revenue preservation checks
 - [x] M1-04 Stub forecaster (seasonal-naive) in the registry
-- [ ] M1-05 Embed the fair-use policy + 3 contracts; one tenant-filtered retrieval test
+- [x] M1-05 Embed the fair-use policy + 3 contracts; one tenant-filtered retrieval test — `knowledge/`, `rag/`; Titan v2 (512 dims) into S3 Vectors `kb-titan-v2-512` in AWS dev, verified 2026-11-04
 - [ ] M1-06 One-node agent (Cost-to-Serve Analyst) + replay evaluation of 5 questions
 - [ ] M1-07 Publish step + PG-1 v0 on CloudFront + the agent API behind the same distribution
 - [ ] M1-08 Nightly workflow; CI with replay evaluations and a cost gate
@@ -1161,6 +1161,7 @@ Status: all ADRs are written up in `docs/adr/` and **accepted** (ADR-017 on 2026
 | 2026-11-03 | 0.4 | M0-07 closed: fresh AWS account (Paid plan) secured; `mc-shared-foundation` deployed to us-east-1 (budget alerts $3/$5, anomaly alerts, FOCUS 1.2 export, GitHub OIDC deploy role); alerts confirmed. M0 exit criteria met | tojoarisoa |
 | 2026-11-04 | 0.4 | M1-01 and M1-02 merged (simulator; ingest, silver, gold, local and AWS dev). M1-03 owner decisions: gold types pinned (revenue DECIMAL(18,2), LLM cost DECIMAL(18,6), counts BIGINT, ratios DOUBLE) and `agg_exec_kpis.unallocated_llm_cost_usd` added; unattributable usage warns per row and becomes unallocated cost, and the run stops only below the KPI-03 target (98% LLM attribution) | tojoarisoa |
 | 2026-11-04 | 0.4 | M1-03 merged (enforced gold contracts; preservation, business-rule, and volume gates; scorecard and lineage; quarantine on error). M1-04 merged: seasonal-naive AI COGS forecaster, model registry (file locally, DynamoDB `core` table in AWS per ADR-011; new stack `mc-dev-state`), `fct_forecasts` in gold. Lambda concurrency quota raised to 1,000 (support case closed) | tojoarisoa |
+| 2026-11-04 | 0.4 | M1-05 merged: synthetic fair-use policy and contracts for bc-t0003, bc-t0009, bc-t0012 in `knowledge/`; `rag/` chunks, embeds (Titan v2, 512 dims; hashing embedder in CI), and retrieves with a mandatory, fail-closed tenant filter; embedding caps in code (200 calls, 100,000 tokens per run). AWS: S3 Vectors bucket and index in `mc-dev-data`; pipeline role allowed Bedrock InvokeModel on Titan v2 only and made a kill-switch target. Policy allowances (250 / 1,100 / 6,600 tickets per month), the 150% review trigger, and 60-day notice are synthetic assumptions | tojoarisoa |
 
 #### v0.3 refocus summary
 
