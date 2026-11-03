@@ -41,6 +41,16 @@ def test_ingest_copies_every_file_into_a_dated_bronze_partition(landing, tmp_pat
     assert {f["path"] for f in manifest["files"]} == {f["path"] for f in result.files}
 
 
+def test_every_manifest_file_lands_in_bronze(landing, tmp_path):
+    """Files that share a partition (s3_revenue: subscriptions and invoices) must all survive."""
+    result = ingest(landing, tmp_path, INGEST_DATE, run_id="r1")
+    for record in result.files:
+        source, name = record["path"].split("/", 1)
+        landed = tmp_path / "bronze" / source / f"ingest_date={INGEST_DATE}" / name
+        assert landed.exists(), record["path"]
+        assert pq.read_metadata(landed).num_rows == record["rows"]
+
+
 def test_reingesting_the_same_date_replaces_the_partition(landing, tmp_path):
     ingest(landing, tmp_path, INGEST_DATE, run_id="r1")
     stray = tmp_path / "bronze/tenants/ingest_date=2026-11-03/stray.parquet"
@@ -137,3 +147,51 @@ def test_exec_kpis_have_one_row_per_day_with_full_attribution(built):
 
 def test_pipeline_fails_cleanly_when_landing_is_missing(tmp_path):
     assert pipeline_main(["run", "--landing", str(tmp_path / "nope"), "--data-root", str(tmp_path), "--ingest-date", INGEST_DATE]) == 2
+
+
+def test_lambda_safe_dbt_path_works_without_posix_semaphores(landing, tmp_path):
+    """Reproduces AWS Lambda (no /dev/shm) on any machine: every POSIX semaphore fails, as it does in
+    Lambda. The Lambda-only dbt patches (thread locks, executor-backed pool) must still give a passing
+    build. Runs in a subprocess so neither the failure nor the patches leak into other tests.
+    """
+    import os
+    import subprocess
+    import sys
+
+    script = f"""
+import sys, _multiprocessing
+class _NoShmSemLock:  # keeps the class constant multiprocessing reads at import; creation fails
+    SEM_VALUE_MAX = _multiprocessing.SemLock.SEM_VALUE_MAX
+    def __init__(self, *args, **kwargs):
+        raise OSError(30, "Read-only file system (simulated: Lambda has no /dev/shm)")
+_multiprocessing.SemLock = _NoShmSemLock
+from mc_pipelines.cli import main
+sys.exit(main(["run", "--landing", {str(landing)!r}, "--data-root", {str(tmp_path)!r}, "--ingest-date", {INGEST_DATE!r}]))
+"""
+    env = {**os.environ, "AWS_LAMBDA_FUNCTION_NAME": "pytest-lambda-path"}
+    proc = subprocess.run([sys.executable, "-c", script], env=env, capture_output=True, text=True, timeout=600)
+    assert proc.returncode == 0, proc.stderr[-3000:]
+    events = [json.loads(line) for line in proc.stderr.splitlines() if line.startswith("{")]
+    dbt = next(e for e in events if e["event"] == "dbt_build_finished")
+    assert dbt["success"] and dbt["statuses"] == {"success": 10, "pass": 24}
+
+
+def test_simulated_lambda_without_the_patches_fails(landing, tmp_path):
+    """Guards the test above: without AWS_LAMBDA_FUNCTION_NAME the patches are off and dbt must fail."""
+    import os
+    import subprocess
+    import sys
+
+    script = f"""
+import sys, _multiprocessing
+class _NoShmSemLock:  # keeps the class constant multiprocessing reads at import; creation fails
+    SEM_VALUE_MAX = _multiprocessing.SemLock.SEM_VALUE_MAX
+    def __init__(self, *args, **kwargs):
+        raise OSError(30, "Read-only file system (simulated)")
+_multiprocessing.SemLock = _NoShmSemLock
+from mc_pipelines.cli import main
+sys.exit(main(["run", "--landing", {str(landing)!r}, "--data-root", {str(tmp_path)!r}, "--ingest-date", {INGEST_DATE!r}]))
+"""
+    env = {k: v for k, v in os.environ.items() if k != "AWS_LAMBDA_FUNCTION_NAME"}
+    proc = subprocess.run([sys.executable, "-c", script], env=env, capture_output=True, text=True, timeout=600)
+    assert proc.returncode == 3  # dbt build failed

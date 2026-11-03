@@ -1,0 +1,8 @@
+# Only simulator/ and pipelines/ go into the pipeline image.
+*
+!simulator/
+!pipelines/
+**/.venv
+**/__pycache__
+**/.pytest_cache
+pipelines/transform/.user.yml

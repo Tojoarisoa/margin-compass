@@ -17,7 +17,8 @@ from pathlib import Path
 from .ingest import IngestError, ingest
 
 log = logging.getLogger("mc_pipelines")
-TRANSFORM_DIR = Path(__file__).resolve().parent.parent / "transform"
+# The dbt project; overridable because the Lambda image keeps it outside the package.
+TRANSFORM_DIR = Path(os.environ.get("MC_TRANSFORM_DIR", Path(__file__).resolve().parent.parent / "transform"))
 
 
 class JsonFormatter(logging.Formatter):
@@ -37,7 +38,69 @@ class JsonFormatter(logging.Formatter):
         return json.dumps(entry, sort_keys=True, default=str)
 
 
-def run_dbt(data_root: Path, ingest_date: str, window: dict, run_id: str) -> dict:
+def _make_dbt_lambda_safe() -> None:
+    """AWS Lambda has no /dev/shm, so anything built on POSIX semaphores fails (ENOENT/EROFS).
+
+    dbt touches them in two places, both replaced here with thread-only equivalents:
+    1. its multiprocessing context, used only for Lock and RLock (manifest, connection manager);
+    2. DbtThreadPool, a multiprocessing.pool.ThreadPool whose internal queue needs a semaphore.
+       dbt only calls apply_async(func, args, callback), close, join, terminate, is_closed, and
+       reads max_threads / max_microbatch_models, so a ThreadPoolExecutor-backed pool suffices.
+    Must run before dbt.cli.main is imported: dbt captures both at import time.
+    """
+    import threading
+    from concurrent.futures import ThreadPoolExecutor, wait
+    from math import floor
+
+    import dbt.mp_context
+
+    class _ThreadLockContext:
+        Lock = staticmethod(threading.Lock)
+        RLock = staticmethod(threading.RLock)
+
+    class _ExecutorPool:
+        def __init__(self, processes, initializer=None, initargs=()):
+            self.max_threads = processes
+            self.max_microbatch_models = max(1, floor(processes / 2))
+            self.closed = False
+            self._executor = ThreadPoolExecutor(processes, initializer=initializer, initargs=tuple(initargs))
+            self._futures = []
+
+        def apply_async(self, func, args=(), kwds=None, callback=None):
+            future = self._executor.submit(func, *args, **(kwds or {}))
+            if callback is not None:
+                # Like multiprocessing's pool: the callback runs only on success.
+                future.add_done_callback(lambda f: callback(f.result()) if f.exception() is None else None)
+            self._futures.append(future)
+            return future
+
+        def close(self):
+            self.closed = True
+
+        def is_closed(self):
+            return self.closed
+
+        def terminate(self):
+            self.closed = True
+            for future in self._futures:
+                future.cancel()
+
+        def join(self):
+            wait(self._futures)
+            self._executor.shutdown(wait=True)
+
+    # Order matters: replace the lock factory before importing anything that imports dbt's manifest
+    # module (dbt.graph does), because the manifest captures get_mp_context().Lock at import time.
+    dbt.mp_context._MP_CONTEXT = _ThreadLockContext()
+
+    import dbt.graph.thread_pool
+
+    dbt.graph.thread_pool.DbtThreadPool = _ExecutorPool
+
+
+def run_dbt(data_root: Path, ingest_date: str, window: dict, run_id: str, transform_dir: Path | None = None) -> dict:
+    if os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
+        _make_dbt_lambda_safe()
     from dbt.cli.main import dbtRunner
 
     root = data_root.resolve()
@@ -54,7 +117,7 @@ def run_dbt(data_root: Path, ingest_date: str, window: dict, run_id: str) -> dic
     (root / "silver").mkdir(parents=True, exist_ok=True)
     (root / "gold").mkdir(parents=True, exist_ok=True)
     args = [
-        "build", "--project-dir", str(TRANSFORM_DIR), "--profiles-dir", str(TRANSFORM_DIR),
+        "build", "--project-dir", str(transform_dir or TRANSFORM_DIR), "--profiles-dir", str(transform_dir or TRANSFORM_DIR),
         "--target-path", str(root / "dbt" / "target"), "--log-path", str(root / "dbt" / "logs"),
         "--vars", json.dumps(variables), "--quiet",
     ]
