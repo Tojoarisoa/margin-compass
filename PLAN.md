@@ -967,10 +967,10 @@ Each milestone ends with a demoable increment and exit criteria. Effort assumes 
 - [x] M0-04 Owner answers the open questions (§19.4)
 - [x] M0-05 Run the verification checklist (§19.3) and record the results in ADRs (`docs/verification/2026-11-02-m0-05.md`; four items left open, see §19.3)
 - [x] M0-06 Write ADR-001…ADR-017 (all accepted; architecture diagrams in `docs/diagrams/`)
-- [ ] M0-07 Harden the AWS account: create it on the **Paid plan** (VER-01), MFA, budgets, Cost Anomaly Detection, OIDC role, Data Exports (FOCUS 1.2); check the Lambda memory quota in Service Quotas (VER-12) — IaC ready in `infra/` (`mc-shared-foundation`), steps in `docs/runbooks/m0-07-aws-account-setup.md`; awaiting owner deploy
+- [x] M0-07 Harden the AWS account: create it on the **Paid plan** (VER-01), MFA, budgets, Cost Anomaly Detection, OIDC role, Data Exports (FOCUS 1.2); check the Lambda memory quota in Service Quotas (VER-12) — IaC ready in `infra/` (`mc-shared-foundation`), steps in `docs/runbooks/m0-07-aws-account-setup.md`; deployed and verified 2026-11-03
 - [x] M0-08 Write the **BoonCore specification**: tenants, plans, features, model tiers, price catalog v1, contracts, injected-pattern catalog with labels (`docs/booncore-spec.md`, approved 2026-11-02)
 
-**Exit:** budgets live; ADRs accepted; BoonCore specification approved.
+**Exit:** budgets live; ADRs accepted; BoonCore specification approved. **Met 2026-11-03.** Carried into M1: Bedrock prices for ADR-003 (before M1-06), GitHub deploy-role variable (before M1-08), cost allocation tags and first FOCUS file (after ~24 h).
 
 ### M1: Walking Skeleton (~2 weeks)
 
@@ -1158,6 +1158,7 @@ Status: all ADRs are written up in `docs/adr/` and **accepted** (ADR-017 on 2026
 | 2026-11-02 | 0.4 | M0-08 closed: BoonCore specification approved (`docs/booncore-spec.md`). Adds **F0 Safety Screening** as a fifth feature (F0–F4); telemetry grain hourly for Enterprise, daily otherwise; outcomes stored as tenant × day aggregates + 10% ticket sample + all labeled safety events (§7.5); simulator assumptions accepted as labeled inputs | tojoarisoa |
 | 2026-11-02 | 0.4 | M0-05 closed: VER-01…VER-14 checked and logged (`docs/verification/2026-11-02-m0-05.md`). ADR-001…ADR-016 drafted (Proposed). Changes from verification: Paid plan for the fresh account; FOCUS 1.2; model tiers in ADR-003; OAC payload-hash header in ADR-012; DuckDB-WASM supply-chain controls in ADR-009; ICONIQ inference claim reworded to share of total spend | tojoarisoa |
 | 2026-11-03 | 0.4 | M0-06 closed: owner accepted ADR-001…ADR-016 (ADR-017 already accepted). Architecture diagrams added (`docs/diagrams/`, embedded in the ADRs) | tojoarisoa |
+| 2026-11-03 | 0.4 | M0-07 closed: fresh AWS account (Paid plan) secured; `mc-shared-foundation` deployed to us-east-1 (budget alerts $3/$5, anomaly alerts, FOCUS 1.2 export, GitHub OIDC deploy role); alerts confirmed. M0 exit criteria met | tojoarisoa |
 
 #### v0.3 refocus summary
 

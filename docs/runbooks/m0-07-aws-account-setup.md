@@ -1,7 +1,7 @@
 # Runbook: M0-07 AWS account setup and foundation deploy
 
 **Who:** the owner, once per AWS account. **Time:** about 45 minutes of clicking and typing, plus up to 24 hours of waiting for billing data.
-**Progress (2026-11-03):** Parts A–D done, foundation deployed (F1, G2). Next: G1 (confirm the alert e-mail), then E1.
+**Progress (2026-11-03):** Parts A–D done, foundation deployed and alerts confirmed (F1, G1, G2). Open: E1 (Bedrock prices, before M1-06), G3 (GitHub variable, before M1-08), G4–G5 (after ~24 h).
 
 **Result:** a fresh AWS account with budgets, a kill switch, anomaly alerts, a daily FOCUS 1.2 bill export, and a GitHub deploy role, all from code (`infra/`). Only your sign-in identity is created by hand.
 
@@ -128,7 +128,7 @@ Tick each box as you go. Every step says where to click, what to type, and what 
 
 ## Part G: After the deploy
 
-- [ ] **G1. Confirm the alert e-mail (required).** AWS sends "AWS Notification - Subscription Confirmation" to your address. Click **Confirm subscription**. Until you do, no budget or anomaly alert reaches you.
+- [x] **G1. Confirm the alert e-mail (required).** *Confirmed 2026-11-03 after a resend (the first link failed, likely consumed by Outlook's link scanner; tip: if a link fails, copy it instead of clicking and confirm with `aws sns confirm-subscription --authenticate-on-unsubscribe true`).* AWS sends "AWS Notification - Subscription Confirmation" to your address. Click **Confirm subscription**. Until you do, no budget or anomaly alert reaches you.
   Check: [SNS → Subscriptions](https://us-east-1.console.aws.amazon.com/sns/v3/home?region=us-east-1#/subscriptions) shows the subscription as **Confirmed**. Docs: [SNS e-mail subscriptions](https://docs.aws.amazon.com/sns/latest/dg/sns-email-notifications.html).
 
 - [x] **G2. Check what was created.** *Verified 2026-11-03 by CLI: budget $5 with alerts at $3/$5/forecast $5; anomaly subscription immediate ≥ $1 on the existing monitor; FOCUS 1.2 export HEALTHY; five tags present.*
