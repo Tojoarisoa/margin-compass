@@ -22,7 +22,7 @@ from .ingest import IngestError, ingest
 
 log = logging.getLogger("mc_pipelines")
 WORK = Path("/tmp/mc")
-UPLOAD_PREFIXES = ("bronze", "silver", "gold", "quarantine")
+UPLOAD_PREFIXES = ("bronze", "silver", "gold", "quarantine", "models")
 
 
 def _configure_logging(run_id: str) -> None:
@@ -77,6 +77,15 @@ def handler(event: dict, context) -> dict:
         return {"status": "dbt_failed", "run_id": run_id, "failures": summary["failures"], "exception": summary.get("exception")}
     log.info("dbt_build_finished", extra={"fields": summary})
 
+    # Stage 4 (M1-04): forecaster -> artifacts (S3 models/) + registry (DynamoDB core table in AWS).
+    from mc_ml.registry import DynamoRegistry, FileRegistry
+    from mc_ml.train import train_cogs_forecaster
+
+    table = os.environ.get("REGISTRY_TABLE", "")
+    registry = DynamoRegistry(table) if table else FileRegistry(data / "models" / "registry.json")
+    artifact_base = f"s3://{bucket}/models" if bucket else str(data / "models")
+    train = train_cogs_forecaster(data / "gold", data / "models", registry, artifact_base, run_id)
+
     uploaded = 0
     if bucket:
         uploaded += _upload(bucket, landing, "landing/booncore")
@@ -84,7 +93,8 @@ def handler(event: dict, context) -> dict:
             if (data / prefix).exists():
                 uploaded += _upload(bucket, data / prefix, prefix)
     log.info("pipeline_finished", extra={"fields": {"status": "success", "objects_uploaded": uploaded}})
-    return {"status": "success", "run_id": run_id, "ingest_date": ingest_date, "objects_uploaded": uploaded, "dbt": summary["statuses"]}
+    return {"status": "success", "run_id": run_id, "ingest_date": ingest_date, "objects_uploaded": uploaded,
+            "dbt": summary["statuses"], "model": {k: train[k] for k in ("version", "alias", "registered", "wape")}}
 
 
 if __name__ == "__main__":  # local smoke test: python -m mc_pipelines.lambda_handler

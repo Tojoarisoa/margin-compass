@@ -9,6 +9,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import aws_cdk as cdk
+from aws_cdk import aws_dynamodb as dynamodb
 from aws_cdk import aws_iam as iam
 from aws_cdk import aws_lambda as lambda_
 from aws_cdk import aws_logs as logs
@@ -22,7 +23,7 @@ LAKE_RETENTION_DAYS = {"landing/": 30, "quarantine/": 30, "bronze/": 90, "silver
 
 
 class DataStack(cdk.Stack):
-    def __init__(self, scope: Construct, construct_id: str, *, env_name: str, **kwargs) -> None:
+    def __init__(self, scope: Construct, construct_id: str, *, env_name: str, core_table: dynamodb.ITable, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
         name = lambda resource: f"mc-{env_name}-data-{resource}"  # noqa: E731 - AGENTS.md naming
 
@@ -50,6 +51,14 @@ class DataStack(cdk.Stack):
         )
         self.lake.grant_read_write(role)  # includes s3:DeleteObject* (needed for idempotent re-ingest)
 
+        # Model registry items in the core table (M1-04): item-level access to this table only.
+        role.add_to_policy(
+            iam.PolicyStatement(
+                actions=["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:Query"],
+                resources=[core_table.table_arn],
+            )
+        )
+
         log_group = logs.LogGroup(
             self,
             "PipelineLogs",
@@ -75,7 +84,7 @@ class DataStack(cdk.Stack):
             timeout=cdk.Duration.minutes(10),
             role=role,
             log_group=log_group,
-            environment={"LAKE_BUCKET": self.lake.bucket_name, "MC_ENV": env_name},
+            environment={"LAKE_BUCKET": self.lake.bucket_name, "MC_ENV": env_name, "REGISTRY_TABLE": core_table.table_name},
         )
 
         cdk.CfnOutput(self, "LakeBucket", value=self.lake.bucket_name)

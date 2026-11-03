@@ -172,6 +172,18 @@ def main(argv: list[str] | None = None) -> int:
     log.log(level, "dbt_build_finished", extra={"fields": summary})
     if not summary["success"]:
         return 3
+
+    # Stage 4 (M1-04): train the seasonal-naive AI COGS forecaster into the local file registry.
+    from mc_ml.registry import FileRegistry
+    from mc_ml.train import train_cogs_forecaster
+
+    models_dir = args.data_root.resolve() / "models"
+    try:
+        train_cogs_forecaster(args.data_root.resolve() / "gold", models_dir, FileRegistry(models_dir / "registry.json"),
+                              artifact_base_uri=str(models_dir), run_id=run_id)
+    except Exception as exc:  # noqa: BLE001 - report any training failure as a failed run
+        log.error("train_failed", extra={"fields": {"reason": str(exc)[:300]}})
+        return 4
     log.info("pipeline_finished", extra={"fields": {"status": "success"}})
     return 0
 

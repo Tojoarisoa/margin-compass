@@ -7,6 +7,7 @@ import aws_cdk as cdk
 
 from margin_compass_infra.config import FoundationConfig
 from margin_compass_infra.data_stack import DataStack
+from margin_compass_infra.state_stack import StateStack
 from margin_compass_infra.foundation_stack import ENV_NAME, STAGE, FoundationStack
 from margin_compass_infra.guardrails import ForbiddenResourceGuard
 from margin_compass_infra.tagging import apply_tags
@@ -26,10 +27,20 @@ foundation = FoundationStack(
     description="Margin Compass foundation: budgets, kill switch, anomaly alerts, FOCUS 1.2 export, GitHub OIDC (M0-07)",
 )
 apply_tags(foundation, project=config.project, env=ENV_NAME, stage=STAGE, owner=config.owner, cost_center=config.cost_center)
+state_dev = StateStack(
+    app,
+    "mc-dev-state",
+    env_name="dev",
+    env=cdk.Environment(account=account, region=config.region),
+    description="Margin Compass dev state: DynamoDB core table (ADR-011; M1-04 model registry)",
+)
+apply_tags(state_dev, project=config.project, env="dev", stage="state", owner=config.owner, cost_center=config.cost_center)
+
 data_dev = DataStack(
     app,
     "mc-dev-data",
     env_name="dev",
+    core_table=state_dev.core,
     env=cdk.Environment(account=account, region=config.region),
     description="Margin Compass dev data: S3 lake and pipeline Lambda (M1-02)",
 )

@@ -14,6 +14,7 @@
 | `fct_revenue_daily` | day × tenant × revenue component | margin marts, pricing simulator (M3), AG-05 |
 | `fct_tenant_margin` | day × tenant × feature | PG-1 Executive overview (M1-07), AG-03, KPI-01/04 |
 | `agg_exec_kpis` | day | PG-1 (M1-07), dashboard KPI tiles |
+| `fct_forecasts` | forecast date × target date × feature | PG-1 forecast band (M1-07), AG-05, KPI-07 baseline |
 
 ### `fct_llm_usage_daily`
 
@@ -40,6 +41,12 @@ Unique: (`usage_date`, `tenant_id`, `feature_id`, `model_id`).
 ### `agg_exec_kpis`
 
 `kpi_date` date (unique) · `total_revenue_usd`, `ai_revenue_usd` decimal(18,2) · `ai_cost_to_serve_usd`, `llm_spend_usd`, `unallocated_llm_cost_usd` decimal(18,6) · `kpi01_ai_gross_margin_pct`, `kpi03_llm_attribution_coverage_pct` double · `kpi04_unprofitable_tenants` bigint · `kpi04_unprofitable_arr_usd` decimal(18,2) · `feature_scope`, `run_id` varchar.
+
+### `fct_forecasts` (M1-04)
+
+Produced by the Python train step (`ml/mc_ml/train.py`), not dbt; its schema is enforced by a pipeline test against `FORECAST_SCHEMA`.
+
+`forecast_date` date (last observed day) · `target_date` date · `feature_id` varchar · `metric` varchar (`ai_cogs_usd`) · `p10_usd`, `p50_usd`, `p90_usd` decimal(18,6) with `0 ≤ p10 ≤ p50 ≤ p90` · `model_name`, `model_version`, `model_alias` (`champion` or `challenger`), `feature_scope`, `run_id` varchar. 30 rows per feature (horizon). AI COGS only in M1; margin quantiles need a revenue forecast (M3).
 
 ## Quality gates
 

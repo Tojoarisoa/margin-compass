@@ -1,6 +1,7 @@
 # Only simulator/ and pipelines/ go into the pipeline image.
 *
 !simulator/
+!ml/
 !pipelines/
 **/.venv
 **/__pycache__

@@ -196,3 +196,37 @@ sys.exit(main(["run", "--landing", {str(landing)!r}, "--data-root", {str(tmp_pat
     env = {k: v for k, v in os.environ.items() if k != "AWS_LAMBDA_FUNCTION_NAME"}
     proc = subprocess.run([sys.executable, "-c", script], env=env, capture_output=True, text=True, timeout=600)
     assert proc.returncode == 3  # dbt build failed
+
+
+# --- M1-04: forecaster in the registry -----------------------------------------------------------
+def test_pipeline_trains_the_forecaster_and_registers_a_champion(built):
+    from mc_ml.registry import FileRegistry
+    from mc_ml.train import FORECAST_SCHEMA, HORIZON_DAYS, MODEL_NAME
+
+    registry = FileRegistry(built / "models/registry.json")
+    champion = registry.get_alias(MODEL_NAME, "champion")
+    assert champion and champion.startswith("sn-")
+    mv = registry.get_version(MODEL_NAME, champion)
+    assert 0 <= mv.metrics["wape"] < 1 and mv.trained_on["window_end"] == "2025-10-29"
+    for artifact in ("model.json", "backtest.json", "model_card.md"):
+        assert (built / "models" / MODEL_NAME / champion / artifact).exists()
+    assert "Synthetic data" in (built / "models" / MODEL_NAME / champion / "model_card.md").read_text()
+
+    forecasts = pq.read_table(built / "gold/fct_forecasts.parquet")
+    assert forecasts.schema.remove_metadata() == FORECAST_SCHEMA  # contract: names and types
+    assert forecasts.num_rows == HORIZON_DAYS
+    rows = forecasts.to_pylist()
+    assert {r["model_alias"] for r in rows} == {"champion"} and {r["model_version"] for r in rows} == {champion}
+    assert all(0 <= r["p10_usd"] <= r["p50_usd"] <= r["p90_usd"] for r in rows)
+    assert rows[0]["target_date"].isoformat() == "2025-10-30"
+
+
+def test_retraining_on_the_same_data_registers_nothing_new(landing, built):
+    import json as _json
+
+    from mc_ml.train import MODEL_NAME
+
+    before = _json.loads((built / "models/registry.json").read_text())
+    assert pipeline_main(["run", "--landing", str(landing), "--data-root", str(built), "--ingest-date", INGEST_DATE]) == 0
+    after = _json.loads((built / "models/registry.json").read_text())
+    assert after == before and len(after["models"][MODEL_NAME]["versions"]) == 1
