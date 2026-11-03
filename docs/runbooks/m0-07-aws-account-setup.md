@@ -1,7 +1,7 @@
 # Runbook: M0-07 AWS account setup and foundation deploy
 
 **Who:** the owner, once per AWS account. **Time:** about 45 minutes of clicking and typing, plus up to 24 hours of waiting for billing data.
-**Progress (2026-11-03):** Parts A–D done, foundation deployed and alerts confirmed (F1, G1, G2). E1 done 2026-11-04. Open: G3 (GitHub variable, before M1-08), G4–G5 (after ~24 h).
+**Progress (2026-11-03):** Parts A–D done, foundation deployed and alerts confirmed (F1, G1, G2). E1 and G3 done 2026-11-04. Open: G4–G5 (after ~24 h).
 
 **Result:** a fresh AWS account with budgets, a kill switch, anomaly alerts, a daily FOCUS 1.2 bill export, and a GitHub deploy role, all from code (`infra/`). Only your sign-in identity is created by hand.
 
@@ -131,7 +131,7 @@ Tick each box as you go. Every step says where to click, what to type, and what 
   | Anomaly alerts | [Cost Anomaly Detection](https://console.aws.amazon.com/costmanagement/home#/anomaly-detection/overview) ([docs](https://docs.aws.amazon.com/cost-management/latest/userguide/getting-started-ad.html)) | Subscription `mc-shared-foundation-anomaly-alerts`, immediate, ≥ $1 |
   | Bill export | [Data Exports](https://console.aws.amazon.com/costmanagement/home#/bcm-data-exports) ([docs](https://docs.aws.amazon.com/cur/latest/userguide/what-is-data-exports.html)) | `mc-shared-foundation-focus-1-2`, FOCUS 1.2, Parquet |
 
-- [ ] **G3. Save the deploy settings for GitHub.** The `deploy to dev` job in `.github/workflows/ci.yml` (M1-08) runs only when these repository variables exist. They are settings, not secrets, and are never committed:
+- [x] **G3. Save the deploy settings for GitHub.** *Done 2026-11-04 (all three variables set).* The `deploy to dev` job in `.github/workflows/ci.yml` (M1-08) runs only when these repository variables exist. They are settings, not secrets, and are never committed:
 
   ```bash
   gh variable set AWS_DEPLOY_ROLE_ARN    --repo Tojoarisoa/margin-compass --body "arn:aws:iam::<account>:role/mc-shared-foundation-github-deploy"
