@@ -1,0 +1,8 @@
+margin_compass:
+  target: local
+  outputs:
+    local:
+      type: duckdb
+      path: "{{ env_var('MC_DUCKDB_PATH', '../../data/local/margin_compass.duckdb') }}"
+      threads: 1
+      extensions: [parquet]

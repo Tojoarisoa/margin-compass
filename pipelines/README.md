@@ -1,0 +1,26 @@
+# pipelines/: ingest and transform
+
+Stage 1 (ingest) and Stages 2–3 (transform, validate) of PLAN.md §6.2, as one command with one `run_id`.
+
+```bash
+cd simulator && uv run booncore-sim --out ../data/local/landing/booncore   # synthetic landing files
+cd ../pipelines
+uv sync
+uv run mc-pipeline run --ingest-date 2026-11-03                            # ingest + dbt build
+uv run pytest -q                                                           # 11 tests
+```
+
+| Step | Code | Output (under `data/local/`, git-ignored) |
+| --- | --- | --- |
+| Ingest: manifest reconcile (SHA-256, rows), `synthetic=true`, contract schema; quarantine on any failure | `mc_pipelines/ingest.py`, `contracts.py` | `bronze/<source>/ingest_date=…/`, `bronze/_manifests/`, `quarantine/` |
+| Silver: token cost priced against the effective-dated catalog; invoices daily-ized exact to the cent | `transform/models/silver/` | `silver/*.parquet` |
+| Gold: `fct_llm_usage_daily`, `fct_revenue_daily`, `fct_tenant_margin`, `agg_exec_kpis` | `transform/models/gold/` | `gold/*.parquet` |
+
+dbt runs on DuckDB (`dbt-duckdb`); paths, the ingest date, and the simulated window are passed as dbt vars by `mc-pipeline`.
+
+## M1 rules (revisit in M2)
+
+- AI-feature revenue = the daily-ized AI add-on, attributed to **F1**, the only AI feature in M1. The multi-feature allocation rule is decided in M2-01 (it affects KPI-01).
+- Cost-to-serve = LLM token cost only; shared-infrastructure allocation arrives in M2-02.
+- KPIs computed: KPI-01 (AI gross margin), KPI-03 (LLM attribution coverage), KPI-04 (unprofitable tenants and their ARR). All rows carry `feature_scope = 'F1 only (M1)'`.
+- With F1 alone, KPI-01 is about 98% (see the landing data contract's known limitations).

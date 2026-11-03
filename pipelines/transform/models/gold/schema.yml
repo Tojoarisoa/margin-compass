@@ -1,0 +1,49 @@
+version: 2
+
+models:
+  - name: fct_llm_usage_daily
+    description: "Grain: day x tenant x feature x model. LLM usage priced against the effective-dated catalog."
+    columns:
+      - name: usage_date
+        tests: [not_null]
+      - name: tenant_id
+        tests: [not_null, {relationships: {to: ref('stg_tenants'), field: tenant_id}}]
+      - name: feature_id
+        tests: [not_null, {accepted_values: {arguments: {values: ['F1']}}}]
+      - name: model_id
+        tests: [not_null]
+      - name: price_effective_from
+        description: "Null means no catalog price matched: the row would be unpriced."
+        tests: [not_null]
+      - name: llm_cost_usd
+        tests: [not_null]
+
+  - name: fct_revenue_daily
+    description: "Grain: day x tenant x revenue component, net of negotiated discounts."
+    columns:
+      - name: revenue_date
+        tests: [not_null]
+      - name: tenant_id
+        tests: [not_null, {relationships: {to: ref('stg_tenants'), field: tenant_id}}]
+      - name: revenue_component
+        tests: [not_null, {accepted_values: {arguments: {values: ['subscription', 'ai_addon']}}}]
+      - name: amount_usd
+        tests: [not_null]
+
+  - name: fct_tenant_margin
+    description: "Grain: day x tenant x feature over the simulated window. M1: F1 only; cost-to-serve is LLM cost only."
+    columns:
+      - name: margin_date
+        tests: [not_null]
+      - name: tenant_id
+        tests: [not_null]
+      - name: feature_scope
+        tests: [{accepted_values: {arguments: {values: ['F1 only (M1)']}}}]
+
+  - name: agg_exec_kpis
+    description: "Grain: day. KPI-01, KPI-03, KPI-04 for the dashboard."
+    columns:
+      - name: kpi_date
+        tests: [not_null, unique]
+      - name: kpi03_llm_attribution_coverage_pct
+        tests: [not_null]
