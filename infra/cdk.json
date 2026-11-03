@@ -15,6 +15,7 @@
       "mc-dev-web-api",
       "mc-dev-data-nightly-scheduler"
     ],
-    "mc:nightlyEnabled": false
+    "mc:nightlyEnabled": false,
+    "mc:githubOidcSubjectPrefix": "repo:Tojoarisoa@47354538/margin-compass@1443582639"
   }
 }

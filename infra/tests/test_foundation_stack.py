@@ -256,6 +256,28 @@ def test_github_deploy_role_may_only_assume_cdk_bootstrap_roles_and_upload_the_d
     ]
 
 
+def test_deploy_role_can_trust_the_immutable_github_subject():
+    _, t = synth(github_oidc_subject_prefix="repo:acme@1/margin-compass@2")
+    roles = t.find_resources("AWS::IAM::Role", {"Properties": {"RoleName": "mc-shared-foundation-github-deploy"}})
+    cond = next(iter(roles.values()))["Properties"]["AssumeRolePolicyDocument"]["Statement"][0]["Condition"]["StringEquals"]
+    assert cond["token.actions.githubusercontent.com:sub"] == "repo:acme@1/margin-compass@2:ref:refs/heads/main"
+
+
+@pytest.mark.parametrize("prefix", ["repo:acme/margin-compass", "repo:other@1/margin-compass@2", "repo:acme@x/margin-compass@2"])
+def test_immutable_subject_must_match_the_repo(prefix):
+    with pytest.raises(ValueError, match="githubOidcSubjectPrefix"):
+        FoundationConfig(alert_email="o@example.com", github_repo="acme/margin-compass", github_oidc_subject_prefix=prefix)
+
+
+def test_cdk_json_uses_the_immutable_subject_for_this_repo():
+    import json as _json
+    from pathlib import Path as _Path
+
+    ctx = _json.loads((_Path(__file__).resolve().parents[1] / "cdk.json").read_text())["context"]
+    owner, repo = ctx["mc:githubRepo"].split("/")
+    assert ctx["mc:githubOidcSubjectPrefix"].startswith(f"repo:{owner}@") and f"/{repo}@" in ctx["mc:githubOidcSubjectPrefix"]
+
+
 def test_no_access_keys_or_users_are_created(default):
     _, t = default
     t.resource_count_is("AWS::IAM::User", 0)

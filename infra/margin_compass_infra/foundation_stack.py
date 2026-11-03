@@ -27,7 +27,7 @@ from aws_cdk import aws_sns as sns
 from aws_cdk import aws_sns_subscriptions as subs
 from constructs import Construct
 
-from .config import FoundationConfig
+from .config import FoundationConfig, oidc_subject
 
 ENV_NAME = "shared"  # account-wide resources serve both dev and prod
 STAGE = "foundation"
@@ -297,7 +297,7 @@ class FoundationStack(cdk.Stack):
                 conditions={
                     "StringEquals": {
                         "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
-                        "token.actions.githubusercontent.com:sub": f"repo:{repo}:ref:refs/heads/main",
+                        "token.actions.githubusercontent.com:sub": oidc_subject(self.config),
                     }
                 },
             ),
