@@ -29,8 +29,23 @@ The agent catalog (PLAN.md §8.3) uses two tiers: **Small** (AG-01 when rules ar
 
 - Model IDs live in config, never in code paths.
 - Changing a model requires re-recording CI fixtures (AGENTS.md rule 7).
-- **Prices are not yet recorded** (see below). The code caps bound spend regardless.
+- **Prices are recorded** below (2026-11-04). The code caps bound spend regardless.
+- At list price, Claude Haiku 5.5 costs one tenth of Haiku 4.5 per token (input and output), so Haiku 5.5 stays the Mid default; the M1-06 replay comparison still runs, as the selection rule requires.
+- The in-region rate is 10% above the global cross-region rate. We use **in-region** prices for caps (the higher figure), and in-region calls keep data in us-east-1.
 - **Revisit if** a model's price changes, a cheaper model passes the same replay evaluations, or a model is deprecated.
+
+## Prices (us-east-1, on-demand, USD per 1M tokens)
+
+| Model ID | Input | Output | Cache read | Cache write (5 min) | Cache write (1 h) | Batch input | Batch output |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `amazon.nova-micro-v1:0` | 0.035 | 0.14 | 0.00875 | 0.00 | — | 0.0175 | 0.07 |
+| `anthropic.claude-haiku-5-5` (in-region) | 0.11 | 0.55 | 0.011 | 0.1375 | 0.22 | not listed | not listed |
+| `anthropic.claude-haiku-5-5` (global) | 0.10 | 0.50 | 0.010 | 0.125 | 0.20 | not listed | not listed |
+| `anthropic.claude-haiku-4-5-20251001-v1:0` (in-region) | 1.10 | 5.50 | 0.11 | 1.375 | 2.20 | 0.55 | 2.75 |
+| `anthropic.claude-haiku-4-5-20251001-v1:0` (global) | 1.00 | 5.00 | 0.10 | 1.25 | 2.00 | 0.50 | 2.50 |
+| `amazon.titan-embed-text-v2:0` | 0.02 | — | — | — | — | 0.01 | — |
+
+Source: AWS Price List API (`aws pricing get-products`, region code `us-east-1`, on-demand terms), read 2026-11-04. Price lists `AmazonBedrock` 20261102165015 (Nova, Titan) and `AmazonBedrockFoundationModels` 20261012084008 (Claude). USD per 1M tokens; Nova and Titan are listed per 1K tokens and were multiplied by 1,000 in a script. Long-context Claude rates (5× standard) are not shown: our prompts stay well below the long-context threshold.
 
 ## Cost impact
 
@@ -38,4 +53,4 @@ The agent catalog (PLAN.md §8.3) uses two tiers: **Small** (AG-01 when rules ar
 
 ## Verified on
 
-2026-11-02 (VER-05): model IDs, caching minimums and TTLs, batch-vs-cache exclusion, and Titan V2 dimensions verified on AWS docs. **Open:** per-token prices. The official pricing tables weren't machine-readable; the owner must read them from the Bedrock console or AWS Pricing Calculator and add them here before M1-06.
+2026-11-02 (VER-05): model IDs, caching minimums and TTLs, batch-vs-cache exclusion, and Titan V2 dimensions verified on AWS docs. 2026-11-04: per-token prices read from the AWS Price List API (table above), closing the VER-05 open item.

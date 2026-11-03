@@ -5,9 +5,8 @@
   live model calls in CI) and by local runs without AWS credentials.
 
 Every Bedrock call goes through EmbeddingBudget, which is checked *before* the call (AGENTS.md rule 6:
-budgets are enforced in code). The caps are in calls and tokens because Bedrock prices are not yet
-recorded in ADR-003 (runbook E1); at the secondary price of $0.02 per 1M tokens the token cap bounds a
-run at $0.002.
+budgets are enforced in code). At the ADR-003 list price of $0.02 per 1M input tokens (Price List
+API, 2026-11-04), the 100,000-token cap bounds a run at $0.002.
 """
 
 from __future__ import annotations

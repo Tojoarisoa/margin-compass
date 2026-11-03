@@ -1,7 +1,7 @@
 # Runbook: M0-07 AWS account setup and foundation deploy
 
 **Who:** the owner, once per AWS account. **Time:** about 45 minutes of clicking and typing, plus up to 24 hours of waiting for billing data.
-**Progress (2026-11-03):** Parts A–D done, foundation deployed and alerts confirmed (F1, G1, G2). Open: E1 (Bedrock prices, before M1-06), G3 (GitHub variable, before M1-08), G4–G5 (after ~24 h).
+**Progress (2026-11-03):** Parts A–D done, foundation deployed and alerts confirmed (F1, G1, G2). E1 done 2026-11-04. Open: G3 (GitHub variable, before M1-08), G4–G5 (after ~24 h).
 
 **Result:** a fresh AWS account with budgets, a kill switch, anomaly alerts, a daily FOCUS 1.2 bill export, and a GitHub deploy role, all from code (`infra/`). Only your sign-in identity is created by hand.
 
@@ -99,16 +99,7 @@ Tick each box as you go. Every step says where to click, what to type, and what 
 
 ## Part E: Record Bedrock prices for ADR-003 (~5 min)
 
-- [ ] **E1.** Open the [Amazon Bedrock pricing page](https://aws.amazon.com/bedrock/pricing/) or the [AWS Pricing Calculator](https://calculator.aws/) for **US East (N. Virginia)**, and copy the per-1M-token prices into the table below (paste it into a message):
-
-  | Model ID | Input | Output | Cache read | Cache write | Batch input | Batch output |
-  | --- | --- | --- | --- | --- | --- | --- |
-  | `amazon.nova-micro-v1:0` | | | | | | |
-  | `anthropic.claude-haiku-5-5` | | | | | | |
-  | `anthropic.claude-haiku-4-5-20251001-v1:0` | | | | | | |
-  | `amazon.titan-embed-text-v2:0` | | — | — | — | | — |
-
-  You can also browse the models in the [Bedrock model catalog](https://us-east-1.console.aws.amazon.com/bedrock/home?region=us-east-1#/model-catalog). If the console asks you to enable model access, enable only these four.
+- [x] **E1.** *Done 2026-11-04: prices read from the AWS Price List API and recorded in [ADR-003](../adr/003-llm-provider-and-models.md#prices-us-east-1-on-demand-usd-per-1m-tokens).* To re-check them later, run `aws pricing get-products --region us-east-1 --service-code AmazonBedrock` (Nova, Titan) and `--service-code AmazonBedrockFoundationModels` (Claude) with the filter `Type=TERM_MATCH,Field=regionCode,Value=us-east-1`, or open the [Amazon Bedrock pricing page](https://aws.amazon.com/bedrock/pricing/).
 
 ---
 

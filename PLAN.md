@@ -1043,7 +1043,7 @@ Status: all ADRs are written up in `docs/adr/` and **accepted** (ADR-017 on 2026
 | --- | --- | --- | --- | --- |
 | ADR-001 | Business problem | **AI cost-to-serve & gross-margin intelligence for AI-enabled B2B SaaS** | Generic cloud FinOps (crowded), supply chain, churn only | Specific, current, underserved where cost, telemetry, and revenue meet; measurable margin outcome |
 | ADR-002 | Region | us-east-1 | eu-west-1, eu-west-3 | Bedrock and S3 Vectors availability |
-| ADR-003 | LLM provider & models | Bedrock on-demand behind an abstraction; Ollama locally. Small tier: Nova Micro; Mid tier: Claude Haiku 5.5 (or Haiku 4.5 if cheaper per question on the M1-06 replay set); no frontier tier; Titan Embeddings V2 at 512 dims | Direct vendor APIs | Single bill, IAM; prices to be recorded from the console before M1-06 (VER-05 open item) |
+| ADR-003 | LLM provider & models | Bedrock on-demand behind an abstraction; Ollama locally. Small tier: Nova Micro; Mid tier: Claude Haiku 5.5 (or Haiku 4.5 if cheaper per question on the M1-06 replay set); no frontier tier; Titan Embeddings V2 at 512 dims | Direct vendor APIs | Single bill, IAM; prices recorded 2026-11-04 from the AWS Price List API |
 | ADR-004 | Transform engine | DuckDB + dbt in Lambda; Athena optional | Glue ETL, EMR Serverless | $0 at this scale; industry-standard dbt |
 | ADR-005 | IaC | **AWS CDK (Python)**, owner decision 2026-11-02 | CDK (TypeScript), Terraform, SAM | One language across infra, pipelines, ML, and agents |
 | ADR-006 | Networking | No VPC for Lambdas | VPC + NAT or endpoints | Avoids NAT and endpoint costs |
@@ -1093,7 +1093,7 @@ Status: all ADRs are written up in `docs/adr/` and **accepted** (ADR-017 on 2026
 | VER-02 | Always-free allowances: Lambda, Step Functions Standard, DynamoDB (provisioned), CloudFront, CloudWatch, SNS/SQS, EventBridge Scheduler, Cognito, X-Ray — **Done** (2026-11-02) |
 | VER-03 | S3 Vectors: pricing, limits, metadata filtering, region — **Done** (2026-11-02) |
 | VER-04 | Region choice satisfies VER-03 and VER-05 — **Done: us-east-1** (2026-11-02) |
-| VER-05 | Bedrock model catalog, prices, prompt caching, embedding dimensions — **Done except prices** (open: owner reads them from the console before M1-06) (2026-11-02) |
+| VER-05 | Bedrock model catalog, prices, prompt caching, embedding dimensions — **Done** (2026-11-02; prices 2026-11-04) |
 | VER-06 | AWS Budgets: cost of action-enabled budgets, action types, refresh latency — **Done; observed refresh latency checked after M0-07** (2026-11-02) |
 | VER-07 | Lambda response streaming for Python through CloudFront — **Done: Python needs Lambda Web Adapter** (2026-11-02) |
 | VER-08 | CloudFront OAC for Lambda Function URLs, including POST bodies — **Done**; streaming through OAC open (spike in M1-07) (2026-11-02) |
@@ -1162,6 +1162,7 @@ Status: all ADRs are written up in `docs/adr/` and **accepted** (ADR-017 on 2026
 | 2026-11-04 | 0.4 | M1-01 and M1-02 merged (simulator; ingest, silver, gold, local and AWS dev). M1-03 owner decisions: gold types pinned (revenue DECIMAL(18,2), LLM cost DECIMAL(18,6), counts BIGINT, ratios DOUBLE) and `agg_exec_kpis.unallocated_llm_cost_usd` added; unattributable usage warns per row and becomes unallocated cost, and the run stops only below the KPI-03 target (98% LLM attribution) | tojoarisoa |
 | 2026-11-04 | 0.4 | M1-03 merged (enforced gold contracts; preservation, business-rule, and volume gates; scorecard and lineage; quarantine on error). M1-04 merged: seasonal-naive AI COGS forecaster, model registry (file locally, DynamoDB `core` table in AWS per ADR-011; new stack `mc-dev-state`), `fct_forecasts` in gold. Lambda concurrency quota raised to 1,000 (support case closed) | tojoarisoa |
 | 2026-11-04 | 0.4 | M1-05 merged: synthetic fair-use policy and contracts for bc-t0003, bc-t0009, bc-t0012 in `knowledge/`; `rag/` chunks, embeds (Titan v2, 512 dims; hashing embedder in CI), and retrieves with a mandatory, fail-closed tenant filter; embedding caps in code (200 calls, 100,000 tokens per run). AWS: S3 Vectors bucket and index in `mc-dev-data`; pipeline role allowed Bedrock InvokeModel on Titan v2 only and made a kill-switch target. Policy allowances (250 / 1,100 / 6,600 tickets per month), the 150% review trigger, and 60-day notice are synthetic assumptions | tojoarisoa |
+| 2026-11-04 | 0.4 | VER-05 closed: Bedrock us-east-1 on-demand prices read from the AWS Price List API and recorded in ADR-003 (Nova Micro $0.035 / $0.14, Claude Haiku 5.5 $0.11 / $0.55 in-region, Claude Haiku 4.5 $1.10 / $5.50 in-region, Titan v2 $0.02 per 1M tokens). Caps use in-region prices. Runbook E1 done | tojoarisoa |
 
 #### v0.3 refocus summary
 

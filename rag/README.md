@@ -43,8 +43,8 @@ Vector keys are `<doc_id>#<section>[.<part>]`, e.g. `contract-bc-t0003#3`.
   the store returns another tenant's chunk.
 - **Budget in code (AGENTS.md rule 6):** `EmbeddingBudget` caps each run at 200 calls and 100,000
   input tokens, checked *before* each Bedrock call. Unchanged chunks are never re-embedded, so a
-  nightly re-run makes no Bedrock calls. Dollar caps follow once Bedrock prices are in ADR-003
-  (runbook E1).
+  nightly re-run makes no Bedrock calls. At the ADR-003 price ($0.02 per 1M tokens) a run costs at
+  most $0.002.
 - **No live model calls in CI:** tests use `HashingEmbedder` and a stubbed Bedrock client.
 - **Kill switch:** the pipeline role `mc-dev-data-pipeline` is a kill-switch target, so the budget
   action denies `bedrock:*` to it at the $5 ceiling.
