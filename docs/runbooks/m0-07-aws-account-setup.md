@@ -1,7 +1,7 @@
 # Runbook: M0-07 AWS account setup and foundation deploy
 
 **Who:** the owner, once per AWS account. **Time:** about 45 minutes of clicking and typing, plus up to 24 hours of waiting for billing data.
-**Progress (2026-11-03):** Parts A–C done (CLI signed in as `mc-admin`). Next: D2 (optional now), then Part E.
+**Progress (2026-11-03):** Parts A–C done (CLI signed in as `mc-admin`). Next: Part E.
 
 **Result:** a fresh AWS account with budgets, a kill switch, anomaly alerts, a daily FOCUS 1.2 bill export, and a GitHub deploy role, all from code (`infra/`). Only your sign-in identity is created by hand.
 
@@ -85,11 +85,13 @@ Tick each box as you go. Every step says where to click, what to type, and what 
   It only reads; it changes nothing. It checks your tools and sign-in, warns about static keys, looks for an existing anomaly monitor (one Cost Explorer API call, at most $0.01), checks whether CDK is bootstrapped, and shows your Lambda quotas.
   ✅ Every line shows ✓, or ! with an explanation.
 
-- [ ] **D2. Lambda concurrency.** D1 shows **Concurrent executions** (quota code `L-B99A9384`). New accounts start low (10 here on 2026-11-03, versus the 1,000 default) and AWS raises it with usage. Ten is enough for M1: the nightly pipeline runs one job at a time. Before a public demo (M1-07 onward), each streamed agent answer holds one execution, so ask for more:
+- [x] **D2. Lambda concurrency.** *Requested 1,000 on 2026-11-03 (status PENDING; check with the command below).* D1 shows **Concurrent executions** (quota code `L-B99A9384`). New accounts start low (10 here on 2026-11-03, versus the 1,000 default) and AWS raises it with usage. Ten is enough for M1: the nightly pipeline runs one job at a time. Before a public demo (M1-07 onward), each streamed agent answer holds one execution, so ask for more:
 
   ```bash
   aws service-quotas request-service-quota-increase --service-code lambda --quota-code L-B99A9384 --desired-value 1000
   ```
+
+  Check the request: `aws service-quotas list-requested-service-quota-change-history-by-quota --service-code lambda --quota-code L-B99A9384 --query 'RequestedQuotas[].[Status,DesiredValue]'`
 
   Or use the console: [Service Quotas → AWS Lambda](https://us-east-1.console.aws.amazon.com/servicequotas/home/services/lambda/quotas) ([docs](https://docs.aws.amazon.com/servicequotas/latest/userguide/request-quota-increase.html)). Increases are free. Function memory (128–10,240 MB) is a fixed limit, not a Service Quota, so there is nothing to request for it.
 
