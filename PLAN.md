@@ -974,8 +974,8 @@ Each milestone ends with a demoable increment and exit criteria. Effort assumes 
 
 ### M1: Walking Skeleton (~2 weeks) *(current)*
 
-- [ ] M1-01 Minimal simulator: 20 tenants, F1 only, 2 model tiers, 90 days, 1 labeled prompt-regression leak
-- [ ] M1-02 Ingest → silver → `fct_llm_usage_daily`, `fct_revenue_daily`, `fct_tenant_margin`, `agg_exec_kpis` (local and AWS)
+- [x] M1-01 Minimal simulator: 20 tenants, F1 only, 2 model tiers, 90 days, 1 labeled prompt-regression leak
+- [x] M1-02 Ingest → silver → `fct_llm_usage_daily`, `fct_revenue_daily`, `fct_tenant_margin`, `agg_exec_kpis` (local and AWS)
 - [ ] M1-03 Contracts + cost and revenue preservation checks
 - [ ] M1-04 Stub forecaster (seasonal-naive) in the registry
 - [ ] M1-05 Embed the fair-use policy + 3 contracts; one tenant-filtered retrieval test
@@ -1159,6 +1159,7 @@ Status: all ADRs are written up in `docs/adr/` and **accepted** (ADR-017 on 2026
 | 2026-11-02 | 0.4 | M0-05 closed: VER-01…VER-14 checked and logged (`docs/verification/2026-11-02-m0-05.md`). ADR-001…ADR-016 drafted (Proposed). Changes from verification: Paid plan for the fresh account; FOCUS 1.2; model tiers in ADR-003; OAC payload-hash header in ADR-012; DuckDB-WASM supply-chain controls in ADR-009; ICONIQ inference claim reworded to share of total spend | tojoarisoa |
 | 2026-11-03 | 0.4 | M0-06 closed: owner accepted ADR-001…ADR-016 (ADR-017 already accepted). Architecture diagrams added (`docs/diagrams/`, embedded in the ADRs) | tojoarisoa |
 | 2026-11-03 | 0.4 | M0-07 closed: fresh AWS account (Paid plan) secured; `mc-shared-foundation` deployed to us-east-1 (budget alerts $3/$5, anomaly alerts, FOCUS 1.2 export, GitHub OIDC deploy role); alerts confirmed. M0 exit criteria met | tojoarisoa |
+| 2026-11-04 | 0.4 | M1-01 and M1-02 merged (simulator; ingest, silver, gold, local and AWS dev). M1-03 owner decisions: gold types pinned (revenue DECIMAL(18,2), LLM cost DECIMAL(18,6), counts BIGINT, ratios DOUBLE) and `agg_exec_kpis.unallocated_llm_cost_usd` added; unattributable usage warns per row and becomes unallocated cost, and the run stops only below the KPI-03 target (98% LLM attribution) | tojoarisoa |
 
 #### v0.3 refocus summary
 
