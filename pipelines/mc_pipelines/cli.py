@@ -15,6 +15,7 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 
 from .ingest import IngestError, ingest
+from .quality import quarantine_partition, write_scorecard
 
 log = logging.getLogger("mc_pipelines")
 # The dbt project; overridable because the Lambda image keeps it outside the package.
@@ -132,6 +133,13 @@ def run_dbt(data_root: Path, ingest_date: str, window: dict, run_id: str, transf
     summary = {"success": bool(result.success), "statuses": statuses, "failures": failures}
     if result.exception:
         summary["exception"] = str(result.exception)[:300]
+    target = root / "dbt" / "target"
+    if (target / "run_results.json").exists() and (target / "manifest.json").exists():
+        scorecard = write_scorecard(root, target, run_id, ingest_date)
+        summary["ev01_status"] = scorecard["ev01_status"]
+        summary["warnings"] = [w["test"] for w in scorecard["warnings"]]
+    if not summary["success"]:
+        summary["quarantined"] = quarantine_partition(root, ingest_date, "dbt build failed (error-severity)")
     return summary
 
 

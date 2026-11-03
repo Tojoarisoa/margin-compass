@@ -173,7 +173,8 @@ sys.exit(main(["run", "--landing", {str(landing)!r}, "--data-root", {str(tmp_pat
     assert proc.returncode == 0, proc.stderr[-3000:]
     events = [json.loads(line) for line in proc.stderr.splitlines() if line.startswith("{")]
     dbt = next(e for e in events if e["event"] == "dbt_build_finished")
-    assert dbt["success"] and dbt["statuses"] == {"success": 10, "pass": 24}
+    # Same outcome as a normal build: all 10 models built, every test passed, nothing failed or warned.
+    assert dbt["success"] and set(dbt["statuses"]) == {"success", "pass"} and dbt["statuses"]["success"] == 10
 
 
 def test_simulated_lambda_without_the_patches_fails(landing, tmp_path):

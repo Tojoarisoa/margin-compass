@@ -21,13 +21,13 @@ cost as (
 )
 select
     s.margin_date, s.tenant_id, s.feature_id,
-    coalesce(r.ai_revenue_usd, 0) as ai_revenue_usd,
-    coalesce(c.llm_cost_usd, 0) as llm_cost_usd,
-    coalesce(c.llm_cost_usd, 0) as cost_to_serve_usd,
-    coalesce(r.ai_revenue_usd, 0) - coalesce(c.llm_cost_usd, 0) as gross_margin_usd,
+    cast(coalesce(r.ai_revenue_usd, 0) as decimal(18, 2)) as ai_revenue_usd,
+    cast(coalesce(c.llm_cost_usd, 0) as decimal(18, 6)) as llm_cost_usd,
+    cast(coalesce(c.llm_cost_usd, 0) as decimal(18, 6)) as cost_to_serve_usd,
+    cast(coalesce(r.ai_revenue_usd, 0) - coalesce(c.llm_cost_usd, 0) as decimal(18, 6)) as gross_margin_usd,
     case when coalesce(r.ai_revenue_usd, 0) > 0
-         then round((coalesce(r.ai_revenue_usd, 0) - coalesce(c.llm_cost_usd, 0)) / r.ai_revenue_usd, 6) end as gross_margin_pct,
-    coalesce(c.request_count, 0) as request_count,
+         then round(cast((coalesce(r.ai_revenue_usd, 0) - coalesce(c.llm_cost_usd, 0)) / r.ai_revenue_usd as double), 6) end as gross_margin_pct,
+    cast(coalesce(c.request_count, 0) as bigint) as request_count,
     '{{ var("feature_scope") }}' as feature_scope
 from spine s
 left join revenue r on r.revenue_date = s.margin_date and r.tenant_id = s.tenant_id

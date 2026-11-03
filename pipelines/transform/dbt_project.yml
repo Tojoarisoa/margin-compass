@@ -21,6 +21,7 @@ vars:
   window_start: "2025-08-01"
   window_end: "2025-10-29"
   feature_scope: "F1 only (M1)"
+  kpi03_min_llm_attribution_coverage: 0.98  # PLAN.md §4.2 KPI-03 target; error below it
   run_id: "unset"
 
 models:

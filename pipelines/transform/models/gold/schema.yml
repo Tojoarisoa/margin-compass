@@ -1,49 +1,93 @@
 version: 2
 
+# Gold-mart contracts (PLAN.md §7.4; docs/data-contracts/gold-marts-m1.md). `contract: enforced`
+# makes dbt fail the build if a model's column names or types drift from what is declared here.
+# Owner-approved schema (2026-11-04): money DECIMAL(18,2) revenue / DECIMAL(18,6) LLM cost, counts
+# BIGINT, ratios DOUBLE, plus agg_exec_kpis.unallocated_llm_cost_usd.
+
 models:
   - name: fct_llm_usage_daily
     description: "Grain: day x tenant x feature x model. LLM usage priced against the effective-dated catalog."
+    config: {contract: {enforced: true}, meta: {owner: "data platform", sla: "ready by 07:00 UTC", pii: none}}
     columns:
-      - name: usage_date
-        tests: [not_null]
+      - {name: usage_date, data_type: date, tests: [{not_null: {config: {tags: [contract]}}}]}
+      # Attribution (owner decision 2026-11-04): unattributable rows only warn and land in
+      # agg_exec_kpis.unallocated_llm_cost_usd; the run stops only if coverage falls below KPI-03
+      # (business_rule_attribution_coverage_meets_kpi03).
       - name: tenant_id
-        tests: [not_null, {relationships: {to: ref('stg_tenants'), field: tenant_id}}]
+        data_type: varchar
+        tests:
+          - not_null: {config: {severity: warn, tags: [business_rule]}}
+          - relationships: {arguments: {to: ref('stg_tenants'), field: tenant_id}, config: {severity: warn, tags: [business_rule]}}
       - name: feature_id
-        tests: [not_null, {accepted_values: {arguments: {values: ['F1']}}}]
-      - name: model_id
-        tests: [not_null]
+        data_type: varchar
+        tests:
+          - not_null: {config: {severity: warn, tags: [business_rule]}}
+          - accepted_values: {arguments: {values: ['F1']}, config: {severity: warn, tags: [business_rule]}}
+      - {name: provider, data_type: varchar}
+      - {name: model_id, data_type: varchar, tests: [{not_null: {config: {tags: [contract]}}}]}
+      - {name: request_count, data_type: bigint}
+      - {name: input_tokens, data_type: bigint}
+      - {name: uncached_input_tokens, data_type: bigint}
+      - {name: cached_input_tokens, data_type: bigint}
+      - {name: output_tokens, data_type: bigint}
+      - {name: retry_count, data_type: bigint}
       - name: price_effective_from
-        description: "Null means no catalog price matched: the row would be unpriced."
-        tests: [not_null]
-      - name: llm_cost_usd
-        tests: [not_null]
+        data_type: date
+        description: "Null would mean no catalog price matched (an unpriced row)."
+        tests: [{not_null: {config: {tags: [business_rule]}}}]
+      - {name: llm_cost_usd, data_type: "decimal(18,6)", tests: [{not_null: {config: {tags: [contract]}}}]}
 
   - name: fct_revenue_daily
     description: "Grain: day x tenant x revenue component, net of negotiated discounts."
+    config: {contract: {enforced: true}, meta: {owner: "data platform", sla: "ready by 07:00 UTC", pii: none}}
     columns:
-      - name: revenue_date
-        tests: [not_null]
+      - {name: revenue_date, data_type: date, tests: [{not_null: {config: {tags: [contract]}}}]}
       - name: tenant_id
-        tests: [not_null, {relationships: {to: ref('stg_tenants'), field: tenant_id}}]
+        data_type: varchar
+        tests:
+          - not_null: {config: {tags: [contract]}}
+          - relationships: {arguments: {to: ref('stg_tenants'), field: tenant_id}, config: {tags: [business_rule]}}
       - name: revenue_component
-        tests: [not_null, {accepted_values: {arguments: {values: ['subscription', 'ai_addon']}}}]
-      - name: amount_usd
-        tests: [not_null]
+        data_type: varchar
+        tests: [{accepted_values: {arguments: {values: ['subscription', 'ai_addon']}, config: {tags: [contract]}}}]
+      - {name: amount_usd, data_type: "decimal(18,2)", tests: [{not_null: {config: {tags: [contract]}}}]}
+      - {name: currency, data_type: varchar, tests: [{accepted_values: {arguments: {values: ['USD']}, config: {tags: [contract]}}}]}
+      - {name: plan, data_type: varchar}
+      - {name: discount_pct, data_type: "decimal(5,2)"}
 
   - name: fct_tenant_margin
     description: "Grain: day x tenant x feature over the simulated window. M1: F1 only; cost-to-serve is LLM cost only."
+    config: {contract: {enforced: true}, meta: {owner: "data platform", sla: "ready by 07:00 UTC", pii: none}}
     columns:
-      - name: margin_date
-        tests: [not_null]
-      - name: tenant_id
-        tests: [not_null]
+      - {name: margin_date, data_type: date, tests: [{not_null: {config: {tags: [contract]}}}]}
+      - {name: tenant_id, data_type: varchar, tests: [{not_null: {config: {tags: [contract]}}}]}
+      - {name: feature_id, data_type: varchar}
+      - {name: ai_revenue_usd, data_type: "decimal(18,2)"}
+      - {name: llm_cost_usd, data_type: "decimal(18,6)"}
+      - {name: cost_to_serve_usd, data_type: "decimal(18,6)"}
+      - {name: gross_margin_usd, data_type: "decimal(18,6)"}
+      - {name: gross_margin_pct, data_type: double}
+      - {name: request_count, data_type: bigint}
       - name: feature_scope
-        tests: [{accepted_values: {arguments: {values: ['F1 only (M1)']}}}]
+        data_type: varchar
+        tests: [{accepted_values: {arguments: {values: ['F1 only (M1)']}, config: {tags: [contract]}}}]
 
   - name: agg_exec_kpis
-    description: "Grain: day. KPI-01, KPI-03, KPI-04 for the dashboard."
+    description: "Grain: day. KPI-01, KPI-03 (with unallocated LLM cost), KPI-04 for the dashboard."
+    config: {contract: {enforced: true}, meta: {owner: "data platform", sla: "ready by 07:00 UTC", pii: none}}
     columns:
       - name: kpi_date
-        tests: [not_null, unique]
-      - name: kpi03_llm_attribution_coverage_pct
-        tests: [not_null]
+        data_type: date
+        tests: [{not_null: {config: {tags: [contract]}}}, {unique: {config: {tags: [contract]}}}]
+      - {name: total_revenue_usd, data_type: "decimal(18,2)"}
+      - {name: ai_revenue_usd, data_type: "decimal(18,2)"}
+      - {name: ai_cost_to_serve_usd, data_type: "decimal(18,6)"}
+      - {name: kpi01_ai_gross_margin_pct, data_type: double}
+      - {name: llm_spend_usd, data_type: "decimal(18,6)"}
+      - {name: unallocated_llm_cost_usd, data_type: "decimal(18,6)", tests: [{not_null: {config: {tags: [contract]}}}]}
+      - {name: kpi03_llm_attribution_coverage_pct, data_type: double, tests: [{not_null: {config: {tags: [contract]}}}]}
+      - {name: kpi04_unprofitable_tenants, data_type: bigint}
+      - {name: kpi04_unprofitable_arr_usd, data_type: "decimal(18,2)"}
+      - {name: feature_scope, data_type: varchar}
+      - {name: run_id, data_type: varchar}

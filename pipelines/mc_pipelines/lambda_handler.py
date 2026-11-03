@@ -70,6 +70,10 @@ def handler(event: dict, context) -> dict:
     summary = run_dbt(data, ingest_date, result.window, run_id, transform_dir=transform)
     if not summary["success"]:
         log.error("dbt_build_finished", extra={"fields": summary})
+        if bucket:  # keep the evidence: quarantined bronze and the scorecard
+            for prefix in ("quarantine", "gold/_quality"):
+                if (data / prefix).exists():
+                    _upload(bucket, data / prefix, prefix)
         return {"status": "dbt_failed", "run_id": run_id, "failures": summary["failures"], "exception": summary.get("exception")}
     log.info("dbt_build_finished", extra={"fields": summary})
 

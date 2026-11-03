@@ -7,7 +7,7 @@ cd simulator && uv run booncore-sim --out ../data/local/landing/booncore   # syn
 cd ../pipelines
 uv sync
 uv run mc-pipeline run --ingest-date 2026-11-03                            # ingest + dbt build
-uv run pytest -q                                                           # 14 tests
+uv run pytest -q                                                           # 22 tests
 ```
 
 | Step | Code | Output (under `data/local/`, git-ignored) |
@@ -17,6 +17,10 @@ uv run pytest -q                                                           # 14 
 | Gold: `fct_llm_usage_daily`, `fct_revenue_daily`, `fct_tenant_margin`, `agg_exec_kpis` | `transform/models/gold/` | `gold/*.parquet` |
 
 dbt runs on DuckDB (`dbt-duckdb`); paths, the ingest date, and the simulated window are passed as dbt vars by `mc-pipeline`.
+
+## Quality gates (M1-03)
+
+Gold marts have enforced dbt contracts; preservation, business-rule, and volume checks run on every build. Results go to `gold/_quality/scorecard.json` (EV-01 pass/fail, tests by category) and `gold/_quality/lineage.json`. An error stops the run and quarantines that day's bronze; a warning is recorded. Details: [gold-mart contract](../docs/data-contracts/gold-marts-m1.md).
 
 ## M1 rules (revisit in M2)
 
