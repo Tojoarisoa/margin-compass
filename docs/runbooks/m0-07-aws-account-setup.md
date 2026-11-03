@@ -85,7 +85,7 @@ Tick each box as you go. Every step says where to click, what to type, and what 
   It only reads; it changes nothing. It checks your tools and sign-in, warns about static keys, looks for an existing anomaly monitor (one Cost Explorer API call, at most $0.01), checks whether CDK is bootstrapped, and shows your Lambda quotas.
   ✅ Every line shows ✓, or ! with an explanation.
 
-- [x] **D2. Lambda concurrency.** *Requested 1,000 on 2026-11-03 (status PENDING; check with the command below).* D1 shows **Concurrent executions** (quota code `L-B99A9384`). New accounts start low (10 here on 2026-11-03, versus the 1,000 default) and AWS raises it with usage. Ten is enough for M1: the nightly pipeline runs one job at a time. Before a public demo (M1-07 onward), each streamed agent answer holds one execution, so ask for more:
+- [x] **D2. Lambda concurrency.** *Requested 1,000 on 2026-11-03; approved (case closed), applied value 1,000 as of 2026-11-04.* D1 shows **Concurrent executions** (quota code `L-B99A9384`). New accounts start low (10 here on 2026-11-03, versus the 1,000 default) and AWS raises it with usage. Ten is enough for M1: the nightly pipeline runs one job at a time. Before a public demo (M1-07 onward), each streamed agent answer holds one execution, so ask for more:
 
   ```bash
   aws service-quotas request-service-quota-increase --service-code lambda --quota-code L-B99A9384 --desired-value 1000
