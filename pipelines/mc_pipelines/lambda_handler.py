@@ -1,5 +1,6 @@
 """AWS Lambda entry point (M1-02, env dev): the same simulator -> ingest -> dbt build path as local,
 run in /tmp, then uploaded to the S3 lake under landing/, bronze/, silver/, gold/, quarantine/.
+Stage 4 trains the forecaster (M1-04); Stage 5 embeds knowledge/ into S3 Vectors (M1-05).
 
 Lambda's filesystem is read-only outside /tmp, so the dbt project is copied there first.
 Set LAKE_BUCKET to an empty string to skip the upload (used for local container tests).
@@ -28,7 +29,7 @@ UPLOAD_PREFIXES = ("bronze", "silver", "gold", "quarantine", "models")
 def _configure_logging(run_id: str) -> None:
     handler = logging.StreamHandler(sys.stdout)  # Lambda forwards stdout to CloudWatch Logs
     handler.setFormatter(JsonFormatter(run_id))
-    for name in ("mc_pipelines", "booncore_sim"):
+    for name in ("mc_pipelines", "booncore_sim", "mc_rag"):
         logger = logging.getLogger(name)
         logger.handlers[:] = [handler]
         logger.setLevel(logging.INFO)
@@ -86,15 +87,26 @@ def handler(event: dict, context) -> dict:
     artifact_base = f"s3://{bucket}/models" if bucket else str(data / "models")
     train = train_cogs_forecaster(data / "gold", data / "models", registry, artifact_base, run_id)
 
+    # Stage 5 (M1-05): knowledge/ -> Titan v2 -> S3 Vectors (hashing -> local file when VECTOR_* unset).
+    from .embed import embed_knowledge
+
+    try:
+        rag = embed_knowledge(data)
+    except Exception as exc:  # noqa: BLE001 - includes BudgetExceeded; gold and models are still uploaded
+        log.error("embed_failed", extra={"fields": {"reason": str(exc)[:300]}})
+        rag = {"error": type(exc).__name__}
+
     uploaded = 0
     if bucket:
         uploaded += _upload(bucket, landing, "landing/booncore")
         for prefix in UPLOAD_PREFIXES:
             if (data / prefix).exists():
                 uploaded += _upload(bucket, data / prefix, prefix)
-    log.info("pipeline_finished", extra={"fields": {"status": "success", "objects_uploaded": uploaded}})
-    return {"status": "success", "run_id": run_id, "ingest_date": ingest_date, "objects_uploaded": uploaded,
-            "dbt": summary["statuses"], "model": {k: train[k] for k in ("version", "alias", "registered", "wape")}}
+    status = "embed_failed" if "error" in rag else "success"
+    log.info("pipeline_finished", extra={"fields": {"status": status, "objects_uploaded": uploaded}})
+    return {"status": status, "run_id": run_id, "ingest_date": ingest_date, "objects_uploaded": uploaded,
+            "dbt": summary["statuses"], "model": {k: train[k] for k in ("version", "alias", "registered", "wape")},
+            "rag": {k: rag[k] for k in ("chunks", "embedded", "unchanged", "deleted", "embedding_calls", "error") if k in rag}}
 
 
 if __name__ == "__main__":  # local smoke test: python -m mc_pipelines.lambda_handler

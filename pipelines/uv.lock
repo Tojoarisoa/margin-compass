@@ -541,6 +541,7 @@ dependencies = [
     { name = "dbt-duckdb" },
     { name = "duckdb" },
     { name = "mc-ml" },
+    { name = "mc-rag" },
     { name = "pyarrow" },
 ]
 
@@ -556,7 +557,29 @@ requires-dist = [
     { name = "dbt-duckdb", specifier = ">=1.9" },
     { name = "duckdb", specifier = ">=1.1" },
     { name = "mc-ml", editable = "../ml" },
+    { name = "mc-rag", editable = "../rag" },
     { name = "pyarrow", specifier = ">=17.0" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "booncore-simulator", editable = "../simulator" },
+    { name = "pytest", specifier = ">=8" },
+]
+
+[[package]]
+name = "mc-rag"
+version = "0.1.0"
+source = { editable = "../rag" }
+dependencies = [
+    { name = "boto3" },
+    { name = "numpy" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "boto3", specifier = ">=1.40" },
+    { name = "numpy", specifier = ">=2.0" },
 ]
 
 [package.metadata.requires-dev]

@@ -184,6 +184,15 @@ def main(argv: list[str] | None = None) -> int:
     except Exception as exc:  # noqa: BLE001 - report any training failure as a failed run
         log.error("train_failed", extra={"fields": {"reason": str(exc)[:300]}})
         return 4
+
+    # Stage 5 (M1-05): embed the knowledge corpus (local: hashing embedder, no network).
+    from .embed import embed_knowledge
+
+    try:
+        log.info("embed_finished", extra={"fields": embed_knowledge(args.data_root.resolve())})
+    except Exception as exc:  # noqa: BLE001 - report any embedding failure as a failed run
+        log.error("embed_failed", extra={"fields": {"reason": str(exc)[:300]}})
+        return 5
     log.info("pipeline_finished", extra={"fields": {"status": "success"}})
     return 0
 

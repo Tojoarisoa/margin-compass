@@ -230,3 +230,13 @@ def test_retraining_on_the_same_data_registers_nothing_new(landing, built):
     assert pipeline_main(["run", "--landing", str(landing), "--data-root", str(built), "--ingest-date", INGEST_DATE]) == 0
     after = _json.loads((built / "models/registry.json").read_text())
     assert after == before and len(after["models"][MODEL_NAME]["versions"]) == 1
+
+
+def test_pipeline_embeds_the_knowledge_corpus_locally(built):
+    """Stage 5 (M1-05): the local run indexes knowledge/ with the hashing embedder (no network)."""
+    import json as _json
+
+    index = _json.loads((built / "rag" / "index.json").read_text())
+    tenants = {v["metadata"]["tenant_id"] for v in index["vectors"]}
+    assert index["dimensions"] == 512
+    assert tenants == {"all", "bc-t0003", "bc-t0009", "bc-t0012"}

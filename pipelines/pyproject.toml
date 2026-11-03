@@ -9,6 +9,7 @@ dependencies = [
     "dbt-duckdb>=1.9",
     "pyarrow>=17.0",
     "mc-ml",
+    "mc-rag",
 ]
 
 [project.scripts]
@@ -20,6 +21,7 @@ dev = ["pytest>=8", "booncore-simulator"]
 [tool.uv.sources]
 booncore-simulator = { path = "../simulator", editable = true }
 mc-ml = { path = "../ml", editable = true }
+mc-rag = { path = "../rag", editable = true }
 
 [build-system]
 requires = ["hatchling"]

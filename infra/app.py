@@ -42,7 +42,7 @@ data_dev = DataStack(
     env_name="dev",
     core_table=state_dev.core,
     env=cdk.Environment(account=account, region=config.region),
-    description="Margin Compass dev data: S3 lake and pipeline Lambda (M1-02)",
+    description="Margin Compass dev data: S3 lake, pipeline Lambda, knowledge vector index (M1-02, M1-05)",
 )
 apply_tags(data_dev, project=config.project, env="dev", stage="data", owner=config.owner, cost_center=config.cost_center)
 

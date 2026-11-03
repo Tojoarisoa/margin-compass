@@ -1,0 +1,28 @@
+[project]
+name = "mc-rag"
+version = "0.1.0"
+description = "Margin Compass retrieval: parse, chunk, embed, index, and tenant-filtered search (PLAN.md §6.2 Stage 5)."
+requires-python = ">=3.12,<3.14"
+dependencies = [
+    "numpy>=2.0",
+    "boto3>=1.40",
+]
+
+[project.scripts]
+mc-rag = "mc_rag.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=8", "booncore-simulator"]
+
+[tool.uv.sources]
+booncore-simulator = { path = "../simulator", editable = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["mc_rag"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
