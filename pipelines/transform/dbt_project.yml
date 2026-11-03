@@ -3,6 +3,9 @@ version: "0.1.0"
 config-version: 2
 profile: margin_compass
 
+flags:
+  send_anonymous_usage_stats: false  # no usage telemetry to dbt Labs
+
 model-paths: ["models"]
 test-paths: ["tests"]
 macro-paths: ["macros"]

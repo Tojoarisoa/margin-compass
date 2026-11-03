@@ -39,3 +39,6 @@ data/
 
 # Local Graphviz environment for docs/diagrams
 .gv-env/
+
+# dbt local user id (anonymous tracking)
+.user.yml
