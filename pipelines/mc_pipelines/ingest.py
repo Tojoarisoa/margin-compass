@@ -82,10 +82,13 @@ def ingest(landing: Path, data_root: Path, ingest_date: str, run_id: str) -> Ing
     if result.quarantined:
         raise IngestError(f"{len(result.quarantined)} file(s) quarantined; bronze left unchanged")
 
-    for src, target, record in staged:
+    # Idempotent re-ingest: clear each partition once per run, before copying. Several files can share
+    # a partition (s3_revenue holds subscriptions and invoices), so never clear per file.
+    for target in {target for _, target, _ in staged}:
         if target.exists():
-            shutil.rmtree(target)  # idempotent re-ingest of the same partition
-        target.mkdir(parents=True)
+            shutil.rmtree(target)
+    for src, target, record in staged:
+        target.mkdir(parents=True, exist_ok=True)
         shutil.copy2(src, target / src.name)
         result.files.append(record)
         log.info("file_ingested", extra={"fields": {"path": record["path"], "rows": record["rows"]}})
