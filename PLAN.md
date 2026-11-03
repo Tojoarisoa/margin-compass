@@ -979,7 +979,7 @@ Each milestone ends with a demoable increment and exit criteria. Effort assumes 
 - [x] M1-03 Contracts + cost and revenue preservation checks
 - [x] M1-04 Stub forecaster (seasonal-naive) in the registry
 - [x] M1-05 Embed the fair-use policy + 3 contracts; one tenant-filtered retrieval test — `knowledge/`, `rag/`; Titan v2 (512 dims) into S3 Vectors `kb-titan-v2-512` in AWS dev, verified 2026-11-04
-- [ ] M1-06 One-node agent (Cost-to-Serve Analyst) + replay evaluation of 5 questions
+- [x] M1-06 One-node agent (Cost-to-Serve Analyst) + replay evaluation of 5 questions — `agents/`, `evals/m1_06/`; 5/5 on Claude Haiku 4.5 (interim), $0.0043 per question, 2026-11-04
 - [ ] M1-07 Publish step + PG-1 v0 on CloudFront + the agent API behind the same distribution
 - [ ] M1-08 Nightly workflow; CI with replay evaluations and a cost gate
 
@@ -1164,6 +1164,7 @@ Status: all ADRs are written up in `docs/adr/` and **accepted** (ADR-017 on 2026
 | 2026-11-04 | 0.4 | M1-05 merged: synthetic fair-use policy and contracts for bc-t0003, bc-t0009, bc-t0012 in `knowledge/`; `rag/` chunks, embeds (Titan v2, 512 dims; hashing embedder in CI), and retrieves with a mandatory, fail-closed tenant filter; embedding caps in code (200 calls, 100,000 tokens per run). AWS: S3 Vectors bucket and index in `mc-dev-data`; pipeline role allowed Bedrock InvokeModel on Titan v2 only and made a kill-switch target. Policy allowances (250 / 1,100 / 6,600 tickets per month), the 150% review trigger, and 60-day notice are synthetic assumptions | tojoarisoa |
 | 2026-11-04 | 0.4 | VER-05 closed: Bedrock us-east-1 on-demand prices read from the AWS Price List API and recorded in ADR-003 (Nova Micro $0.035 / $0.14, Claude Haiku 5.5 $0.11 / $0.55 in-region, Claude Haiku 4.5 $1.10 / $5.50 in-region, Titan v2 $0.02 per 1M tokens). Caps use in-region prices. Runbook E1 done | tojoarisoa |
 | 2026-11-04 | 0.4 | ADR-003 interim decision (owner): Claude Haiku 4.5 is the Mid default until the account can call Claude Haiku 5.5 (denied after the Anthropic use-case form). Invocation uses `us.` inference profiles (Haiku 4.5 rejects in-region on-demand calls) | tojoarisoa |
+| 2026-11-04 | 0.4 | M1-06 merged: one-node Cost-to-Serve Analyst (AG-03, LangGraph 1.2.19) with deterministic metric tools over gold, evidence-ledger verifier (one revision, then withheld), and per-question caps in code (8 calls, $0.01). Replay evaluation of 5 questions: 5/5 on Claude Haiku 4.5, $0.0043 per question. Open: Haiku 5.5 access (support case) and comparison; daily and monthly $ caps arrive with the agent API (M1-07) | tojoarisoa |
 
 #### v0.3 refocus summary
 
