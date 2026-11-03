@@ -17,7 +17,7 @@ Gold defaults to `../data/local/gold`; run `mc-pipeline run` first.
 ## Graph
 
 ```text
-START -> analyst (LLM, Mid tier) --toolUse--> tools (deterministic) --> analyst
+START -> analyst (LLM, Mid tier: Claude Haiku 4.5 interim, ADR-003) --toolUse--> tools (deterministic) --> analyst
                      \--text--> verify (deterministic ledger check) --pass--> END
                                          \--fail, 1 revision--> analyst; still failing -> withheld
 ```

@@ -38,7 +38,7 @@ MODELS: dict[str, ModelSpec] = {
     "nova-micro": ModelSpec("nova-micro", "amazon.nova-micro-v1:0", "Amazon Nova Micro", "small",
                             Decimal("0.035"), Decimal("0.14"), Decimal("0.00875"), "us.amazon.nova-micro-v1:0"),
 }
-DEFAULT_ANALYST_MODEL = "haiku-5-5"  # ADR-003 Mid default; M1-06 replay compares it with Haiku 4.5
+DEFAULT_ANALYST_MODEL = "haiku-4-5"  # interim Mid default (owner, 2026-11-04): Haiku 5.5 not yet available to the account (ADR-003)
 
 MAX_LLM_CALLS_PER_QUESTION = 8          # PLAN.md §8.3 / ADR-013 hard cap
 MAX_USD_PER_QUESTION = Decimal("0.01")  # EV-10 target, enforced as a hard cap

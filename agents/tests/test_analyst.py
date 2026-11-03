@@ -20,11 +20,11 @@ def test_good_model_answers_every_question_grounded(gold, qid):
     assert r.status == "answered", r.verification
     assert r.llm_calls == 2 and r.cost_usd <= Decimal("0.01")
     assert r.evidence[0]["tool"] == Q[qid]["expected_tool"]["name"]
-    assert r.cost_line.startswith("Cost of this answer: $") and "Claude Haiku 5.5" in r.cost_line
+    assert r.cost_line.startswith("Cost of this answer: $") and "Claude Haiku 4.5" in r.cost_line
 
 
 def test_cost_is_computed_from_adr003_prices(gold):
-    r = answer_question(Q["q1"]["question"], gold_dir=gold, client=good_answer(Q, "q1"))
+    r = answer_question(Q["q1"]["question"], gold_dir=gold, client=good_answer(Q, "q1"), model_key="haiku-5-5")
     spec = MODELS["haiku-5-5"]
     assert r.cost_usd == call_cost(spec, 900, 60) + call_cost(spec, 1400, 80)
     assert r.cost_usd == Decimal("0.000330")  # (2,300 x $0.11 + 140 x $0.55) / 1M
@@ -67,6 +67,12 @@ def test_call_cap_stops_before_the_ninth_call():
         b.record(10, 10)
     with pytest.raises(BudgetExceeded, match="call cap"):
         b.reserve("x")
+
+
+def test_default_model_is_the_interim_mid_choice():
+    from mc_agents.config import DEFAULT_ANALYST_MODEL
+
+    assert DEFAULT_ANALYST_MODEL == "haiku-4-5" and MODELS[DEFAULT_ANALYST_MODEL].tier == "mid"
 
 
 def test_dollar_cap_blocks_an_expensive_call():

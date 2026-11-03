@@ -12,7 +12,8 @@ The agent catalog (PLAN.md §8.3) uses two tiers: **Small** (AG-01 when rules ar
 
 - **Amazon Bedrock on-demand** behind a provider abstraction; **Ollama** locally; replayed fixtures in CI.
 - **Small tier:** `amazon.nova-micro-v1:0` (fallback `amazon.nova-2-lite-v1:0`).
-- **Mid tier:** `anthropic.claude-haiku-5-5` by default; its prompt-caching minimum is 512 tokens versus 4,096 for `anthropic.claude-haiku-4-5-20251001-v1:0`, so short schema cards and system prompts can be cached. **Selection rule:** once prices are recorded, run the M1-06 replay set on both and keep the model with the lower cost per question at equal or better EV scores.
+- **Mid tier:** `anthropic.claude-haiku-5-5` by default (**interim: `anthropic.claude-haiku-4-5-20251001-v1:0`**, see below); its prompt-caching minimum is 512 tokens versus 4,096 for `anthropic.claude-haiku-4-5-20251001-v1:0`, so short schema cards and system prompts can be cached. **Selection rule:** once prices are recorded, run the M1-06 replay set on both and keep the model with the lower cost per question at equal or better EV scores.
+- **Interim Mid default (owner, 2026-11-04):** Claude Haiku 4.5. After the Anthropic use-case form, Haiku 4.5 calls succeed but Haiku 5.5 is still denied ("not available for this account"). Haiku 4.5 passed the M1-06 replay set 5/5 at $0.0043 per question (2 calls), inside EV-10's $0.01. Switch back to Haiku 5.5 when the account gets access and it passes the same set; until then the online budget buys about 10× fewer tokens per dollar.
 - No frontier tier. A stronger model needs a new ADR with a cost estimate.
 - **Embeddings:** `amazon.titan-embed-text-v2:0` at **512 dimensions**.
 - **Prompt caching** on stable system prompts and schema cards; **batch** only for nightly jobs that don't rely on caching (the two can't be combined).
