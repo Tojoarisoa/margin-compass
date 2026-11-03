@@ -1,0 +1,36 @@
+{
+  "set": "m1-06",
+  "description": "M1-06 replay evaluation for AG-03 (Cost-to-Serve Analyst). Synthetic data: simulator profile m1, seed 42.",
+  "questions": [
+    {
+      "id": "q1",
+      "question": "What was the AI gross margin for tenant bc-t0003 in September 2025?",
+      "expected_tool": {"name": "tenant_margin", "args": {"tenant_id": "bc-t0003", "start_date": "2025-09-01", "end_date": "2025-09-30"}},
+      "expected_figures": ["gross_margin_usd", "gross_margin_pct"]
+    },
+    {
+      "id": "q2",
+      "question": "Which three tenants had the lowest AI gross margin percentage from August 1 to October 29, 2025?",
+      "expected_tool": {"name": "tenant_ranking", "args": {"metric": "gross_margin_pct", "order": "asc", "limit": 3, "start_date": "2025-08-01", "end_date": "2025-10-29"}},
+      "expected_figures": ["ranking[].tenant_id", "ranking[].gross_margin_pct"]
+    },
+    {
+      "id": "q3",
+      "question": "How much did it cost to serve bc-t0012 in October 2025, and what was its AI revenue?",
+      "expected_tool": {"name": "tenant_margin", "args": {"tenant_id": "bc-t0012", "start_date": "2025-10-01", "end_date": "2025-10-31"}},
+      "expected_figures": ["cost_to_serve_usd", "ai_revenue_usd"]
+    },
+    {
+      "id": "q4",
+      "question": "What was the portfolio AI gross margin in August 2025?",
+      "expected_tool": {"name": "portfolio_margin", "args": {"start_date": "2025-08-01", "end_date": "2025-08-31"}},
+      "expected_figures": ["ai_gross_margin_pct"]
+    },
+    {
+      "id": "q5",
+      "question": "Which tenant had the highest AI cost to serve in September 2025, and how much was it?",
+      "expected_tool": {"name": "tenant_ranking", "args": {"metric": "cost_to_serve_usd", "order": "desc", "limit": 1, "start_date": "2025-09-01", "end_date": "2025-09-30"}},
+      "expected_figures": ["ranking[].tenant_id", "ranking[].cost_to_serve_usd"]
+    }
+  ]
+}

@@ -28,6 +28,8 @@ The agent catalog (PLAN.md §8.3) uses two tiers: **Small** (AG-01 when rules ar
 ## Consequences
 
 - Model IDs live in config, never in code paths.
+- **Invocation goes through the `us.` cross-region inference profiles** (`us.anthropic.claude-haiku-5-5`, `us.anthropic.claude-haiku-4-5-20251001-v1:0`, `us.amazon.nova-micro-v1:0`). Verified 2026-11-04: Bedrock rejects on-demand calls to the in-region Claude Haiku 4.5 ID ("on-demand throughput isn't supported"); the `us.` profiles are ACTIVE. Requests stay in US Regions; caps use the in-region price.
+- **Anthropic models need a one-time model-access agreement** in the Bedrock console. On 2026-11-04 `get-foundation-model-availability` reported `agreementAvailability: NOT_AVAILABLE` for both Claude Haiku models, and calls were denied until the owner completed it; Nova Micro needed no agreement.
 - Changing a model requires re-recording CI fixtures (AGENTS.md rule 7).
 - **Prices are recorded** below (2026-11-04). The code caps bound spend regardless.
 - At list price, Claude Haiku 5.5 costs one tenth of Haiku 4.5 per token (input and output), so Haiku 5.5 stays the Mid default; the M1-06 replay comparison still runs, as the selection rule requires.
