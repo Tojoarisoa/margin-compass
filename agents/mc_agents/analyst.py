@@ -7,7 +7,6 @@ answer is withheld (fail closed). The cost-of-answer line is computed in code, n
 
 from __future__ import annotations
 
-import json
 import logging
 from dataclasses import dataclass, field
 from decimal import Decimal

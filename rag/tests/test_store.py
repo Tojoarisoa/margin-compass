@@ -1,7 +1,7 @@
+import boto3
 import numpy as np
 import pytest
 from botocore.stub import Stubber
-import boto3
 
 from mc_rag.store import LocalVectorStore, S3VectorsStore, VectorRecord, matches
 

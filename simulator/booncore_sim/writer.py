@@ -92,7 +92,7 @@ def _records(cfg: SimConfig, tenants: list[Tenant], usage: list[UsageRow], invoi
             {**asdict(PRICE_CATALOG_V1[m]), "effective_to": None} for m in cfg.models
         ],
         "labels/patterns.parquet": [
-            {**l, "expected_impact_usd_per_day": Decimal(str(l["expected_impact_usd_per_day"]))} for l in labels
+            {**lab, "expected_impact_usd_per_day": Decimal(str(lab["expected_impact_usd_per_day"]))} for lab in labels
         ],
     }
 

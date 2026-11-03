@@ -1,0 +1,11 @@
+# Lint config for all Python projects (PLAN.md §15 PR pipeline step 1). Pinned in CI.
+line-length = 140
+target-version = "py312"
+extend-exclude = ["dashboard", "docs", "infra/cdk.out", "data"]
+
+[lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+ignore = ["E501"]  # long lines are style only; no formatter is adopted yet, so lines aren't reflowed
+
+[lint.isort]
+known-first-party = ["booncore_sim", "mc_ml", "mc_rag", "mc_pipelines", "mc_agents", "margin_compass_infra"]

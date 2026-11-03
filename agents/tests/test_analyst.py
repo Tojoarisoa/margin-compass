@@ -2,14 +2,13 @@ import json
 from decimal import Decimal
 
 import pytest
+from scripted import ScriptedLLM, good_answer, load_questions
 
 from mc_agents.analyst import answer_question
 from mc_agents.budget import BudgetExceeded, QuestionBudget, call_cost
 from mc_agents.config import MODELS
 from mc_agents.evaluate import EVAL_DIR, run_eval
 from mc_agents.llm import FixtureDrift, LLMRequest, LLMResponse, RecordingLLM, ReplayLLM
-
-from scripted import ScriptedLLM, good_answer, load_questions
 
 Q = load_questions(EVAL_DIR)
 

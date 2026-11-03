@@ -5,13 +5,12 @@ from decimal import Decimal
 import boto3
 import pytest
 from moto import mock_aws
+from scripted import good_answer, load_questions
 
 from mc_agents import api
 from mc_agents.budget import BudgetExceeded
 from mc_agents.evaluate import EVAL_DIR
 from mc_agents.guard import Caps, RateLimiter, SpendGuard
-
-from scripted import good_answer, load_questions
 
 Q = load_questions(EVAL_DIR)
 

@@ -7,11 +7,11 @@ import aws_cdk as cdk
 
 from margin_compass_infra.config import FoundationConfig
 from margin_compass_infra.data_stack import DataStack
-from margin_compass_infra.state_stack import StateStack
-from margin_compass_infra.web_stack import WebStack
 from margin_compass_infra.foundation_stack import ENV_NAME, STAGE, FoundationStack
 from margin_compass_infra.guardrails import ForbiddenResourceGuard
+from margin_compass_infra.state_stack import StateStack
 from margin_compass_infra.tagging import apply_tags
+from margin_compass_infra.web_stack import WebStack
 
 app = cdk.App()
 # An empty CDK_DEFAULT_ACCOUNT (e.g. expired credentials) would leak into resource names; fail clearly instead.

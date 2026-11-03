@@ -16,6 +16,7 @@ import json
 import math
 import re
 from dataclasses import dataclass, field
+from itertools import pairwise
 from typing import Protocol
 
 import numpy as np
@@ -78,7 +79,7 @@ class HashingEmbedder:
     def embed(self, text: str) -> np.ndarray:
         self.budget.reserve(text)
         words = _WORD.findall(text.lower())
-        features = words + [f"{a} {b}" for a, b in zip(words, words[1:])]
+        features = words + [f"{a} {b}" for a, b in pairwise(words)]
         vec = np.zeros(self.dimensions, dtype=np.float32)
         for feat in features:
             h = int.from_bytes(hashlib.blake2b(feat.encode(), digest_size=8).digest(), "big")

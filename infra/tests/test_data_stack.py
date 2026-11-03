@@ -7,8 +7,8 @@ import pytest
 from aws_cdk.assertions import Annotations, Match, Template
 
 from margin_compass_infra.data_stack import LAKE_RETENTION_DAYS, DataStack
-from margin_compass_infra.state_stack import StateStack
 from margin_compass_infra.guardrails import ForbiddenResourceGuard
+from margin_compass_infra.state_stack import StateStack
 from margin_compass_infra.tagging import REQUIRED_TAG_KEYS, apply_tags
 
 ACCOUNT = "123456789012"
@@ -101,10 +101,10 @@ def test_tags_and_guardrails(synth):
 # --- M1-05: knowledge vector index + embedding grant -------------------------------------------------
 
 def test_knowledge_index_matches_the_rag_package(synth):
-    from margin_compass_infra.data_stack import EMBEDDING_DIMENSIONS, KNOWLEDGE_INDEX_NAME, NON_FILTERABLE_METADATA_KEYS
-
     import ast
     from pathlib import Path
+
+    from margin_compass_infra.data_stack import EMBEDDING_DIMENSIONS, KNOWLEDGE_INDEX_NAME, NON_FILTERABLE_METADATA_KEYS
 
     rag = Path(__file__).resolve().parents[2] / "rag" / "mc_rag"  # read, not imported: infra has no numpy
 

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import logging
 from datetime import date, timedelta
 from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
@@ -12,7 +11,7 @@ import pyarrow.parquet as pq
 import pytest
 
 from booncore_sim.catalog import PRICE_CATALOG_V1, token_cost_usd
-from booncore_sim.cli import JsonFormatter, main, run
+from booncore_sim.cli import main, run
 from booncore_sim.config import M1
 
 CENT = Decimal("0.01")  # money is rounded half-up to the cent, like the generator

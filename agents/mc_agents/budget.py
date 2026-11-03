@@ -6,8 +6,7 @@ import math
 from dataclasses import dataclass, field
 from decimal import Decimal
 
-from .config import (MAX_INPUT_TOKENS_PER_CALL, MAX_LLM_CALLS_PER_QUESTION, MAX_OUTPUT_TOKENS_PER_CALL,
-                     MAX_USD_PER_QUESTION, ModelSpec)
+from .config import MAX_INPUT_TOKENS_PER_CALL, MAX_LLM_CALLS_PER_QUESTION, MAX_OUTPUT_TOKENS_PER_CALL, MAX_USD_PER_QUESTION, ModelSpec
 
 MILLION = Decimal(1_000_000)
 

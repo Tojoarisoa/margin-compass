@@ -14,7 +14,7 @@ from __future__ import annotations
 import hashlib
 import time
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any
 
@@ -37,7 +37,7 @@ class RateLimited(RuntimeError):
 
 
 def _now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def _ttl(days: int) -> int:
@@ -49,8 +49,8 @@ def _micros(usd: Decimal) -> int:
 
 
 class SpendGuard:
-    def __init__(self, table: Any, caps: Caps = Caps(), pk: str = "BUDGET#online") -> None:
-        self.table, self.caps, self.pk = table, caps, pk
+    def __init__(self, table: Any, caps: Caps | None = None, pk: str = "BUDGET#online") -> None:
+        self.table, self.caps, self.pk = table, caps or Caps(), pk
 
     def _keys(self) -> list[tuple[str, Decimal]]:
         now = _now()
@@ -87,8 +87,8 @@ class SpendGuard:
 
 
 class RateLimiter:
-    def __init__(self, table: Any, caps: Caps = Caps()) -> None:
-        self.table, self.caps = table, caps
+    def __init__(self, table: Any, caps: Caps | None = None) -> None:
+        self.table, self.caps = table, caps or Caps()
 
     @staticmethod
     def client_key(address: str) -> str:

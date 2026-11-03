@@ -8,7 +8,7 @@ PLAN.md §7.5: a KPI page snapshot stays ≤ 200 KB (checked here, and the run f
 from __future__ import annotations
 
 import json
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 
@@ -70,7 +70,7 @@ def build_pg1(gold: Path, run_id: str, ingest_date: str) -> dict:
     return {
         "schema_version": SCHEMA_VERSION,
         "page": "PG-1 Executive Margin Overview (v0)",
-        "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "generated_at": datetime.now(UTC).isoformat(timespec="seconds"),
         "run_id": run_id, "ingest_date": ingest_date,
         "data_label": "synthetic", "feature_scope": "F1 only (M1)",
         "window": {"from": first.isoformat(), "to": last.isoformat(), "days": len(days)},

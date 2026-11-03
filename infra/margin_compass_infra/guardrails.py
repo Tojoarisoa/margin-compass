@@ -5,8 +5,8 @@ A resource type can be allowed only by an accepted ADR, recorded in ALLOWED_BY_A
 
 from __future__ import annotations
 
-import jsii
 import aws_cdk as cdk
+import jsii
 from constructs import IConstruct
 
 # CloudFormation type (or prefix ending in "::") -> reason. PLAN.md §11.2.

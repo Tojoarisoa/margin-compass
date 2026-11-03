@@ -14,7 +14,7 @@ import logging
 import os
 import shutil
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from booncore_sim.cli import run as simulate
@@ -62,7 +62,7 @@ def _extra_args(path: Path) -> dict:
 def handler(event: dict, context) -> dict:
     event = event or {}
     run_id = event.get("run_id") or getattr(context, "aws_request_id", "local")
-    ingest_date = event.get("ingest_date") or datetime.now(timezone.utc).date().isoformat()
+    ingest_date = event.get("ingest_date") or datetime.now(UTC).date().isoformat()
     bucket = os.environ.get("LAKE_BUCKET", "")
     _configure_logging(run_id)
     log.info("pipeline_started", extra={"fields": {"env": os.environ.get("MC_ENV", "dev"), "ingest_date": ingest_date}})
