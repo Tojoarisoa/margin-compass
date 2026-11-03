@@ -120,3 +120,10 @@ def test_api_role_is_a_kill_switch_target():
 
     ctx = json.loads((Path(__file__).resolve().parents[1] / "cdk.json").read_text())["context"]
     assert "mc-dev-web-api" in ctx["mc:killSwitchRoleNames"]
+
+
+def test_no_bucket_deployment_with_lake_wide_write(synth):
+    """The dashboard is uploaded by scripts/deploy-dashboard.sh, not by a Lambda that could write the whole lake."""
+    _, t, _ = synth
+    t.resource_count_is("Custom::CDKBucketDeployment", 0)
+    assert not [s for s in _statements(t) if any(a.startswith(("s3:Put", "s3:Delete", "s3:Abort")) for a in _actions(s))]

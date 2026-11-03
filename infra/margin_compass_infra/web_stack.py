@@ -21,11 +21,9 @@ from aws_cdk import aws_iam as iam
 from aws_cdk import aws_lambda as lambda_
 from aws_cdk import aws_logs as logs
 from aws_cdk import aws_s3 as s3
-from aws_cdk import aws_s3_deployment as s3deploy
 from constructs import Construct
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-DASHBOARD_DIST = REPO_ROOT / "dashboard" / "dist"
 
 # Interim Mid model (ADR-003) through the us. cross-region inference profile.
 AGENT_INFERENCE_PROFILE = "us.anthropic.claude-haiku-4-5-20251001-v1:0"
@@ -117,15 +115,9 @@ class WebStack(cdk.Stack):
             },
         )
 
-        # --- dashboard deployment (only when it has been built: cd dashboard && npm ci && npm run build) ---
-        if (DASHBOARD_DIST / "index.html").exists():
-            s3deploy.BucketDeployment(
-                self, "Dashboard", sources=[s3deploy.Source.asset(str(DASHBOARD_DIST), exclude=["publish/*"])],
-                destination_bucket=lake, destination_key_prefix="site/", prune=True,
-                distribution=self.distribution, distribution_paths=["/index.html"], memory_limit=256,
-            )
-        else:
-            cdk.Annotations.of(self).add_warning("dashboard/dist not built: the dashboard is not deployed in this synth")
+        # The dashboard build is uploaded by infra/scripts/deploy-dashboard.sh (s3 sync to site/ + invalidation),
+        # not by a CDK BucketDeployment, whose helper Lambda would need write and delete on the whole lake.
 
         cdk.CfnOutput(self, "Url", value=f"https://{self.distribution.distribution_domain_name}")
         cdk.CfnOutput(self, "ApiFunction", value=self.api.function_name)
+        cdk.CfnOutput(self, "DistributionId", value=self.distribution.distribution_id)
