@@ -21,7 +21,9 @@ This file tells any AI agent (Claude Code, Codex, Cursor, etc.) how to work in t
 
 ## 2. Current project state
 
-- **Milestone M0: Foundations.** No application code exists yet.
+- **Milestone M1: Walking Skeleton** (started 2026-11-03; M0 exit criteria met that day).
+- Deployed: the account-wide foundation stack `mc-shared-foundation` (budgets, kill-switch policy, anomaly alerts, FOCUS 1.2 export, GitHub OIDC deploy role). See `infra/` and `docs/runbooks/m0-07-aws-account-setup.md`.
+- Application code starts with M1-01 (`simulator/`).
 - Work milestones in order (PLAN.md §17). Don't start a milestone until the previous one's exit criteria are met, unless the owner says otherwise.
 - **M1 is a walking skeleton:** keep every stage thin. Do not deepen a single stage during M1.
 

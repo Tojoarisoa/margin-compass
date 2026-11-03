@@ -959,7 +959,7 @@ margin-compass/
 
 Each milestone ends with a demoable increment and exit criteria. Effort assumes about 10 hours per week, solo. Task IDs are stable.
 
-### M0: Foundations (~1 week) *(current)*
+### M0: Foundations (~1 week) *(done 2026-11-03)*
 
 - [x] M0-01 Create repository and master plan
 - [x] M0-02 Optimize plan (v0.2)
@@ -972,7 +972,7 @@ Each milestone ends with a demoable increment and exit criteria. Effort assumes 
 
 **Exit:** budgets live; ADRs accepted; BoonCore specification approved. **Met 2026-11-03.** Carried into M1: Bedrock prices for ADR-003 (before M1-06), GitHub deploy-role variable (before M1-08), cost allocation tags and first FOCUS file (after ~24 h).
 
-### M1: Walking Skeleton (~2 weeks)
+### M1: Walking Skeleton (~2 weeks) *(current)*
 
 - [ ] M1-01 Minimal simulator: 20 tenants, F1 only, 2 model tiers, 90 days, 1 labeled prompt-regression leak
 - [ ] M1-02 Ingest → silver → `fct_llm_usage_daily`, `fct_revenue_daily`, `fct_tenant_margin`, `agg_exec_kpis` (local and AWS)
