@@ -240,3 +240,25 @@ def test_pipeline_embeds_the_knowledge_corpus_locally(built):
     tenants = {v["metadata"]["tenant_id"] for v in index["vectors"]}
     assert index["dimensions"] == 512
     assert tenants == {"all", "bc-t0003", "bc-t0009", "bc-t0012"}
+
+
+def test_publish_writes_a_small_pg1_snapshot_that_matches_gold(built):
+    """M1-07: publish/latest/pg1.json is within §7.5 and its headline equals the exec KPI mart."""
+    import json as _json
+    from decimal import Decimal as _D
+
+    import duckdb as _duckdb
+
+    path = built / "publish" / "latest" / "pg1.json"
+    raw = path.read_bytes()
+    assert len(raw) <= 200 * 1024
+    snap = _json.loads(raw)
+    assert snap["data_label"] == "synthetic" and snap["schema_version"] == "pg1.v0"
+    assert (built / "publish" / "history" / INGEST_DATE / "pg1.json").read_bytes() == raw
+    rev, cost = _duckdb.sql(f"SELECT sum(ai_revenue_usd), sum(ai_cost_to_serve_usd) FROM read_parquet('{built}/gold/agg_exec_kpis.parquet')").fetchall()[0]
+    w = snap["headline"]["window"]
+    assert _D(str(w["ai_revenue_usd"])) == rev
+    assert _D(str(w["ai_cost_to_serve_usd"])) == cost.quantize(_D("0.01"))
+    assert len(snap["trend"]) == snap["window"]["days"] and len(snap["forecast"]["points"]) == 30
+    assert len(snap["tenants"]) == snap["headline"]["tenants"] == 20
+    assert snap["headline"]["llm_attribution_coverage_pct"] >= 0.98

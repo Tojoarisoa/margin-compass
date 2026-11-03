@@ -8,6 +8,7 @@ import aws_cdk as cdk
 from margin_compass_infra.config import FoundationConfig
 from margin_compass_infra.data_stack import DataStack
 from margin_compass_infra.state_stack import StateStack
+from margin_compass_infra.web_stack import WebStack
 from margin_compass_infra.foundation_stack import ENV_NAME, STAGE, FoundationStack
 from margin_compass_infra.guardrails import ForbiddenResourceGuard
 from margin_compass_infra.tagging import apply_tags
@@ -45,6 +46,17 @@ data_dev = DataStack(
     description="Margin Compass dev data: S3 lake, pipeline Lambda, knowledge vector index (M1-02, M1-05)",
 )
 apply_tags(data_dev, project=config.project, env="dev", stage="data", owner=config.owner, cost_center=config.cost_center)
+
+web_dev = WebStack(
+    app,
+    "mc-dev-web",
+    env_name="dev",
+    lake_bucket_name=data_dev.lake.bucket_name,
+    core_table=state_dev.core,
+    env=cdk.Environment(account=account, region=config.region),
+    description="Margin Compass dev web: CloudFront for the dashboard, snapshots, and agent API (M1-07)",
+)
+apply_tags(web_dev, project=config.project, env="dev", stage="web", owner=config.owner, cost_center=config.cost_center)
 
 cdk.Aspects.of(app).add(ForbiddenResourceGuard())
 

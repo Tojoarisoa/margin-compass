@@ -1,6 +1,7 @@
 """AWS Lambda entry point (M1-02, env dev): the same simulator -> ingest -> dbt build path as local,
 run in /tmp, then uploaded to the S3 lake under landing/, bronze/, silver/, gold/, quarantine/.
-Stage 4 trains the forecaster (M1-04); Stage 5 embeds knowledge/ into S3 Vectors (M1-05).
+Stage 4 trains the forecaster (M1-04); Stage 5 embeds knowledge/ into S3 Vectors (M1-05); publish
+writes the PG-1 snapshot to publish/ (M1-07).
 
 Lambda's filesystem is read-only outside /tmp, so the dbt project is copied there first.
 Set LAKE_BUCKET to an empty string to skip the upload (used for local container tests).
@@ -23,7 +24,7 @@ from .ingest import IngestError, ingest
 
 log = logging.getLogger("mc_pipelines")
 WORK = Path("/tmp/mc")
-UPLOAD_PREFIXES = ("bronze", "silver", "gold", "quarantine", "models")
+UPLOAD_PREFIXES = ("bronze", "silver", "gold", "quarantine", "models", "publish")
 
 
 def _configure_logging(run_id: str) -> None:
@@ -96,17 +97,28 @@ def handler(event: dict, context) -> dict:
         log.error("embed_failed", extra={"fields": {"reason": str(exc)[:300]}})
         rag = {"error": type(exc).__name__}
 
+    # Publish (M1-07): PG-1 snapshot. A publish failure keeps the previous publish/latest in S3.
+    from .publish import publish
+
+    try:
+        pub = publish(data, run_id, ingest_date)
+    except Exception as exc:  # noqa: BLE001
+        log.error("publish_failed", extra={"fields": {"reason": str(exc)[:300]}})
+        pub = {"error": type(exc).__name__}
+        shutil.rmtree(data / "publish", ignore_errors=True)
+
     uploaded = 0
     if bucket:
         uploaded += _upload(bucket, landing, "landing/booncore")
         for prefix in UPLOAD_PREFIXES:
             if (data / prefix).exists():
                 uploaded += _upload(bucket, data / prefix, prefix)
-    status = "embed_failed" if "error" in rag else "success"
+    status = "embed_failed" if "error" in rag else "publish_failed" if "error" in pub else "success"
     log.info("pipeline_finished", extra={"fields": {"status": status, "objects_uploaded": uploaded}})
     return {"status": status, "run_id": run_id, "ingest_date": ingest_date, "objects_uploaded": uploaded,
             "dbt": summary["statuses"], "model": {k: train[k] for k in ("version", "alias", "registered", "wape")},
-            "rag": {k: rag[k] for k in ("chunks", "embedded", "unchanged", "deleted", "embedding_calls", "error") if k in rag}}
+            "rag": {k: rag[k] for k in ("chunks", "embedded", "unchanged", "deleted", "embedding_calls", "error") if k in rag},
+            "publish": {k: pub[k] for k in ("bytes", "error") if k in pub}}
 
 
 if __name__ == "__main__":  # local smoke test: python -m mc_pipelines.lambda_handler

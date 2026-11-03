@@ -21,7 +21,9 @@ from constructs import Construct
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 # PLAN.md §7.1 retention, for the prefixes that exist in M1.
-LAKE_RETENTION_DAYS = {"landing/": 30, "quarantine/": 30, "bronze/": 90, "silver/": 395, "gold/": 760}
+LAKE_RETENTION_DAYS = {"landing/": 30, "quarantine/": 30, "bronze/": 90, "silver/": 395, "gold/": 760,
+                       "publish/history/": 30}  # publish/latest is overwritten each run (§7.1: latest + 30 days)
+WEB_READABLE_PREFIXES = ("site/*", "publish/*")  # served by CloudFront (web stack, M1-07)
 
 # Knowledge index (M1-05). Must match rag/mc_rag (embed.DIMENSIONS, store.NON_FILTERABLE_KEYS).
 EMBEDDING_MODEL_ID = "amazon.titan-embed-text-v2:0"
@@ -48,6 +50,19 @@ class DataStack(cdk.Stack):
                 s3.LifecycleRule(id=f"expire-{prefix.rstrip('/')}", prefix=prefix, expiration=cdk.Duration.days(days))
                 for prefix, days in LAKE_RETENTION_DAYS.items()
             ],
+        )
+
+        # CloudFront (OAC) may read only the dashboard and its snapshots. Scoped to this account's
+        # distributions so the web stack can import the bucket without a cross-stack cycle.
+        self.lake.add_to_resource_policy(
+            iam.PolicyStatement(
+                sid="CloudFrontReadsSiteAndPublish",
+                principals=[iam.ServicePrincipal("cloudfront.amazonaws.com")],
+                actions=["s3:GetObject"],
+                resources=[self.lake.arn_for_objects(p) for p in WEB_READABLE_PREFIXES],
+                conditions={"StringEquals": {"aws:SourceAccount": self.account},
+                            "ArnLike": {"aws:SourceArn": f"arn:{cdk.Aws.PARTITION}:cloudfront::{self.account}:distribution/*"}},
+            )
         )
 
         role = iam.Role(

@@ -193,6 +193,15 @@ def main(argv: list[str] | None = None) -> int:
     except Exception as exc:  # noqa: BLE001 - report any embedding failure as a failed run
         log.error("embed_failed", extra={"fields": {"reason": str(exc)[:300]}})
         return 5
+
+    # Publish (M1-07): gold -> publish/latest/pg1.json for the dashboard.
+    from .publish import publish
+
+    try:
+        log.info("publish_finished", extra={"fields": publish(args.data_root.resolve(), run_id, args.ingest_date)})
+    except Exception as exc:  # noqa: BLE001 - report any publish failure as a failed run
+        log.error("publish_failed", extra={"fields": {"reason": str(exc)[:300]}})
+        return 6
     log.info("pipeline_finished", extra={"fields": {"status": "success"}})
     return 0
 

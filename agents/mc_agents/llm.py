@@ -15,6 +15,7 @@ import json
 import logging
 import time
 from dataclasses import dataclass, field
+from decimal import Decimal
 from pathlib import Path
 from typing import Any, Protocol
 
@@ -133,16 +134,28 @@ class RecordingLLM:
         Path(self.path).write_text(json.dumps({**meta, "calls": self.calls}, indent=2, sort_keys=True) + "\n")
 
 
+class SpendGuard(Protocol):
+    """Shared daily/monthly $ caps (the DynamoDB counter in AWS, PLAN.md §11.3 guardrail 1)."""
+
+    def reserve(self, worst_usd: Decimal) -> None: ...
+    def record(self, usd: Decimal) -> None: ...
+
+
 @dataclass
 class BudgetedLLM:
     inner: LLMClient
     budget: QuestionBudget
+    spend: SpendGuard | None = None
 
     def complete(self, request: LLMRequest) -> LLMResponse:
-        self.budget.reserve(request.canonical())  # raises BudgetExceeded before any call
+        worst = self.budget.reserve(request.canonical())  # raises BudgetExceeded before any call
+        if self.spend is not None:
+            self.spend.reserve(worst)  # shared caps, also before the call
         start = time.monotonic()
         resp = self.inner.complete(request)
         cost = self.budget.record(resp.input_tokens, resp.output_tokens, resp.cache_read_tokens)
+        if self.spend is not None:
+            self.spend.record(cost)
         log.info("gen_ai_call", extra={"fields": {  # OTel GenAI attribute names (ADR-015); no content
             "gen_ai.operation.name": "chat", "gen_ai.provider.name": "aws.bedrock",
             "gen_ai.request.model": request.model_id, "gen_ai.request.max_tokens": request.max_tokens,

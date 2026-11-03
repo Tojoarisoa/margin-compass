@@ -139,10 +139,11 @@ def build_graph(llm: BudgetedLLM, tools: MetricTools, ledger: Ledger, model_id: 
     return g.compile()
 
 
-def answer_question(question: str, *, gold_dir: Path, client: LLMClient, model_key: str = DEFAULT_ANALYST_MODEL) -> AnswerResult:
+def answer_question(question: str, *, gold_dir: Path, client: LLMClient, model_key: str = DEFAULT_ANALYST_MODEL,
+                    spend=None) -> AnswerResult:
     spec = MODELS[model_key]
     budget = QuestionBudget(spec)
-    llm = BudgetedLLM(client, budget)
+    llm = BudgetedLLM(client, budget, spend)
     ledger, tool_log = Ledger(), []
     graph = build_graph(llm, MetricTools(gold_dir), ledger, spec.target, tool_log)
     state: State = {"question": question, "messages": [{"role": "user", "content": [{"text": question}]}]}

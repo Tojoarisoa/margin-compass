@@ -1,11 +1,14 @@
-# Only these folders go into the pipeline image.
+# Only these folders go into the container images (pipeline, agent API).
 *
 !simulator/
 !ml/
 !pipelines/
 !rag/
 !knowledge/
+!agents/
 **/.venv
 **/__pycache__
 **/.pytest_cache
+agents/tests/
+evals/
 pipelines/transform/.user.yml

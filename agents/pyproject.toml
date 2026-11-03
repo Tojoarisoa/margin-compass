@@ -13,7 +13,12 @@ dependencies = [
 mc-agents = "mc_agents.cli:main"
 
 [dependency-groups]
-dev = ["pytest>=8", "mc-pipelines", "booncore-simulator"]
+dev = [
+    "pytest>=8",
+    "mc-pipelines",
+    "booncore-simulator",
+    "moto[dynamodb]>=5",
+]
 
 [tool.uv.sources]
 mc-pipelines = { path = "../pipelines", editable = true }

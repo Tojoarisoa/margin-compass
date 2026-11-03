@@ -1,0 +1,122 @@
+"""M1-07 web stack: one CloudFront distribution for site, snapshots, and the agent API (synth only)."""
+
+from __future__ import annotations
+
+import json
+
+import aws_cdk as cdk
+import pytest
+from aws_cdk.assertions import Annotations, Match, Template
+
+from margin_compass_infra.data_stack import DataStack
+from margin_compass_infra.guardrails import ForbiddenResourceGuard
+from margin_compass_infra.state_stack import StateStack
+from margin_compass_infra.tagging import REQUIRED_TAG_KEYS, apply_tags
+from margin_compass_infra.web_stack import API_RESERVED_CONCURRENCY, WebStack
+
+ACCOUNT = "123456789012"
+
+
+@pytest.fixture(scope="module")
+def synth():
+    app = cdk.App()
+    env = cdk.Environment(account=ACCOUNT, region="us-east-1")
+    state = StateStack(app, "State", env_name="dev", env=env)
+    data = DataStack(app, "Data", env_name="dev", core_table=state.core, env=env)
+    web = WebStack(app, "Web", env_name="dev", lake_bucket_name=data.lake.bucket_name, core_table=state.core, env=env)
+    for s in (state, data, web):
+        apply_tags(s, project="margin-compass", env="dev", stage="web", owner="acme", cost_center="margin-compass")
+    cdk.Aspects.of(app).add(ForbiddenResourceGuard())
+    return web, Template.from_stack(web), Template.from_stack(data)
+
+
+def _statements(t):
+    return [s for p in t.find_resources("AWS::IAM::Policy").values() for s in p["Properties"]["PolicyDocument"]["Statement"]]
+
+
+def _actions(s):
+    return s["Action"] if isinstance(s["Action"], list) else [s["Action"]]
+
+
+def test_three_behaviors_on_one_distribution(synth):
+    _, t, _ = synth
+    dist = next(iter(t.find_resources("AWS::CloudFront::Distribution").values()))["Properties"]["DistributionConfig"]
+    assert {b["PathPattern"] for b in dist["CacheBehaviors"]} == {"/publish/*", "/api/*"}
+    assert dist["DefaultCacheBehavior"]["ViewerProtocolPolicy"] == "redirect-to-https"
+    assert dist["DefaultRootObject"] == "index.html" and dist["PriceClass"] == "PriceClass_100"
+    api = next(b for b in dist["CacheBehaviors"] if b["PathPattern"] == "/api/*")
+    assert api["ViewerProtocolPolicy"] == "https-only" and "POST" in api["AllowedMethods"]
+    site = next(o for o in dist["Origins"] if o.get("OriginPath") == "/site")
+    assert "OriginAccessControlId" in site
+
+
+def test_api_is_only_reachable_through_cloudfront(synth):
+    _, t, _ = synth
+    t.has_resource_properties("AWS::Lambda::Url", {"AuthType": "AWS_IAM"})
+    perms = [p["Properties"] for p in t.find_resources("AWS::Lambda::Permission").values()]
+    assert {p["Action"] for p in perms} == {"lambda:InvokeFunctionUrl", "lambda:InvokeFunction"}
+    assert all(p["Principal"] == "cloudfront.amazonaws.com" and "distribution/" in json.dumps(p["SourceArn"]) for p in perms)
+
+
+def test_api_request_policy_never_forwards_host_or_cookies(synth):
+    _, t, _ = synth
+    cfg = next(iter(t.find_resources("AWS::CloudFront::OriginRequestPolicy").values()))["Properties"]["OriginRequestPolicyConfig"]
+    headers = {h.lower() for h in cfg["HeadersConfig"]["Headers"]}
+    assert "host" not in headers and "cloudfront-viewer-address" in headers and "x-amz-content-sha256" in headers
+    assert cfg["CookiesConfig"]["CookieBehavior"] == "none"
+
+
+def test_api_lambda_is_bounded_and_never_retries_async_jobs(synth):
+    _, t, _ = synth
+    t.has_resource_properties("AWS::Lambda::Function", {"FunctionName": "mc-dev-web-api", "PackageType": "Image",
+                                                        "ReservedConcurrentExecutions": API_RESERVED_CONCURRENCY, "Timeout": 60})
+    t.has_resource_properties("AWS::Lambda::EventInvokeConfig", {"MaximumRetryAttempts": 0, "MaximumEventAgeInSeconds": 300})
+
+
+def test_api_role_least_privilege(synth):
+    web, t, _ = synth
+    role_id = web.get_logical_id(web.api.role.node.default_child)
+    policies = t.find_resources("AWS::IAM::Policy", {"Properties": {"Roles": [{"Ref": role_id}]}})
+    stmts = [s for p in policies.values() for s in p["Properties"]["PolicyDocument"]["Statement"]]
+    actions = {a for s in stmts for a in _actions(s)}
+    assert actions == {"s3:GetObject", "dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:UpdateItem", "bedrock:InvokeModel",
+                       "lambda:InvokeFunction", "logs:CreateLogStream", "logs:PutLogEvents"}
+    bedrock = next(s for s in stmts if "bedrock:InvokeModel" in _actions(s))
+    blob = json.dumps(bedrock["Resource"])
+    assert "claude-haiku-4-5" in blob and "*" not in blob.replace("\"*\"", "")
+    s3 = next(s for s in stmts if "s3:GetObject" in _actions(s))
+    assert "gold/fct_tenant_margin.parquet" in json.dumps(s3["Resource"])
+
+
+def test_security_headers(synth):
+    _, t, _ = synth
+    cfg = next(iter(t.find_resources("AWS::CloudFront::ResponseHeadersPolicy").values()))["Properties"]["ResponseHeadersPolicyConfig"]
+    csp = cfg["SecurityHeadersConfig"]["ContentSecurityPolicy"]["ContentSecurityPolicy"]
+    assert "script-src 'self'" in csp and "frame-ancestors 'none'" in csp and "unsafe-eval" not in csp
+    assert cfg["SecurityHeadersConfig"]["FrameOptions"]["FrameOption"] == "DENY"
+
+
+def test_lake_lets_cloudfront_read_only_site_and_publish(synth):
+    _, _, data = synth
+    pol = next(iter(data.find_resources("AWS::S3::BucketPolicy").values()))["Properties"]["PolicyDocument"]["Statement"]
+    cf = [s for s in pol if s.get("Principal", {}).get("Service") == "cloudfront.amazonaws.com"]
+    assert len(cf) == 1 and cf[0]["Action"] == "s3:GetObject"
+    res = json.dumps(cf[0]["Resource"])
+    assert "/site/*" in res and "/publish/*" in res and "/gold/" not in res
+    assert cf[0]["Condition"]["StringEquals"]["aws:SourceAccount"] == ACCOUNT
+
+
+def test_tags_and_guardrails(synth):
+    web, t, _ = synth
+    for resource in t.to_json()["Resources"].values():
+        tags = resource.get("Properties", {}).get("Tags")
+        if isinstance(tags, list):
+            assert set(REQUIRED_TAG_KEYS) <= {tag["Key"] for tag in tags}, resource["Type"]
+    Annotations.from_stack(web).has_no_error("*", Match.any_value())
+
+
+def test_api_role_is_a_kill_switch_target():
+    from pathlib import Path
+
+    ctx = json.loads((Path(__file__).resolve().parents[1] / "cdk.json").read_text())["context"]
+    assert "mc-dev-web-api" in ctx["mc:killSwitchRoleNames"]

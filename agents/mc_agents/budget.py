@@ -36,7 +36,8 @@ class QuestionBudget:
     def estimate_tokens(text: str) -> int:
         return max(1, math.ceil(len(text) / 3))  # conservative: ~3 characters per token
 
-    def reserve(self, request_text: str) -> None:
+    def reserve(self, request_text: str) -> Decimal:
+        """Raise BudgetExceeded if the next call could break a cap; return its worst-case cost."""
         est_in = self.estimate_tokens(request_text)
         if est_in > MAX_INPUT_TOKENS_PER_CALL:
             raise BudgetExceeded(f"request of ~{est_in} tokens exceeds the {MAX_INPUT_TOKENS_PER_CALL}-token ceiling")
@@ -45,6 +46,7 @@ class QuestionBudget:
         worst = call_cost(self.spec, est_in, MAX_OUTPUT_TOKENS_PER_CALL)
         if self.usd + worst > self.max_usd:
             raise BudgetExceeded(f"question cost cap reached (${self.max_usd})")
+        return worst
 
     def record(self, input_tokens: int, output_tokens: int, cache_read_tokens: int = 0) -> Decimal:
         cost = call_cost(self.spec, input_tokens, output_tokens, cache_read_tokens)
