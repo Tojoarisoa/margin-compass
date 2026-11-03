@@ -26,10 +26,14 @@ fi
 echo "4. CDK bootstrap"
 cdk_bootstrapped && ok "CDKToolkit stack present" || warn "Not bootstrapped yet; deploy-foundation.sh will do it"
 
-echo "5. Lambda quotas (new accounts start lower; the pipeline needs 6,144 MB memory)"
-aws service-quotas list-service-quotas --service-code lambda \
-  --query "Quotas[?contains(QuotaName,'oncurren') || contains(QuotaName,'emory')].[QuotaName,Value]" \
-  --output table 2>/dev/null || warn "Could not read Service Quotas; check them in the console (runbook step 3.2)"
+echo "5. Lambda concurrency (new accounts start below the 1,000 default; AWS raises it with usage)"
+applied="$(aws service-quotas get-service-quota --service-code lambda --quota-code L-B99A9384 --query 'Quota.Value' --output text 2>/dev/null || echo "?")"
+default="$(aws service-quotas get-aws-default-service-quota --service-code lambda --quota-code L-B99A9384 --query 'Quota.Value' --output text 2>/dev/null || echo "?")"
+if [ "$applied" = "$default" ]; then
+  ok "Concurrent executions: ${applied%.0} (the AWS default)"
+else
+  warn "Concurrent executions: ${applied%.0} (AWS default ${default%.0}). Enough for M1; request an increase before a public demo (runbook D2)"
+fi
 
 echo
 echo "Preflight finished. Next: ALERT_EMAIL=you@example.com infra/scripts/deploy-foundation.sh"
