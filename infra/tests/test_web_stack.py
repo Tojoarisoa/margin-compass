@@ -62,7 +62,7 @@ def test_api_request_policy_never_forwards_host_or_cookies(synth):
     _, t, _ = synth
     cfg = next(iter(t.find_resources("AWS::CloudFront::OriginRequestPolicy").values()))["Properties"]["OriginRequestPolicyConfig"]
     headers = {h.lower() for h in cfg["HeadersConfig"]["Headers"]}
-    assert "host" not in headers and "cloudfront-viewer-address" in headers and "x-amz-content-sha256" in headers
+    assert "host" not in headers and "cloudfront-viewer-address" in headers  # x-amz-content-sha256 is rejected by CloudFront here
     assert cfg["CookiesConfig"]["CookieBehavior"] == "none"
 
 

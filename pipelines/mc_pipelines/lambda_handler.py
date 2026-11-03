@@ -43,9 +43,20 @@ def _upload(bucket: str, local_root: Path, key_prefix: str) -> int:
     s3 = boto3.client("s3")
     count = 0
     for path in sorted(p for p in local_root.rglob("*") if p.is_file()):
-        s3.upload_file(str(path), bucket, f"{key_prefix}/{path.relative_to(local_root).as_posix()}")
+        s3.upload_file(str(path), bucket, f"{key_prefix}/{path.relative_to(local_root).as_posix()}", ExtraArgs=_extra_args(path))
         count += 1
     return count
+
+
+CONTENT_TYPES = {".json": "application/json", ".parquet": "application/vnd.apache.parquet", ".md": "text/markdown; charset=utf-8"}
+
+
+def _extra_args(path: Path) -> dict:
+    """Content type for objects CloudFront serves (publish/); snapshots revalidate after 5 minutes."""
+    args = {"ContentType": CONTENT_TYPES.get(path.suffix, "application/octet-stream")}
+    if "publish" in path.parts:
+        args["CacheControl"] = "public, max-age=300"
+    return args
 
 
 def handler(event: dict, context) -> dict:

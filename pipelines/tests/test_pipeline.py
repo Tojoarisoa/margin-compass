@@ -262,3 +262,11 @@ def test_publish_writes_a_small_pg1_snapshot_that_matches_gold(built):
     assert len(snap["trend"]) == snap["window"]["days"] and len(snap["forecast"]["points"]) == 30
     assert len(snap["tenants"]) == snap["headline"]["tenants"] == 20
     assert snap["headline"]["llm_attribution_coverage_pct"] >= 0.98
+
+
+def test_uploads_set_content_type_for_served_snapshots(tmp_path):
+    from mc_pipelines.lambda_handler import _extra_args
+
+    snap = tmp_path / "publish" / "latest" / "pg1.json"
+    assert _extra_args(snap) == {"ContentType": "application/json", "CacheControl": "public, max-age=300"}
+    assert _extra_args(tmp_path / "gold" / "x.parquet") == {"ContentType": "application/vnd.apache.parquet"}
