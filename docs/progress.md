@@ -21,7 +21,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## 2026-11-04 (owner session)
 
-- Owner: autopilot merges once CI is green (AGENTS.md §8.1 step 5 updated; `.claude/settings.json` allows `git push origin *:main`). PR #23 merged by fast-forward.
+- Owner: autopilot merges once CI is green (AGENTS.md §8.1 step 5 updated; `.claude/settings.json` allows `git push origin *:main`). PR #23 merged by fast-forward. Dev deploy green. Haiku 5.5 probe (ops run 41917944197): still `AccessDeniedException`, "not available for this account".
 
 ## 2026-11-04 (autopilot run 4)
 
