@@ -10,12 +10,19 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 ## Next
 
 1. M1 cost check (above), then close M1 (PLAN.md §17, AGENTS.md §2).
-2. M2-01: full simulator (`docs/plans/m2-plan.md` §3 step 2). Spike done: `docs/plans/m2-spike-results.md`.
+2. M2-01 continued: features and models (F0–F4, tiers, effective-dated catalog), then telemetry grain, outcomes, FOCUS, patterns (`docs/plans/m2-plan.md` §2). Tenants and contracts are done.
 
 ## 2026-11-04
 
 - M1-01…M1-08 merged; dev deployed; CI deploys on merge through OIDC (immutable subject).
 - M2 plan approved (D1, D3, D4, D7 by the owner; D2, D5, D6 by recommendation).
+
+## 2026-11-04 (autopilot run 2)
+
+- **Task:** M2-01 step 1, tenants and contracts: `simulator/booncore_sim/m2_tenants.py` (400 tenants, ARR exact to $24.0M by plan, contract clauses at the spec §5 counts, SCD2 plan history, +2%/month onboarding with Jan/Sep waves). 10 new tests; not wired into the CLI yet, so M1 output is unchanged.
+- **PR / CI / deploy:** see the PR; simulator code only, no infra change. Cost $0.
+- **Decisions (§8.2):** none needed. Labeled assumptions: log-normal sigma 0.5, 6% of tenants upgrade a plan in the window, wave months onboard 2× a normal month, 80% of fiscal years end Jun 30.
+- **Next:** M2-01 features and models. M1 cost check still waits for 2026-11-05 10:00 UTC.
 
 ## 2026-11-04 (autopilot run 1)
 
