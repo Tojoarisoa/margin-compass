@@ -68,6 +68,7 @@ This file tells any AI agent (Claude Code, Codex, Cursor, etc.) how to work in t
 ## 6. Conventions
 
 - **Commits:** Conventional Commits, with the task ID in the scope, e.g. `feat(m1-02): add bronze ingest`.
+- **Commit identity:** author and committer are `tojoarisoa <47354538+Tojoarisoa@users.noreply.github.com>` everywhere, including cloud sessions (`.claude/settings.json` sets it at session start). No AI attribution in commits or PRs: no `Co-Authored-By` or `Claude-Session` trailers, no "Generated with/by Claude Code" footers, no session links.
 - **AWS resource names:** `mc-<env>-<stage>-<name>` (e.g., `mc-prod-ingest-telemetry`).
 - **Data:** snake_case columns; marts are prefixed `fct_`, `dim_`, `agg_`.
 - **IDs:** use the plan's IDs in code comments, test names, and PRs where helpful (`AG-03`, `EV-05`, `KPI-04`).
