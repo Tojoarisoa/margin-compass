@@ -1,6 +1,6 @@
 # M2 plan: Cost-to-Serve Platform
 
-- **Status:** Draft for owner review (2026-11-04). M1 closes when its cost criterion is verified.
+- **Status:** Approved by the owner on 2026-11-04 (D1, D3, D4, D7 decided; D2, D5, D6 follow the recommendations unless the owner changes them). M1 closes when its cost criterion is verified.
 - **Scope (PLAN.md §17):** M2-01 … M2-04.
 - **Exit:**
   - EV-01 passes;
@@ -122,17 +122,17 @@ Everything stays synthetic except S7, the platform's own AWS bill and agent tele
 
 Each step is its own PR, with CI green and the cost gate showing the delta.
 
-## 4. Owner decisions needed
+## 4. Owner decisions
 
-| # | Decision | Recommendation |
+| # | Decision | Recommendation (outcome) |
 | --- | --- | --- |
-| D1 | **Gold schema change** (AGENTS.md: owner approval): 7 new marts/dims, and `fct_tenant_margin.cost_to_serve_usd` becomes fully loaded, so KPI-01 drops from the LLM-only ≈ 98.5% toward the planned ≈ 50% baseline | Approve; the `feature_scope` column changes from `F1 only (M1)` to `F0–F4` |
-| D2 | **Default allocation rules** | F2 agent compute → F2 by tenant **token share**; vector storage → F3 by tenant **storage share**, vector queries → F3 **request share**; egress and observability → all features by **request share**; third-party APIs → direct by tag; untagged → **unallocated** (shown, never hidden) |
-| D3 | **Size of shared infrastructure** (an assumption; the spec doesn't fix it) | Shared infra + vector + third-party ≈ **15% of AI COGS** at baseline, so LLM tokens stay the dominant cost and baseline AI gross margin lands near 50% (§4.1); labeled *(assumption)* |
-| D4 | **Semantic metrics layer** | A small **YAML metric registry** (`metrics/*.yml`, compiled to SQL for dbt and to Python for the publish step and agent tools, with parity tests) rather than dbt MetricFlow: fewer dependencies, and it fits the shared calculation spec (ADR-016) |
-| D5 | **Backfill shape and memory** | Step Functions Map over monthly chunks, max concurrency 2; pipeline Lambda up to 6 GB only if the spike shows it's needed (all within the free tier) |
-| D6 | **When the public dashboard switches to M2 data** | Only after EV-01 passes on the full window; until then the URL keeps showing M1 v0 |
-| D7 | **Publishing the real AWS bill** (S7) on the public PG-8 (external publishing) | Approve, with account ID, ARNs, and resource IDs stripped; services, lifecycle stage, and amounts only |
+| D1 | **Gold schema change** (AGENTS.md: owner approval): 7 new marts/dims, and `fct_tenant_margin.cost_to_serve_usd` becomes fully loaded, so KPI-01 drops from the LLM-only ≈ 98.5% toward the planned ≈ 50% baseline | **Approved 2026-11-04.** `feature_scope` changes from `F1 only (M1)` to `F0–F4` |
+| D2 | **Default allocation rules** | F2 agent compute → F2 by tenant **token share**; vector storage → F3 by tenant **storage share**, vector queries → F3 **request share**; egress and observability → all features by **request share**; third-party APIs → direct by tag; untagged → **unallocated** (shown, never hidden). *Default* |
+| D3 | **Size of shared infrastructure** (an assumption; the spec doesn't fix it) | Shared infra + vector + third-party ≈ **15% of AI COGS** at baseline, so LLM tokens stay the dominant cost and baseline AI gross margin lands near 50% (§4.1); labeled *(assumption)*. **Approved 2026-11-04** |
+| D4 | **Semantic metrics layer** | A small **YAML metric registry** (`metrics/*.yml`, compiled to SQL for dbt and to Python for the publish step and agent tools, with parity tests) rather than dbt MetricFlow: fewer dependencies, and it fits the shared calculation spec (ADR-016). **Approved 2026-11-04** |
+| D5 | **Backfill shape and memory** | Step Functions Map over monthly chunks, max concurrency 2; pipeline Lambda up to 6 GB only if the spike shows it's needed (all within the free tier). *Default* |
+| D6 | **When the public dashboard switches to M2 data** | Only after EV-01 passes on the full window; until then the URL keeps showing M1 v0. *Default* |
+| D7 | **Publishing the real AWS bill** (S7) on the public PG-8 (external publishing) | **Approved 2026-11-04:** account ID, ARNs, and resource IDs stripped; services, lifecycle stage, and amounts only |
 
 ## 5. Cost impact (to be confirmed by the cost gate)
 
