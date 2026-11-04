@@ -100,6 +100,7 @@ The owner pre-approved unattended work on 2026-11-04 (this section). It applies 
 ### 8.2 Standing approval
 
 Where §7 or PLAN.md asks for an owner decision, choose the option you would mark *(Recommended)*, provided it:
+
 - keeps the cost gate's worst-case monthly estimate at or below **$3.00**;
 - keeps every evaluation gate and guardrail at least as strict (never weaken tests or guardrails);
 - follows PLAN.md, the accepted ADRs, and `docs/plans/` for the milestone.
