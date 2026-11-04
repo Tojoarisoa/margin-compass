@@ -51,7 +51,9 @@ jobs:
           set -euo pipefail
           {
             echo "## Status"
-            aws cloudformation describe-stacks --query "Stacks[?starts_with(StackName,'mc-')].[StackName,StackStatus]" --output text | sed 's/^/- /'
+            for st in mc-shared-foundation mc-dev-state mc-dev-data mc-dev-web; do
+              echo "- $st: $(aws cloudformation describe-stacks --stack-name "$st" --query 'Stacks[0].StackStatus' --output text)"
+            done
             url="$(aws cloudformation describe-stacks --stack-name mc-dev-web --query "Stacks[0].Outputs[?OutputKey=='Url'].OutputValue" --output text)"
             for p in / /publish/latest/pg1.json /api/health; do echo "- $p → $(curl -s -o /dev/null -w '%{http_code}' "$url$p")"; done
             sm="$(aws cloudformation describe-stacks --stack-name mc-dev-data --query "Stacks[0].Outputs[?OutputKey=='NightlyStateMachine'].OutputValue" --output text)"
