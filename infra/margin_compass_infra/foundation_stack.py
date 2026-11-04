@@ -54,6 +54,8 @@ FOCUS_1_2_AWS_COLUMNS = (
 # Actions blocked by the kill switch: all model spend and all pipeline starts.
 # The dashboard keeps serving cached snapshots (PLAN.md §8.7 degradation).
 KILL_SWITCH_DENIED_ACTIONS = ("bedrock:*", "states:StartExecution")
+OPS_MODEL_SUFFIXES = ("4-5-20251001-v1:0", "5-5")  # ADR-003 Mid candidates (interim 4.5; 5.5 once available)
+US_PROFILE_REGIONS = ("us-east-1", "us-east-2", "us-west-2")  # where a us. inference profile may route
 
 
 def name(resource: str) -> str:
@@ -71,6 +73,7 @@ class FoundationStack(cdk.Stack):
         self._anomaly_detection()
         self.billing_bucket = self._billing_export()
         self.deploy_role = self._github_deploy_role()
+        self.ops_role = self._github_ops_role()
 
     # --- Alerts -----------------------------------------------------------------------------
     def _alert_topic(self) -> sns.Topic:
@@ -167,6 +170,7 @@ class FoundationStack(cdk.Stack):
             )
         )
 
+        self.kill_switch_action = None
         if cfg.kill_switch_role_names:
             action = budgets.CfnBudgetsAction(
                 self,
@@ -188,6 +192,7 @@ class FoundationStack(cdk.Stack):
                 subscribers=[budgets.CfnBudgetsAction.SubscriberProperty(type="SNS", address=self.alerts.topic_arn)],
             )
             action.add_dependency(budget)
+            self.kill_switch_action = action
 
     # --- Cost Anomaly Detection -------------------------------------------------------------
     def _anomaly_detection(self) -> None:
@@ -279,7 +284,7 @@ class FoundationStack(cdk.Stack):
 
     # --- GitHub Actions OIDC ----------------------------------------------------------------
     def _github_deploy_role(self) -> iam.Role:
-        provider = iam.OidcProviderNative(
+        provider = self.oidc_provider = iam.OidcProviderNative(
             self,
             "GitHubOidc",
             url="https://token.actions.githubusercontent.com",
@@ -332,4 +337,49 @@ class FoundationStack(cdk.Stack):
                                 resources=[f"arn:aws:cloudfront::{self.account}:distribution/*"])
         )
         cdk.CfnOutput(self, "GitHubDeployRoleArn", value=role.role_arn)
+        return role
+
+    # --- GitHub Actions ops role (autopilot, .github/workflows/ops.yml) -------------------------
+    def _github_ops_role(self) -> iam.Role:
+        """Read-mostly AWS access for unattended runs, which never hold AWS keys (AGENTS.md rule 1).
+
+        Same trust as the deploy role (this repository's main branch only). It may run the pipeline,
+        start the nightly state machine, call the agent's Bedrock models (fixture recording and live
+        evals, capped in code), and read costs, budgets, stack outputs, and logs. It is a kill-switch
+        target. It cannot deploy or change infrastructure.
+        """
+        acct, region = self.account, self.region
+        role = iam.Role(
+            self,
+            "GitHubOpsRole",
+            role_name=name("github-ops"),
+            description=f"Assumed by the ops workflow on {self.config.github_repo} main: run, observe, and price; no deploys.",
+            max_session_duration=cdk.Duration.hours(1),
+            assumed_by=iam.WebIdentityPrincipal(
+                self.oidc_provider.oidc_provider_arn,
+                conditions={"StringEquals": {
+                    "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
+                    "token.actions.githubusercontent.com:sub": oidc_subject(self.config),
+                }},
+            ),
+        )
+        statements = [
+            ("RunPipeline", ["lambda:InvokeFunction"], [f"arn:aws:lambda:{region}:{acct}:function:mc-*-data-pipeline"]),
+            ("StartNightly", ["states:StartExecution"], [f"arn:aws:states:{region}:{acct}:stateMachine:mc-*-data-nightly"]),
+            ("ReadNightly", ["states:DescribeExecution", "states:ListExecutions"],
+             [f"arn:aws:states:{region}:{acct}:execution:mc-*-data-nightly:*", f"arn:aws:states:{region}:{acct}:stateMachine:mc-*-data-nightly"]),
+            ("InvokeAgentModels", ["bedrock:InvokeModel"],
+             [f"arn:aws:bedrock:{region}:{acct}:inference-profile/us.anthropic.claude-haiku-{m}" for m in OPS_MODEL_SUFFIXES]
+             + [f"arn:aws:bedrock:{r}::foundation-model/anthropic.claude-haiku-{m}" for r in US_PROFILE_REGIONS for m in OPS_MODEL_SUFFIXES]),
+            ("ReadCosts", ["ce:GetCostAndUsage", "bcm-data-exports:ListExports", "bcm-data-exports:ListExecutions"], ["*"]),
+            ("ReadBudget", ["budgets:ViewBudget"], [f"arn:aws:budgets::{acct}:budget/{name('monthly-total')}"]),
+            ("ListBillingExport", ["s3:ListBucket"], [self.billing_bucket.bucket_arn]),
+            ("ReadStacks", ["cloudformation:DescribeStacks"], [f"arn:aws:cloudformation:{region}:{acct}:stack/mc-*/*"]),
+            ("ReadLogs", ["logs:FilterLogEvents"], [f"arn:aws:logs:{region}:{acct}:log-group:/aws/lambda/mc-*:*"]),
+        ]
+        for sid, actions, resources in statements:
+            role.add_to_policy(iam.PolicyStatement(sid=sid, actions=actions, resources=resources))
+        if self.kill_switch_action is not None:  # the budget action names this role; create the role first
+            self.kill_switch_action.node.add_dependency(role)
+        cdk.CfnOutput(self, "GitHubOpsRoleArn", value=role.role_arn)
         return role

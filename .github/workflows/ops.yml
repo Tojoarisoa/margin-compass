@@ -1,0 +1,114 @@
+# Ops (autopilot, AGENTS.md §8): AWS actions for unattended Claude Code cloud sessions, which hold
+# no AWS credentials. Dispatched on main only; the OIDC ops role can run and observe, not deploy.
+# Live model calls are capped in code (8 calls and $0.01 per question; the cost gate covers infra).
+name: ops
+
+on:
+  workflow_dispatch:
+    inputs:
+      task:
+        description: What to do
+        required: true
+        type: choice
+        options: [status, cost-report, run-pipeline, start-nightly, record-fixtures, live-eval]
+      model:
+        description: Agent model for record-fixtures / live-eval (agents/mc_agents/config.py)
+        required: false
+        default: haiku-4-5
+        type: choice
+        options: [haiku-4-5, haiku-5-5]
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: ops
+  cancel-in-progress: false
+
+env:
+  UV_VERSION: "0.11.16"
+  PYTHON_VERSION: "3.13"
+  AWS_REGION: us-east-1
+
+jobs:
+  ops:
+    if: github.ref == 'refs/heads/main' && vars.AWS_OPS_ROLE_ARN != ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_OPS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: gh-ops-${{ github.run_id }}
+          mask-aws-account-id: true
+
+      - name: status
+        if: inputs.task == 'status'
+        run: |
+          set -euo pipefail
+          {
+            echo "## Status"
+            aws cloudformation describe-stacks --query "Stacks[?starts_with(StackName,'mc-')].[StackName,StackStatus]" --output text | sed 's/^/- /'
+            url="$(aws cloudformation describe-stacks --stack-name mc-dev-web --query "Stacks[0].Outputs[?OutputKey=='Url'].OutputValue" --output text)"
+            for p in / /publish/latest/pg1.json /api/health; do echo "- $p → $(curl -s -o /dev/null -w '%{http_code}' "$url$p")"; done
+            sm="$(aws cloudformation describe-stacks --stack-name mc-dev-data --query "Stacks[0].Outputs[?OutputKey=='NightlyStateMachine'].OutputValue" --output text)"
+            echo "- nightly runs: $(aws stepfunctions list-executions --state-machine-arn "$sm" --max-results 5 --query 'executions[].[name,status]' --output text | tr '\t\n' ' ;')"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: cost-report
+        if: inputs.task == 'cost-report'
+        run: python3 infra/scripts/ops/cost_report.py | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: run-pipeline
+        if: inputs.task == 'run-pipeline'
+        run: |
+          set -euo pipefail
+          aws lambda invoke --function-name mc-dev-data-pipeline --cli-read-timeout 900 \
+            --payload "{\"run_id\":\"ops-${GITHUB_RUN_ID}\"}" --cli-binary-format raw-in-base64-out out.json --query FunctionError --output text
+          { echo "## Pipeline run"; echo '```json'; cat out.json; echo; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          python3 -c "import json,sys; sys.exit(0 if json.load(open('out.json')).get('status')=='success' else 1)"
+
+      - name: start-nightly
+        if: inputs.task == 'start-nightly'
+        run: |
+          set -euo pipefail
+          sm="$(aws cloudformation describe-stacks --stack-name mc-dev-data --query "Stacks[0].Outputs[?OutputKey=='NightlyStateMachine'].OutputValue" --output text)"
+          ex="$(aws stepfunctions start-execution --state-machine-arn "$sm" --name "ops-${GITHUB_RUN_ID}" --query executionArn --output text)"
+          for _ in $(seq 1 60); do st="$(aws stepfunctions describe-execution --execution-arn "$ex" --query status --output text)"; [[ "$st" != RUNNING ]] && break; sleep 15; done
+          echo "## Nightly execution: $st" >> "$GITHUB_STEP_SUMMARY"
+          [[ "$st" == SUCCEEDED ]]
+
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        if: inputs.task == 'record-fixtures' || inputs.task == 'live-eval'
+        with: { version: "${{ env.UV_VERSION }}", python-version: "${{ env.PYTHON_VERSION }}" }
+      - name: record-fixtures / live-eval (live Bedrock, capped per question)
+        if: inputs.task == 'record-fixtures' || inputs.task == 'live-eval'
+        working-directory: agents
+        env:
+          MODEL: ${{ inputs.model }}
+          MODE: ${{ inputs.task == 'record-fixtures' && 'record' || 'live' }}
+        run: |
+          set -euo pipefail
+          uv sync --frozen
+          uv run python - <<'PY'
+          from pathlib import Path
+          from booncore_sim.cli import run as simulate
+          from mc_pipelines.cli import main
+          root = Path("../data/ops")
+          simulate("m1", 42, root / "landing" / "booncore", run_id="ops")
+          raise SystemExit(main(["run", "--landing", str(root / "landing" / "booncore"), "--data-root", str(root), "--ingest-date", "2026-11-04"]))
+          PY
+          line="$(uv run mc-agents --gold ../data/ops/gold --model "$MODEL" eval --mode "$MODE" --out ../data/ops/report.json)" || status=$?
+          { echo "## Agent eval ($MODE, $MODEL)"; echo "$line"; } >> "$GITHUB_STEP_SUMMARY"
+          exit "${status:-0}"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always() && (inputs.task == 'record-fixtures' || inputs.task == 'live-eval')
+        with:
+          name: agent-eval-${{ inputs.model }}
+          path: |
+            evals/m1_06/fixtures/${{ inputs.model }}/
+            data/ops/report.json
+          retention-days: 14

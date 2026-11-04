@@ -304,3 +304,50 @@ def test_foundation_has_no_forbidden_resources(default):
 def test_config_rejects_missing_alert_email():
     with pytest.raises(ValueError, match="mc:alertEmail"):
         FoundationConfig(alert_email="", github_repo="acme/margin-compass")
+
+
+# --- GitHub ops role (autopilot) --------------------------------------------------------------
+
+def _ops_statements(stack, t):
+    role_id = stack.get_logical_id(stack.ops_role.node.default_child)
+    policies = t.find_resources("AWS::IAM::Policy", {"Properties": {"Roles": [{"Ref": role_id}]}})
+    return [s for p in policies.values() for s in p["Properties"]["PolicyDocument"]["Statement"]]
+
+
+def test_ops_role_trusts_only_main_and_cannot_deploy(default):
+    stack, t = default
+    roles = t.find_resources("AWS::IAM::Role", {"Properties": {"RoleName": "mc-shared-foundation-github-ops"}})
+    cond = next(iter(roles.values()))["Properties"]["AssumeRolePolicyDocument"]["Statement"][0]["Condition"]["StringEquals"]
+    assert cond["token.actions.githubusercontent.com:sub"] == "repo:acme/margin-compass:ref:refs/heads/main"
+    actions = {a for s in _ops_statements(stack, t) for a in (s["Action"] if isinstance(s["Action"], list) else [s["Action"]])}
+    assert actions == {
+        "lambda:InvokeFunction", "states:StartExecution", "states:DescribeExecution", "states:ListExecutions",
+        "bedrock:InvokeModel", "ce:GetCostAndUsage", "bcm-data-exports:ListExports", "bcm-data-exports:ListExecutions",
+        "budgets:ViewBudget", "s3:ListBucket", "cloudformation:DescribeStacks", "logs:FilterLogEvents",
+    }
+    assert not any(a.startswith(("iam:", "sts:", "cloudformation:Create", "cloudformation:Update", "s3:Put", "s3:Delete")) for a in actions)
+
+
+def test_ops_role_resources_are_scoped(default):
+    stack, t = default
+    for s in _ops_statements(stack, t):
+        res = s["Resource"] if isinstance(s["Resource"], list) else [s["Resource"]]
+        if s["Sid"] == "ReadCosts":  # Cost Explorer and Data Exports reads have no resource-level scoping
+            assert res == ["*"]
+            continue
+        assert all("*" not in json.dumps(r) or "mc-" in json.dumps(r) or "claude-haiku" in json.dumps(r) for r in res), s["Sid"]
+    bedrock = next(s for s in _ops_statements(stack, t) if s["Sid"] == "InvokeAgentModels")
+    assert all("claude-haiku" in json.dumps(r) for r in bedrock["Resource"])
+
+
+def test_ops_role_is_a_kill_switch_target_and_created_first():
+    stack, t = synth(kill_switch_role_names=["mc-shared-foundation-github-ops"])
+    action = next(iter(t.find_resources("AWS::Budgets::BudgetsAction").values()))
+    assert stack.get_logical_id(stack.ops_role.node.default_child) in action.get("DependsOn", [])
+
+
+def test_cdk_json_kill_switch_includes_the_ops_role():
+    from pathlib import Path as _Path
+
+    ctx = json.loads((_Path(__file__).resolve().parents[1] / "cdk.json").read_text())["context"]
+    assert "mc-shared-foundation-github-ops" in ctx["mc:killSwitchRoleNames"]
