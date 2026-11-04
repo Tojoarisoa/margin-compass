@@ -94,7 +94,7 @@ The owner pre-approved unattended work on 2026-11-04 (this section). It applies 
 2. Work on a branch `auto/<task-id>-<slug>`. One task per run; split a large task into PR-sized steps and log the remainder.
 3. Run the affected tests and `uvx ruff@0.17.3 check .` locally. Open a PR with `gh api` (the cloud GitHub proxy rejects `gh pr`).
 4. Wait for **every** CI check on the PR's head commit to succeed (`gh api repos/{owner}/{repo}/commits/{sha}/check-runs`). Never merge with a failing, pending, or missing check. If CI fails, fix it; after 3 failed attempts, stop (§8.3).
-5. Merge by fast-forwarding `main` to the PR head (`git push origin <sha>:main`), which deploys dev through CI. Wait for the `deploy to dev` job and its smoke test to pass.
+5. Merge by fast-forwarding `main` to the PR head (`git push origin <sha>:main`), which deploys dev through CI. The owner authorized this on 2026-11-04: once CI is green, autopilot merges without asking. "Green" means the latest run of every check on the head commit succeeded; an earlier run of the same check that a re-run superseded (for example `attribution` before a PR-description edit) doesn't count. Wait for the `deploy to dev` job and its smoke test to pass.
 6. For AWS checks or live model calls, use the ops workflow (`.github/workflows/ops.yml`, dispatched with `gh api …/actions/workflows/ops.yml/dispatches`). Never use or ask for AWS access keys.
 7. Tick PLAN.md §17 and add the Change Log entry, marking decisions **auto-decided under AGENTS.md §8.2**. Append a dated entry to `docs/progress.md` (done, decisions, open items, cost), then end the run.
 

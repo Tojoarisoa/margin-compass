@@ -7,6 +7,8 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 - **M1 exit, cost criterion:** Cost Explorer had no data on 2026-11-04 (enabled that day). Re-check with the ops workflow (`task: cost-report`) after 2026-11-05 10:00 UTC; close M1 if month-to-date < $0.50.
 - **Claude Haiku 5.5 access** (support case): when granted, record its M1-06 fixtures (`task: record-fixtures`, model `haiku-5-5`) and apply the ADR-003 selection rule.
 
+- **Haiku 5.5 access:** only the owner can follow up on the support case; autopilot re-probes it with the ops workflow (`record-fixtures`, `haiku-5-5`) at most once a day.
+
 ## Next
 
 1. M1 cost check (above), then close M1 (PLAN.md §17, AGENTS.md §2).
@@ -16,6 +18,10 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 - M1-01…M1-08 merged; dev deployed; CI deploys on merge through OIDC (immutable subject).
 - M2 plan approved (D1, D3, D4, D7 by the owner; D2, D5, D6 by recommendation).
+
+## 2026-11-04 (owner session)
+
+- Owner: autopilot merges once CI is green (AGENTS.md §8.1 step 5 updated; `.claude/settings.json` allows `git push origin *:main`). PR #23 merged by fast-forward.
 
 ## 2026-11-04 (autopilot run 4)
 

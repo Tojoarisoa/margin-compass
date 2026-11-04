@@ -16,5 +16,10 @@
         ]
       }
     ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(git push origin *:main)"
+    ]
   }
 }
