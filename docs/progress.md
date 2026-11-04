@@ -10,12 +10,21 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 ## Next
 
 1. M1 cost check (above), then close M1 (PLAN.md §17, AGENTS.md §2).
-2. M2-01 continued: telemetry grain, outcomes, FOCUS, patterns (`docs/plans/m2-plan.md` §2). Tenants, contracts, features, and the model catalog are done.
+2. M2-01 continued: outcomes, FOCUS shared-infra export, patterns PT-01…PT-14 (`docs/plans/m2-plan.md` §2). Done: tenants, contracts, features, model catalog, telemetry grain.
 
 ## 2026-11-04
 
 - M1-01…M1-08 merged; dev deployed; CI deploys on merge through OIDC (immutable subject).
 - M2 plan approved (D1, D3, D4, D7 by the owner; D2, D5, D6 by recommendation).
+
+## 2026-11-04 (autopilot run 4)
+
+- **Task:** M2-01 step 3, telemetry grain: `simulator/booncore_sim/m2_telemetry.py`. Enterprise hourly, other plans daily, 1% raw request sample with trace IDs, weekly/respiratory/fiscal-year seasonality (PT-13 baseline, no injected patterns yet). One RNG stream per (seed, month, tenant), so any month regenerates identically alone. 11 new tests; not wired into the CLI, so M1 output is unchanged.
+- **Result (seed 42, 18 months):** 2.59M telemetry rows (budget 1.5-3M), 0.42M sampled requests (< 0.63M), 41.8M requests. A full run takes about 65 s in plain Python, fine for the monthly Lambda chunks.
+- **Decisions (§8.2):** F3 and F4 get daily rows for every tenant (labeled assumption). With them hourly the Enterprise grain gave 3.05M rows, over the 3M budget. Alternative: hourly for all features and lower volume; rejected because it changes the spec volumes. Other labeled assumptions: peak hours 08-17 UTC, F1 cache hit 70%, F2 50%, retry rate 2%.
+- **Calibration note:** 41.8M requests is below the spec's ~115k/weekday x 18 months estimate; AI margin calibration (~50%) is still to do before the patterns step.
+- **PR / CI / deploy:** see below. Simulator code only, no infra change. Cost $0.
+- **Next:** M2-01 outcomes (tenant x day aggregates, 10% ticket sample, safety events). M1 cost check still waits for 2026-11-05 10:00 UTC.
 
 ## 2026-11-04 (autopilot run 3)
 
