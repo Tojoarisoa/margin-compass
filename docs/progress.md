@@ -10,12 +10,19 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 ## Next
 
 1. M1 cost check (above), then close M1 (PLAN.md §17, AGENTS.md §2).
-2. M2-01 continued: features and models (F0–F4, tiers, effective-dated catalog), then telemetry grain, outcomes, FOCUS, patterns (`docs/plans/m2-plan.md` §2). Tenants and contracts are done.
+2. M2-01 continued: telemetry grain, outcomes, FOCUS, patterns (`docs/plans/m2-plan.md` §2). Tenants, contracts, features, and the model catalog are done.
 
 ## 2026-11-04
 
 - M1-01…M1-08 merged; dev deployed; CI deploys on merge through OIDC (immutable subject).
 - M2 plan approved (D1, D3, D4, D7 by the owner; D2, D5, D6 by recommendation).
+
+## 2026-11-04 (autopilot run 3)
+
+- **Task:** M2-01 step 2, features and models: `simulator/booncore_sim/m2_catalog.py` (F0-F4 with token medians, 6 models incl. `emb-1`, effective-dated catalog with the `b-mid` -40% cut on 2026-03-01, cached and batch pricing, tier quality table, token draws). 9 new tests; not wired into the CLI, so M1 output is unchanged.
+- **PR / CI / deploy:** see the PR; simulator code only, no infra change. Cost $0.
+- **Decisions (§8.2):** none needed. Labeled assumptions: F2 cacheable prefix 3,000 tokens, token sigma 0.4 (as M1).
+- **Next:** M2-01 telemetry grain (Enterprise hourly, others daily, 1% raw sample). M1 cost check still waits for 2026-11-05 10:00 UTC.
 
 ## 2026-11-04 (autopilot run 2)
 
