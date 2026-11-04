@@ -10,7 +10,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 ## Next
 
 1. M1 cost check (above), then close M1 (PLAN.md §17, AGENTS.md §2).
-2. M2-01 continued: features and models (F0–F4, tiers, effective-dated catalog), then telemetry grain, outcomes, FOCUS, patterns (`docs/plans/m2-plan.md` §2). Tenants and contracts are done.
+2. M2-01 continued: telemetry grain, outcomes, FOCUS, patterns (`docs/plans/m2-plan.md` §2). Tenants, contracts, features and models are done.
 
 ## 2026-11-04
 
@@ -31,3 +31,10 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 - **Not done:** the Lambda 4 GB run (needs a deploy; do it at M2 step 5). M1 cost check skipped: Cost Explorer has no data before 2026-11-05 10:00 UTC.
 - **Decisions (§8.2):** none needed. No infra change, cost $0.
 - **Next:** M2-01 simulator, starting with tenants and contracts.
+
+## 2026-11-04 (autopilot run 3)
+
+- **Task:** M2-01 step 2, features and models: `simulator/booncore_sim/m2_features.py` (F0-F4 with log-normal token draws, F2 imaging x1.8, tiers plus `emb-1`, effective-dated catalog with the `b-mid` -40% cut on 2026-03-01, cached and batch pricing, constraint-aware tier routing). 6 new tests, 35 pass; ruff clean. Not wired into the CLI, so M1 output is unchanged.
+- **PR / CI / deploy:** see the PR; simulator code only, no infra change. Cost $0.
+- **Decisions (§8.2):** none needed. Labeled assumptions: token sigma 0.4, cacheable prefix per feature (F0 800, F1 1,200, F2 2,000).
+- **Next:** M2-01 telemetry grain (Enterprise hourly, others daily, 1% raw sample). M1 cost check still waits for 2026-11-05 10:00 UTC.
