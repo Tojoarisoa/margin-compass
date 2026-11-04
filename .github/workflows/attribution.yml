@@ -1,0 +1,41 @@
+# Owner rule (AGENTS.md §6): commits are authored by the owner's GitHub noreply identity, and no AI
+# attribution appears in commits or PRs. Autopilot (AGENTS.md §8) merges only when every check is
+# green, so this check blocks a merge until the PR body and commits comply. Re-runs when the PR
+# description is edited.
+name: attribution
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  attribution:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - name: PR body and commits carry no AI attribution and use the owner identity
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+          OWNER_EMAIL: 47354538+Tojoarisoa@users.noreply.github.com
+        run: |
+          set -euo pipefail
+          pattern='Generated (by|with) \[?Claude|Claude-Session:|Co-Authored-By: Claude|claude\.ai/code/session_|noreply@anthropic\.com'
+          fail=0
+          if gh api "repos/$REPO/pulls/$PR" --jq .body | grep -Eiq "$pattern"; then
+            echo "::error::PR #$PR description contains AI attribution (footer, session link, or trailer). Remove it and save; this check re-runs on edit."
+            fail=1
+          fi
+          while IFS=$'\t' read -r sha author committer; do
+            msg="$(gh api "repos/$REPO/commits/$sha" --jq .commit.message)"
+            if echo "$msg" | grep -Eiq "$pattern"; then echo "::error::commit ${sha:0:7} message contains AI attribution"; fail=1; fi
+            if [[ "$author" != "$OWNER_EMAIL" || "$committer" != "$OWNER_EMAIL" ]]; then
+              echo "::error::commit ${sha:0:7} author/committer is $author / $committer, expected $OWNER_EMAIL"; fail=1
+            fi
+          done < <(gh api "repos/$REPO/pulls/$PR/commits" --paginate --jq '.[] | [.sha, .commit.author.email, .commit.committer.email] | @tsv')
+          exit $fail
