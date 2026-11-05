@@ -76,3 +76,31 @@ def test_apply_all_labels(tenants):
     out, labels = pt.apply_pt01_to_pt04(rows, tenants)
     assert [x.pattern_id for x in labels] == ["PT-01", "PT-02", "PT-03", "PT-04"]
     assert len(out) == len(rows)
+
+
+def test_pt05_f3_volume_x30_three_days(tenants):
+    rows = month(tenants, 9)  # Feb 2026
+    out, label = pt.pt05_reindex_storm(rows)
+    f3 = lambda rs: sum(r.request_count for r in rs if r.feature_id == "F3" and date(2026, 2, 10) <= r.usage_ts.date() <= date(2026, 2, 12))  # noqa: E731
+    assert (label.end_date - label.start_date).days == 2 and label.model == "emb-1"
+    assert f3(rows) > 0 and f3(out) == 30 * f3(rows)
+    assert label.expected_impact_usd_per_day > 0
+
+
+def test_pt06_pt07_imaging_targets(tenants):
+    for i, fn, n in ((13, pt.pt06_fleet_update_surge, 1), (15, pt.pt07_integration_flood, 3)):
+        rows = month(tenants, i)
+        out, label = fn(rows, tenants)
+        assert len(label.tenant_ids) == n
+        assert all(next(t for t in tenants if t.tenant_id == x).segment == "imaging" for x in label.tenant_ids)
+        changed = [(a, b) for a, b in zip(rows, out, strict=True) if a != b]
+        assert changed and all(a.feature_id == "F2" and a.tenant_id in label.tenant_ids for a, _ in changed)
+        assert label.expected_impact_usd_per_day > 0
+    assert (label.end_date - label.start_date).days == 6
+
+
+def test_apply_pt05_to_pt07_labels(tenants):
+    rows = month(tenants, 9) + month(tenants, 13)
+    out, labels = pt.apply_pt05_to_pt07(rows, tenants)
+    assert [x.pattern_id for x in labels] == ["PT-05", "PT-06", "PT-07"]
+    assert len(out) == len(rows)

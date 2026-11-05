@@ -10,7 +10,14 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-1. M2-01 continued: patterns PT-05…PT-14 (`docs/plans/m2-plan.md` §2). Done: tenants, contracts, features, model catalog, telemetry grain, outcomes, FOCUS shared infra.
+1. M2-01 continued: patterns PT-08…PT-14 (`docs/plans/m2-plan.md` §2). Done: tenants, contracts, features, model catalog, telemetry grain, outcomes, FOCUS shared infra, PT-01…PT-07.
+
+## 2026-11-05 (autopilot run 8)
+
+- **Task:** M2-01 step 7, patterns PT-05...PT-07 in `simulator/booncore_sim/m2_patterns.py`: F3 re-index storm (x30, 2026-02-10 for 3 days), F2 fleet update surge (x6, 5 days from 2026-06-02), F2 integration flood (uncached input x3, 7 days from 2026-08-18). 3 new tests; not wired into the CLI, so M1 output is unchanged.
+- **Impacts (seed 42, $/day):** PT-05 4.4, PT-06 25.2 (tenant `bc-t0059`), PT-07 428 (`bc-t0001`...`bc-t0003`).
+- **Decisions (§8.2):** none needed. Labeled assumptions: PT-06 targets the last imaging tenant by id (differs from PT-02); PT-07 triples only uncached input tokens; PT-05 scales all F3 tenants.
+- **Next:** PT-08...PT-14. Cost $0.
 
 ## 2026-11-05 (autopilot run 7)
 

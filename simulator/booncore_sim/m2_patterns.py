@@ -1,4 +1,4 @@
-"""M2-01 step 6: injected patterns PT-01..PT-04 (spec §8), applied to baseline telemetry rows.
+"""M2-01 step 6: injected patterns PT-01..PT-07 (spec §8), applied to baseline telemetry rows.
 
 Patterns are post-hoc transforms of the baseline rows from `m2_telemetry`, so the baseline stays unchanged and
 every pattern is switchable. Each returns a `PatternLabel` for `labels/patterns` whose
@@ -25,6 +25,16 @@ PT03_BEFORE_MODEL = "a-mid"  # F4 ran on the mid tier until the silent upgrade
 PT04_START = date(2026, 4, 7)
 PT04_HIT_BASELINE = 0.70
 PT04_HIT_AFTER = 0.15
+PT05_START = date(2026, 2, 10)
+PT05_DAYS = 3
+PT05_FACTOR = 30  # spec §8: 30x embedding volume
+PT06_START = date(2026, 6, 2)
+PT06_DAYS = 5
+PT06_FACTOR = 6  # spec §8: 6x near-identical tickets
+PT07_START = date(2026, 8, 18)
+PT07_DAYS = 7
+PT07_TENANTS = 3
+PT07_LOG_FACTOR = 3  # spec §8: log tokens x3
 
 
 @dataclass(frozen=True)
@@ -153,6 +163,102 @@ def pt04_cache_collapse(rows: list[TelemetryRow]) -> tuple[list[TelemetryRow], P
         "cache-hit rate 70% -> 15%", _impact(base, new, PT04_START, WINDOW_END), ("leak_detector",),
     )
     return out, label
+
+
+def _scale_volume(r: TelemetryRow, k: int) -> TelemetryRow:
+    return replace(
+        r,
+        request_count=r.request_count * k,
+        retry_count=r.retry_count * k,
+        gen_ai_usage_input_tokens=r.gen_ai_usage_input_tokens * k,
+        gen_ai_usage_output_tokens=r.gen_ai_usage_output_tokens * k,
+        gen_ai_usage_cache_read_input_tokens=r.gen_ai_usage_cache_read_input_tokens * k,
+    )
+
+
+def _imaging_ids(tenants: list[M2Tenant], on: date) -> list[str]:
+    return sorted(t.tenant_id for t in tenants if t.segment == "imaging" and t.onboarded_on <= on)
+
+
+def pt05_reindex_storm(rows: list[TelemetryRow]) -> tuple[list[TelemetryRow], PatternLabel]:
+    """F3 embedding volume x30 for 3 days from the simulated recall notice on 2026-02-10, all tenants."""
+    end = PT05_START + timedelta(days=PT05_DAYS - 1)
+    out, base, new = [], [], []
+    for r in rows:
+        if r.feature_id == "F3" and PT05_START <= r.usage_ts.date() <= end:
+            r2 = _scale_volume(r, PT05_FACTOR)
+            base.append(r)
+            new.append(r2)
+            r = r2
+        out.append(r)
+    label = PatternLabel(
+        "PT-05", "reindex_storm", (), "F3", "emb-1", PT05_START, end, "request_count",
+        "30x embedding volume", _impact(base, new, PT05_START, end), ("leak_detector",),
+    )
+    return out, label
+
+
+def pt06_fleet_update_surge(
+    rows: list[TelemetryRow], tenants: list[M2Tenant]
+) -> tuple[list[TelemetryRow], PatternLabel]:
+    """F2 volume x6 for 5 days from 2026-06-02 for one imaging tenant (the last by id, so it differs from PT-02).
+
+    Near-identical tickets: the cached-prefix share is unchanged, so the surge is a caching opportunity.
+    """
+    target = _imaging_ids(tenants, PT06_START)[-1]
+    end = PT06_START + timedelta(days=PT06_DAYS - 1)
+    out, base, new = [], [], []
+    for r in rows:
+        if r.feature_id == "F2" and r.tenant_id == target and PT06_START <= r.usage_ts.date() <= end:
+            r2 = _scale_volume(r, PT06_FACTOR)
+            base.append(r)
+            new.append(r2)
+            r = r2
+        out.append(r)
+    label = PatternLabel(
+        "PT-06", "fleet_update_surge", (target,), "F2", None, PT06_START, end, "request_count",
+        "6x near-identical tickets", _impact(base, new, PT06_START, end), ("leak_detector", "caching_opportunity"),
+    )
+    return out, label
+
+
+def pt07_integration_flood(
+    rows: list[TelemetryRow], tenants: list[M2Tenant]
+) -> tuple[list[TelemetryRow], PatternLabel]:
+    """F2 log tokens x3 for 7 days from 2026-08-18 for three imaging tenants (the first three by id).
+
+    (assumption) Log tokens are the uncached part of the input, so only uncached input tokens triple.
+    """
+    targets = tuple(_imaging_ids(tenants, PT07_START)[:PT07_TENANTS])
+    end = PT07_START + timedelta(days=PT07_DAYS - 1)
+    out, base, new = [], [], []
+    for r in rows:
+        if r.feature_id == "F2" and r.tenant_id in targets and PT07_START <= r.usage_ts.date() <= end:
+            uncached = r.gen_ai_usage_input_tokens - r.gen_ai_usage_cache_read_input_tokens
+            r2 = replace(r, gen_ai_usage_input_tokens=r.gen_ai_usage_input_tokens + uncached * (PT07_LOG_FACTOR - 1))
+            base.append(r)
+            new.append(r2)
+            r = r2
+        out.append(r)
+    label = PatternLabel(
+        "PT-07", "integration_flood", targets, "F2", None, PT07_START, end, "input_tokens_per_request",
+        "log tokens x3", _impact(base, new, PT07_START, end), ("leak_detector",),
+    )
+    return out, label
+
+
+def apply_pt05_to_pt07(
+    rows: list[TelemetryRow], tenants: list[M2Tenant]
+) -> tuple[list[TelemetryRow], list[PatternLabel]]:
+    """Apply PT-05..PT-07 in order (impacts marginal in this order); call after `apply_pt01_to_pt04`."""
+    labels = []
+    rows, lab = pt05_reindex_storm(rows)
+    labels.append(lab)
+    rows, lab = pt06_fleet_update_surge(rows, tenants)
+    labels.append(lab)
+    rows, lab = pt07_integration_flood(rows, tenants)
+    labels.append(lab)
+    return rows, labels
 
 
 def apply_pt01_to_pt04(
