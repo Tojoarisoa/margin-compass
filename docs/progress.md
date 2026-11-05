@@ -18,8 +18,8 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 - **Task:** M2-01 step 4, outcomes: `simulator/booncore_sim/m2_outcomes.py`. Every ticket is drawn individually, then stored as tenant x day aggregates (171k rows) plus per-ticket rows for a 10% sample and every labeled safety event (485k rows). Total 0.66M, under the 1M budget. F0 flags follow the F0 tier's recall (seed 42: recall 99.3%, remote resolution 40%). 7 new tests; not wired into the CLI, so M1 output is unchanged.
 - **Decisions (§8.2):** none needed. Labeled assumptions: false-flag rate 0.5%, field visit 60% after unresolved F2 and 15% otherwise, escalation 30/10/3% by severity, CSAT and eval_score distributions. Outcome ticket counts share the telemetry mean but use their own RNG stream, so they track request volume statistically, not ticket for ticket.
-- **M1 cost check:** not run; it is 00:xx UTC, Cost Explorer data is expected after 10:00 UTC today.
-- **PR / CI / deploy:** see below. Simulator code only, no infra change. Cost $0.
+- **M1 cost check:** not run; it was about 00:10 UTC, Cost Explorer data is expected after 10:00 UTC today.
+- **PR / CI / deploy:** PR #25, all checks green on the head commit (attribution failed once on the proxy footer, passed after removing it via the GitHub MCP tool). Fast-forwarded to `main`; `deploy to dev` and smoke test green. Simulator code only, no infra change. Cost $0.
 - **Next:** M2-01 FOCUS shared-infra export, then patterns PT-01...PT-14.
 
 ## 2026-11-04
