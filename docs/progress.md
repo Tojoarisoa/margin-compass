@@ -7,6 +7,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 - **Claude Haiku 5.5 access** (support case): when granted, record its M1-06 fixtures (`task: record-fixtures`, model `haiku-5-5`) and apply the ADR-003 selection rule.
 
 - **Haiku 5.5 access:** only the owner can follow up on the support case; autopilot re-probes it with the ops workflow (`record-fixtures`, `haiku-5-5`) at most once a day.
+- **Haiku 5.5, 2026-11-05 (owner session):** the owner accepted AWS's public offer (`offer-u3aih6zr7uw5u`, usage-based: $0.10/$0.50 per 1M input/output, global). The agreement is **AVAILABLE** (authorization, entitlement, and region also available), but Converse via `us.anthropic.claude-haiku-5-5` still returns `AccessDeniedException` "not available for this account … contact AWS Sales" after 4 tries over 4 minutes. Per AWS docs this is the separate account-level access that only AWS Sales grants. Owner action: contact AWS Sales. Keep the daily re-probe.
 
 ## Owner decision 2026-11-06
 
