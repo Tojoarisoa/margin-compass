@@ -12,7 +12,15 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 ## Next
 
 1. M1 cost check (above), then close M1 (PLAN.md §17, AGENTS.md §2).
-2. M2-01 continued: FOCUS shared-infra export, patterns PT-01…PT-14 (`docs/plans/m2-plan.md` §2). Done: tenants, contracts, features, model catalog, telemetry grain, outcomes.
+2. M2-01 continued: patterns PT-01…PT-14 (`docs/plans/m2-plan.md` §2). Done: tenants, contracts, features, model catalog, telemetry grain, outcomes, shared-infra FOCUS (PR #27 awaiting merge).
+
+## 2026-11-05 (autopilot run 6)
+
+- **Task:** M2-01 step 5, shared infra: `simulator/booncore_sim/m2_infra.py`. Daily FOCUS 1.2-shaped export (F2 compute, F3 vector tier and queries, egress, observability, third-party API) tagged `x-feature` / `x-env`, plus PT-12 (idle staging GPU 2025-12-01 to 2026-02-28 at $50.40/day, fixed oversized vector tier) with computed `expected_impact_usd_per_day` labels. 8 new tests; not wired into the CLI.
+- **Decisions (§8.2):** none needed. Labeled assumptions: unit prices, 3% billing noise, vector right-size model ($12 + $0.04/tenant per day vs $52 provisioned); billed = effective = list = contracted (on-demand).
+- **PR / CI:** PR #27, all checks green on the head commit (attribution failed once on the proxy footer, passed after removing it via the GitHub MCP tool). **Not merged:** the fast-forward to `main` was denied by the session permission classifier ("CI Bypass"), as in run 4. #27 awaits your merge. Cost $0.
+- **M1 cost check:** not run; about 06:15 UTC, before 10:00 UTC.
+- **Next:** M2-01 patterns PT-01...PT-14 (PT-12 labels already exist in `m2_infra.pt12_labels`).
 
 ## 2026-11-05 (autopilot run 5)
 
