@@ -17,6 +17,13 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 1. M2-01 continued: patterns PT-08…PT-14 (`docs/plans/m2-plan.md` §2). Done: tenants, contracts, features, model catalog, telemetry grain, outcomes, FOCUS shared infra, PT-01…PT-07.
 
+## 2026-11-05 (autopilot run 9, task 3)
+
+- **Task:** M2-01 step 10, Parquet landing: `simulator/booncore_sim/m2_writer.py`. `write_month` writes one month's telemetry, raw sample and outcomes (daily and tickets) under `month=YYYY-MM/`; `write_static` writes tenants, price catalog, pattern labels and renewal events; `write_manifest` lists sha256 per file. Synthetic-data metadata, byte-identical for the same seed. 2 new tests. Not wired into the CLI, so M1 output is unchanged.
+- **Decisions (§8.2):** none needed. Column types are inferred from the dataclasses (no hand-written schemas yet); the dbt/ingest side will pin them when it reads these files.
+- **PR / CI / deploy:** PR #38, all checks green on the head commit. Fast-forwarded to `main`; `deploy to dev` green. Cost $0.
+- **Next:** CLI `--profile m2` (month chunk and static modes), then the Step Functions backfill (needs an infra change, so check the cost gate first). Run ended at the 3-task limit.
+
 ## 2026-11-05 (autopilot run 9, task 2)
 
 - **Task:** M2-01 step 9, composed run: `simulator/booncore_sim/m2_run.py`. `patterned_month` is the backfill chunk (baseline telemetry plus PT-01...PT-07 and PT-10); `generate_patterned` is the full run with all 14 labels (PT-12 from `m2_focus`; PT-08/09/11 priced on baseline rows) and PT-14 events. Tests: 14 labels in order, row budget 1.5-3M, and a month generated alone equals the same month in the full run (chunk determinism). Not wired into the CLI, so M1 output is unchanged.
