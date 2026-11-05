@@ -15,8 +15,13 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-1. M2-01: Step Functions backfill over 19 monthly chunks calling `booncore-sim --profile m2 --mode month --month N` (infra change: check the cost gate first), then tick M2-01.
-2. M2-02: FOCUS ingestion, allocation rules, cost-to-serve marts (`docs/plans/m2-plan.md` §2).
+Follow `docs/plans/m2-plan.md` §3 sequencing (AWS backfill comes after M2-03):
+
+1. M2-02 step 1: silver `stg_focus_*`, telemetry priced against the effective-dated catalog, revenue daily-ized (local DuckDB, dbt).
+2. M2-02 remaining steps: allocation rules, gold marts, gates.
+3. M2-03: metrics registry, contracts, scorecard.
+4. M2-01 close-out: Step Functions backfill over 19 monthly chunks (`booncore-sim --profile m2 --mode month --month N`), one deploy under §8.2 if the cost gate stays ≤ $3.00, verify AWS gold = local gold, then tick M2-01.
+5. M2-04.
 
 ## 2026-11-05 (autopilot run 10, task 1)
 

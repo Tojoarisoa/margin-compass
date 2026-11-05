@@ -116,7 +116,7 @@ Everything stays synthetic except S7, the platform's own AWS bill and agent tele
 2. M2-01 simulator (tenants → telemetry → outcomes → FOCUS → patterns), with tests per pattern.
 3. M2-02 silver/gold + allocation + gates.
 4. M2-03 metrics + contracts + scorecard.
-5. AWS: Map-based backfill, one deploy (owner approval), then verify AWS gold = local gold.
+5. AWS: Map-based backfill, one deploy, then verify AWS gold = local gold. The deploy is covered by the standing approval (AGENTS.md §8.2) while the cost gate's worst case stays ≤ $3.00/month; anything in AGENTS.md §8.3 still stops (owner, 2026-11-06).
 6. M2-04 dashboard pages + S7 telemetry; re-record agent fixtures.
 7. Exit check, then PLAN.md ticks and the Change Log.
 
