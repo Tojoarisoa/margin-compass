@@ -22,7 +22,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 - **Task:** M2-01 step 11, CLI `--profile m2` with `--mode month --month N` (one backfill chunk), `--mode static`, or `all`. Chunk and static modes write their manifest under `_manifests/`; `all` writes `manifest.json`. M1 profile unchanged. 1 new test.
 - **Decisions (§8.2):** none needed. Default seed 42 for m2. Cost $0.
-- **PR / CI / deploy:** see below.
+- **PR / CI / deploy:** PR #40, all checks green on the head commit. Fast-forwarded to `main`; `deploy to dev` green.
 - **Next:** Step Functions backfill (infra change, cost gate first).
 
 ## 2026-11-05 (autopilot run 9, task 3)
