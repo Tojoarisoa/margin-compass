@@ -17,6 +17,13 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 1. M2-01 continued: patterns PT-08…PT-14 (`docs/plans/m2-plan.md` §2). Done: tenants, contracts, features, model catalog, telemetry grain, outcomes, FOCUS shared infra, PT-01…PT-07.
 
+## 2026-11-05 (autopilot run 9, task 2)
+
+- **Task:** M2-01 step 9, composed run: `simulator/booncore_sim/m2_run.py`. `patterned_month` is the backfill chunk (baseline telemetry plus PT-01...PT-07 and PT-10); `generate_patterned` is the full run with all 14 labels (PT-12 from `m2_focus`; PT-08/09/11 priced on baseline rows) and PT-14 events. Tests: 14 labels in order, row budget 1.5-3M, and a month generated alone equals the same month in the full run (chunk determinism). Not wired into the CLI, so M1 output is unchanged.
+- **Decisions (§8.2):** none needed. Cost $0.
+- **PR / CI / deploy:** PR #37, all checks green on the head commit (rebased once more onto a docs-only main commit and re-ran CI). Fast-forwarded to `main`; `deploy to dev` green.
+- **Next:** M2 landing writer (parquet for the new tables) and CLI profile, then the Step Functions backfill.
+
 ## 2026-11-05 (autopilot run 9)
 
 - **Task:** M2-01 step 8, patterns PT-08...PT-14 in `simulator/booncore_sim/m2_patterns_b.py`. PT-08 (b-mid blocked by provider/EU clauses), PT-09 (F0 to small tier proposal, recall 97.5% < 99%), PT-11 (b-mid cut not adopted) are label-only with computed savings; PT-10 scales 12 unlimited-AI tenants x3; PT-13 is a zero-impact seasonality label; PT-14 draws renewal churn/downgrade events with true probabilities (logistic, assumed coefficients). PT-12 already in `m2_focus`. 7 new tests; not wired into the CLI, so M1 output is unchanged.
