@@ -8,6 +8,10 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 - **Haiku 5.5 access:** only the owner can follow up on the support case; autopilot re-probes it with the ops workflow (`record-fixtures`, `haiku-5-5`) at most once a day.
 
+## Owner decision 2026-11-06
+
+- **Window:** BoonCore's fiscal year starts April 1. The simulation window is now **2025-04-01 → 2026-10-31** (19 months, 579 days), set in `simulator/booncore_sim/m2_tenants.py` (`WINDOW_START`, `MONTHS`, `fiscal_year()`). Build the remaining M2 steps (backfill: 19 monthly chunks) on this window. Measured at seed 42: telemetry 2.71M rows, sample 0.44M, outcomes 0.68M, shared infrastructure 16.5% of AI COGS.
+
 ## Next
 
 1. M2-01 continued: patterns PT-08…PT-14 (`docs/plans/m2-plan.md` §2). Done: tenants, contracts, features, model catalog, telemetry grain, outcomes, FOCUS shared infra, PT-01…PT-07.

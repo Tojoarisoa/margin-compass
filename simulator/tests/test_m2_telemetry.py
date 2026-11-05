@@ -28,7 +28,7 @@ def test_month_days_cover_the_window_exactly():
     assert days[0] == mt.WINDOW_START and days[-1] == mt.WINDOW_END
     assert len(days) == len(set(days)) == (mt.WINDOW_END - mt.WINDOW_START).days + 1
     with pytest.raises(ValueError):
-        tl.month_days(18)
+        tl.month_days(mt.MONTHS)
 
 
 def test_chunk_alone_is_identical_to_a_rerun(tenants, last_month):
@@ -52,7 +52,7 @@ def test_grain_enterprise_hourly_others_daily(tenants, last_month):
 def test_row_budget_spec_10(tenants, last_month):
     """Tenants grow about linearly, so 18 x the mean of the first and last month estimates the total.
 
-    The full 18-month run (2.59M rows, 0.42M sample at seed 42) was checked by hand against the 1.5-3M budget.
+    The full 19-month run (2.71M rows, 0.44M sample at seed 42, measured 2026-11-06) was checked by hand against the 1.5-3M budget.
     """
     first = tl.generate_month(SEED, tenants, 0)
     est_rows = 18 * (len(first[0]) + len(last_month[0])) / 2

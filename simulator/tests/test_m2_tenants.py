@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections import Counter
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
@@ -67,13 +67,13 @@ def test_discounts_and_slas(gen):
 def test_renewals_spread_across_the_year_and_terms_are_annual(gen):
     tenants, _ = gen
     assert all((t.renewal_date - t.contract_start).days == 365 for t in tenants)
-    assert all(m.WINDOW_START <= t.renewal_date < date(2026, 5, 1) for t in tenants)
+    assert all(m.WINDOW_START <= t.renewal_date < m.WINDOW_START + timedelta(days=365) for t in tenants)
     assert len({t.renewal_date.month for t in tenants}) == 12
 
 
 def test_growth_is_two_percent_a_month_with_waves():
     counts = m.onboarding_counts()
-    assert sum(counts) == 400 and counts[0] == 280
+    assert sum(counts) == 400 and counts[0] == round(400 / 1.02**m.MONTHS)
     waves = {i for i in range(1, m.MONTHS) if m._month_start(i).month in m.WAVE_MONTHS}
     normal = [c for i, c in enumerate(counts) if i > 0 and i not in waves]
     assert all(counts[i] >= 2 * min(normal) - 1 for i in waves)
@@ -81,7 +81,7 @@ def test_growth_is_two_percent_a_month_with_waves():
 
 def test_active_count_matches_cohorts(gen):
     tenants, _ = gen
-    assert m.active_tenant_count(tenants, m.WINDOW_START) == 280
+    assert m.active_tenant_count(tenants, m.WINDOW_START) == m.onboarding_counts()[0]
     assert m.active_tenant_count(tenants, m.WINDOW_END) == 400
 
 
@@ -109,3 +109,12 @@ def test_deterministic_and_seed_sensitive(gen):
     assert m.generate_m2_tenants(43)[0] != gen[0]
     with pytest.raises(ValueError):
         m.generate_m2_tenants(-1)
+
+
+def test_window_follows_the_fiscal_year():
+    """Owner decision 2026-11-06: start at FY2025's first day; end at the last full month before the project."""
+    assert (m.WINDOW_START, m.WINDOW_END, m.MONTHS) == (date(2025, 4, 1), date(2026, 10, 31), 19)
+    assert m._month_start(m.MONTHS) == m.WINDOW_END + timedelta(days=1)
+    assert (m.WINDOW_END - m.WINDOW_START).days + 1 == 579
+    assert m.fiscal_year(date(2025, 4, 1)) == 2025 and m.fiscal_year(date(2026, 3, 31)) == 2025
+    assert m.fiscal_year(date(2026, 4, 1)) == 2026 and m.fiscal_year(m.WINDOW_END) == 2026

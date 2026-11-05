@@ -36,7 +36,7 @@ def test_focus_shape(rows):
         assert r.charge_period_end - r.charge_period_start == timedelta(days=1)
         assert r.billing_period_start.day == 1 and r.billing_period_end > r.charge_period_start
         assert r.tag_feature and r.tag_env in ("prod", "staging")
-    assert {r.charge_period_start for r in rows} == {date(2025, 5, 1) + timedelta(days=i) for i in range(549)}
+    assert {r.charge_period_start for r in rows} == {mt.WINDOW_START + timedelta(days=i) for i in range((mt.WINDOW_END - mt.WINDOW_START).days + 1)}
 
 
 def test_idle_gpu_only_in_window(rows):
@@ -48,7 +48,7 @@ def test_idle_gpu_only_in_window(rows):
 
 def test_oversized_vector_tier_all_window(rows):
     xl = [r for r in rows if r.sku_id == "vector-tier-xl"]
-    assert len(xl) == 549 and all(r.billed_cost == fx.VECTOR_OVERSIZE_USD_PER_DAY for r in xl)
+    assert len(xl) == (mt.WINDOW_END - mt.WINDOW_START).days + 1 and all(r.billed_cost == fx.VECTOR_OVERSIZE_USD_PER_DAY for r in xl)
 
 
 def test_waste_ground_truth(rows):
@@ -59,9 +59,9 @@ def test_waste_ground_truth(rows):
 
 
 def test_share_of_ai_cogs_near_15_percent(rows):
-    # D3: shared infra ~ 15% of AI COGS. Seed-42 LLM cost over the window is $3.43M (measured 2026-11-05).
+    # D3: shared infra ~ 15% of AI COGS. Seed-42 LLM cost over the 19-month window is $3.58M (measured 2026-11-06).
     shared = sum(r.billed_cost for r in rows)
-    share = shared / (shared + 3_433_851)
+    share = shared / (shared + 3_579_745)
     assert 0.12 <= share <= 0.18, share
 
 

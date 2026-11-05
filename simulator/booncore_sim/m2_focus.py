@@ -6,8 +6,8 @@ oversized vector tier throughout). Rows carry `x-feature` and `x-env` tags. Stan
 CLI. Deterministic: one RNG stream per (seed, day). All output is synthetic.
 
 Calibration (decision D3, PLAN approved 2026-11-04): shared infra is about 15% of AI COGS. Seed 42 LLM cost
-is $3.43M over 18 months ($141k in May 2025 growing to $226k in Oct 2026), so shared infra targets about
-$0.62M, i.e. 17.6% of LLM cost = 15% of total AI COGS. Parameters marked (assumption) are labeled inputs.
+is $3.58M over the 19-month window ($131k in Apr 2025 growing to $226k in Oct 2026); shared infra measures
+$0.71M, 16.5% of AI COGS (test band 12-18%; measured 2026-11-06). Parameters marked (assumption) are labeled inputs.
 """
 
 from __future__ import annotations

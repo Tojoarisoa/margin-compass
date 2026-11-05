@@ -17,9 +17,12 @@ import numpy as np
 from .config import PLANS
 
 CENT = Decimal("0.01")
-WINDOW_START = date(2025, 5, 1)
-WINDOW_END = date(2026, 10, 31)  # 18 months
-MONTHS = 18
+# Window (owner, 2026-11-06): BoonCore's fiscal year starts April 1, so the window starts at FY2025's
+# first day and runs through the last full month before the project started: 19 months, 579 days.
+WINDOW_START = date(2025, 4, 1)
+WINDOW_END = date(2026, 10, 31)
+MONTHS = 19
+FISCAL_YEAR_START_MONTH = 4
 FINAL_TENANTS = 400
 MONTHLY_GROWTH = 0.02  # spec §7
 WAVE_MONTHS = (1, 9)  # onboarding waves in Jan and Sep (spec §7)
@@ -88,6 +91,11 @@ def _money(x: float | Decimal) -> Decimal:
     return Decimal(str(x)).quantize(CENT, ROUND_HALF_UP)
 
 
+def fiscal_year(d: date) -> int:
+    """BoonCore fiscal year, named by the calendar year it starts in: FY2025 = 2025-04-01 → 2026-03-31."""
+    return d.year if d.month >= FISCAL_YEAR_START_MONTH else d.year - 1
+
+
 def _month_start(i: int) -> date:
     y, m = divmod(WINDOW_START.month - 1 + i, 12)
     return date(WINDOW_START.year + y, m + 1, 1)
@@ -96,7 +104,7 @@ def _month_start(i: int) -> date:
 def onboarding_counts() -> list[int]:
     """New tenants per window month (index 0 = the first month's start cohort is pre-existing).
 
-    The tenant count starts at round(400 / 1.02^18) = 280 and grows about 2% a month; Jan and Sep
+    The tenant count starts at round(400 / 1.02^MONTHS) and grows about 2% a month; Jan and Sep
     count double. Largest-remainder rounding makes the total exactly 400.
     """
     base = round(FINAL_TENANTS / (1 + MONTHLY_GROWTH) ** MONTHS)

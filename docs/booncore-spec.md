@@ -14,7 +14,8 @@
 | Business | B2B AI technical-support platform for medical device and diagnostics companies; medical imaging is the flagship segment |
 | ARR at simulation end | $24.0M |
 | Tenants | 400 |
-| Simulation window | 2025-05-01 → 2026-10-31 (18 months, 549 days), backfilled in monthly chunks |
+| Fiscal year | Starts April 1; named by its start year (FY2025 = 2025-04-01 → 2026-03-31). Owner decision 2026-11-06 |
+| Simulation window | 2025-04-01 → 2026-10-31 (19 months, 579 days): FY2025 in full plus FY2026 through the last full month before the project started; backfilled in monthly chunks |
 | Determinism | Every run takes a seed; same seed + same config ⇒ byte-identical output |
 | Labeling | Every generated file carries `synthetic = true` in its metadata |
 
@@ -168,11 +169,11 @@ A counterfactual run (same seed, no action) is always produced, for KPI-02.
 
 | Item | Estimate | Budget | OK |
 | --- | --- | --- | --- |
-| Aggregated telemetry: Enterprise hourly (≈ 3,000 rows/day) + others daily (≈ 2,100 rows/day) | ≈ 2.8M rows / 18 months | 1.5–3M | Yes |
-| Same, but hourly for all tenants | ≈ 13.2M rows | 1.5–3M | **No** (reason for the split grain) |
-| 1% raw request sample | ≈ 0.63M rows | — | Yes |
-| Tickets / outcomes, one row per ticket | ≈ 5.2M rows (392 weekdays × 12,250 + 157 weekend days × 2,450) | < 1M | **No** (rejected; see §12 item 3) |
-| Outcomes, approved storage (§12 item 3a) | ≈ 0.79M rows | < 1M | Yes |
+| Aggregated telemetry: Enterprise hourly + others daily | **2.71M rows** over 19 months (measured, seed 42, 2026-11-06; was 2.59M over 18 months) | 1.5–3M | Yes |
+| Same, but hourly for all tenants | ≈ 13.9M rows (estimate scaled to 579 days) | 1.5–3M | **No** (reason for the split grain) |
+| 1% raw request sample | **0.44M rows** (measured) | — | Yes |
+| Tickets / outcomes, one row per ticket | ≈ 5.5M rows (414 weekdays × 12,250 + 165 weekend days × 2,450) | < 1M | **No** (rejected; see §12 item 3) |
+| Outcomes, approved storage (§12 item 3a) | **0.68M rows** (measured: 0.18M tenant-day + 0.51M ticket rows) | < 1M | Yes |
 
 ## 11. M1 subset (M1-01)
 
