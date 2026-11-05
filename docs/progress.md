@@ -17,6 +17,13 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 1. M2-01 continued: patterns PT-08…PT-14 (`docs/plans/m2-plan.md` §2). Done: tenants, contracts, features, model catalog, telemetry grain, outcomes, FOCUS shared infra, PT-01…PT-07.
 
+## 2026-11-05 (autopilot run 9)
+
+- **Task:** M2-01 step 8, patterns PT-08...PT-14 in `simulator/booncore_sim/m2_patterns_b.py`. PT-08 (b-mid blocked by provider/EU clauses), PT-09 (F0 to small tier proposal, recall 97.5% < 99%), PT-11 (b-mid cut not adopted) are label-only with computed savings; PT-10 scales 12 unlimited-AI tenants x3; PT-13 is a zero-impact seasonality label; PT-14 draws renewal churn/downgrade events with true probabilities (logistic, assumed coefficients). PT-12 already in `m2_focus`. 7 new tests; not wired into the CLI, so M1 output is unchanged.
+- **Decisions (§8.2):** none needed. Labeled assumptions: PT-09 proposal date 2026-09-01; PT-10 3x applies to each tenant's own baseline; PT-08 prices only b-mid (c-small has no cache pricing); PT-14 coefficients and renewal price uplift 0-8%.
+- **PR / CI / deploy:** PR #35, all checks green on the head commit (attribution failed once on the proxy footer, passed after editing the body via the GitHub MCP tool; rebased once onto a docs-only main commit and re-ran CI). Fast-forwarded to `main`; `deploy to dev` green. Cost $0.
+- **Next:** wire the patterns into the generator and add the chunked backfill (M2-01 remainder).
+
 ## 2026-11-05 (autopilot run 8)
 
 - **Task:** M2-01 step 7, patterns PT-05...PT-07 in `simulator/booncore_sim/m2_patterns.py`: F3 re-index storm (x30, 2026-02-10 for 3 days), F2 fleet update surge (x6, 5 days from 2026-06-02), F2 integration flood (uncached input x3, 7 days from 2026-08-18). 3 new tests; not wired into the CLI, so M1 output is unchanged.
