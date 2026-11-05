@@ -12,7 +12,15 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 ## Next
 
 1. M1 cost check (above), then close M1 (PLAN.md §17, AGENTS.md §2).
-2. M2-01 continued: FOCUS shared-infra export, patterns PT-01…PT-14 (`docs/plans/m2-plan.md` §2). Done: tenants, contracts, features, model catalog, telemetry grain, outcomes.
+2. M2-01 continued: patterns PT-01…PT-14 (`docs/plans/m2-plan.md` §2). Done: tenants, contracts, features, model catalog, telemetry grain, outcomes, FOCUS shared infra.
+
+## 2026-11-05 (autopilot run 6)
+
+- **Task:** M2-01 step 5, FOCUS shared infra: `simulator/booncore_sim/m2_focus.py`. FOCUS 1.2 daily rows (4,482) for compute, vector storage and queries, egress, observability, third-party APIs and staging, tagged `x-feature` and `x-env`. PT-12 is in: idle staging GPU 2025-12-01..2026-02-28 ($96/day) and an oversized vector tier throughout ($38/day), with `pt12_waste_usd_per_day` as ground truth. 7 new tests; not wired into the CLI, so M1 output is unchanged.
+- **Calibration (D3):** seed 42 LLM cost is $3.43M over 18 months; shared infra is $0.675M, 16.4% of AI COGS (target about 15%; test band 12-18%). Labeled assumptions: per-tenant-day cost lines, 3% metering noise, weekend factor 0.6.
+- **Decisions (§8.2):** none needed. Cost $0.
+- **M1 cost check:** not run; it was about 09:10 UTC, Cost Explorer data is expected after 10:00 UTC.
+- **Next:** M2-01 patterns PT-01...PT-14 (start with PT-01...PT-04 and `labels/patterns`).
 
 ## 2026-11-05 (autopilot run 5)
 
