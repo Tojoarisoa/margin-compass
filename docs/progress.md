@@ -12,7 +12,15 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 ## Next
 
 1. M1 cost check (above), then close M1 (PLAN.md §17, AGENTS.md §2).
-2. M2-01 continued: FOCUS shared-infra export, patterns PT-01…PT-14 (`docs/plans/m2-plan.md` §2). Done: tenants, contracts, features, model catalog, telemetry grain, outcomes.
+2. M2-01 continued: patterns PT-01…PT-14 (`docs/plans/m2-plan.md` §2), AI margin calibration (~50%), CLI wiring. Done: tenants, contracts, features, model catalog, telemetry grain, outcomes, FOCUS shared infra.
+
+## 2026-11-05 (autopilot run 6)
+
+- **Task:** M2-01 step 5, shared infrastructure: `simulator/booncore_sim/m2_infra.py`. Daily FOCUS 1.2-shaped rows (compute for F2, vector storage and queries for F3, egress, observability, third-party APIs) tagged `x-feature`/`x-env`; observability is untagged on purpose (needs an allocation rule in M2-02). PT-12: idle staging GPU $60/day 2025-12-01..2026-02-28 and an oversized vector tier ($120 vs $45 right-sized, label $75/day). 8 new tests; not wired into the CLI, so M1 output is unchanged.
+- **Decisions (§8.2):** none needed. Labeled assumptions: per-request rates sized so infra is ~15% of AI COGS (D3, test band 12-18%), 3% daily billing noise, a month depends only on (seed, month, its telemetry).
+- **M1 cost check:** not run; it was about 03:00 UTC, Cost Explorer data is expected after 10:00 UTC today.
+- **PR / CI / deploy:** see below. Simulator code only, no infra change. Cost $0.
+- **Next:** M1 cost check (after 10:00 UTC), then M2-01 patterns PT-01...PT-14.
 
 ## 2026-11-05 (autopilot run 5)
 
