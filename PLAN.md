@@ -983,7 +983,7 @@ Each milestone ends with a demoable increment and exit criteria. Effort assumes 
 - [x] M1-07 Publish step + PG-1 v0 on CloudFront + the agent API behind the same distribution — `mc-dev-web` deployed and verified 2026-11-04 (polling API; streaming spike open)
 - [x] M1-08 Nightly workflow; CI with replay evaluations and a cost gate — `.github/workflows/ci.yml`, `infra/scripts/cost_gate.py`; nightly state machine verified 2026-11-04 (dev schedule off, §15)
 
-**Exit:** a public URL shows per-tenant margin from the pipeline, and one agent question works end to end. Month-to-date AWS cost < $0.50. **Status 2026-11-04:** first two met; the cost criterion is unverified until Cost Explorer has data for the account.
+**Exit:** a public URL shows per-tenant margin from the pipeline, and one agent question works end to end. Month-to-date AWS cost < $0.50. **Met 2026-11-05:** month-to-date AWS cost $0.0373 (Cost Explorer, ops run 42025060616).
 
 ### M2: Cost-to-Serve Platform (~2 weeks)
 

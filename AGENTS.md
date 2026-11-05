@@ -21,7 +21,7 @@ This file tells any AI agent (Claude Code, Codex, Cursor, etc.) how to work in t
 
 ## 2. Current project state
 
-- **Milestone M1: Walking Skeleton.** M1-01…M1-08 are merged. The exit cost criterion (month to date < $0.50) is pending until Cost Explorer has data.
+- **Milestone M1: Walking Skeleton** is closed (2026-11-05): M1-01…M1-08 merged; month-to-date cost $0.0373 (< $0.50).
 - **Milestone M2: Cost-to-Serve Platform** is planned and approved (`docs/plans/m2-plan.md`). The owner allowed M2 work to start while the M1 cost check is pending (2026-11-04).
 - Deployed (AWS dev, us-east-1): `mc-shared-foundation`, `mc-dev-state`, `mc-dev-data`, `mc-dev-web` (public URL: the `mc-dev-web` `Url` output). Merges to `main` deploy dev through GitHub Actions OIDC (`.github/workflows/ci.yml`). See `infra/` and `docs/runbooks/`.
 - State for unattended runs: `docs/progress.md` (§8).
