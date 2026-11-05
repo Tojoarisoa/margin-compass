@@ -19,6 +19,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 - **Task:** M2-01 step 6, patterns PT-01...PT-04: `simulator/booncore_sim/m2_patterns.py`. Post-hoc transforms of baseline telemetry, so the baseline is unchanged. Each returns a `PatternLabel` with a computed `expected_impact_usd_per_day`. 5 new tests; not wired into the CLI, so M1 output is unchanged.
 - **Impacts (seed 42, $/day, averaged over each pattern's days):** PT-01 37, PT-02 5 (tenant `bc-t0002`), PT-03 489, PT-04 43. PT-02 is small because the spec's "retries x4" on a 2% retry base only adds about 6% extra requests (assumption: each added retry re-sends an average request).
 - **Decisions (§8.2):** none needed. PT-03: the baseline already routes F4 to frontier, so earlier F4 rows are moved to `a-mid` before 2025-11-03. Labels are marginal in order PT-01 to PT-04 (PT-04 impact includes PT-01's token growth on the same F1 rows).
+- **PR / CI / deploy:** PR #29, all checks green on the head commit (attribution failed once on the proxy footer, passed after removing it). Fast-forwarded to `main`; `deploy to dev` green. Cost $0.
 - **Next:** PT-05...PT-07 (F3 re-index storm, F2 fleet update surge, integration flood), then PT-08...PT-14. M1 cost check still pending (after 10:00 UTC).
 
 ## 2026-11-05 (autopilot run 6)
