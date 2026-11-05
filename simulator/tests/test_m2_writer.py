@@ -39,3 +39,16 @@ def test_static_tables_and_manifest(tenants, tmp_path):
     assert [f["path"] for f in manifest["files"]] == sorted(f["path"] for f in files)
     assert next(f for f in files if f["path"] == "tenants/tenants.parquet")["rows"] == 400
     assert manifest["synthetic"] is True and (tmp_path / "manifest.json").exists()
+
+
+def test_cli_m2_month_and_static_modes(tmp_path):
+    import json
+
+    from booncore_sim.cli import main
+
+    assert main(["--profile", "m2", "--mode", "month", "--month", "0", "--out", str(tmp_path)]) == 0
+    man = json.loads((tmp_path / "_manifests" / "month-00" / "manifest.json").read_text())
+    assert man["profile"] == "m2" and man["synthetic"] is True
+    assert all("month=2025-04" in f["path"] for f in man["files"])
+    with pytest.raises(SystemExit):
+        main(["--profile", "m2", "--mode", "month", "--out", str(tmp_path)])

@@ -7,6 +7,8 @@ cd simulator
 uv sync
 uv run pytest -q                                              # 19 tests
 uv run booncore-sim --profile m1 --out ../data/local/landing/booncore
+# M2: one backfill chunk (month index 0..18), the static tables, or everything (default)
+uv run booncore-sim --profile m2 --mode month --month 0 --out ../data/local/landing/m2
 ```
 
 - Profile `m1` (M1-01): 20 tenants, F1 only, `a-small` and `a-mid`, 2025-08-01 → 2025-10-29, pattern PT-01.

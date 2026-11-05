@@ -15,9 +15,15 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-1. M2-01: simulator CLI `--profile m2` (month-chunk and static modes) using `m2_run` and `m2_writer`.
-2. M2-01: Step Functions backfill over 19 monthly chunks (infra change: check the cost gate first), then tick M2-01.
-3. M2-02: FOCUS ingestion, allocation rules, cost-to-serve marts (`docs/plans/m2-plan.md` §2).
+1. M2-01: Step Functions backfill over 19 monthly chunks calling `booncore-sim --profile m2 --mode month --month N` (infra change: check the cost gate first), then tick M2-01.
+2. M2-02: FOCUS ingestion, allocation rules, cost-to-serve marts (`docs/plans/m2-plan.md` §2).
+
+## 2026-11-05 (autopilot run 10, task 1)
+
+- **Task:** M2-01 step 11, CLI `--profile m2` with `--mode month --month N` (one backfill chunk), `--mode static`, or `all`. Chunk and static modes write their manifest under `_manifests/`; `all` writes `manifest.json`. M1 profile unchanged. 1 new test.
+- **Decisions (§8.2):** none needed. Default seed 42 for m2. Cost $0.
+- **PR / CI / deploy:** see below.
+- **Next:** Step Functions backfill (infra change, cost gate first).
 
 ## 2026-11-05 (autopilot run 9, task 3)
 
