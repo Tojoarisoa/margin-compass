@@ -15,7 +15,9 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-1. M2-01 continued: patterns PT-08…PT-14 (`docs/plans/m2-plan.md` §2). Done: tenants, contracts, features, model catalog, telemetry grain, outcomes, FOCUS shared infra, PT-01…PT-07.
+1. M2-01: simulator CLI `--profile m2` (month-chunk and static modes) using `m2_run` and `m2_writer`.
+2. M2-01: Step Functions backfill over 19 monthly chunks (infra change: check the cost gate first), then tick M2-01.
+3. M2-02: FOCUS ingestion, allocation rules, cost-to-serve marts (`docs/plans/m2-plan.md` §2).
 
 ## 2026-11-05 (autopilot run 9, task 3)
 

@@ -8,7 +8,7 @@ the owner completes the remaining steps below.
 
 | Piece | Where | Role |
 | --- | --- | --- |
-| Driver | cloud scheduled task (claude.ai/code/routines), prompt in `scheduled-task-prompt.md` | up to 3 tasks per run (one PR each), every 3 h |
+| Driver | cloud scheduled task (claude.ai/code/routines), prompt in `scheduled-task-prompt.md` | tasks one PR each until 2 h 15 min into the run (max 8), every 3 h |
 | Rules | AGENTS.md §8 (applied at the owner's request, 2026-11-04) | loop, standing approval, hard stops |
 | State | `docs/progress.md`, PLAN.md §17 | where the next run picks up; "Waiting for owner" items |
 | Deploys | `.github/workflows/ci.yml` on merge to main (OIDC deploy role) | the only path that changes AWS |
