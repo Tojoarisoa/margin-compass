@@ -15,6 +15,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 ## 2026-11-05 (autopilot run 7)
 
 - **Task:** M1 cost check and close. Ops `cost-report` (run 42025060616): month to date $0.0373 (< $0.50), budget actual $0.0 of $5, FOCUS export delivering. M1 exit criterion met; PLAN.md §17 and AGENTS.md §2 updated.
+- **PR / CI / deploy:** PR #30, all checks green on the head commit (attribution failed once on the proxy footer, passed after removing it via the GitHub MCP tool). Fast-forwarded to `main`; `deploy to dev` green.
 - **Decisions (§8.2):** none needed. Cost $0.
 - **Next:** M2-01 patterns PT-05...PT-14.
 
