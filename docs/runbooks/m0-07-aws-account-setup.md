@@ -131,12 +131,14 @@ Tick each box as you go. Every step says where to click, what to type, and what 
   | Anomaly alerts | [Cost Anomaly Detection](https://console.aws.amazon.com/costmanagement/home#/anomaly-detection/overview) ([docs](https://docs.aws.amazon.com/cost-management/latest/userguide/getting-started-ad.html)) | Subscription `mc-shared-foundation-anomaly-alerts`, immediate, ≥ $1 |
   | Bill export | [Data Exports](https://console.aws.amazon.com/costmanagement/home#/bcm-data-exports) ([docs](https://docs.aws.amazon.com/cur/latest/userguide/what-is-data-exports.html)) | `mc-shared-foundation-focus-1-2`, FOCUS 1.2, Parquet |
 
-- [x] **G3. Save the deploy settings for GitHub.** *Done 2026-11-04 (all three variables set).* The `deploy to dev` job in `.github/workflows/ci.yml` (M1-08) runs only when these repository variables exist. They are settings, not secrets, and are never committed:
+- [x] **G3. Save the deploy settings for GitHub.** *Done 2026-11-04; moved from variables to secrets 2026-11-06 because the repository is public and variables are printed in Actions logs.* The `deploy to dev` job in `.github/workflows/ci.yml` (M1-08) and the ops workflow run only when `MC_AWS_ENABLED` is `true`. The account values are repository **secrets** (masked in logs) and are never committed:
 
   ```bash
-  gh variable set AWS_DEPLOY_ROLE_ARN    --repo Tojoarisoa/margin-compass --body "arn:aws:iam::<account>:role/mc-shared-foundation-github-deploy"
-  gh variable set MC_ALERT_EMAIL         --repo Tojoarisoa/margin-compass --body "you@example.com"
-  gh variable set MC_ANOMALY_MONITOR_ARN --repo Tojoarisoa/margin-compass --body "<existing anomaly monitor ARN, or leave unset>"
+  gh secret set AWS_DEPLOY_ROLE_ARN    --repo Tojoarisoa/margin-compass --body "arn:aws:iam::<account>:role/mc-shared-foundation-github-deploy"
+  gh secret set AWS_OPS_ROLE_ARN       --repo Tojoarisoa/margin-compass --body "arn:aws:iam::<account>:role/mc-shared-foundation-github-ops"
+  gh secret set MC_ALERT_EMAIL         --repo Tojoarisoa/margin-compass --body "you@example.com"
+  gh secret set MC_ANOMALY_MONITOR_ARN --repo Tojoarisoa/margin-compass --body "<existing anomaly monitor ARN, or leave unset>"
+  gh variable set MC_AWS_ENABLED       --repo Tojoarisoa/margin-compass --body true
   ```
 
   The deploy role trusts only workflows on `main` of this repository (no environments).

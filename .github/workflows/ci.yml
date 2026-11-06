@@ -151,7 +151,7 @@ jobs:
 
   deploy-dev:
     name: deploy to dev
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.AWS_DEPLOY_ROLE_ARN != ''
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.MC_AWS_ENABLED == 'true'  # account values are secrets (masked in public logs)
     needs: [lint, python, dashboard, replay-eval, cost-gate]
     runs-on: ubuntu-24.04
     timeout-minutes: 40
@@ -171,15 +171,15 @@ jobs:
         with: { node-version: "${{ env.NODE_VERSION }}" }
       - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
         with:
-          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
           aws-region: us-east-1
           role-session-name: gh-deploy-${{ github.run_id }}
           mask-aws-account-id: true
       - name: Deploy stacks (state -> data -> web -> foundation)
         working-directory: infra
         env:
-          MC_ALERT_EMAIL: ${{ vars.MC_ALERT_EMAIL }}
-          MC_ANOMALY_MONITOR_ARN: ${{ vars.MC_ANOMALY_MONITOR_ARN }}
+          MC_ALERT_EMAIL: ${{ secrets.MC_ALERT_EMAIL }}
+          MC_ANOMALY_MONITOR_ARN: ${{ secrets.MC_ANOMALY_MONITOR_ARN }}
         run: |
           set -euo pipefail
           uv sync --frozen

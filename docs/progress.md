@@ -5,6 +5,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 ## Waiting for owner
 
 - **GitHub Actions minutes (2026-11-06):** exhausted (private repo). Owner decision: not a hard stop; AGENTS.md §8.1 now says how to continue without CI. Unverified (no CI/deploy ran after the merge): PR #61 (`m2_kpis`, code-only, local suite green), PR #60 (`run-m2` CLI, code-only, local suite green), `b0dc936` (code-only; PR head had passed all 12 checks) and `8aa0229`/progress commits (docs only). When minutes are back, re-run the `ci` push workflow on `main` and confirm `deploy to dev`.
+  - **Update 2026-11-06 (owner session):** the owner is making the repository **public** (free Actions minutes). Account values moved from repository variables to secrets (`MC_AWS_ENABLED` var gates AWS jobs), old workflow runs deleted. Once CI runs again, re-run the `ci` push workflow on `main`, confirm `deploy to dev`, then remove this item.
 
 - **Claude Haiku 5.5 access** (support case): when granted, record its M1-06 fixtures (`task: record-fixtures`, model `haiku-5-5`) and apply the ADR-003 selection rule.
 

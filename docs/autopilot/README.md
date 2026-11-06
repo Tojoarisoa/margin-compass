@@ -20,7 +20,7 @@ The cloud sessions never hold AWS credentials. The GitHub proxy rejects `gh pr` 
 ## Owner steps to enable
 
 1. ~~Rules~~: done. AGENTS.md §8 was applied at the owner's explicit request on 2026-11-04.
-2. ~~Ops role~~: done. `mc-shared-foundation-github-ops` is deployed and `AWS_OPS_ROLE_ARN` is set (ops `status` verified 2026-11-04).
+2. ~~Ops role~~: done. `mc-shared-foundation-github-ops` is deployed and the `AWS_OPS_ROLE_ARN` secret is set (ops `status` verified 2026-11-04).
 3. **GitHub for cloud sessions:** at claude.ai/code, connect GitHub (Claude GitHub App on this repo,
    or `/web-setup`).
 4. **Scheduled task:** create it at claude.ai/code/routines with `scheduled-task-prompt.md`.
