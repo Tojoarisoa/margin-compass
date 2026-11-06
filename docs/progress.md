@@ -4,8 +4,6 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Waiting for owner
 
-- **CI check after going public (2026-11-06):** the repository is public since 2026-11-06 ~13:20 UTC (free Actions minutes). If the `ci` push run on `main` for the commit that added this line isn't green with `deploy to dev` passing, fix that first; it covers the merges made without CI (`b0dc936`, PR #60, PR #61, PR #62). Remove this item once it's green.
-
 - **Claude Haiku 5.5 access** (support case): when granted, record its M1-06 fixtures (`task: record-fixtures`, model `haiku-5-5`) and apply the ADR-003 selection rule.
 
 - **Haiku 5.5 access:** only the owner can follow up on the support case; autopilot re-probes it with the ops workflow (`record-fixtures`, `haiku-5-5`) at most once a day.
@@ -28,6 +26,7 @@ Follow `docs/plans/m2-plan.md` §3 sequencing (AWS backfill comes after M2-03):
 - **Why:** GitHub Actions minutes for the private repository were exhausted (1,963 of 2,019 used in November).
 - **Checks before switching:** full history of every ref scanned (account ID, alert e-mail, ARNs, key/token patterns, high-entropy strings): clean. Commits on `main` all use the owner's noreply identity. Actions logs printed the alert e-mail and account ID (repository variables aren't masked), so the account values moved to secrets (PR #62) and all 248 old workflow runs and their artifacts were deleted. Claude Code footers removed from PRs #15, #60, #61.
 - **Settings:** public; secret scanning with push protection; Dependabot alerts; workflow runs from outside contributors need approval; ruleset `protect-main` blocks force pushes and deletion of `main` (fast-forward pushes still work); default `GITHUB_TOKEN` read-only.
+- **Verified:** `ci` push run on `main` (`354d238`) green, including `deploy to dev` (one ECR push timeout, passed on re-run); this covers the merges made without CI (`b0dc936`, PRs #60–#62). New logs show the account values as `***`.
 - **Autopilot:** CI works again, so the normal §8.1 loop applies (wait for every check, then fast-forward).
 
 ## 2026-11-06 (autopilot run 15, task 1)
