@@ -54,6 +54,7 @@ web_dev = WebStack(
     env_name="dev",
     lake_bucket_name=data_dev.lake.bucket_name,
     core_table=state_dev.core,
+    dashboard_domain=app.node.try_get_context("mc:dashboardDomain") or None,
     env=cdk.Environment(account=account, region=config.region),
     description="Margin Compass dev web: CloudFront for the dashboard, snapshots, and agent API (M1-07)",
 )

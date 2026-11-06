@@ -44,6 +44,7 @@ CATALOG: dict[str, tuple[Decimal, str]] = {
     "AWS::CloudFront::Distribution": (Decimal(0), "always-free 1 TB / 10M requests"),
     "AWS::CloudFront::CachePolicy": (Decimal(0), ""), "AWS::CloudFront::OriginRequestPolicy": (Decimal(0), ""),
     "AWS::CloudFront::ResponseHeadersPolicy": (Decimal(0), ""), "AWS::CloudFront::OriginAccessControl": (Decimal(0), ""),
+    "AWS::CertificateManager::Certificate": (Decimal(0), "public ACM certificates are free"),
     "AWS::CloudWatch::Alarm": (Decimal(0), "first 10 free (checked)"),
     "AWS::StepFunctions::StateMachine": (Decimal(0), "Standard, ~4 transitions/run (4,000 free)"),
     "AWS::Scheduler::Schedule": (Decimal(0), "< 100 invocations"),

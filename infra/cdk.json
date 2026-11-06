@@ -17,6 +17,7 @@
       "mc-shared-foundation-github-ops"
     ],
     "mc:nightlyEnabled": false,
+    "mc:dashboardDomain": "medtech.booncore.com",
     "mc:githubOidcSubjectPrefix": "repo:Tojoarisoa@47354538/margin-compass@1443582639"
   }
 }

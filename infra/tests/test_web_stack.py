@@ -127,3 +127,35 @@ def test_no_bucket_deployment_with_lake_wide_write(synth):
     _, t, _ = synth
     t.resource_count_is("Custom::CDKBucketDeployment", 0)
     assert not [s for s in _statements(t) if any(a.startswith(("s3:Put", "s3:Delete", "s3:Abort")) for a in _actions(s))]
+
+
+# --- dashboard custom domain (medtech.booncore.com) ---------------------------------------------------
+
+def test_custom_domain_adds_a_dns_validated_certificate_and_alias():
+    app = cdk.App()
+    env = cdk.Environment(account=ACCOUNT, region="us-east-1")
+    state = StateStack(app, "S", env_name="dev", env=env)
+    data = DataStack(app, "D", env_name="dev", core_table=state.core, env=env)
+    web = WebStack(app, "W", env_name="dev", lake_bucket_name=data.lake.bucket_name, core_table=state.core,
+                   dashboard_domain="medtech.example.com", env=env)
+    t = Template.from_stack(web)
+    t.has_resource_properties("AWS::CertificateManager::Certificate",
+                              {"DomainName": "medtech.example.com", "ValidationMethod": "DNS"})
+    dist = next(iter(t.find_resources("AWS::CloudFront::Distribution").values()))["Properties"]["DistributionConfig"]
+    assert dist["Aliases"] == ["medtech.example.com"]
+    assert dist["ViewerCertificate"]["SslSupportMethod"] == "sni-only"
+    assert dist["ViewerCertificate"]["MinimumProtocolVersion"] == "TLSv1.2_2021"
+    t.has_output("DashboardUrl", {"Value": "https://medtech.example.com"})
+
+
+def test_no_custom_domain_by_default(synth):
+    _, t, _ = synth
+    t.resource_count_is("AWS::CertificateManager::Certificate", 0)
+    assert "Aliases" not in next(iter(t.find_resources("AWS::CloudFront::Distribution").values()))["Properties"]["DistributionConfig"]
+
+
+def test_cdk_json_sets_the_medtech_dashboard_domain():
+    from pathlib import Path
+
+    ctx = json.loads((Path(__file__).resolve().parents[1] / "cdk.json").read_text())["context"]
+    assert ctx["mc:dashboardDomain"] == "medtech.booncore.com"

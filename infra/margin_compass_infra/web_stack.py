@@ -14,6 +14,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import aws_cdk as cdk
+from aws_cdk import aws_certificatemanager as acm
 from aws_cdk import aws_cloudfront as cf
 from aws_cdk import aws_cloudfront_origins as origins
 from aws_cdk import aws_dynamodb as dynamodb
@@ -37,7 +38,7 @@ CSP = ("default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';
 
 class WebStack(cdk.Stack):
     def __init__(self, scope: Construct, construct_id: str, *, env_name: str, lake_bucket_name: str,
-                 core_table: dynamodb.ITable, **kwargs) -> None:
+                 core_table: dynamodb.ITable, dashboard_domain: str | None = None, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
         name = lambda resource: f"mc-{env_name}-web-{resource}"  # noqa: E731
         lake = s3.Bucket.from_bucket_name(self, "Lake", lake_bucket_name)
@@ -100,8 +101,15 @@ class WebStack(cdk.Stack):
         publish_origin = origins.S3BucketOrigin.with_origin_access_control(lake)
         api_origin = origins.FunctionUrlOrigin.with_origin_access_control(url)
 
+        # Optional custom domain for the dashboard (e.g. medtech.booncore.com). The DNS zone is in Cloudflare, so the
+        # certificate is DNS-validated without a Route 53 zone: add the validation CNAME there (docs/runbooks/dashboard-domain.md).
+        certificate = None
+        if dashboard_domain:
+            certificate = acm.Certificate(self, "DashboardCertificate", domain_name=dashboard_domain,
+                                          validation=acm.CertificateValidation.from_dns())
         self.distribution = cf.Distribution(
             self, "Distribution", comment=f"Margin Compass {env_name}: dashboard, snapshots, agent API",
+            domain_names=[dashboard_domain] if dashboard_domain else None, certificate=certificate,
             default_root_object="index.html", price_class=cf.PriceClass.PRICE_CLASS_100,
             http_version=cf.HttpVersion.HTTP2_AND_3, minimum_protocol_version=cf.SecurityPolicyProtocol.TLS_V1_2_2021,
             default_behavior=cf.BehaviorOptions(origin=site_origin, viewer_protocol_policy=cf.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
@@ -121,3 +129,5 @@ class WebStack(cdk.Stack):
         cdk.CfnOutput(self, "Url", value=f"https://{self.distribution.distribution_domain_name}")
         cdk.CfnOutput(self, "ApiFunction", value=self.api.function_name)
         cdk.CfnOutput(self, "DistributionId", value=self.distribution.distribution_id)
+        if dashboard_domain:
+            cdk.CfnOutput(self, "DashboardUrl", value=f"https://{dashboard_domain}")
