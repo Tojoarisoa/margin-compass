@@ -73,6 +73,15 @@ def _text(content: list[dict[str, Any]]) -> str:
     return "\n".join(b["text"] for b in content if "text" in b).strip()
 
 
+def _tools_for(gold_dir):
+    """M1 tools, plus the registry `kpi` tool when M2 marts exist and `mc_pipelines` is installed (not in the Lambda image yet)."""
+    try:
+        from .tools.m2 import analyst_tools
+    except ImportError:
+        return MetricTools(gold_dir)
+    return analyst_tools(gold_dir)
+
+
 def build_graph(llm: BudgetedLLM, tools: MetricTools, ledger: Ledger, model_id: str, tool_log: list):
     specs = tools.specs()
 
@@ -144,7 +153,7 @@ def answer_question(question: str, *, gold_dir: Path, client: LLMClient, model_k
     budget = QuestionBudget(spec)
     llm = BudgetedLLM(client, budget, spend)
     ledger, tool_log = Ledger(), []
-    graph = build_graph(llm, MetricTools(gold_dir), ledger, spec.target, tool_log)
+    graph = build_graph(llm, _tools_for(gold_dir), ledger, spec.target, tool_log)
     state: State = {"question": question, "messages": [{"role": "user", "content": [{"text": question}]}]}
     try:
         final = graph.invoke(state, {"recursion_limit": 20})

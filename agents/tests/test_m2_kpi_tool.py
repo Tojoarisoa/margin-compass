@@ -37,3 +37,27 @@ def test_kpi_margin_matches_the_mart(m2_gold):
 def test_unknown_metric_is_a_tool_error(m2_gold):
     with pytest.raises(ToolError):
         M2KpiTools(m2_gold).kpi("revenue_vibes")
+
+
+def test_analyst_gets_kpi_tool_only_with_m2_marts(m2_gold, tmp_path):
+    import shutil
+
+    from mc_agents.tools import MetricTools
+    from mc_agents.tools.m2 import analyst_tools
+
+    gold = tmp_path / "gold"
+    shutil.copytree(m2_gold, gold)
+    # the analyst's M1 tools need the M1 mart beside the M2 ones; a stub with the two columns they read at start
+    duckdb.sql(f"copy (select 'bc-t0001' as tenant_id, date '2025-04-01' as margin_date) "
+               f"to '{gold}/fct_tenant_margin.parquet' (format parquet)")
+    full = analyst_tools(gold)
+    assert "kpi" in [s["toolSpec"]["name"] for s in full.specs()]
+    assert full.call("kpi", {"metric": "gross_margin_pct"})["display"].endswith("%")
+    with pytest.raises(ToolError):
+        full.call("kpi", {"metrick": "x"})
+    with pytest.raises(ToolError):
+        full.call("nope", {})
+    (gold / "fct_m2_tenant_margin.parquet").unlink()
+    m1 = analyst_tools(gold)
+    assert type(m1) is MetricTools
+    assert "kpi" not in [s["toolSpec"]["name"] for s in m1.specs()]

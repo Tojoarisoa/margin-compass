@@ -12,10 +12,17 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-0. Finish PR #82 (PG-8 Platform FinOps card): all checks green on f52ad44, but the fast-forward push to `main` was denied by the session's permission classifier. Merge it (or re-run), then deploy check. Then wire `MC_FINOPS_FOCUS_GLOB` once the S7 export has data.
-1. M2-03 close-out: register `M2KpiTools` with the analyst (needs `mc_pipelines` in the agents image, so one deploy; changes the agent tool set, so re-record replay fixtures first, ops `record-fixtures`), then tick M2-03 in PLAN.md §17. Contracts doc, lineage, scorecard, drift checks are done.
+0. Wire `MC_FINOPS_FOCUS_GLOB` once the S7 export has data (PR #82 is merged and deployed).
+1. M2-03 close-out: `kpi` tool is wired into the analyst (code-only, lazy import). Remaining: add `mc_pipelines` to the agents image (one deploy) so the Lambda gets it, and have M2 gold sit beside M1 gold for the analyst; then tick M2-03 in PLAN.md §17. The replay set runs on M1 gold, so its fixtures are unchanged.
 2. M2-01 close-out: Step Functions backfill over 19 monthly chunks, one deploy under §8.2 if the cost gate stays <= $3.00, verify AWS gold = local gold, then tick M2-01.
 3. M2-04 remaining: PG-8 *Platform FinOps* tab (real AWS bill by lifecycle stage, budget burn-down; shows "awaiting first export" while the FOCUS export is empty), PG-8 freshness and run history in the health card, dogfood telemetry (S7). The health card (scorecard, lineage) is done. PG-1 and PG-2 are complete (PG-2: cost explorer, margin waterfall table, attribution coverage, margin-vs-usage scatter).
+
+## 2026-11-06 (autopilot run 24, task 1)
+
+- **Task:** M2-03 step 7b: `AnalystTools` adds the registry `kpi` tool to the analyst when every M2 mart is in gold and `mc_pipelines` is importable; otherwise the M1 tool set is unchanged, so replay fixtures stay valid and the current Lambda image is unaffected. Agents 58 passed, ruff clean.
+- **Decisions (§8.2):** gate by mart presence rather than re-recording fixtures (no live model spend, no behaviour change on M1 gold).
+- **Found:** PR #82 had already been merged; `ci` on `main` and `deploy to dev` green.
+- **PR / CI / deploy:** see PR. Cost $0.
 
 ## 2026-11-06 (autopilot run 23, task 1)
 
