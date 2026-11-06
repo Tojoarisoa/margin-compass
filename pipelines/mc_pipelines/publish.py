@@ -100,10 +100,25 @@ def build_pg1(gold: Path, run_id: str, ingest_date: str) -> dict:
     if m2 is not None:
         snapshot["m2_kpis"] = m2  # additive (PG-1 M2-04): registry KPIs over the whole window, metrics/metrics.yml
         snapshot["m2_at_risk"] = m2_at_risk(g)  # additive (PG-1 M2-04): unprofitable tenants and ARR at risk
+        snapshot["m2_margin_forecast"] = margin_forecast(recent, fc)  # additive (PG-1 M2-04): margin % band
         snapshot["m2_features"] = m2_feature_costs(g)  # additive (PG-1 M2-04): fully loaded cost by feature
         snapshot["not_yet_available"].pop("cost_per_outcome", None)
         snapshot["not_yet_available"].pop("arr_at_risk", None)
     return snapshot
+
+
+def margin_forecast(recent: list[tuple], fc: list[tuple]) -> dict:
+    """Forecast margin % band: trailing daily AI revenue (mean of the last 30 days, held flat) minus the COGS forecast.
+
+    Higher cost means lower margin, so the P90 cost gives the low end of the margin band.
+    """
+    if not recent or not fc:
+        return {"assumption": "no recent revenue or no forecast", "points": []}
+    rev = sum((Decimal(r[0]) for r in recent), Decimal(0)) / len(recent)
+    pts = [{"date": r[1].isoformat(), "low": _ratio(rev - Decimal(r[4]), rev), "mid": _ratio(rev - Decimal(r[3]), rev),
+            "high": _ratio(rev - Decimal(r[2]), rev)} for r in fc]
+    return {"assumption": "daily AI revenue held at the last-30-day mean; cost from the P10/P50/P90 COGS forecast",
+            "daily_revenue_usd": _money(rev), "points": pts}
 
 
 def publish(data_root: Path, run_id: str, ingest_date: str) -> dict:

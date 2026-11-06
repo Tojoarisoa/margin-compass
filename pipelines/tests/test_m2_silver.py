@@ -462,6 +462,21 @@ def test_publish_m2_at_risk_counts_negative_margin_tenants(tmp_path):
     assert [w["margin_usd"] for w in risk["worst"]] == sorted(w["margin_usd"] for w in risk["worst"])
 
 
+def test_margin_forecast_band_is_ordered_and_matches_hand_values():
+    from datetime import date
+
+    from mc_pipelines.publish import margin_forecast
+
+    recent = [(100, 40), (100, 40)]  # mean daily revenue 100
+    fc = [(date(2026, 1, 1), date(2026, 1, 2), 30, 40, 55, "v1", "champion")]
+    out = margin_forecast(recent, fc)
+    assert out["daily_revenue_usd"] == 100.0
+    p = out["points"][0]
+    assert (p["low"], p["mid"], p["high"]) == (0.45, 0.6, 0.7)  # P90 cost gives the low margin
+    assert p["low"] <= p["mid"] <= p["high"]
+    assert margin_forecast([], fc)["points"] == []
+
+
 def test_pg1_snapshot_carries_m2_kpis_only_when_the_m2_marts_exist(tmp_path):
     from mc_pipelines.publish import _m2_marts_present
 

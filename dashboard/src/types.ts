@@ -36,6 +36,8 @@ export interface Snapshot {
   m2_features?: FeatureCost[];
   /** Present with m2_kpis: tenants with negative fully loaded margin over the window and the ARR they carry. */
   m2_at_risk?: AtRisk;
+  /** Present with m2_kpis: margin % band for the forecast days (revenue held at the last-30-day mean). */
+  m2_margin_forecast?: { assumption: string; daily_revenue_usd?: number; points: { date: string; low: number | null; mid: number | null; high: number | null }[] };
   not_yet_available: Record<string, string>;
 }
 

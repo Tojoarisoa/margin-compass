@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { AskPanel } from "./AskPanel";
-import { CogsForecast, MarginTrend } from "./charts";
+import { CogsForecast, MarginForecast, MarginTrend } from "./charts";
 import { count, money, percent } from "./format";
 import type { Snapshot } from "./types";
 
@@ -63,6 +63,13 @@ export function App() {
           <h2 id="trend-title">Daily AI gross margin</h2>
           <MarginTrend snap={snap} />
         </section>
+        {snap.m2_margin_forecast && snap.m2_margin_forecast.points.length > 0 && (
+          <section className="card" aria-labelledby="mf-title">
+            <h2 id="mf-title">AI gross margin: forecast band</h2>
+            <MarginForecast snap={snap} />
+            <p className="muted small">{snap.m2_margin_forecast.assumption}.</p>
+          </section>
+        )}
         <section className="card" aria-labelledby="fc-title">
           <h2 id="fc-title">AI COGS: last 30 days and 30-day forecast</h2>
           <CogsForecast snap={snap} />

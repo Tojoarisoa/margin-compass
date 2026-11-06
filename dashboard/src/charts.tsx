@@ -64,3 +64,29 @@ export function CogsForecast({ snap }: { snap: Snapshot }) {
   };
   return <Chart option={option} label="Last 30 days of AI cost to serve and the 30-day forecast with its P10 to P90 band" />;
 }
+
+export function MarginForecast({ snap }: { snap: Snapshot }) {
+  const f = snap.m2_margin_forecast;
+  if (!f || f.points.length === 0) return null;
+  const recent = snap.trend.slice(-30);
+  const pts = f.points;
+  const dates = [...recent.map((d) => d.date), ...pts.map((p) => p.date)];
+  const pad = (n: number) => Array(n).fill(null);
+  const pct = (v: number | null) => (v === null ? null : +(v * 100).toFixed(2));
+  const option: EChartsCoreOption = {
+    tooltip: { trigger: "axis", valueFormatter: (v: number | null) => (v === null ? "" : `${v.toFixed(2)}%`) },
+    legend: { data: ["Actual margin", "Forecast margin", "Margin band"], bottom: 0 },
+    grid: { left: 56, right: 16, top: 16, bottom: 48 },
+    xAxis: { type: "category", data: dates },
+    yAxis: { type: "value", scale: true, axisLabel: { formatter: "{value}%" } },
+    series: [
+      { name: "Actual margin", type: "line", showSymbol: false, color: "#64748b", data: [...recent.map((d) => pct(d.ai_gross_margin_pct)), ...pad(pts.length)] },
+      { name: "Band base", type: "line", stack: "band", symbol: "none", lineStyle: { opacity: 0 }, tooltip: { show: false }, data: [...pad(recent.length), ...pts.map((p) => pct(p.low))] },
+      // The band height (high - low) is a chart drawing aid, not a reported figure.
+      { name: "Margin band", type: "line", stack: "band", symbol: "none", lineStyle: { opacity: 0 }, areaStyle: { color: "#93c5fd", opacity: 0.5 },
+        color: "#93c5fd", tooltip: { show: false }, data: [...pad(recent.length), ...pts.map((p) => (p.low === null || p.high === null ? null : +((p.high - p.low) * 100).toFixed(2)))] },
+      { name: "Forecast margin", type: "line", showSymbol: false, color: "#2563eb", lineStyle: { type: "dashed" }, data: [...pad(recent.length), ...pts.map((p) => pct(p.mid))] },
+    ],
+  };
+  return <Chart option={option} label="Last 30 days of AI gross margin and the 30-day margin forecast band" />;
+}
