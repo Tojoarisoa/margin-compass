@@ -20,7 +20,8 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 - **Task:** M2-04 step 2c: `pg2.json` gets `margin_waterfall` (per tenant: revenue, discount, LLM, infrastructure, margin; lowest first) and `attribution_by_month` (allocated vs unallocated shared infrastructure); both shown in the explorer card. Test: sums equal the marts. Pipelines test + ruff clean, dashboard build clean.
 - **Decisions (§8.2):** waterfall as a table, not a chart, for now.
-- **PR / CI / deploy:** see PR below.
+- **PR / CI / deploy:** PR #79, all checks green on the head commit; fast-forwarded to `main`; `ci` push run and `deploy to dev` green. Cost $0.
+- **Run end:** past 35 min; 2 tasks done.
 
 ## 2026-11-06 (autopilot run 21, task 1)
 
