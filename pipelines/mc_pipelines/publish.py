@@ -130,6 +130,42 @@ def write_explore_parquet(gold: Path, out: Path) -> int:
     return size
 
 
+PG2_MAX_BYTES = 1024 * 1024  # M2-04: pre-aggregated PG-2 JSON (ADR-009 fallback), served gzip by CloudFront
+_PG2_COLS = ("requests", "llm_cost_usd", "agent_compute_usd", "vector_usd", "network_observability_usd", "third_party_usd",
+             "cost_to_serve_usd")
+
+
+def build_pg2(gold: Path, run_id: str) -> dict:
+    """PG-2 cost-to-serve explorer data, pre-aggregated in the pipeline (ADR-009 fallback: DuckDB-WASM needs the
+    parquet extension from a public CDN, which the ADR rules out). Sums only; every view totals to `fct_cost_to_serve`.
+    """
+    g = Path(gold)
+    con = duckdb.connect()
+    base = (f"FROM read_parquet('{g}/fct_cost_to_serve.parquet') c "
+            f"LEFT JOIN read_parquet('{g}/dim_feature.parquet') f USING (feature_id)")
+    sums = ", ".join(f"sum(c.{c})" for c in _PG2_COLS)
+
+    def view(keys: list[str], names: list[str]) -> list[dict]:
+        sel = ", ".join(keys)
+        rows = con.execute(f"SELECT {sel}, {sums} {base} GROUP BY {sel} ORDER BY {sel}").fetchall()
+        out = []
+        for r in rows:
+            d = {n: (v.isoformat() if hasattr(v, "isoformat") else v) for n, v in zip(names, r[:len(names)], strict=True)}
+            d["requests"] = int(r[len(names)])
+            d.update({c: _money(v) for c, v in zip(_PG2_COLS[1:], r[len(names) + 1:], strict=True)})
+            out.append(d)
+        return out
+
+    names = {r[0]: r[1] for r in con.execute(f"SELECT feature_id, any_value(feature_name) {base} GROUP BY feature_id").fetchall()}
+    by_feature = view(["c.feature_id"], ["feature_id"])
+    for r in by_feature:
+        r["feature_name"] = names.get(r["feature_id"])
+    return {"schema_version": "pg2.v0", "run_id": run_id, "data_label": "synthetic",
+            "by_tenant": view(["c.tenant_id"], ["tenant_id"]), "by_feature": by_feature,
+            "by_month": view(["date_trunc('month', c.cost_date)::DATE"], ["month"]),
+            "by_tenant_feature": view(["c.tenant_id", "c.feature_id"], ["tenant_id", "feature_id"])}
+
+
 def margin_forecast(recent: list[tuple], fc: list[tuple]) -> dict:
     """Forecast margin % band: trailing daily AI revenue (mean of the last 30 days, held flat) minus the COGS forecast.
 
@@ -153,6 +189,11 @@ def publish(data_root: Path, run_id: str, ingest_date: str) -> dict:
     explore = None
     if _m2_marts_present(root / "gold"):
         explore = write_explore_parquet(root / "gold", root / "publish" / "latest" / "explore.parquet")
+    if explore is not None:
+        pg2 = json.dumps(build_pg2(root / "gold", run_id), separators=(",", ":"), allow_nan=False).encode()
+        if len(pg2) > PG2_MAX_BYTES:
+            raise PublishError(f"pg2.json is {len(pg2)} bytes; the M2-04 limit is {PG2_MAX_BYTES}")
+        (root / "publish" / "latest" / "pg2.json").write_bytes(pg2)
     paths = [root / "publish" / "latest" / "pg1.json", root / "publish" / "history" / ingest_date / "pg1.json"]
     for p in paths:
         p.parent.mkdir(parents=True, exist_ok=True)

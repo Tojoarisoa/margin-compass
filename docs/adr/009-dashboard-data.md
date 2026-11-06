@@ -32,6 +32,7 @@ A **static SPA** on S3 + CloudFront. KPI pages load small JSON snapshots; explor
 
 - Same origin means no CORS configuration.
 - **Open:** wasm bundle size and Parquet range reads through CloudFront; spike in M1-07.
+- **Spike result (2026-11-06, M2-04):** DuckDB-WASM 1.32.0 fetches its Parquet reader from `extensions.duckdb.org` at run time, which breaks the no-public-CDN control, so PG-2 uses the fallback below: pre-aggregated JSON (`publish/latest/pg2.json`). A retry needs the extension self-hosted (`custom_extension_repository`).
 - **Revisit if** the spike shows range reads fail or the wasm bundle makes first load too slow; fall back to pre-aggregated JSON for those pages.
 
 ## Cost impact

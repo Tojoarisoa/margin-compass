@@ -14,7 +14,13 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 1. M2-03 close-out: register `M2KpiTools` with the analyst (needs `mc_pipelines` in the agents image, so one deploy; changes the agent tool set, so re-record replay fixtures first, ops `record-fixtures`), then tick M2-03 in PLAN.md §17. Contracts doc, lineage, scorecard, drift checks are done.
 2. M2-01 close-out: Step Functions backfill over 19 monthly chunks, one deploy under §8.2 if the cost gate stays <= $3.00, verify AWS gold = local gold, then tick M2-01.
-3. M2-04 remaining: PG-2 page (ADR-009 spike: pinned DuckDB-WASM, self-hosted bundles, range reads of `publish/latest/explore.parquet`; fall back to JSON if it fails), PG-8 tabs, dogfood telemetry. PG-1 is complete.
+3. M2-04 remaining: PG-2 extras (margin waterfall, margin-vs-usage scatter, attribution coverage; add to `pg2.json`), PG-8 tabs, dogfood telemetry. PG-1 is complete; PG-2 has the cost explorer (JSON).
+
+## 2026-11-06 (autopilot run 21, task 1)
+
+- **Task:** M2-04 step 2b: PG-2 spike + page. DuckDB-WASM 1.32.0 (npm audit clean) loads its Parquet reader from `extensions.duckdb.org` at run time, which ADR-009 forbids and the sandbox can't reach, so under the ADR's own fallback (§8.2) PG-2 is pre-aggregated JSON: `publish/latest/pg2.json` (by tenant, feature, month, tenant x feature; each view totals to `fct_cost_to_serve`) and a lazy "Cost-to-serve explorer" card on the page. Pipelines 68 passed, ruff clean, dashboard build clean. ADR-009 spike result and PLAN Change Log noted.
+- **Decisions (§8.2):** JSON fallback (ADR-009); `explore.parquet` kept for a later retry with a self-hosted extension.
+- **PR / CI / deploy:** see PR below.
 
 ## 2026-11-06 (autopilot run 20, task 2)
 

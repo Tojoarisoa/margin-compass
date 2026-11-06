@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { AskPanel } from "./AskPanel";
 import { CogsForecast, MarginForecast, MarginTrend } from "./charts";
 import { count, money, percent } from "./format";
 import type { Snapshot } from "./types";
+
+const Explorer = lazy(() => import("./Explorer"));
 
 function Tile({ label, value, note }: { label: string; value: string; note?: string }) {
   return (
@@ -17,6 +19,7 @@ function Tile({ label, value, note }: { label: string; value: string; note?: str
 export function App() {
   const [snap, setSnap] = useState<Snapshot | null>(null);
   const [error, setError] = useState("");
+  const [showExplorer, setShowExplorer] = useState(false);
 
   useEffect(() => {
     fetch("/publish/latest/pg1.json", { cache: "no-cache" })
@@ -126,6 +129,17 @@ export function App() {
               </tbody>
             </table>
           </div>
+        </section>
+      )}
+
+      {snap.m2_kpis && (
+        <section className="card" aria-labelledby="explore-title">
+          <h2 id="explore-title">Cost-to-serve explorer</h2>
+          {showExplorer ? (
+            <Suspense fallback={<p className="muted">Loading explorer…</p>}><Explorer /></Suspense>
+          ) : (
+            <button onClick={() => setShowExplorer(true)}>Open explorer</button>
+          )}
         </section>
       )}
 

@@ -485,6 +485,31 @@ def test_explore_parquet_sums_equal_the_mart_and_stay_small(tmp_path):
     assert (a[0], a[1]) == (b[0], b[1]) and a[2] > 0
 
 
+def test_pg2_views_each_total_to_the_cost_to_serve_mart(tmp_path):
+    from booncore_sim.m2_writer import write_dimensions, write_focus, write_revenue
+    from mc_pipelines.cli import run_m2_dbt
+    from mc_pipelines.publish import PG2_MAX_BYTES, build_pg2
+
+    tenants, history = generate_m2_tenants(42)
+    landing = tmp_path / "landing"
+    write_month(landing, 42, tenants, 5)
+    _write(landing, "tenants/tenants.parquet", tenants, 42, "tenants")
+    write_focus(landing, 42, tenants)
+    write_revenue(landing, 42, tenants, history)
+    write_dimensions(landing, 42, history)
+    _write(landing, "s5_price_catalog/price_catalog.parquet", list(PRICE_CATALOG_V2), 42, "price catalog")
+    assert run_m2_dbt(landing, tmp_path / "data", "run-m2")["success"]
+    gold = tmp_path / "data" / "gold"
+    pg2 = build_pg2(gold, "r1")
+    total = duckdb.sql(f"select sum(cost_to_serve_usd), sum(requests) from read_parquet('{gold}/fct_cost_to_serve.parquet')").fetchall()[0]
+    for view in ("by_tenant", "by_feature", "by_month", "by_tenant_feature"):
+        assert pg2[view], view
+        assert sum(r["cost_to_serve_usd"] for r in pg2[view]) == pytest.approx(float(total[0]), abs=0.01 * len(pg2[view])), view  # rows are rounded to cents
+        assert sum(r["requests"] for r in pg2[view]) == total[1], view
+    assert all(r["feature_name"] for r in pg2["by_feature"])
+    assert len(json.dumps(pg2)) <= PG2_MAX_BYTES
+
+
 def test_margin_forecast_band_is_ordered_and_matches_hand_values():
     from datetime import date
 
