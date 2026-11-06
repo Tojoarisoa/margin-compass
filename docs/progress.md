@@ -17,11 +17,18 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 Follow `docs/plans/m2-plan.md` §3 sequencing (AWS backfill comes after M2-03):
 
-1. M2-02 step 1: silver `stg_focus_*`, telemetry priced against the effective-dated catalog, revenue daily-ized (local DuckDB, dbt).
+1. M2-02 step 1b: silver revenue daily-ized (overage, discounts), outcomes joined to telemetry by trace ID (sample), `stg_focus_*` (the shared-infra FOCUS export is not in the landing writer yet; add it to `m2_writer` first).
 2. M2-02 remaining steps: allocation rules, gold marts, gates.
 3. M2-03: metrics registry, contracts, scorecard.
-4. M2-01 close-out: Step Functions backfill over 19 monthly chunks (`booncore-sim --profile m2 --mode month --month N`), one deploy under §8.2 if the cost gate stays ≤ $3.00, verify AWS gold = local gold, then tick M2-01.
+4. M2-01 close-out: Step Functions backfill over 19 monthly chunks, one deploy under §8.2 if the cost gate stays <= $3.00, verify AWS gold = local gold, then tick M2-01.
 5. M2-04.
+
+## 2026-11-06 (autopilot run 11, task 1)
+
+- **Task:** M2-02 step 1a, silver priced telemetry: dbt models in `pipelines/transform/models/m2/` (`stg_m2_telemetry`, `stg_m2_price_catalog`, `slv_m2_llm_usage_priced`) with cache-read and batch rates; enabled only when var `m2_landing_path` is set, so the M1 build is unchanged. 3 new tests compare dbt output with the simulator's `request_cost_usd` (one month, 2025-09).
+- **Decisions (§8.2):** none needed. Catalog `effective_to` is exclusive in M2 (inclusive in M1).
+- **PR / CI / deploy:** PR #42, all checks green on the head commit (attribution failed once on the proxy footer, passed after editing the body via the GitHub MCP tool). The unattended push to `main` was denied by the permission classifier; the owner approved it in session and it was fast-forwarded; `deploy to dev` green. Cost $0.
+- **Next:** M2-02 step 1b. The run stopped after one task because of the denied merge.
 
 ## 2026-11-05 (autopilot run 10, task 1)
 
