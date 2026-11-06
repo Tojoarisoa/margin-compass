@@ -69,6 +69,34 @@ export function App() {
         </section>
       </div>
 
+      {snap.m2_features && snap.m2_features.length > 0 && (
+        <section className="card" aria-labelledby="features-title">
+          <h2 id="features-title">Fully loaded cost to serve by feature</h2>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr><th scope="col">Feature</th><th scope="col" className="num">Requests</th><th scope="col" className="num">LLM</th>
+                  <th scope="col" className="num">Agent compute</th><th scope="col" className="num">Vector</th>
+                  <th scope="col" className="num">Network + observability</th><th scope="col" className="num">Third-party</th>
+                  <th scope="col" className="num">Total</th><th scope="col" className="num">Share</th></tr>
+              </thead>
+              <tbody>
+                {snap.m2_features.map((f) => (
+                  <tr key={f.feature_id}>
+                    <td>{f.feature_id} {f.feature_name ?? ""}</td><td className="num">{f.requests.toLocaleString("en-US")}</td>
+                    <td className="num">{money(f.llm_cost_usd)}</td><td className="num">{money(f.agent_compute_usd)}</td>
+                    <td className="num">{money(f.vector_usd)}</td><td className="num">{money(f.network_observability_usd)}</td>
+                    <td className="num">{money(f.third_party_usd)}</td><td className="num">{money(f.cost_to_serve_usd)}</td>
+                    <td className="num">{percent(f.cost_share, 1)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="muted small">Revenue is booked per tenant, so features show cost and share of cost, not a margin %.</p>
+        </section>
+      )}
+
       <AskPanel />
 
       <section className="card" aria-labelledby="tenants-title">

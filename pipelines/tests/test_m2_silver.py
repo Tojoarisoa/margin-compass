@@ -416,6 +416,28 @@ def test_publish_m2_kpis_come_from_the_registry_and_match_the_marts(tmp_path):
     assert set(kpis) >= {"unit_cost_per_request_usd", "cost_per_outcome_usd", "safety_event_recall", "attribution_coverage"}
 
 
+def test_publish_m2_feature_costs_sum_to_the_mart_total(tmp_path):
+    from booncore_sim.m2_writer import write_dimensions, write_focus, write_revenue
+    from mc_pipelines.cli import run_m2_dbt
+    from mc_pipelines.publish import m2_feature_costs
+
+    tenants, history = generate_m2_tenants(42)
+    landing = tmp_path / "landing"
+    write_month(landing, 42, tenants, 5)
+    _write(landing, "tenants/tenants.parquet", tenants, 42, "tenants")
+    write_focus(landing, 42, tenants)
+    write_revenue(landing, 42, tenants, history)
+    write_dimensions(landing, 42, history)
+    _write(landing, "s5_price_catalog/price_catalog.parquet", list(PRICE_CATALOG_V2), 42, "price catalog")
+    assert run_m2_dbt(landing, tmp_path / "data", "run-m2")["success"]
+    gold = tmp_path / "data" / "gold"
+    feats = m2_feature_costs(gold)
+    total = duckdb.sql(f"select sum(cost_to_serve_usd) from read_parquet('{gold}/fct_cost_to_serve.parquet')").fetchall()[0][0]
+    assert sum(f["cost_to_serve_usd"] for f in feats) == pytest.approx(float(total), abs=0.05)
+    assert sum(f["cost_share"] for f in feats) == pytest.approx(1.0, abs=0.001)
+    assert all(f["feature_name"] for f in feats)
+
+
 def test_pg1_snapshot_carries_m2_kpis_only_when_the_m2_marts_exist(tmp_path):
     from mc_pipelines.publish import _m2_marts_present
 

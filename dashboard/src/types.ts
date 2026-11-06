@@ -32,5 +32,12 @@ export interface Snapshot {
   tenants: TenantRow[];
   /** Present when the M2 marts exist: registry KPIs over the whole window (metrics/metrics.yml). */
   m2_kpis?: Record<string, number | null>;
+  /** Present with m2_kpis: fully loaded cost to serve per feature (revenue is per tenant, so no per-feature margin %). */
+  m2_features?: FeatureCost[];
   not_yet_available: Record<string, string>;
+}
+
+export interface FeatureCost {
+  feature_id: string; feature_name: string | null; requests: number; llm_cost_usd: number; agent_compute_usd: number;
+  vector_usd: number; network_observability_usd: number; third_party_usd: number; cost_to_serve_usd: number; cost_share: number | null;
 }

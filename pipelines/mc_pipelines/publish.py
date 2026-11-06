@@ -99,6 +99,7 @@ def build_pg1(gold: Path, run_id: str, ingest_date: str) -> dict:
     }
     if m2 is not None:
         snapshot["m2_kpis"] = m2  # additive (PG-1 M2-04): registry KPIs over the whole window, metrics/metrics.yml
+        snapshot["m2_features"] = m2_feature_costs(g)  # additive (PG-1 M2-04): fully loaded cost by feature
         snapshot["not_yet_available"].pop("cost_per_outcome", None)
     return snapshot
 
@@ -135,3 +136,22 @@ def m2_kpis(gold: Path, names: tuple[str, ...] | None = None) -> dict[str, float
         value = registry.compute(metric, [dict(zip(cols, r, strict=True)) for r in cur.fetchall()])
         out[name] = None if value is None else float(value.quantize(RATIO, ROUND_HALF_UP))
     return out
+
+
+def m2_feature_costs(gold: Path) -> list[dict]:
+    """Fully loaded cost to serve per feature over the whole window, by component (fct_cost_to_serve + dim_feature).
+
+    Revenue is booked per tenant, not per feature, so this is cost and share of cost, not a per-feature margin %.
+    """
+    g = Path(gold)
+    rows = duckdb.connect().execute(f"""
+        SELECT c.feature_id, any_value(f.feature_name), sum(c.requests), sum(c.llm_cost_usd), sum(c.agent_compute_usd),
+               sum(c.vector_usd), sum(c.network_observability_usd), sum(c.third_party_usd), sum(c.cost_to_serve_usd)
+        FROM read_parquet('{g}/fct_cost_to_serve.parquet') c
+        LEFT JOIN read_parquet('{g}/dim_feature.parquet') f USING (feature_id)
+        GROUP BY c.feature_id ORDER BY c.feature_id""").fetchall()
+    total = sum((Decimal(r[8]) for r in rows), Decimal(0))
+    return [{"feature_id": r[0], "feature_name": r[1], "requests": int(r[2]), "llm_cost_usd": _money(r[3]),
+             "agent_compute_usd": _money(r[4]), "vector_usd": _money(r[5]), "network_observability_usd": _money(r[6]),
+             "third_party_usd": _money(r[7]), "cost_to_serve_usd": _money(r[8]), "cost_share": _ratio(Decimal(r[8]), total)}
+            for r in rows]
