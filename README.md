@@ -1,6 +1,6 @@
 # Margin Compass
 
-**AI cost-to-serve and gross-margin intelligence for B2B SaaS companies that ship AI features, built on AWS for ~$0/month.**
+**AI cost-to-serve and gross-margin intelligence for B2B SaaS companies that ship AI features.**
 
 Generative-AI features turned software's near-zero marginal cost into a real per-interaction inference cost. Yet most SaaS companies still can't answer three questions:
 
