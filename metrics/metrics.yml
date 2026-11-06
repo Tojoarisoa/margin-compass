@@ -25,6 +25,12 @@ metrics:
     kind: ratio
     numerator: [{col: llm_cost_usd}]
     denominator: [{col: requests}]
+  - name: cost_per_outcome_usd
+    description: Fully loaded cost to serve per ticket resolved remotely (KPI-05)
+    source: agg_m2_cost_per_outcome
+    kind: ratio
+    numerator: [{col: cost_to_serve_usd}]
+    denominator: [{col: resolved_remotely}]
   - name: safety_event_recall
     description: Labeled safety events that F0 flagged, over all labeled events
     source: fct_quality

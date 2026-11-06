@@ -14,6 +14,7 @@ import pytest
 from booncore_sim.m2_catalog import PRICE_CATALOG_V2, price_on, request_cost_usd
 from booncore_sim.m2_tenants import generate_m2_tenants
 from booncore_sim.m2_writer import _write, write_month
+from mc_pipelines import metrics
 from mc_pipelines.cli import TRANSFORM_DIR
 
 pytestmark = pytest.mark.filterwarnings("ignore")
@@ -172,7 +173,7 @@ def allocated(tmp_path_factory):
     variables = {"m2_landing_path": str(landing), "silver_path": str(root / "silver"), "bronze_path": "x",
                  "gold_path": str(root / "gold"), "allocation_rules": load_rules()}
     result = dbtRunner().invoke([
-        "build", "--select", "+fct_infra_cost_allocated", "+fct_cost_to_serve", "+fct_unit_cost", "+fct_quality", "+fct_m2_tenant_margin", "--project-dir", str(TRANSFORM_DIR),
+        "build", "--select", "+fct_infra_cost_allocated", "+fct_cost_to_serve", "+fct_unit_cost", "+fct_quality", "+fct_m2_tenant_margin", "+agg_m2_cost_per_outcome", "--project-dir", str(TRANSFORM_DIR),
         "--profiles-dir", str(TRANSFORM_DIR), "--target-path", str(root / "t"), "--log-path", str(root / "l"),
         "--vars", json.dumps(variables), "--quiet"])
     assert result.success, result.exception
@@ -286,6 +287,20 @@ def test_dimensions_scd2_has_one_current_row_and_no_gaps(tmp_path):
 
 M2_GATES = ["m2_preservation_infra_cost", "m2_preservation_llm_cost", "m2_preservation_revenue_invoice_line",
             "m2_preservation_revenue_period"]
+
+
+def test_cost_per_outcome_mart_matches_sources_and_registry(allocated):
+    out, _ = allocated
+    gold = out.parent
+    cost, outcomes = duckdb.sql(
+        f"select sum(cost_to_serve_usd), sum(resolved_remotely) from '{gold}/agg_m2_cost_per_outcome.parquet'").fetchall()[0]
+    src_cost = duckdb.sql(f"select sum(cost_to_serve_usd) from '{gold}/fct_m2_tenant_margin.parquet'").fetchall()[0][0]
+    src_out = duckdb.sql(f"select sum(resolved_remotely) from '{gold}/fct_quality.parquet'").fetchall()[0][0]
+    assert (cost, outcomes) == (src_cost, src_out)  # full outer join: nothing lost or doubled
+    assert duckdb.sql(f"select count(*) - count(distinct (metric_date, tenant_id)) from '{gold}/agg_m2_cost_per_outcome.parquet'").fetchall()[0][0] == 0
+    m = metrics.load()["cost_per_outcome_usd"]
+    got = duckdb.sql(f"select {metrics.to_sql(m)} from '{gold}/agg_m2_cost_per_outcome.parquet'").fetchall()[0][0]
+    assert abs(Decimal(str(got)) - Decimal(str(cost)) / Decimal(str(outcomes))) < Decimal("1e-9")
 
 
 def _dbt(root: Path, args: list[str], variables: dict):

@@ -14,6 +14,11 @@ ROWS = {
         {"tenant_id": "a", "revenue_usd": "100.00", "cost_to_serve_usd": "60.5"},
         {"tenant_id": "b", "revenue_usd": "10.00", "cost_to_serve_usd": "30.25"},
     ],
+    "agg_m2_cost_per_outcome": [
+        {"cost_to_serve_usd": "30.0", "resolved_remotely": 10},
+        {"cost_to_serve_usd": "5.0", "resolved_remotely": 0},  # cost on a day with no resolutions still counts
+        {"cost_to_serve_usd": "5.0", "resolved_remotely": 10},
+    ],
     "fct_unit_cost": [
         {"llm_cost_usd": "3.5", "requests": 1000},
         {"llm_cost_usd": "0.5", "requests": 3000},
@@ -53,6 +58,7 @@ def test_known_values_and_rollup_from_sums():
     reg = metrics.load()
     assert metrics.compute(reg["gross_margin_usd"], ROWS["fct_m2_tenant_margin"]) == Decimal("19.25")
     assert metrics.compute(reg["attribution_coverage"], ROWS["fct_infra_cost_allocated"]) == Decimal("0.75")
+    assert metrics.compute(reg["cost_per_outcome_usd"], ROWS["agg_m2_cost_per_outcome"]) == Decimal("2")
     # Recall is 10/11 from summed counts, not the mean of daily ratios (0.9, none, 1.0 -> 0.95).
     recall = metrics.compute(reg["safety_event_recall"], ROWS["fct_quality"])
     assert abs(recall - Decimal(10) / Decimal(11)) < Decimal("1e-12")
