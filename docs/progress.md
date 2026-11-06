@@ -17,9 +17,16 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 Follow `docs/plans/m2-plan.md` §3 sequencing (AWS backfill comes after M2-03):
 
-1. M2-03 remaining (`cost_per_outcome_usd` is now in the registry): use the registry in the dbt marts (`to_sql`), the publish step and the agent tools, with parity tests; wire the two drift checks (`mc_pipelines/drift.py`) into the scorecard as warnings; scorecard and lineage. Wire the M2 dbt build (`m2_gates` var, allocation rules var) into `mc_pipelines`; the Lambda image copies `pipelines/` only, so `reference/allocation_rules.yml` and `metrics/` must be copied in too.
+1. M2-03 remaining (`cost_per_outcome_usd` is now in the registry): use the registry in the dbt marts (`to_sql`), the publish step and the agent tools, with parity tests; call `write_m2_scorecard` (`mc_pipelines/drift.py`) from the pipeline run once the M2 dbt build is wired in; lineage. Wire the M2 dbt build (`m2_gates` var, allocation rules var) into `mc_pipelines`; the Lambda image copies `pipelines/` only, so `reference/allocation_rules.yml` and `metrics/` must be copied in too.
 2. M2-01 close-out: Step Functions backfill over 19 monthly chunks, one deploy under §8.2 if the cost gate stays <= $3.00, verify AWS gold = local gold, then tick M2-01.
 3. M2-04.
+
+## 2026-11-06 (autopilot run 13, task 5)
+
+- **Task:** M2-03 step 3c: `drift.m2_drift_checks` (volume of requests, tokens per request, cost per request on `fct_unit_cost`) and `write_m2_scorecard` -> `gold/_quality/m2_scorecard.json`, all findings as `statistical` warnings. 1 test on the built gold marts (shape; every finding is a warning).
+- **Decisions (§8.2):** none needed. Not yet called from the pipeline run: the M2 dbt build is not wired into `mc_pipelines` (next step).
+- **PR / CI / deploy:** PR #57, all checks green on the head commit (attribution passed after the body was edited via the GitHub MCP tool). Fast-forwarded to `main`; `deploy to dev` green (slow, ~15 min). Cost $0.
+- **Next:** wire the M2 dbt build into `mc_pipelines` (copy `reference/` and `metrics/` into the Lambda image), then lineage and the registry in marts/publish/tools.
 
 ## 2026-11-06 (autopilot run 13, task 4)
 
