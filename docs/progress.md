@@ -17,7 +17,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 Follow `docs/plans/m2-plan.md` §3 sequencing (AWS backfill comes after M2-03):
 
-1. M2-02 step 1d: silver outcomes joined to telemetry by trace ID (sample only). Overage revenue is not simulated yet (flat add-on only); decide whether to add it before the gold margin mart.
+1. M2-02 step 1d: silver outcomes joined to telemetry by trace ID (sample only). Needs a simulator change first: `TicketOutcome` has no `trace_id` and `RawRequest` has no `ticket_id`, so link them (a new column on the 10% ticket sample referencing sampled raw requests; this changes landed bytes, update the determinism tests). Otherwise skip to step 2 and join at tenant x day. Overage revenue is not simulated yet (flat add-on only); decide whether to add it before the gold margin mart.
 2. M2-02 remaining steps: allocation rules (`reference/allocation_rules.yml`), gold marts, gates.
 3. M2-03: metrics registry, contracts, scorecard.
 4. M2-01 close-out: Step Functions backfill over 19 monthly chunks, one deploy under §8.2 if the cost gate stays <= $3.00, verify AWS gold = local gold, then tick M2-01.
