@@ -18,6 +18,7 @@ from mc_pipelines import metrics as registry
 
 SCHEMA_VERSION = "pg1.v0"
 MAX_BYTES = 200 * 1024
+EXPLORE_MAX_BYTES = 5 * 1024 * 1024  # M2-04: exploration Parquet for PG-2 (DuckDB-WASM)
 CENT, RATIO = Decimal("0.01"), Decimal("0.000001")
 
 
@@ -107,6 +108,28 @@ def build_pg1(gold: Path, run_id: str, ingest_date: str) -> dict:
     return snapshot
 
 
+def write_explore_parquet(gold: Path, out: Path) -> int:
+    """PG-2 exploration Parquet: fully loaded cost to serve at tenant x feature x month grain, with names.
+
+    Sums only (no ratios), so the browser can roll up any slice and stay equal to the marts. Fails if over 5 MB.
+    """
+    g = Path(gold)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    duckdb.connect().execute(f"""
+        COPY (SELECT date_trunc('month', c.cost_date)::DATE AS month, c.tenant_id, c.feature_id, any_value(f.feature_name) AS feature_name,
+                     sum(c.requests) AS requests, sum(c.llm_cost_usd) AS llm_cost_usd, sum(c.agent_compute_usd) AS agent_compute_usd,
+                     sum(c.vector_usd) AS vector_usd, sum(c.network_observability_usd) AS network_observability_usd,
+                     sum(c.third_party_usd) AS third_party_usd, sum(c.cost_to_serve_usd) AS cost_to_serve_usd
+              FROM read_parquet('{g}/fct_cost_to_serve.parquet') c
+              LEFT JOIN read_parquet('{g}/dim_feature.parquet') f USING (feature_id)
+              GROUP BY 1, 2, 3 ORDER BY 1, 2, 3) TO '{out}' (FORMAT parquet, COMPRESSION zstd)""")
+    size = out.stat().st_size
+    if size > EXPLORE_MAX_BYTES:
+        out.unlink()
+        raise PublishError(f"explore.parquet is {size} bytes; the M2-04 limit is {EXPLORE_MAX_BYTES}")
+    return size
+
+
 def margin_forecast(recent: list[tuple], fc: list[tuple]) -> dict:
     """Forecast margin % band: trailing daily AI revenue (mean of the last 30 days, held flat) minus the COGS forecast.
 
@@ -127,11 +150,15 @@ def publish(data_root: Path, run_id: str, ingest_date: str) -> dict:
     body = json.dumps(snapshot, separators=(",", ":"), allow_nan=False).encode()
     if len(body) > MAX_BYTES:
         raise PublishError(f"pg1.json is {len(body)} bytes; the §7.5 limit is {MAX_BYTES}")
+    explore = None
+    if _m2_marts_present(root / "gold"):
+        explore = write_explore_parquet(root / "gold", root / "publish" / "latest" / "explore.parquet")
     paths = [root / "publish" / "latest" / "pg1.json", root / "publish" / "history" / ingest_date / "pg1.json"]
     for p in paths:
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_bytes(body)
-    return {"bytes": len(body), "files": [str(p.relative_to(root)) for p in paths], "days": snapshot["window"]["days"]}
+    return {"bytes": len(body), "files": [str(p.relative_to(root)) for p in paths], "days": snapshot["window"]["days"],
+            **({"explore_bytes": explore} if explore is not None else {})}
 
 
 def _m2_marts_present(gold: Path) -> bool:

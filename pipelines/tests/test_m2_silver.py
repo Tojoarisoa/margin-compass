@@ -462,6 +462,29 @@ def test_publish_m2_at_risk_counts_negative_margin_tenants(tmp_path):
     assert [w["margin_usd"] for w in risk["worst"]] == sorted(w["margin_usd"] for w in risk["worst"])
 
 
+def test_explore_parquet_sums_equal_the_mart_and_stay_small(tmp_path):
+    from booncore_sim.m2_writer import write_dimensions, write_focus, write_revenue
+    from mc_pipelines.cli import run_m2_dbt
+    from mc_pipelines.publish import EXPLORE_MAX_BYTES, write_explore_parquet
+
+    tenants, history = generate_m2_tenants(42)
+    landing = tmp_path / "landing"
+    write_month(landing, 42, tenants, 5)
+    _write(landing, "tenants/tenants.parquet", tenants, 42, "tenants")
+    write_focus(landing, 42, tenants)
+    write_revenue(landing, 42, tenants, history)
+    write_dimensions(landing, 42, history)
+    _write(landing, "s5_price_catalog/price_catalog.parquet", list(PRICE_CATALOG_V2), 42, "price catalog")
+    assert run_m2_dbt(landing, tmp_path / "data", "run-m2")["success"]
+    gold = tmp_path / "data" / "gold"
+    out = tmp_path / "publish" / "latest" / "explore.parquet"
+    size = write_explore_parquet(gold, out)
+    assert 0 < size <= EXPLORE_MAX_BYTES
+    a = duckdb.sql(f"select sum(cost_to_serve_usd), sum(requests), count(*) from read_parquet('{out}')").fetchall()[0]
+    b = duckdb.sql(f"select sum(cost_to_serve_usd), sum(requests) from read_parquet('{gold}/fct_cost_to_serve.parquet')").fetchall()[0]
+    assert (a[0], a[1]) == (b[0], b[1]) and a[2] > 0
+
+
 def test_margin_forecast_band_is_ordered_and_matches_hand_values():
     from datetime import date
 
