@@ -4,7 +4,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Waiting for owner
 
-- **GitHub Actions billing (2026-11-06 ~07:46 UTC, hard stop §8.3):** jobs no longer start: "recent account payments have failed or your spending limit needs to be increased" (Billing & plans). Effects: `deploy to dev` for `8aa0229` (docs-only) failed, and every job of the push run for `b0dc936` failed in 2 s, so dev is still on the `ee611b4` deploy. `b0dc936` itself passed all 12 checks on the PR head before the fast-forward, and only adds `run_m2_dbt` (not called by the Lambda), so no deploy is needed to keep dev consistent. Owner action: fix billing or raise the spending limit; then re-run the `ci` push run for `b0dc936` (or let the next merge deploy). Autopilot makes no further code merges until CI starts again.
+- **GitHub Actions minutes (2026-11-06):** exhausted (private repo). Owner decision: not a hard stop; AGENTS.md §8.1 now says how to continue without CI. Unverified (no CI/deploy ran after the merge): `b0dc936` (code-only; PR head had passed all 12 checks) and `8aa0229`/progress commits (docs only). When minutes are back, re-run the `ci` push workflow on `main` and confirm `deploy to dev`.
 
 - **Claude Haiku 5.5 access** (support case): when granted, record its M1-06 fixtures (`task: record-fixtures`, model `haiku-5-5`) and apply the ADR-003 selection rule.
 
