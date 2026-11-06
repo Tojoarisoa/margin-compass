@@ -12,11 +12,17 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-Follow `docs/plans/m2-plan.md` §3 sequencing (AWS backfill comes after M2-03):
-
-1. M2-03 remaining: registry in the dbt marts (`to_sql`), the agent tools (the PG-1 snapshot `m2_kpis` block is done), with parity tests; call `run_m2_dbt` from the Lambda handler / CLI path (image now has `reference/` and `metrics/`); lineage.
+1. M2-03 remaining: agent tools on the registry (note: `mc-pipelines` is only a dev dependency of `agents`, so the agents image would need `metrics/` and the registry code, which needs a deploy; split: first a read-only M2 tool class over the gold marts using a copy-free import path, with replay fixtures untouched), then close M2-03 (contracts doc `gold-marts-m2.md` check, tick PLAN.md §17).
 2. M2-01 close-out: Step Functions backfill over 19 monthly chunks, one deploy under §8.2 if the cost gate stays <= $3.00, verify AWS gold = local gold, then tick M2-01.
 3. M2-04.
+
+## 2026-11-06 (autopilot run 17, task 2)
+
+- **Task:** M2-03 step 6: `run_m2_dbt` writes `gold/_quality/m2_lineage.json` (model lineage from the dbt manifest and the metrics each mart feeds) and copies it and `m2_scorecard.json` to `publish/latest/` for PG-8. Test extended; pipelines 63 passed, ruff clean.
+- **Decisions (§8.2):** none needed.
+- **PR / CI / deploy:** PR #71, all checks green on the head commit (an earlier `attribution` run failed because the proxy appended a Claude footer to the PR description; removed with the MCP `update_pull_request`, the check re-ran green); fast-forwarded to `main`; `ci` push run and `deploy to dev` green. Cost $0.
+- **Run end:** 31 min elapsed, past the point where a new task fits. 2 tasks done.
+- **Next:** see Next section.
 
 ## 2026-11-06 (autopilot run 17, task 1)
 
