@@ -17,9 +17,16 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 Follow `docs/plans/m2-plan.md` §3 sequencing (AWS backfill comes after M2-03):
 
-1. M2-03 remaining (`cost_per_outcome_usd` is now in the registry): use the registry in the dbt marts (`to_sql`), the publish step and the agent tools, with parity tests; statistical checks (volume drift is done; add a distribution-drift check and wire both into the scorecard as warnings); scorecard and lineage. Wire the M2 dbt build (`m2_gates` var, allocation rules var) into `mc_pipelines`; the Lambda image copies `pipelines/` only, so `reference/allocation_rules.yml` and `metrics/` must be copied in too.
+1. M2-03 remaining (`cost_per_outcome_usd` is now in the registry): use the registry in the dbt marts (`to_sql`), the publish step and the agent tools, with parity tests; wire the two drift checks (`mc_pipelines/drift.py`) into the scorecard as warnings; scorecard and lineage. Wire the M2 dbt build (`m2_gates` var, allocation rules var) into `mc_pipelines`; the Lambda image copies `pipelines/` only, so `reference/allocation_rules.yml` and `metrics/` must be copied in too.
 2. M2-01 close-out: Step Functions backfill over 19 monthly chunks, one deploy under §8.2 if the cost gate stays <= $3.00, verify AWS gold = local gold, then tick M2-01.
 3. M2-04.
+
+## 2026-11-06 (autopilot run 13, task 4)
+
+- **Task:** M2-03 step 3b: `ratio_drift` in `mc_pipelines/drift.py` (a day's ratio of sums vs the ratio of sums over the previous 28 days, warn beyond +-50%). 3 tests, including the PT-13 guard on tokens per request for Jan-Apr 2026 baseline telemetry (no warning).
+- **Decisions (§8.2):** none needed. Thresholds are assumptions. Run 13 stopped early after task 3 by mistake (no reason under §8.1); it resumed at 07:07 UTC.
+- **PR / CI / deploy:** PR #56, all checks green on the head commit (attribution passed after the body was edited via the GitHub MCP tool). Fast-forwarded to `main`; `deploy to dev` green. Cost $0.
+- **Next:** wire the drift checks into the scorecard and lineage, then the registry in marts/publish/tools.
 
 ## 2026-11-06 (autopilot run 13, task 3)
 
