@@ -17,9 +17,16 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 Follow `docs/plans/m2-plan.md` §3 sequencing (AWS backfill comes after M2-03):
 
-1. M2-03 remaining (`cost_per_outcome_usd` is now in the registry): use the registry in the dbt marts (`to_sql`), the publish step and the agent tools, with parity tests; statistical checks (PT-13 seasonality guard must not alert); scorecard and lineage. Wire the M2 dbt build (`m2_gates` var, allocation rules var) into `mc_pipelines`; the Lambda image copies `pipelines/` only, so `reference/allocation_rules.yml` and `metrics/` must be copied in too.
+1. M2-03 remaining (`cost_per_outcome_usd` is now in the registry): use the registry in the dbt marts (`to_sql`), the publish step and the agent tools, with parity tests; statistical checks (volume drift is done; add a distribution-drift check and wire both into the scorecard as warnings); scorecard and lineage. Wire the M2 dbt build (`m2_gates` var, allocation rules var) into `mc_pipelines`; the Lambda image copies `pipelines/` only, so `reference/allocation_rules.yml` and `metrics/` must be copied in too.
 2. M2-01 close-out: Step Functions backfill over 19 monthly chunks, one deploy under §8.2 if the cost gate stays <= $3.00, verify AWS gold = local gold, then tick M2-01.
 3. M2-04.
+
+## 2026-11-06 (autopilot run 13, task 3)
+
+- **Task:** M2-03 step 3a: `mc_pipelines/drift.py` volume drift check (day vs mean of the same weekday in the previous 4 weeks, warn outside 0.5x-2x). 4 tests, including the PT-13 guard: Jan-Apr 2026 baseline telemetry (fiscal-year-end crunch, growth) produces no warning; a tripled day and a dropout do.
+- **Decisions (§8.2):** none needed. Thresholds are assumptions (0.5x / 2x, 4 weeks). Not yet in the scorecard.
+- **PR / CI / deploy:** PR #55, all checks green on the head commit (attribution passed after the body was edited via the GitHub MCP tool). Fast-forwarded to `main`; `deploy to dev` green. Cost $0.
+- **Next:** distribution drift, scorecard and lineage for the M2 marts, registry in the marts/publish/tools.
 
 ## 2026-11-06 (autopilot run 13, task 2)
 
