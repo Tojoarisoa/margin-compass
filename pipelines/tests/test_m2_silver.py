@@ -536,3 +536,24 @@ def test_pg1_snapshot_carries_m2_kpis_only_when_the_m2_marts_exist(tmp_path):
     from mc_pipelines.publish import _m2_marts_present
 
     assert not _m2_marts_present(tmp_path)  # M1-only gold: the snapshot stays as before
+
+
+def test_finops_awaits_the_first_export_then_sums_by_stage(tmp_path):
+    import duckdb
+
+    from mc_pipelines.publish import build_finops
+
+    pattern = str(tmp_path / "focus" / "*.parquet")
+    empty = build_finops(pattern, "r1")
+    assert empty["status"] == "awaiting_first_export" and empty["by_stage"] == []
+    (tmp_path / "focus").mkdir()
+    duckdb.sql("""COPY (SELECT * FROM (VALUES
+        (TIMESTAMP '2026-11-01', 'AWS Lambda', 0.10, '{"stage":"dev"}'),
+        (TIMESTAMP '2026-11-02', 'Amazon S3', 0.05, '{"stage":"dev"}'),
+        (TIMESTAMP '2026-11-02', 'Amazon S3', 0.30, NULL))
+        t(ChargePeriodStart, ServiceName, BilledCost, Tags)) TO '{tmp_path}/focus/a.parquet' (FORMAT PARQUET)""".replace("{tmp_path}", str(tmp_path)))
+    out = build_finops(pattern, "r1")
+    assert out["status"] == "ok"
+    assert {r["key"]: r["cost_usd"] for r in out["by_stage"]} == {"untagged": 0.3, "dev": 0.15}
+    assert out["latest_month_usd"] == 0.45 and out["budget_used"] == 0.15
+    assert "account" not in str(out).lower()

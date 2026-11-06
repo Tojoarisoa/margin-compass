@@ -7,7 +7,9 @@ PLAN.md §7.5: a KPI page snapshot stays ≤ 200 KB (checked here, and the run f
 
 from __future__ import annotations
 
+import glob
 import json
+import os
 from datetime import UTC, datetime, timedelta
 from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
@@ -182,6 +184,31 @@ def build_pg2(gold: Path, run_id: str) -> dict:
             "by_tenant_feature": view(["c.tenant_id", "c.feature_id"], ["tenant_id", "feature_id"])}
 
 
+def build_finops(focus_glob: str | None, run_id: str, budget_usd: float = 3.0) -> dict:
+    """PG-8 Platform FinOps: the platform's own AWS bill (S7 FOCUS export) by lifecycle stage, service and month.
+
+    Only services, stage tags and amounts leave this function (D7: no account IDs, ARNs or resource IDs).
+    With no files yet (the export is still empty) the status is `awaiting_first_export`.
+    """
+    base = {"schema_version": "finops.v0", "run_id": run_id, "data_label": "real", "budget_usd": budget_usd}
+    if not focus_glob or not glob.glob(focus_glob):
+        return {**base, "status": "awaiting_first_export", "by_stage": [], "by_service": [], "by_month": []}
+    con = duckdb.connect()
+    src = (f"(SELECT CAST(ChargePeriodStart AS DATE) AS d, ServiceName AS service, CAST(BilledCost AS DECIMAL(18,6)) AS cost, "
+           f"coalesce(nullif(json_extract_string(CAST(Tags AS VARCHAR), '$.stage'), ''), 'untagged') AS stage "
+           f"FROM read_parquet('{focus_glob}'))")
+
+    def view(sel: str) -> list[dict]:
+        return [{"key": r[0].isoformat() if hasattr(r[0], "isoformat") else r[0], "cost_usd": _money(r[1])}
+                for r in con.execute(f"SELECT {sel} AS k, sum(cost) FROM {src} GROUP BY 1 ORDER BY 2 DESC, 1").fetchall()]
+
+    by_month = sorted(view("date_trunc('month', d)::DATE"), key=lambda r: r["key"])
+    latest = by_month[-1] if by_month else {"key": None, "cost_usd": 0.0}
+    return {**base, "status": "ok", "by_stage": view("stage"), "by_service": view("service"), "by_month": by_month,
+            "latest_month": latest["key"], "latest_month_usd": latest["cost_usd"],
+            "budget_used": _ratio(Decimal(str(latest["cost_usd"])), Decimal(str(budget_usd)))}
+
+
 def margin_forecast(recent: list[tuple], fc: list[tuple]) -> dict:
     """Forecast margin % band: trailing daily AI revenue (mean of the last 30 days, held flat) minus the COGS forecast.
 
@@ -210,6 +237,9 @@ def publish(data_root: Path, run_id: str, ingest_date: str) -> dict:
         if len(pg2) > PG2_MAX_BYTES:
             raise PublishError(f"pg2.json is {len(pg2)} bytes; the M2-04 limit is {PG2_MAX_BYTES}")
         (root / "publish" / "latest" / "pg2.json").write_bytes(pg2)
+    if explore is not None:
+        fin = json.dumps(build_finops(os.environ.get("MC_FINOPS_FOCUS_GLOB"), run_id), separators=(",", ":"), allow_nan=False)
+        (root / "publish" / "latest" / "finops.json").write_text(fin)
     paths = [root / "publish" / "latest" / "pg1.json", root / "publish" / "history" / ingest_date / "pg1.json"]
     for p in paths:
         p.parent.mkdir(parents=True, exist_ok=True)

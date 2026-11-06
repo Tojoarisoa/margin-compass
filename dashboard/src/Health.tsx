@@ -8,6 +8,36 @@ interface Lineage { run_id: string; models: Record<string, string[]>; metrics_by
 const get = <T,>(name: string): Promise<T> =>
   fetch(`/publish/latest/${name}`, { cache: "no-cache" }).then((r) => (r.ok ? (r.json() as Promise<T>) : Promise.reject(new Error(`${name} ${r.status}`))));
 
+interface Fin { status: string; budget_usd: number; by_stage: { key: string; cost_usd: number }[]; by_service: { key: string; cost_usd: number }[]; latest_month?: string; latest_month_usd?: number; budget_used?: number | null }
+
+function Finops() {
+  const [fin, setFin] = useState<Fin | null>(null);
+  useEffect(() => { get<Fin>("finops.json").then(setFin).catch(() => setFin(null)); }, []);
+  if (!fin) return null;
+  return (
+    <div>
+      <h3>Platform FinOps</h3>
+      {fin.status !== "ok" ? <p className="muted">Awaiting first export of the platform's AWS bill.</p> : (
+        <>
+          <p className="muted small">Month {fin.latest_month?.slice(0, 7)}: ${fin.latest_month_usd?.toFixed(2)} of a ${fin.budget_usd.toFixed(2)} budget ({fin.budget_used == null ? "n/a" : `${(fin.budget_used * 100).toFixed(0)}%`}). Real AWS cost, not synthetic.</p>
+          <div className="table-wrap">
+            <table>
+              <thead><tr><th scope="col">Lifecycle stage</th><th scope="col" className="num">Cost</th></tr></thead>
+              <tbody>{fin.by_stage.map((r) => <tr key={r.key}><td>{r.key}</td><td className="num">${r.cost_usd.toFixed(2)}</td></tr>)}</tbody>
+            </table>
+          </div>
+          <div className="table-wrap">
+            <table>
+              <thead><tr><th scope="col">Service</th><th scope="col" className="num">Cost</th></tr></thead>
+              <tbody>{fin.by_service.map((r) => <tr key={r.key}><td>{r.key}</td><td className="num">${r.cost_usd.toFixed(2)}</td></tr>)}</tbody>
+            </table>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 export default function Health() {
   const [card, setCard] = useState<Card | null>(null);
   const [lin, setLin] = useState<Lineage | null>(null);
@@ -52,6 +82,7 @@ export default function Health() {
           <tbody>{Object.entries(lin.models).sort().map(([m, up]) => <tr key={m}><td>{m}</td><td>{up.join(", ") || "none"}</td></tr>)}</tbody>
         </table>
       </div>
+      <Finops />
       <h3>Metrics each mart feeds</h3>
       <div className="table-wrap">
         <table>
