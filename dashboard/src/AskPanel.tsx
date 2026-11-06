@@ -8,7 +8,7 @@ const SUGGESTED = [
 ];
 
 const STATUS_TEXT: Record<Job["status"], string> = {
-  pending: "Queued…", running: "Thinking…", answered: "", unverified: "Answer withheld", budget_exceeded: "Budget reached", error: "Error",
+  pending: "Queued…", running: "Thinking…", answered: "", unverified: "Answer withheld", budget_exceeded: "Unavailable right now", error: "Error",
 };
 
 export function AskPanel() {
@@ -37,8 +37,8 @@ export function AskPanel() {
     <section className="card ask" aria-labelledby="ask-title">
       <h2 id="ask-title">Ask the Cost-to-Serve Analyst</h2>
       <p className="muted">
-        One agent (AG-03) answers from deterministic metric tools; every figure is checked against the evidence ledger.
-        Limited to a few questions per hour and a small daily budget.
+        The analyst answers from deterministic metric tools; every figure is checked against the evidence ledger.
+        Limited to a few questions per hour.
       </p>
       <form onSubmit={(e) => { e.preventDefault(); void submit(question); }}>
         <label htmlFor="q" className="sr-only">Question</label>
@@ -57,7 +57,6 @@ export function AskPanel() {
         {job?.answer && (
           <div className="answer">
             <p>{job.answer}</p>
-            {job.cost_line && <p className="cost">{job.cost_line}</p>}
             {job.evidence && job.evidence.length > 0 && (
               <details>
                 <summary>Evidence ({job.evidence.length})</summary>

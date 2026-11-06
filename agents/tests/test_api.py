@@ -92,7 +92,10 @@ def test_worker_answers_records_spend_and_never_runs_twice(table, gold):
     assert api.run_job(job_id, table=table, gold_dir=gold, client=good_answer(Q, "q1"), sync=False) == "answered"
     assert api.run_job(job_id, table=table, gold_dir=gold, client=good_answer(Q, "q1"), sync=False) == "skipped"
     body = json.loads(api.handle_job(f"/api/jobs/{job_id}", table=table)["body"])
-    assert body["status"] == "answered" and "[E1]" in body["answer"] and body["cost_line"].startswith("Cost of this answer")
+    assert body["status"] == "answered" and "[E1]" in body["answer"]
+    assert not {"cost_line", "cost_usd", "llm_calls", "model"} & set(body)  # public API hides cost and model
+    stored = table.get_item(Key={"PK": f"JOB#{job_id}", "SK": "JOB"})["Item"]
+    assert stored["cost_line"].startswith("Cost of this answer") and stored["llm_calls"] >= 1  # still in the ledger
     assert body["evidence"][0]["tool"] == "tenant_margin"
     spent = SpendGuard(table).spent()
     assert all(v > 0 for v in spent.values())
@@ -114,5 +117,6 @@ def test_unknown_jobs_are_404(table, path):
 def test_router(monkeypatch, table):
     monkeypatch.setattr(api, "_table", lambda: table)
     health = api.handler({"requestContext": {"http": {"method": "GET"}}, "rawPath": "/api/health"}, None)
-    assert health["statusCode"] == 200 and json.loads(health["body"])["caps"]["monthly_usd"] == "1.50"
+    assert health["statusCode"] == 200 and json.loads(health["body"]) == {"ok": True}
+    assert Caps().monthly_usd == Decimal("1.50")  # the cap itself is unchanged
     assert api.handler({"requestContext": {"http": {"method": "DELETE"}}, "rawPath": "/api/ask"}, None)["statusCode"] == 404

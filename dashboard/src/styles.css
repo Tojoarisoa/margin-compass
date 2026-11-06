@@ -22,7 +22,7 @@ button { font: inherit; border-radius: 8px; border: 1px solid var(--accent); bac
 button:disabled { opacity: .5; cursor: default; }
 .suggested { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .chip { background: transparent; color: var(--accent); padding: 4px 10px; font-size: .85rem; text-align: left; }
-.answer { margin-top: 10px; border-left: 3px solid var(--accent); padding-left: 10px; } .cost { color: var(--muted); font-size: .85rem; }
+.answer { margin-top: 10px; border-left: 3px solid var(--accent); padding-left: 10px; }
 pre { white-space: pre-wrap; font-size: .8rem; background: var(--bg); padding: 8px; border-radius: 6px; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 footer { padding-bottom: 16px; }

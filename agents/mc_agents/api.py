@@ -26,7 +26,7 @@ from typing import Any
 from .analyst import PROMPT_VERSION, answer_question
 from .budget import BudgetExceeded
 from .config import DEFAULT_ANALYST_MODEL, MAX_USD_PER_QUESTION, MODELS
-from .guard import Caps, RateLimited, RateLimiter, SpendGuard
+from .guard import RateLimited, RateLimiter, SpendGuard
 from .llm import BedrockLLM
 
 log = logging.getLogger("mc_agents")
@@ -106,7 +106,7 @@ def handle_ask(event: dict[str, Any], context: Any, *, table=None, invoke=None) 
     table = table or _table()
     spend = SpendGuard(table)
     if not spend.headroom(MAX_USD_PER_QUESTION):
-        return _resp(503, {"error": "The agent's budget for today is used up. Try again tomorrow.", "code": "budget"})
+        return _resp(503, {"error": "The analyst is unavailable right now. Please try again later.", "code": "budget"})
     try:
         RateLimiter(table).admit(_client_address(event))
     except RateLimited:
@@ -131,7 +131,8 @@ def handle_job(path: str, *, table=None) -> dict[str, Any]:
     item = (table or _table()).get_item(Key={"PK": f"JOB#{job_id}", "SK": "JOB"}).get("Item")
     if not item:
         return _resp(404, {"error": "not found"})
-    keys = ("status", "question", "answer", "cost_line", "evidence", "llm_calls", "model", "verification")
+    # Public response: cost, call count and model stay in the job record (ledger), not on the public API.
+    keys = ("status", "question", "answer", "evidence", "verification")
     return _resp(200, {"job_id": job_id, **{k: item[k] for k in keys if k in item}})
 
 
@@ -154,7 +155,7 @@ def run_job(job_id: str, *, table=None, gold_dir: Path = GOLD_DIR, client=None, 
                   "evidence": json.loads(json.dumps(evidence, default=str)), "cost_usd": str(res.cost_usd),
                   "verification": json.loads(json.dumps(res.verification, default=str))}
     except BudgetExceeded as exc:
-        update = {"status": "budget_exceeded", "answer": "The agent's budget is used up for now.", "error": str(exc)[:200]}
+        update = {"status": "budget_exceeded", "answer": "The analyst is unavailable right now. Please try again later.", "error": str(exc)[:200]}
     except Exception as exc:  # noqa: BLE001 - the job must end in a terminal state
         log.error("job_failed", extra={"fields": {"job_id": job_id, "error": type(exc).__name__}})
         update = {"status": "error", "answer": "Something went wrong while answering.", "error": type(exc).__name__}
@@ -188,8 +189,5 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
     if method == "GET" and path.startswith("/api/jobs/"):
         return handle_job(path)
     if method == "GET" and path == "/api/health":
-        caps = Caps()
-        return _resp(200, {"ok": True, "env": os.environ.get("MC_ENV", ""), "model": MODELS[DEFAULT_ANALYST_MODEL].label,
-                           "caps": {"daily_usd": str(caps.daily_usd), "monthly_usd": str(caps.monthly_usd),
-                                    "per_client_per_hour": caps.per_client_per_hour}})
+        return _resp(200, {"ok": True})  # no model, caps or environment on the public API
     return _resp(404, {"error": "not found"})

@@ -16,14 +16,12 @@ Ingest ➔ Transform ➔ Validate ➔ Train ➔ Embed ➔ Evaluate ➔ Monitor /
 
 | | |
 | --- | --- |
-| **Status** | M0: Foundations. Plan v0.3, no code yet |
 | **Customer** | B2B SaaS (≈ $10M–$200M ARR) with generative-AI features in production |
 | **Pain points** | Cost-to-serve blindness, late margin leaks, hidden unprofitable tenants, pricing by guesswork, unmanaged cost vs quality, unforecastable AI COGS |
 | **Standout features** | Per-tenant margin waterfall, Pricing Simulator (churn-risk-adjusted), Cost–Quality Lab, contract-aware agents |
 | **Architecture** | Serverless AWS (Lambda, Step Functions, S3, DynamoDB, S3 Vectors, Bedrock, CloudFront), DuckDB + dbt |
 | **Agents** | LangGraph supervisor + 5 specialists, deterministic verifier, role-based human approval, durable checkpoints |
 | **Proof of value** | Closed loop: approved actions change future simulated usage and revenue; recovered margin is measured against a forecast baseline |
-| **Budget** | Target ≤ $3/month, hard ceiling $5 with an automated kill switch |
 
 ## Start here
 

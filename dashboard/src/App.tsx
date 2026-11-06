@@ -83,13 +83,8 @@ export function App() {
         </div>
       </section>
 
-      <section className="card muted small" aria-labelledby="soon-title">
-        <h2 id="soon-title">Coming in later milestones</h2>
-        <ul>{Object.entries(snap.not_yet_available).map(([k, v]) => <li key={k}>{k.replace(/_/g, " ")}: {v}</li>)}</ul>
-      </section>
-
       <footer className="muted small">
-        Snapshot {snap.generated_at} · run {snap.run_id.slice(0, 8)} · Margin Compass portfolio project
+        Snapshot {snap.generated_at} · run {snap.run_id.slice(0, 8)}
       </footer>
     </main>
   );

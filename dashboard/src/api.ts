@@ -7,10 +7,7 @@ export interface Job {
   status: "pending" | "running" | "answered" | "unverified" | "budget_exceeded" | "error";
   question?: string;
   answer?: string;
-  cost_line?: string;
   evidence?: Evidence[];
-  llm_calls?: number;
-  model?: string;
 }
 
 async function sha256Hex(text: string): Promise<string> {
