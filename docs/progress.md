@@ -14,7 +14,14 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 1. M2-03 close-out: register `M2KpiTools` with the analyst (needs `mc_pipelines` in the agents image, so one deploy; changes the agent tool set, so re-record replay fixtures first, ops `record-fixtures`), then tick M2-03 in PLAN.md §17. Contracts doc, lineage, scorecard, drift checks are done.
 2. M2-01 close-out: Step Functions backfill over 19 monthly chunks, one deploy under §8.2 if the cost gate stays <= $3.00, verify AWS gold = local gold, then tick M2-01.
-3. M2-04 remaining: trend with forecast band (PG-1), then PG-2, PG-8 tabs, dogfood telemetry.
+3. M2-04 remaining: PG-2 Cost-to-Serve Explorer, PG-8 tabs, dogfood telemetry (PG-1 is complete).
+
+## 2026-11-06 (autopilot run 20, task 1)
+
+- **Task:** M2-04 step 1d: PG-1 snapshot gets additive `m2_margin_forecast` (margin % band: daily AI revenue held at the last-30-day mean, cost from the P10/P50/P90 COGS forecast) and a "forecast band" chart. PG-1 is now complete per m2-plan. Pipelines 66 passed, ruff clean, dashboard typecheck + build clean.
+- **Decisions (§8.2):** revenue held flat at the trailing mean (no revenue forecast exists); stated on the card.
+- **PR / CI / deploy:** PR #76, all checks green on the head commit (first `attribution` failure superseded after removing the proxy-added footer); fast-forwarded to `main`; `ci` push run and `deploy to dev` green. Cost $0.
+- **Next:** see Next section.
 
 ## 2026-11-06 (autopilot run 19, task 2)
 
