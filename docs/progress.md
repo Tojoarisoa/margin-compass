@@ -4,7 +4,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Waiting for owner
 
-- **GitHub Actions minutes (2026-11-06):** exhausted (private repo). Owner decision: not a hard stop; AGENTS.md §8.1 now says how to continue without CI. Unverified (no CI/deploy ran after the merge): PR #60 (`run-m2` CLI, code-only, local suite green), `b0dc936` (code-only; PR head had passed all 12 checks) and `8aa0229`/progress commits (docs only). When minutes are back, re-run the `ci` push workflow on `main` and confirm `deploy to dev`.
+- **GitHub Actions minutes (2026-11-06):** exhausted (private repo). Owner decision: not a hard stop; AGENTS.md §8.1 now says how to continue without CI. Unverified (no CI/deploy ran after the merge): PR #61 (`m2_kpis`, code-only, local suite green), PR #60 (`run-m2` CLI, code-only, local suite green), `b0dc936` (code-only; PR head had passed all 12 checks) and `8aa0229`/progress commits (docs only). When minutes are back, re-run the `ci` push workflow on `main` and confirm `deploy to dev`.
 
 - **Claude Haiku 5.5 access** (support case): when granted, record its M1-06 fixtures (`task: record-fixtures`, model `haiku-5-5`) and apply the ADR-003 selection rule.
 
@@ -19,9 +19,16 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 Follow `docs/plans/m2-plan.md` §3 sequencing (AWS backfill comes after M2-03):
 
-1. M2-03 remaining (`cost_per_outcome_usd` is now in the registry): use the registry in the dbt marts (`to_sql`), the publish step and the agent tools, with parity tests; call `write_m2_scorecard` (`mc_pipelines/drift.py`) from the pipeline run once the M2 dbt build is wired in; lineage. Wire the M2 dbt build (`m2_gates` var, allocation rules var) into `mc_pipelines`; the Lambda image copies `pipelines/` only, so `reference/allocation_rules.yml` and `metrics/` must be copied in too.
+1. M2-03 remaining: publish `m2_kpis` is done; use the registry in the dbt marts (`to_sql`), the PG-1 snapshot and the agent tools, with parity tests; call `write_m2_scorecard` (`mc_pipelines/drift.py`) from the pipeline run once the M2 dbt build is wired in; lineage. Wire the M2 dbt build (`m2_gates` var, allocation rules var) into `mc_pipelines`; the Lambda image copies `pipelines/` only, so `reference/allocation_rules.yml` and `metrics/` must be copied in too.
 2. M2-01 close-out: Step Functions backfill over 19 monthly chunks, one deploy under §8.2 if the cost gate stays <= $3.00, verify AWS gold = local gold, then tick M2-01.
 3. M2-04.
+
+## 2026-11-06 (autopilot run 15, task 1)
+
+- **Task:** M2-03 step 5a: `publish.m2_kpis` computes the registry KPIs (gross margin $ and %, unit cost, cost per outcome, recall, attribution coverage) from the M2 gold marts via `metrics.compute`. 1 test (margin equals mart totals).
+- **Decisions (§8.2):** none needed. Not yet in the PG-1 snapshot (schema change is the next step).
+- **PR / CI / deploy:** PR #61. CI unavailable (Actions minutes); local: pipelines 61 passed, ruff clean. Fast-forwarded to `main` (unverified SHA below). Cost $0.
+- **Next:** registry in agent tools; PG-1 snapshot fields; image copy of `reference/` and `metrics/` once minutes are back.
 
 ## 2026-11-06 (autopilot run 14, task 1)
 
