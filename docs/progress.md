@@ -26,7 +26,7 @@ Follow `docs/plans/m2-plan.md` §3 sequencing (AWS backfill comes after M2-03):
 
 - **Task:** M2-02 step 3d, dimensions: `dim_tenant` (SCD2 from the plan history), `dim_feature`, `dim_model_price`. The CLI `--profile m2` static and all modes did not land the FOCUS export or invoices (only the writer functions existed), so they now also write `s2_focus`, `s3_revenue`, `tenants/plan_history` and `features` (new `write_dimensions`). Existing landed files are unchanged. 2 new tests (CLI static lands the four files; dim_tenant has exactly one current row per tenant and contiguous versions).
 - **Decisions (§8.2):** none needed. Static-mode CLI test adds about 1 min to the simulator CI job.
-- **PR / CI / deploy:** PENDING. Cost $0.
+- **PR / CI / deploy:** PR #50, all checks green on the head commit (attribution passed after the body was edited via the GitHub MCP tool). Fast-forwarded to `main`; `deploy to dev` green. Cost $0.
 - **Next:** gate tests, then tick M2-02.
 
 ## 2026-11-06 (autopilot run 12, task 5)
