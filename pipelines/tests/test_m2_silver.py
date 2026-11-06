@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 from datetime import date
+from decimal import Decimal
 from pathlib import Path
 
 import duckdb
@@ -148,3 +149,54 @@ def test_outcomes_daily_joins_usage_at_tenant_day(tmp_path):
     assert with_usage > 0.9 * n
     db = duckdb.connect(str(tmp_path / "o.duckdb"))
     assert db.sql("select count(*) from stg_m2_tickets").fetchall()[0][0] > 0
+
+
+@pytest.fixture(scope="module")
+def allocated(tmp_path_factory):
+    from dbt.cli.main import dbtRunner
+
+    from booncore_sim.m2_writer import write_focus
+    from mc_pipelines.allocation import load_rules
+
+    root = tmp_path_factory.mktemp("alloc")
+    landing = root / "landing"
+    tenants = generate_m2_tenants(42)[0]
+    month = 5  # 2025-09
+    write_month(landing, 42, tenants, month)
+    write_focus(landing, 42, tenants)
+    _write(landing, "s5_price_catalog/price_catalog.parquet", list(PRICE_CATALOG_V2), 42, "price catalog")
+    (root / "silver").mkdir()
+    (root / "gold").mkdir()
+    os.environ["MC_DUCKDB_PATH"] = str(root / "a.duckdb")
+    variables = {"m2_landing_path": str(landing), "silver_path": str(root / "silver"), "bronze_path": "x",
+                 "gold_path": str(root / "gold"), "allocation_rules": load_rules()}
+    result = dbtRunner().invoke([
+        "build", "--select", "+fct_infra_cost_allocated", "--project-dir", str(TRANSFORM_DIR),
+        "--profiles-dir", str(TRANSFORM_DIR), "--target-path", str(root / "t"), "--log-path", str(root / "l"),
+        "--vars", json.dumps(variables), "--quiet"])
+    assert result.success, result.exception
+    return root / "gold" / "fct_infra_cost_allocated.parquet", landing
+
+
+def test_infra_allocated_plus_unallocated_equals_billed_exactly(allocated):
+    out, landing = allocated
+    # Billed is read straight from the landed FOCUS file, independent of the allocation model.
+    # September 2025 only: the focus file spans the window, the telemetry chunk does not.
+    billed = duckdb.sql(f"select sum(effective_cost) from '{landing}/s2_focus/focus.parquet' "
+                        f"where cast(charge_period_start as date) between date '2025-09-01' and date '2025-09-30'"
+                        ).fetchall()[0][0]
+    got, unalloc = duckdb.sql(
+        f"select sum(allocated_cost_usd), sum(allocated_cost_usd) filter (where rule_id = 'UNALLOCATED') "
+        f"from '{out}' where cost_date between date '2025-09-01' and date '2025-09-30'").fetchall()[0]
+    assert got == Decimal(str(round(billed, 4)))  # exact, 4-decimal units
+    assert unalloc > 0  # staging overhead is shown, not hidden
+
+
+def test_infra_allocation_uses_each_rule_and_never_negative(allocated):
+    out, _ = allocated
+    rules = {r[0] for r in duckdb.sql(f"select distinct rule_id from '{out}'").fetchall()}
+    assert {"AR-01-agent-compute", "AR-02-vector-storage", "AR-04-egress", "UNALLOCATED"} <= rules
+    assert duckdb.sql(f"select count(*) from '{out}' where allocated_cost_usd < 0").fetchall()[0][0] == 0
+    # Unallocated rows carry no tenant; allocated rows always do.
+    bad = duckdb.sql(f"select count(*) from '{out}' where (rule_id = 'UNALLOCATED') <> (tenant_id is null)").fetchall()[0][0]
+    assert bad == 0

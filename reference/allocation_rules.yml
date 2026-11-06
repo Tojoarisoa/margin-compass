@@ -1,0 +1,54 @@
+# Allocation rules for shared infrastructure cost (FOCUS rows) -> tenant x feature.
+# Versioned and effective-dated (m2-plan.md M2-02.2, default rules from decision D2). Synthetic-data project.
+#
+# A FOCUS row matches a rule on service_name + env (x-env tag), within [effective_from, effective_to).
+# The rule spreads the row's cost over tenant x feature drivers of the same day:
+#   driver: requests | tokens | cumulative_input_tokens   (from the priced telemetry)
+#   driver_features: list of feature ids, or "*" for all features
+# A row that matches no rule, a day with no driver activity, and any staging cost go to the explicit
+# UNALLOCATED bucket (shown, never hidden). Staging (x-env=staging) is overhead, not tenant cost.
+# Changing a rule means adding a new version with a later effective_from, never editing history.
+version: 1
+rules:
+  - rule_id: AR-01-agent-compute
+    description: F2 agent compute by tenant token share
+    effective_from: 2025-04-01
+    effective_to: null
+    match: {service_name: Agent Compute, env: prod}
+    driver: tokens
+    driver_features: [F2]
+  - rule_id: AR-02-vector-storage
+    description: Vector storage to F3 by tenant storage share (assumption - stored volume proxied by cumulative F3 input tokens)
+    effective_from: 2025-04-01
+    effective_to: null
+    match: {service_name: Vector Storage, env: prod}
+    driver: cumulative_input_tokens
+    driver_features: [F3]
+  - rule_id: AR-03-vector-queries
+    description: Vector queries to F3 by tenant request share
+    effective_from: 2025-04-01
+    effective_to: null
+    match: {service_name: Vector Queries, env: prod}
+    driver: requests
+    driver_features: [F3]
+  - rule_id: AR-04-egress
+    description: Egress to all features by request share
+    effective_from: 2025-04-01
+    effective_to: null
+    match: {service_name: Egress, env: prod}
+    driver: requests
+    driver_features: ["*"]
+  - rule_id: AR-05-observability
+    description: Observability to all features by request share
+    effective_from: 2025-04-01
+    effective_to: null
+    match: {service_name: Observability, env: prod}
+    driver: requests
+    driver_features: ["*"]
+  - rule_id: AR-06-third-party-apis
+    description: Third-party APIs by tag, to F4 tenant request share
+    effective_from: 2025-04-01
+    effective_to: null
+    match: {service_name: Third-Party APIs, env: prod}
+    driver: requests
+    driver_features: [F4]

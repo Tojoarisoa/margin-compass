@@ -24,3 +24,9 @@ models:
     columns:
       - name: llm_cost_usd
         data_tests: [not_null]
+  - name: fct_infra_cost_allocated
+    columns:
+      - name: allocated_cost_usd
+        data_tests: [not_null]
+      - name: rule_id
+        data_tests: [not_null]

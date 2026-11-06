@@ -23,6 +23,7 @@ vars:
   feature_scope: "F1 only (M1)"
   kpi03_min_llm_attribution_coverage: 0.98  # PLAN.md §4.2 KPI-03 target; error below it
   run_id: "unset"
+  allocation_rules: {rules: []}  # M2: loaded from reference/allocation_rules.yml by mc_pipelines.allocation
 
 models:
   margin_compass:

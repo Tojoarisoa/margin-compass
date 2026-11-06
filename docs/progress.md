@@ -17,10 +17,17 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 Follow `docs/plans/m2-plan.md` §3 sequencing (AWS backfill comes after M2-03):
 
-1. M2-02 remaining steps: allocation rules (`reference/allocation_rules.yml`), gold marts, gates. Overage revenue is not simulated yet (flat add-on only); decide whether to add it before the gold margin mart.
+1. M2-02 remaining steps: gold marts (`fct_cost_to_serve`, `fct_unit_cost`, `fct_quality`, `dim_*`, fully loaded `fct_tenant_margin`) and the gates. Overage revenue is not simulated yet (flat add-on only); decide whether to add it before the margin mart.
 2. M2-03: metrics registry, contracts, scorecard.
 3. M2-01 close-out: Step Functions backfill over 19 monthly chunks, one deploy under §8.2 if the cost gate stays <= $3.00, verify AWS gold = local gold, then tick M2-01.
 4. M2-04.
+
+## 2026-11-06 (autopilot run 12, task 2)
+
+- **Task:** M2-02 step 2, allocation rules: `reference/allocation_rules.yml` (6 effective-dated rules, D2 defaults), loader `mc_pipelines/allocation.py` (passes rules as a dbt var), models `int_m2_alloc_drivers` and gold `fct_infra_cost_allocated` (day x tenant x feature x rule). Split is exact in 0.0001 USD units (integer weights, leftover units to the largest drivers). 2 new tests: allocated + unallocated = landed FOCUS billed, exactly (Sep 2025); each rule used, no negatives, unallocated rows have no tenant.
+- **Decisions (§8.2):** none beyond D2. Labeled assumptions: vector storage share is proxied by cumulative F3 input tokens (no stored-volume data is simulated); all staging (x-env=staging, incl. the PT-12 idle GPU) goes to UNALLOCATED as overhead; third-party APIs spread by F4 request share.
+- **PR / CI / deploy:** see below. Cost $0.
+- **Next:** gold marts and gates.
 
 ## 2026-11-06 (autopilot run 12, task 1)
 
