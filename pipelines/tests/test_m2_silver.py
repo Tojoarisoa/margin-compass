@@ -155,7 +155,7 @@ def test_outcomes_daily_joins_usage_at_tenant_day(tmp_path):
 def allocated(tmp_path_factory):
     from dbt.cli.main import dbtRunner
 
-    from booncore_sim.m2_writer import write_focus
+    from booncore_sim.m2_writer import write_focus, write_revenue
     from mc_pipelines.allocation import load_rules
 
     root = tmp_path_factory.mktemp("alloc")
@@ -164,6 +164,7 @@ def allocated(tmp_path_factory):
     month = 5  # 2025-09
     write_month(landing, 42, tenants, month)
     write_focus(landing, 42, tenants)
+    write_revenue(landing, 42, *generate_m2_tenants(42))
     _write(landing, "s5_price_catalog/price_catalog.parquet", list(PRICE_CATALOG_V2), 42, "price catalog")
     (root / "silver").mkdir()
     (root / "gold").mkdir()
@@ -171,7 +172,7 @@ def allocated(tmp_path_factory):
     variables = {"m2_landing_path": str(landing), "silver_path": str(root / "silver"), "bronze_path": "x",
                  "gold_path": str(root / "gold"), "allocation_rules": load_rules()}
     result = dbtRunner().invoke([
-        "build", "--select", "+fct_infra_cost_allocated", "+fct_cost_to_serve", "+fct_unit_cost", "+fct_quality", "--project-dir", str(TRANSFORM_DIR),
+        "build", "--select", "+fct_infra_cost_allocated", "+fct_cost_to_serve", "+fct_unit_cost", "+fct_quality", "+fct_m2_tenant_margin", "--project-dir", str(TRANSFORM_DIR),
         "--profiles-dir", str(TRANSFORM_DIR), "--target-path", str(root / "t"), "--log-path", str(root / "l"),
         "--vars", json.dumps(variables), "--quiet"])
     assert result.success, result.exception
@@ -235,3 +236,17 @@ def test_unit_cost_and_quality_recompute_from_sums(allocated):
     flagged, labeled = duckdb.sql(
         f"select sum(safety_events_flagged), sum(safety_events_labeled) from '{gold}/fct_quality.parquet'").fetchall()[0]
     assert abs(flagged / labeled - m2_outcomes.safety_event_recall(daily)) < 1e-12
+
+
+def test_fully_loaded_margin_keeps_revenue_and_cost(allocated):
+    out, landing = allocated
+    gold = out.parent
+    rev_src = duckdb.sql(f"select sum(amount_usd) from '{landing}/s3_revenue/invoices.parquet'").fetchall()[0][0]
+    cost_src = duckdb.sql(f"select sum(cost_to_serve_usd) from '{gold}/fct_cost_to_serve.parquet'").fetchall()[0][0]
+    rev, cost, margin, dup, discounts = duckdb.sql(
+        f"select sum(revenue_usd), sum(cost_to_serve_usd), sum(margin_usd), "
+        f"count(*) - count(distinct (margin_date, tenant_id)), sum(discount_usd) "
+        f"from '{gold}/fct_m2_tenant_margin.parquet'").fetchall()[0]
+    assert rev == rev_src and cost == cost_src and dup == 0
+    assert margin == rev - cost
+    assert discounts < 0  # discounts stay visible as their own negative component
