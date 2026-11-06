@@ -385,3 +385,26 @@ def test_cli_run_m2_builds_the_marts_and_returns_zero(tmp_path):
     _write(landing, "s5_price_catalog/price_catalog.parquet", list(PRICE_CATALOG_V2), 42, "price catalog")
     assert main(["run-m2", "--landing", str(landing), "--data-root", str(tmp_path / "data")]) == 0
     assert (tmp_path / "data" / "gold" / "fct_m2_tenant_margin.parquet").exists()
+
+
+def test_publish_m2_kpis_come_from_the_registry_and_match_the_marts(tmp_path):
+    from booncore_sim.m2_writer import write_dimensions, write_focus, write_revenue
+    from mc_pipelines.cli import run_m2_dbt
+    from mc_pipelines.publish import m2_kpis
+
+    tenants, history = generate_m2_tenants(42)
+    landing = tmp_path / "landing"
+    write_month(landing, 42, tenants, 5)
+    _write(landing, "tenants/tenants.parquet", tenants, 42, "tenants")
+    write_focus(landing, 42, tenants)
+    write_revenue(landing, 42, tenants, history)
+    write_dimensions(landing, 42, history)
+    _write(landing, "s5_price_catalog/price_catalog.parquet", list(PRICE_CATALOG_V2), 42, "price catalog")
+    assert run_m2_dbt(landing, tmp_path / "data", "run-m2")["success"]
+    gold = tmp_path / "data" / "gold"
+    kpis = m2_kpis(gold)
+    rev, cost = duckdb.sql(
+        f"select sum(revenue_usd), sum(cost_to_serve_usd) from read_parquet('{gold}/fct_m2_tenant_margin.parquet')").fetchall()[0]
+    assert kpis["gross_margin_usd"] == pytest.approx(float(rev - cost), abs=1e-6)
+    assert kpis["gross_margin_pct"] == pytest.approx(float((rev - cost) / rev), abs=1e-6)
+    assert set(kpis) >= {"unit_cost_per_request_usd", "cost_per_outcome_usd", "safety_event_recall", "attribution_coverage"}

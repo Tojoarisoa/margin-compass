@@ -14,6 +14,8 @@ from pathlib import Path
 
 import duckdb
 
+from mc_pipelines import metrics as registry
+
 SCHEMA_VERSION = "pg1.v0"
 MAX_BYTES = 200 * 1024
 CENT, RATIO = Decimal("0.01"), Decimal("0.000001")
@@ -107,3 +109,20 @@ def publish(data_root: Path, run_id: str, ingest_date: str) -> dict:
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_bytes(body)
     return {"bytes": len(body), "files": [str(p.relative_to(root)) for p in paths], "days": snapshot["window"]["days"]}
+
+
+def m2_kpis(gold: Path, names: tuple[str, ...] | None = None) -> dict[str, float | None]:
+    """M2 headline KPIs over the whole window, every figure from the metric registry (`metrics/metrics.yml`).
+
+    Rows are read from each metric's source mart and passed to `registry.compute` (sums, then ratios of sums).
+    """
+    con = duckdb.connect()
+    out: dict[str, float | None] = {}
+    for name, metric in registry.load().items():
+        if names is not None and name not in names:
+            continue
+        cur = con.execute(f"SELECT * FROM read_parquet('{Path(gold)}/{metric['source']}.parquet')")
+        cols = [c[0] for c in cur.description]
+        value = registry.compute(metric, [dict(zip(cols, r, strict=True)) for r in cur.fetchall()])
+        out[name] = None if value is None else float(value.quantize(RATIO, ROUND_HALF_UP))
+    return out
