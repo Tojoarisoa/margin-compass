@@ -65,6 +65,10 @@ def handler(event: dict, context) -> dict:
     ingest_date = event.get("ingest_date") or datetime.now(UTC).date().isoformat()
     bucket = os.environ.get("LAKE_BUCKET", "")
     _configure_logging(run_id)
+    if event.get("profile") == "m2":  # chunked backfill steps (M2-01.8), see m2_lambda.py
+        from .m2_lambda import handle
+
+        return handle(event, run_id)
     log.info("pipeline_started", extra={"fields": {"env": os.environ.get("MC_ENV", "dev"), "ingest_date": ingest_date}})
 
     shutil.rmtree(WORK, ignore_errors=True)
