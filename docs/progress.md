@@ -20,7 +20,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 - **Task:** M2-04 step 1c: PG-1 snapshot gets additive `m2_at_risk` (tenants with negative fully loaded margin over the window, ARR they carry from current `dim_tenant`, worst 10) plus an "ARR at risk" tile and table. Pipelines 65 passed, ruff clean, dashboard typecheck + build clean.
 - **Decisions (§8.2):** ARR at risk = current ARR + AI add-on ARR of window-unprofitable tenants.
-- **PR / CI / deploy:** see PR. Cost $0.
+- **PR / CI / deploy:** PR #75, all checks green on the head commit; fast-forwarded to `main`; `ci` push run and `deploy to dev` green. Cost $0.
 - **Next:** see Next section.
 
 ## 2026-11-06 (autopilot run 19, task 1)
