@@ -17,10 +17,17 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 Follow `docs/plans/m2-plan.md` §3 sequencing (AWS backfill comes after M2-03):
 
-1. M2-02 remaining steps: `fct_unit_cost` (day x feature x model), `fct_quality` (safety recall from summed counts), `dim_tenant`/`dim_feature`/`dim_model_price`, fully loaded `fct_tenant_margin` (revenue minus `fct_cost_to_serve`), and the M2 gate tests with break-on-purpose checks. Overage revenue is not simulated yet (flat add-on only); decide whether to add it before the margin mart.
+1. M2-02 remaining steps: `dim_tenant`/`dim_feature`/`dim_model_price`, fully loaded `fct_tenant_margin` (revenue minus `fct_cost_to_serve`), and the M2 gate tests with break-on-purpose checks. Overage revenue is not simulated yet (flat add-on only); decide whether to add it before the margin mart.
 2. M2-03: metrics registry, contracts, scorecard.
 3. M2-01 close-out: Step Functions backfill over 19 monthly chunks, one deploy under §8.2 if the cost gate stays <= $3.00, verify AWS gold = local gold, then tick M2-01.
 4. M2-04.
+
+## 2026-11-06 (autopilot run 12, task 4)
+
+- **Task:** M2-02 step 3b, gold `fct_unit_cost` (day x feature x model: sums plus cost per request, per 1k tokens, cache hit share recomputed from sums) and `fct_quality` (day x tenant: outcome sums, `safety_event_recall`, remote resolution, CSAT and eval averages recomputed from sums). 1 new test: unit-cost totals equal priced silver, no duplicate grain, recall rolled up from summed counts equals the generator's.
+- **Decisions (§8.2):** none needed.
+- **PR / CI / deploy:** PENDING. Cost $0.
+- **Next:** dims and the fully loaded margin.
 
 ## 2026-11-06 (autopilot run 12, task 3)
 

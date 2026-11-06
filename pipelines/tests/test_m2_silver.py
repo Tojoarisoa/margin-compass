@@ -171,7 +171,7 @@ def allocated(tmp_path_factory):
     variables = {"m2_landing_path": str(landing), "silver_path": str(root / "silver"), "bronze_path": "x",
                  "gold_path": str(root / "gold"), "allocation_rules": load_rules()}
     result = dbtRunner().invoke([
-        "build", "--select", "+fct_infra_cost_allocated", "+fct_cost_to_serve", "--project-dir", str(TRANSFORM_DIR),
+        "build", "--select", "+fct_infra_cost_allocated", "+fct_cost_to_serve", "+fct_unit_cost", "+fct_quality", "--project-dir", str(TRANSFORM_DIR),
         "--profiles-dir", str(TRANSFORM_DIR), "--target-path", str(root / "t"), "--log-path", str(root / "l"),
         "--vars", json.dumps(variables), "--quiet"])
     assert result.success, result.exception
@@ -216,3 +216,22 @@ def test_cost_to_serve_preserves_llm_and_allocated_infra(allocated):
     assert llm == llm_billed and infra == infra_alloc  # no cost lost or doubled by the full outer join
     assert total == llm + infra
     assert dup == 0
+
+
+def test_unit_cost_and_quality_recompute_from_sums(allocated):
+    from booncore_sim import m2_outcomes
+
+    out, _ = allocated
+    gold = out.parent
+    silver = gold.parent / "silver"
+    billed = duckdb.sql(f"select sum(llm_cost_usd), sum(request_count) from '{silver}/slv_m2_llm_usage_priced.parquet'").fetchall()[0]
+    cost, reqs, dup = duckdb.sql(
+        f"select sum(llm_cost_usd), sum(requests), count(*) - count(distinct (cost_date, feature_id, model_id)) "
+        f"from '{gold}/fct_unit_cost.parquet'").fetchall()[0]
+    assert cost == billed[0] and reqs == billed[1] and dup == 0
+    # Safety recall rolled up from summed counts equals the generator's recomputed recall.
+    tenants = generate_m2_tenants(42)[0]
+    daily, _ = m2_outcomes.generate_month(42, tenants, 5)
+    flagged, labeled = duckdb.sql(
+        f"select sum(safety_events_flagged), sum(safety_events_labeled) from '{gold}/fct_quality.parquet'").fetchall()[0]
+    assert abs(flagged / labeled - m2_outcomes.safety_event_recall(daily)) < 1e-12

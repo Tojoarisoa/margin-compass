@@ -36,3 +36,11 @@ models:
         data_tests: [not_null]
       - name: tenant_id
         data_tests: [not_null]
+  - name: fct_unit_cost
+    columns:
+      - name: llm_cost_usd
+        data_tests: [not_null]
+  - name: fct_quality
+    columns:
+      - name: tickets
+        data_tests: [not_null]
