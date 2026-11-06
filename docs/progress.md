@@ -14,7 +14,14 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 1. M2-03 close-out: register `M2KpiTools` with the analyst (needs `mc_pipelines` in the agents image, so one deploy; changes the agent tool set, so re-record replay fixtures first, ops `record-fixtures`), then tick M2-03 in PLAN.md §17. Contracts doc, lineage, scorecard, drift checks are done.
 2. M2-01 close-out: Step Functions backfill over 19 monthly chunks, one deploy under §8.2 if the cost gate stays <= $3.00, verify AWS gold = local gold, then tick M2-01.
-3. M2-04 remaining: unprofitable tenants + ARR at risk, trend with forecast band (PG-1), then PG-2, PG-8 tabs, dogfood telemetry.
+3. M2-04 remaining: trend with forecast band (PG-1), then PG-2, PG-8 tabs, dogfood telemetry.
+
+## 2026-11-06 (autopilot run 19, task 2)
+
+- **Task:** M2-04 step 1c: PG-1 snapshot gets additive `m2_at_risk` (tenants with negative fully loaded margin over the window, ARR they carry from current `dim_tenant`, worst 10) plus an "ARR at risk" tile and table. Pipelines 65 passed, ruff clean, dashboard typecheck + build clean.
+- **Decisions (§8.2):** ARR at risk = current ARR + AI add-on ARR of window-unprofitable tenants.
+- **PR / CI / deploy:** see PR. Cost $0.
+- **Next:** see Next section.
 
 ## 2026-11-06 (autopilot run 19, task 1)
 
