@@ -99,8 +99,10 @@ def build_pg1(gold: Path, run_id: str, ingest_date: str) -> dict:
     }
     if m2 is not None:
         snapshot["m2_kpis"] = m2  # additive (PG-1 M2-04): registry KPIs over the whole window, metrics/metrics.yml
+        snapshot["m2_at_risk"] = m2_at_risk(g)  # additive (PG-1 M2-04): unprofitable tenants and ARR at risk
         snapshot["m2_features"] = m2_feature_costs(g)  # additive (PG-1 M2-04): fully loaded cost by feature
         snapshot["not_yet_available"].pop("cost_per_outcome", None)
+        snapshot["not_yet_available"].pop("arr_at_risk", None)
     return snapshot
 
 
@@ -155,3 +157,24 @@ def m2_feature_costs(gold: Path) -> list[dict]:
              "agent_compute_usd": _money(r[4]), "vector_usd": _money(r[5]), "network_observability_usd": _money(r[6]),
              "third_party_usd": _money(r[7]), "cost_to_serve_usd": _money(r[8]), "cost_share": _ratio(Decimal(r[8]), total)}
             for r in rows]
+
+
+def m2_at_risk(gold: Path, top: int = 10) -> dict:
+    """Tenants with a negative fully loaded margin over the whole window, and the current ARR they carry.
+
+    ARR is the current `dim_tenant` row (`arr_usd` + `ai_addon_arr_usd`); the worst `top` tenants are listed.
+    """
+    g = Path(gold)
+    rows = duckdb.connect().execute(f"""
+        WITH m AS (SELECT tenant_id, sum(revenue_usd) AS rev, sum(cost_to_serve_usd) AS cost, sum(margin_usd) AS margin
+                   FROM read_parquet('{g}/fct_m2_tenant_margin.parquet') GROUP BY tenant_id),
+             t AS (SELECT tenant_id, any_value(plan) AS plan, sum(arr_usd + ai_addon_arr_usd) AS arr
+                   FROM read_parquet('{g}/dim_tenant.parquet') WHERE is_current GROUP BY tenant_id)
+        SELECT m.tenant_id, t.plan, coalesce(t.arr, 0), m.rev, m.cost, m.margin
+        FROM m LEFT JOIN t USING (tenant_id) WHERE m.margin < 0 ORDER BY m.margin, m.tenant_id""").fetchall()
+    return {
+        "unprofitable_tenants": len(rows),
+        "arr_at_risk_usd": _money(sum((Decimal(r[2]) for r in rows), Decimal(0))),
+        "worst": [{"tenant_id": r[0], "plan": r[1], "arr_usd": _money(r[2]), "revenue_usd": _money(r[3]),
+                   "cost_to_serve_usd": _money(r[4]), "margin_usd": _money(r[5])} for r in rows[:top]],
+    }

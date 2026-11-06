@@ -34,10 +34,17 @@ export interface Snapshot {
   m2_kpis?: Record<string, number | null>;
   /** Present with m2_kpis: fully loaded cost to serve per feature (revenue is per tenant, so no per-feature margin %). */
   m2_features?: FeatureCost[];
+  /** Present with m2_kpis: tenants with negative fully loaded margin over the window and the ARR they carry. */
+  m2_at_risk?: AtRisk;
   not_yet_available: Record<string, string>;
 }
 
 export interface FeatureCost {
   feature_id: string; feature_name: string | null; requests: number; llm_cost_usd: number; agent_compute_usd: number;
   vector_usd: number; network_observability_usd: number; third_party_usd: number; cost_to_serve_usd: number; cost_share: number | null;
+}
+
+export interface AtRisk {
+  unprofitable_tenants: number; arr_at_risk_usd: number;
+  worst: { tenant_id: string; plan: string | null; arr_usd: number; revenue_usd: number; cost_to_serve_usd: number; margin_usd: number }[];
 }

@@ -54,6 +54,7 @@ export function App() {
           <Tile label="Unit cost per request" value={snap.m2_kpis.unit_cost_per_request_usd == null ? "n/a" : `$${snap.m2_kpis.unit_cost_per_request_usd.toFixed(4)}`} />
           <Tile label="Safety-event recall" value={percent(snap.m2_kpis.safety_event_recall ?? null, 1)} />
           <Tile label="Attribution coverage (all cost)" value={percent(snap.m2_kpis.attribution_coverage ?? null, 1)} />
+          {snap.m2_at_risk && <Tile label="ARR at risk" value={money(snap.m2_at_risk.arr_at_risk_usd)} note={`${snap.m2_at_risk.unprofitable_tenants} unprofitable tenants`} />}
         </section>
       )}
 
@@ -94,6 +95,30 @@ export function App() {
             </table>
           </div>
           <p className="muted small">Revenue is booked per tenant, so features show cost and share of cost, not a margin %.</p>
+        </section>
+      )}
+
+      {snap.m2_at_risk && snap.m2_at_risk.worst.length > 0 && (
+        <section className="card" aria-labelledby="risk-title">
+          <h2 id="risk-title">Unprofitable tenants, fully loaded (worst first)</h2>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr><th scope="col">Tenant</th><th scope="col">Plan</th><th scope="col" className="num">ARR</th>
+                  <th scope="col" className="num">Revenue</th><th scope="col" className="num">Cost to serve</th>
+                  <th scope="col" className="num">Margin</th></tr>
+              </thead>
+              <tbody>
+                {snap.m2_at_risk.worst.map((t) => (
+                  <tr key={t.tenant_id}>
+                    <td>{t.tenant_id}</td><td>{t.plan ?? "n/a"}</td><td className="num">{money(t.arr_usd)}</td>
+                    <td className="num">{money(t.revenue_usd)}</td><td className="num">{money(t.cost_to_serve_usd)}</td>
+                    <td className="num">{money(t.margin_usd)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </section>
       )}
 

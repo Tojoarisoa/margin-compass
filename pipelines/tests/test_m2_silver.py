@@ -438,6 +438,30 @@ def test_publish_m2_feature_costs_sum_to_the_mart_total(tmp_path):
     assert all(f["feature_name"] for f in feats)
 
 
+def test_publish_m2_at_risk_counts_negative_margin_tenants(tmp_path):
+    from booncore_sim.m2_writer import write_dimensions, write_focus, write_revenue
+    from mc_pipelines.cli import run_m2_dbt
+    from mc_pipelines.publish import m2_at_risk
+
+    tenants, history = generate_m2_tenants(42)
+    landing = tmp_path / "landing"
+    write_month(landing, 42, tenants, 5)
+    _write(landing, "tenants/tenants.parquet", tenants, 42, "tenants")
+    write_focus(landing, 42, tenants)
+    write_revenue(landing, 42, tenants, history)
+    write_dimensions(landing, 42, history)
+    _write(landing, "s5_price_catalog/price_catalog.parquet", list(PRICE_CATALOG_V2), 42, "price catalog")
+    assert run_m2_dbt(landing, tmp_path / "data", "run-m2")["success"]
+    gold = tmp_path / "data" / "gold"
+    risk = m2_at_risk(gold)
+    n = duckdb.sql(f"select count(*) from (select tenant_id from read_parquet('{gold}/fct_m2_tenant_margin.parquet') "
+                   "group by tenant_id having sum(margin_usd) < 0)").fetchall()[0][0]
+    assert risk["unprofitable_tenants"] == n
+    assert risk["arr_at_risk_usd"] >= 0
+    assert all(w["margin_usd"] < 0 for w in risk["worst"])
+    assert [w["margin_usd"] for w in risk["worst"]] == sorted(w["margin_usd"] for w in risk["worst"])
+
+
 def test_pg1_snapshot_carries_m2_kpis_only_when_the_m2_marts_exist(tmp_path):
     from mc_pipelines.publish import _m2_marts_present
 
