@@ -25,7 +25,7 @@ Follow `docs/plans/m2-plan.md` §3 sequencing (AWS backfill comes after M2-03):
 
 - **Task:** M2-02 gates and close-out: four dbt gates in `pipelines/transform/tests/m2_*.sql` (infra cost, LLM cost, revenue per invoice line, revenue per tenant and period), enabled only with var `m2_gates`. One test runs them green, then breaks each on purpose (drops rows from the guarded facts) and checks every gate fails. M2-02 ticked in PLAN.md §17; Change Log entry added.
 - **Decisions (§8.2):** gates sit behind `m2_gates` so subset builds in tests (and the M1 build) don't pick them up. The deviations from the M2-02 text (tenant x day join, separate margin model name, no overage) are in the Change Log.
-- **PR / CI / deploy:** PENDING. Cost $0.
+- **PR / CI / deploy:** PR #51, all checks green on the head commit (attribution passed after the body was edited via the GitHub MCP tool). Fast-forwarded to `main`; `deploy to dev` green. Cost $0.
 - **Next:** M2-03.
 
 ## 2026-11-06 (autopilot run 12, task 6)
