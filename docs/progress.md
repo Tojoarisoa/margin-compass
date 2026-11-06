@@ -14,7 +14,13 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 1. M2-03 close-out: register `M2KpiTools` with the analyst (needs `mc_pipelines` in the agents image, so one deploy; changes the agent tool set, so re-record replay fixtures first, ops `record-fixtures`), then tick M2-03 in PLAN.md §17. Contracts doc, lineage, scorecard, drift checks are done.
 2. M2-01 close-out: Step Functions backfill over 19 monthly chunks, one deploy under §8.2 if the cost gate stays <= $3.00, verify AWS gold = local gold, then tick M2-01.
-3. M2-04 remaining: PG-2 margin-vs-usage scatter (add to `pg2.json`), PG-8 tabs, dogfood telemetry. PG-1 is complete; PG-2 has the cost explorer, margin waterfall table and attribution coverage (JSON).
+3. M2-04 remaining: PG-8 tabs (Pipeline & Data Health, Platform FinOps), dogfood telemetry. PG-1 and PG-2 are complete (PG-2: cost explorer, margin waterfall table, attribution coverage, margin-vs-usage scatter).
+
+## 2026-11-06 (autopilot run 22, task 1)
+
+- **Task:** M2-04 step 2d: `pg2.json` `margin_waterfall` rows carry `requests`; the explorer draws a margin-vs-usage scatter (one point per tenant, SVG, no new dependency). Tenants with no usage rows plot at 0. Pipelines 68 passed, ruff clean, dashboard typecheck + build clean.
+- **Decisions (§8.2):** none needed.
+- **PR / CI / deploy:** PR #80, all checks green on the head commit (first `attribution` failure superseded after removing the proxy-added footer); fast-forwarded to `main`; `ci` push run and `deploy to dev` green. Cost $0.
 
 ## 2026-11-06 (autopilot run 21, task 2)
 
