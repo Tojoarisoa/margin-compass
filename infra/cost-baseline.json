@@ -20,6 +20,7 @@
     },
     "mc-dev-web": {
       "AWS::CDK::Metadata": 1,
+      "AWS::CertificateManager::Certificate": 1,
       "AWS::CloudFront::CachePolicy": 1,
       "AWS::CloudFront::Distribution": 1,
       "AWS::CloudFront::OriginAccessControl": 3,
