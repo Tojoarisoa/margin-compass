@@ -30,5 +30,7 @@ export interface Snapshot {
   trend: { date: string; ai_revenue_usd: number; ai_cost_to_serve_usd: number; ai_gross_margin_pct: number | null }[];
   forecast: { metric: string; model_version: string | null; model_alias: string | null; points: { date: string; p10: number; p50: number; p90: number }[] };
   tenants: TenantRow[];
+  /** Present when the M2 marts exist: registry KPIs over the whole window (metrics/metrics.yml). */
+  m2_kpis?: Record<string, number | null>;
   not_yet_available: Record<string, string>;
 }

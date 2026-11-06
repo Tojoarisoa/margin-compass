@@ -47,6 +47,16 @@ export function App() {
         <Tile label="LLM attribution coverage (KPI-03)" value={percent(h.llm_attribution_coverage_pct, 1)} note="target ≥ 98%" />
       </section>
 
+      {snap.m2_kpis && (
+        <section className="tiles" aria-label="Fully loaded KPIs">
+          <Tile label="Gross margin, fully loaded" value={percent(snap.m2_kpis.gross_margin_pct ?? null)} note={snap.m2_kpis.gross_margin_usd == null ? undefined : money(snap.m2_kpis.gross_margin_usd)} />
+          <Tile label="Cost per outcome (KPI-05)" value={snap.m2_kpis.cost_per_outcome_usd == null ? "n/a" : money(snap.m2_kpis.cost_per_outcome_usd)} />
+          <Tile label="Unit cost per request" value={snap.m2_kpis.unit_cost_per_request_usd == null ? "n/a" : `$${snap.m2_kpis.unit_cost_per_request_usd.toFixed(4)}`} />
+          <Tile label="Safety-event recall" value={percent(snap.m2_kpis.safety_event_recall ?? null, 1)} />
+          <Tile label="Attribution coverage (all cost)" value={percent(snap.m2_kpis.attribution_coverage ?? null, 1)} />
+        </section>
+      )}
+
       <div className="grid">
         <section className="card" aria-labelledby="trend-title">
           <h2 id="trend-title">Daily AI gross margin</h2>

@@ -14,7 +14,15 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 1. M2-03 close-out: register `M2KpiTools` with the analyst (needs `mc_pipelines` in the agents image, so one deploy; changes the agent tool set, so re-record replay fixtures first, ops `record-fixtures`), then tick M2-03 in PLAN.md §17. Contracts doc, lineage, scorecard, drift checks are done.
 2. M2-01 close-out: Step Functions backfill over 19 monthly chunks, one deploy under §8.2 if the cost gate stays <= $3.00, verify AWS gold = local gold, then tick M2-01.
-3. M2-04.
+3. M2-04 remaining: margin per feature, unprofitable tenants + ARR at risk, trend with forecast band (PG-1), then PG-2, PG-8 tabs, dogfood telemetry.
+
+## 2026-11-06 (autopilot run 18, task 2)
+
+- **Task:** M2-04 step 1a: PG-1 shows a "fully loaded" tile row (margin %, cost per outcome, unit cost, safety recall, attribution coverage) when the snapshot has `m2_kpis`; hidden otherwise. Dashboard typecheck + build clean (display only, no new figures computed in the browser).
+- **Decisions (§8.2):** none needed.
+- **PR / CI / deploy:** see PR. Cost $0.
+- **Note:** `npm ci` was refused by the harness's rm safety check; used `npm install --no-save` instead.
+- **Next:** see Next section.
 
 ## 2026-11-06 (autopilot run 18, task 1)
 
