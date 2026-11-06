@@ -26,7 +26,7 @@ Follow `docs/plans/m2-plan.md` §3 sequencing (AWS backfill comes after M2-03):
 
 - **Task:** M2-02 step 3b, gold `fct_unit_cost` (day x feature x model: sums plus cost per request, per 1k tokens, cache hit share recomputed from sums) and `fct_quality` (day x tenant: outcome sums, `safety_event_recall`, remote resolution, CSAT and eval averages recomputed from sums). 1 new test: unit-cost totals equal priced silver, no duplicate grain, recall rolled up from summed counts equals the generator's.
 - **Decisions (§8.2):** none needed.
-- **PR / CI / deploy:** PENDING. Cost $0.
+- **PR / CI / deploy:** PR #48, all checks green on the head commit (attribution passed after the body was edited via the GitHub MCP tool). Fast-forwarded to `main`; `deploy to dev` green. Cost $0.
 - **Next:** dims and the fully loaded margin.
 
 ## 2026-11-06 (autopilot run 12, task 3)
