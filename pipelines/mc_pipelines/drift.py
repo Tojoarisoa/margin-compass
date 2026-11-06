@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date, timedelta
+from pathlib import Path
 
 WEEKS_BACK = 4
 LOW, HIGH = 0.5, 2.0
@@ -69,3 +70,38 @@ def ratio_drift(numerator: dict[date, float], denominator: dict[date, float], ba
         if abs(ratio - 1) > band:
             out.append(DriftWarning(day, value, expected, ratio))
     return out
+
+
+def m2_drift_checks(gold: Path) -> list[dict]:
+    """Run the drift checks on the M2 gold marts. Each result is a warning (never an error) tagged statistical."""
+    import duckdb
+
+    daily = duckdb.sql(
+        f"select cost_date, sum(requests), sum(input_tokens + output_tokens), sum(llm_cost_usd) "
+        f"from '{gold}/fct_unit_cost.parquet' group by all order by 1").fetchall()
+    requests = {r[0]: float(r[1]) for r in daily}
+    tokens = {r[0]: float(r[2]) for r in daily}
+    cost = {r[0]: float(r[3]) for r in daily}
+    checks = {
+        "volume_requests": volume_drift(requests),
+        "ratio_tokens_per_request": ratio_drift(tokens, requests),
+        "ratio_cost_per_request": ratio_drift(cost, requests),
+    }
+    return [
+        {"check": name, "category": "statistical", "severity": "warn", "day": w.day.isoformat(),
+         "value": round(w.value, 6), "expected": round(w.expected, 6), "ratio": round(w.ratio, 4)}
+        for name, found in checks.items() for w in found
+    ]
+
+
+def write_m2_scorecard(gold: Path, run_id: str) -> dict:
+    """gold/_quality/m2_scorecard.json: the M2 statistical warnings, for PG-8 (M2-03.4). Synthetic data."""
+    import json
+
+    warnings = m2_drift_checks(gold)
+    card = {"run_id": run_id, "checks": ["volume_requests", "ratio_tokens_per_request", "ratio_cost_per_request"],
+            "warnings": warnings, "synthetic": True}
+    out = gold / "_quality"
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "m2_scorecard.json").write_text(json.dumps(card, indent=2, sort_keys=True) + "\n")
+    return card

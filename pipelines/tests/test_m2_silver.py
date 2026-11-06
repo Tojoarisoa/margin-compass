@@ -289,6 +289,18 @@ M2_GATES = ["m2_preservation_infra_cost", "m2_preservation_llm_cost", "m2_preser
             "m2_preservation_revenue_period"]
 
 
+def test_m2_scorecard_lists_drift_warnings_as_warnings(allocated):
+    from mc_pipelines.drift import write_m2_scorecard
+
+    out, _ = allocated
+    card = write_m2_scorecard(out.parent, "run-test")
+    on_disk = json.loads((out.parent / "_quality" / "m2_scorecard.json").read_text())
+    assert on_disk == json.loads(json.dumps(card)) and on_disk["synthetic"] is True
+    assert set(on_disk["checks"]) == {"volume_requests", "ratio_tokens_per_request", "ratio_cost_per_request"}
+    for w in on_disk["warnings"]:  # drift never fails a build
+        assert w["severity"] == "warn" and w["category"] == "statistical" and w["check"] in on_disk["checks"]
+
+
 def test_cost_per_outcome_mart_matches_sources_and_registry(allocated):
     out, _ = allocated
     gold = out.parent
