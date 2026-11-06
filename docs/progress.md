@@ -26,7 +26,7 @@ Follow `docs/plans/m2-plan.md` §3 sequencing (AWS backfill comes after M2-03):
 
 - **Task:** M2-02 step 1d, silver outcomes: `stg_m2_outcomes_daily`, `stg_m2_tickets`, `slv_m2_outcomes_daily` (tenant x day outcomes joined to priced usage: requests and LLM cost). 1 new test (row count and ticket total match the generator, no join fan-out).
 - **Decisions (§8.2):** joined at tenant x day instead of by trace ID. Options: (a) add `trace_id` to tickets, which needs the raw sample inside the outcomes generator and changes landed bytes; (b) tenant x day join. Chose (b), the fallback already named in Next: no simulator change, and margin marts work at tenant x day. Per-ticket rows stay in `stg_m2_tickets` for quality gates.
-- **PR / CI / deploy:** see below. Cost $0.
+- **PR / CI / deploy:** PR #45, all checks green on the head commit (attribution passed after the body was edited via the GitHub MCP tool). Fast-forwarded to `main`; `deploy to dev` green. Cost $0.
 - **Next:** M2-02 allocation rules.
 
 ## 2026-11-06 (autopilot run 11, task 3)
