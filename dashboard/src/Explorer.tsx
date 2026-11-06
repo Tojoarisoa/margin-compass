@@ -5,7 +5,7 @@ import { money, percent } from "./format";
 
 interface Cost { requests: number; llm_cost_usd: number; agent_compute_usd: number; vector_usd: number; network_observability_usd: number; third_party_usd: number; cost_to_serve_usd: number }
 type Row = Cost & { tenant_id?: string; feature_id?: string; feature_name?: string | null; month?: string };
-interface Wf { tenant_id: string; revenue_usd: number; discount_usd: number; llm_cost_usd: number; infra_cost_usd: number; margin_usd: number }
+interface Wf { tenant_id: string; requests: number; revenue_usd: number; discount_usd: number; llm_cost_usd: number; infra_cost_usd: number; margin_usd: number }
 interface Cov { month: string; allocated_usd: number; unallocated_usd: number; coverage: number | null }
 interface Pg2 { schema_version: "pg2.v0"; margin_waterfall: Wf[]; attribution_by_month: Cov[]; by_tenant: Row[]; by_feature: Row[]; by_month: Row[]; by_tenant_feature: Row[] }
 
@@ -13,6 +13,28 @@ const VIEWS = { by_tenant: "Tenant", by_feature: "Feature", by_month: "Month", b
 type View = keyof typeof VIEWS;
 
 const label = (r: Row) => [r.tenant_id, r.month, r.feature_id && `${r.feature_id}${r.feature_name ? ` ${r.feature_name}` : ""}`].filter(Boolean).join(" / ");
+
+function Scatter({ rows }: { rows: Wf[] }) {
+  const W = 480, H = 240, L = 56, B = 28, P = 8;
+  const xs = rows.map((r) => r.requests), ys = rows.map((r) => r.margin_usd);
+  const x1 = Math.max(...xs, 1), y0 = Math.min(...ys, 0), y1 = Math.max(...ys, 0), span = y1 - y0 || 1;
+  const sx = (v: number) => L + (v / x1) * (W - L - P), sy = (v: number) => P + (1 - (v - y0) / span) * (H - B - P);
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Margin against usage, one point per tenant" style={{ width: "100%", maxWidth: W }}>
+      <line x1={L} y1={sy(0)} x2={W - P} y2={sy(0)} stroke="currentColor" strokeOpacity={0.4} />
+      <line x1={L} y1={P} x2={L} y2={H - B} stroke="currentColor" strokeOpacity={0.4} />
+      {rows.map((r) => (
+        <circle key={r.tenant_id} cx={sx(r.requests)} cy={sy(r.margin_usd)} r={3.5} fill="currentColor" fillOpacity={r.margin_usd < 0 ? 0.9 : 0.45}>
+          <title>{`${r.tenant_id}: ${r.requests.toLocaleString("en-US")} requests, margin ${money(r.margin_usd)}`}</title>
+        </circle>
+      ))}
+      <text x={L - 4} y={P + 8} textAnchor="end" fontSize="10" fill="currentColor">{money(y1)}</text>
+      <text x={L - 4} y={H - B} textAnchor="end" fontSize="10" fill="currentColor">{money(y0)}</text>
+      <text x={W - P} y={H - 8} textAnchor="end" fontSize="10" fill="currentColor">{x1.toLocaleString("en-US")} requests</text>
+      <text x={L} y={H - 8} fontSize="10" fill="currentColor">0</text>
+    </svg>
+  );
+}
 
 export default function Explorer() {
   const [data, setData] = useState<Pg2 | null>(null);
@@ -72,6 +94,8 @@ export default function Explorer() {
           </tbody>
         </table>
       </div>
+      <h3>Margin against usage, one point per tenant</h3>
+      <Scatter rows={data.margin_waterfall} />
       <h3>Shared-infrastructure attribution coverage by month</h3>
       <div className="table-wrap">
         <table>

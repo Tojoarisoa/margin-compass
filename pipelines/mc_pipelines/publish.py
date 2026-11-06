@@ -171,9 +171,13 @@ def build_pg2(gold: Path, run_id: str) -> dict:
         SELECT date_trunc('month', cost_date)::DATE, coalesce(sum(allocated_cost_usd) FILTER (WHERE rule_id <> 'UNALLOCATED'), 0),
                coalesce(sum(allocated_cost_usd) FILTER (WHERE rule_id = 'UNALLOCATED'), 0)
         FROM read_parquet('{g}/fct_infra_cost_allocated.parquet') GROUP BY 1 ORDER BY 1""").fetchall()]
+    by_tenant = view(["c.tenant_id"], ["tenant_id"])
+    usage = {r["tenant_id"]: r["requests"] for r in by_tenant}
+    for w in waterfall:
+        w["requests"] = usage.get(w["tenant_id"], 0)  # usage axis of the margin-vs-usage scatter
     return {"schema_version": "pg2.v0", "run_id": run_id, "data_label": "synthetic",
             "margin_waterfall": waterfall, "attribution_by_month": coverage,
-            "by_tenant": view(["c.tenant_id"], ["tenant_id"]), "by_feature": by_feature,
+            "by_tenant": by_tenant, "by_feature": by_feature,
             "by_month": view(["date_trunc('month', c.cost_date)::DATE"], ["month"]),
             "by_tenant_feature": view(["c.tenant_id", "c.feature_id"], ["tenant_id", "feature_id"])}
 
