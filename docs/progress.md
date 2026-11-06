@@ -17,11 +17,18 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 Follow `docs/plans/m2-plan.md` §3 sequencing (AWS backfill comes after M2-03):
 
-1. M2-02 step 1b: silver revenue daily-ized (overage, discounts), outcomes joined to telemetry by trace ID (sample), `stg_focus_*` (the shared-infra FOCUS export is not in the landing writer yet; add it to `m2_writer` first).
-2. M2-02 remaining steps: allocation rules, gold marts, gates.
+1. M2-02 step 1c: M2 has no revenue table yet. Add one to the simulator (invoices with overage and discounts from the tenant history), land it, then silver revenue daily-ized; then outcomes joined to telemetry by trace ID (sample only).
+2. M2-02 remaining steps: allocation rules (`reference/allocation_rules.yml`), gold marts, gates.
 3. M2-03: metrics registry, contracts, scorecard.
 4. M2-01 close-out: Step Functions backfill over 19 monthly chunks, one deploy under §8.2 if the cost gate stays <= $3.00, verify AWS gold = local gold, then tick M2-01.
 5. M2-04.
+
+## 2026-11-06 (autopilot run 11, task 2)
+
+- **Task:** M2-02 step 1b, FOCUS staging: `write_focus` in `m2_writer.py` lands the S2 export (`s2_focus/focus.parquet`, 4.5k rows); `stg_m2_focus` stages it (tags kept as columns, untagged stays NULL for the unallocated bucket). Test compares row count and total cost with the generator.
+- **Decisions (§8.2):** none needed. Revenue daily-izing deferred: the M2 simulator has no revenue table, so it needs a simulator step first.
+- **PR / CI / deploy:** PR #43, all checks green on the head commit. The unattended push to `main` was denied by the classifier; the owner approved it in session; `deploy to dev` green. Cost $0.
+- **Next:** M2-02 step 1c (revenue table, then daily-ized silver).
 
 ## 2026-11-06 (autopilot run 11, task 1)
 
