@@ -17,10 +17,17 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 Follow `docs/plans/m2-plan.md` §3 sequencing (AWS backfill comes after M2-03):
 
-1. M2-02 remaining steps: gold marts (`fct_cost_to_serve`, `fct_unit_cost`, `fct_quality`, `dim_*`, fully loaded `fct_tenant_margin`) and the gates. Overage revenue is not simulated yet (flat add-on only); decide whether to add it before the margin mart.
+1. M2-02 remaining steps: `fct_unit_cost` (day x feature x model), `fct_quality` (safety recall from summed counts), `dim_tenant`/`dim_feature`/`dim_model_price`, fully loaded `fct_tenant_margin` (revenue minus `fct_cost_to_serve`), and the M2 gate tests with break-on-purpose checks. Overage revenue is not simulated yet (flat add-on only); decide whether to add it before the margin mart.
 2. M2-03: metrics registry, contracts, scorecard.
 3. M2-01 close-out: Step Functions backfill over 19 monthly chunks, one deploy under §8.2 if the cost gate stays <= $3.00, verify AWS gold = local gold, then tick M2-01.
 4. M2-04.
+
+## 2026-11-06 (autopilot run 12, task 3)
+
+- **Task:** M2-02 step 3a, gold `fct_cost_to_serve` (day x tenant x feature): LLM cost plus allocated infra by component (agent compute, vector, network/observability, third-party). Unallocated infra stays in `fct_infra_cost_allocated`. 1 new test: LLM total and allocated infra total match their sources exactly (no loss or doubling in the full outer join), total = LLM + infra, no duplicate grain.
+- **Decisions (§8.2):** none needed.
+- **PR / CI / deploy:** PENDING. Cost $0.
+- **Next:** unit cost, quality, dims, margin.
 
 ## 2026-11-06 (autopilot run 12, task 2)
 

@@ -171,7 +171,7 @@ def allocated(tmp_path_factory):
     variables = {"m2_landing_path": str(landing), "silver_path": str(root / "silver"), "bronze_path": "x",
                  "gold_path": str(root / "gold"), "allocation_rules": load_rules()}
     result = dbtRunner().invoke([
-        "build", "--select", "+fct_infra_cost_allocated", "--project-dir", str(TRANSFORM_DIR),
+        "build", "--select", "+fct_infra_cost_allocated", "+fct_cost_to_serve", "--project-dir", str(TRANSFORM_DIR),
         "--profiles-dir", str(TRANSFORM_DIR), "--target-path", str(root / "t"), "--log-path", str(root / "l"),
         "--vars", json.dumps(variables), "--quiet"])
     assert result.success, result.exception
@@ -200,3 +200,19 @@ def test_infra_allocation_uses_each_rule_and_never_negative(allocated):
     # Unallocated rows carry no tenant; allocated rows always do.
     bad = duckdb.sql(f"select count(*) from '{out}' where (rule_id = 'UNALLOCATED') <> (tenant_id is null)").fetchall()[0][0]
     assert bad == 0
+
+
+def test_cost_to_serve_preserves_llm_and_allocated_infra(allocated):
+    out, _ = allocated
+    gold = out.parent
+    silver = out.parent.parent / "silver"
+    llm_billed, infra_alloc = duckdb.sql(
+        f"select (select sum(llm_cost_usd) from '{silver}/slv_m2_llm_usage_priced.parquet'), "
+        f"(select sum(allocated_cost_usd) from '{out}' where rule_id <> 'UNALLOCATED')").fetchall()[0]
+    llm, infra, total, dup = duckdb.sql(
+        f"select sum(llm_cost_usd), sum(infra_cost_usd), sum(cost_to_serve_usd), "
+        f"count(*) - count(distinct (cost_date, tenant_id, feature_id)) from '{gold}/fct_cost_to_serve.parquet'"
+    ).fetchall()[0]
+    assert llm == llm_billed and infra == infra_alloc  # no cost lost or doubled by the full outer join
+    assert total == llm + infra
+    assert dup == 0

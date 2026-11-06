@@ -30,3 +30,9 @@ models:
         data_tests: [not_null]
       - name: rule_id
         data_tests: [not_null]
+  - name: fct_cost_to_serve
+    columns:
+      - name: cost_to_serve_usd
+        data_tests: [not_null]
+      - name: tenant_id
+        data_tests: [not_null]
