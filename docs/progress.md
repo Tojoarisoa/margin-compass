@@ -21,6 +21,10 @@ Follow `docs/plans/m2-plan.md` §3 sequencing (AWS backfill comes after M2-03):
 2. M2-01 close-out: Step Functions backfill over 19 monthly chunks, one deploy under §8.2 if the cost gate stays <= $3.00, verify AWS gold = local gold, then tick M2-01.
 3. M2-04.
 
+## 2026-11-06 (owner session: dashboard domain)
+
+- **Done:** dashboard served at https://medtech.booncore.com (PR #64): ACM certificate + CloudFront alias in `mc-dev-web` (`mc:dashboardDomain`), Cloudflare CNAMEs DNS only (`docs/runbooks/dashboard-domain.md`). Verified `/`, `/publish/latest/pg1.json`, `/api/health` = 200. Cost $0, no IAM change.
+
 ## 2026-11-06 (owner session: repository public)
 
 - **Why:** GitHub Actions minutes for the private repository were exhausted (1,963 of 2,019 used in November).
