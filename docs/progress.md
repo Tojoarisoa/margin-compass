@@ -12,9 +12,16 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-1. M2-03 remaining: agent tools on the registry (note: `mc-pipelines` is only a dev dependency of `agents`, so the agents image would need `metrics/` and the registry code, which needs a deploy; split: first a read-only M2 tool class over the gold marts using a copy-free import path, with replay fixtures untouched), then close M2-03 (contracts doc `gold-marts-m2.md` check, tick PLAN.md §17).
+1. M2-03 close-out: register `M2KpiTools` with the analyst (needs `mc_pipelines` in the agents image, so one deploy; changes the agent tool set, so re-record replay fixtures first, ops `record-fixtures`), then tick M2-03 in PLAN.md §17. Contracts doc, lineage, scorecard, drift checks are done.
 2. M2-01 close-out: Step Functions backfill over 19 monthly chunks, one deploy under §8.2 if the cost gate stays <= $3.00, verify AWS gold = local gold, then tick M2-01.
 3. M2-04.
+
+## 2026-11-06 (autopilot run 18, task 1)
+
+- **Task:** M2-03 step 7a: `agents/mc_agents/tools/m2.py` `M2KpiTools.kpi(metric)`: read-only registry KPI as a display string (not yet wired into the analyst). 2 tests (margin equals mart totals; unknown metric is a tool error); agents 57 passed, ruff clean.
+- **Decisions (§8.2):** none needed.
+- **PR / CI / deploy:** see PR below. Cost $0.
+- **Next:** see Next section.
 
 ## 2026-11-06 (autopilot run 17, task 2)
 
