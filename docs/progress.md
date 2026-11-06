@@ -26,7 +26,7 @@ Follow `docs/plans/m2-plan.md` §3 sequencing (AWS backfill comes after M2-03):
 
 - **Task:** M2-02 step 3c, gold `fct_m2_tenant_margin` (day x tenant): all daily-ized revenue (discounts as a negative component) minus `fct_cost_to_serve`. Named `fct_m2_tenant_margin` beside the M1 `fct_tenant_margin` until the M1 profile is retired. 1 new test: revenue and cost totals equal their sources, margin = revenue - cost, no duplicate grain.
 - **Decisions (§8.2):** (a) overage revenue: not added (options: simulate it now, or keep the flat add-on only); kept flat add-on, because the simulator spec has no overage parameters and adding them would change landed bytes with no plan item. (b) Unallocated infra is not charged to any tenant; it stays visible in `fct_infra_cost_allocated`. (c) Separate model name instead of switching M1's in place, so the M1 build is untouched.
-- **PR / CI / deploy:** PENDING. Cost $0.
+- **PR / CI / deploy:** PR #49, all checks green on the head commit (attribution passed after the body was edited via the GitHub MCP tool). Fast-forwarded to `main`; `deploy to dev` green. Cost $0.
 - **Next:** dims and gate tests, then tick M2-02.
 
 ## 2026-11-06 (autopilot run 12, task 4)
