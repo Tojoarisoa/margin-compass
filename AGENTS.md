@@ -69,7 +69,7 @@ This file tells any AI agent (Claude Code, Codex, Cursor, etc.) how to work in t
 
 - **Commits:** Conventional Commits, with the task ID in the scope, e.g. `feat(m1-02): add bronze ingest`.
 - **Commit identity:** author and committer are `tojoarisoa <47354538+Tojoarisoa@users.noreply.github.com>` everywhere, including cloud sessions (`.claude/settings.json` sets it at session start). No AI attribution in commits or PRs: no `Co-Authored-By` or `Claude-Session` trailers, no "Generated with/by Claude Code" footers, no session links. The `attribution` CI check enforces this; if a tool adds a footer to a PR description, edit the description to remove it (the check re-runs on edit).
-- **Public surfaces** (README, dashboard, public API responses; owner, 2026-11-06): don't show project status or milestones, budgets or caps, "portfolio project", or per-answer cost, LLM call counts, or model names. Keep those in internal records, logs, and docs. The short synthetic-data notice stays (rule 10).
+- **Public surfaces** (README, dashboard, public API responses; owner, 2026-11-06): don't show project status or milestones, budgets or caps, "portfolio project", per-answer cost, LLM call counts, or model names, or internal IDs and scope codes (`KPI-01`, `PG-2`, `F1`, `M1`, `AG-03`, …); use plain names instead. Keep those in internal records, logs, and docs. The short synthetic-data notice stays (rule 10).
 - **AWS resource names:** `mc-<env>-<stage>-<name>` (e.g., `mc-prod-ingest-telemetry`).
 - **Data:** snake_case columns; marts are prefixed `fct_`, `dim_`, `agg_`.
 - **IDs:** use the plan's IDs in code comments, test names, and PRs where helpful (`AG-03`, `EV-05`, `KPI-04`).

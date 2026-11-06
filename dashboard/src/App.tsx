@@ -37,7 +37,7 @@ export function App() {
   return (
     <main className="page">
       <div className="banner" role="note">
-        <strong>Synthetic data.</strong> BoonCore is a fictional company; all tenants and figures are simulated. Scope: {snap.feature_scope}.
+        <strong>Synthetic data.</strong> BoonCore is a fictional company; all tenants and figures are simulated.
       </div>
       <header>
         <h1>Executive Margin Overview <span className="tag">v0</span></h1>
@@ -45,17 +45,17 @@ export function App() {
       </header>
 
       <section className="tiles" aria-label="Headline KPIs">
-        <Tile label="AI gross margin (KPI-01)" value={percent(h.window.ai_gross_margin_pct)} note={`last 30 days: ${percent(h.last_30_days.ai_gross_margin_pct)}`} />
+        <Tile label="AI gross margin" value={percent(h.window.ai_gross_margin_pct)} note={`last 30 days: ${percent(h.last_30_days.ai_gross_margin_pct)}`} />
         <Tile label="AI revenue" value={money(h.window.ai_revenue_usd)} note={`last 30 days: ${money(h.last_30_days.ai_revenue_usd)}`} />
         <Tile label="AI cost to serve" value={money(h.window.ai_cost_to_serve_usd)} note={`last 30 days: ${money(h.last_30_days.ai_cost_to_serve_usd)}`} />
-        <Tile label="Unprofitable tenants (KPI-04)" value={`${h.unprofitable_tenants} of ${h.tenants}`} />
-        <Tile label="LLM attribution coverage (KPI-03)" value={percent(h.llm_attribution_coverage_pct, 1)} note="target ≥ 98%" />
+        <Tile label="Unprofitable tenants" value={`${h.unprofitable_tenants} of ${h.tenants}`} />
+        <Tile label="LLM attribution coverage" value={percent(h.llm_attribution_coverage_pct, 1)} note="target ≥ 98%" />
       </section>
 
       {snap.m2_kpis && (
         <section className="tiles" aria-label="Fully loaded KPIs">
           <Tile label="Gross margin, fully loaded" value={percent(snap.m2_kpis.gross_margin_pct ?? null)} note={snap.m2_kpis.gross_margin_usd == null ? undefined : money(snap.m2_kpis.gross_margin_usd)} />
-          <Tile label="Cost per outcome (KPI-05)" value={snap.m2_kpis.cost_per_outcome_usd == null ? "n/a" : money(snap.m2_kpis.cost_per_outcome_usd)} />
+          <Tile label="Cost per outcome" value={snap.m2_kpis.cost_per_outcome_usd == null ? "n/a" : money(snap.m2_kpis.cost_per_outcome_usd)} />
           <Tile label="Unit cost per request" value={snap.m2_kpis.unit_cost_per_request_usd == null ? "n/a" : `$${snap.m2_kpis.unit_cost_per_request_usd.toFixed(4)}`} />
           <Tile label="Safety-event recall" value={percent(snap.m2_kpis.safety_event_recall ?? null, 1)} />
           <Tile label="Attribution coverage (all cost)" value={percent(snap.m2_kpis.attribution_coverage ?? null, 1)} />
