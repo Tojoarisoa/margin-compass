@@ -5,6 +5,7 @@ import { count, money, percent } from "./format";
 import type { Snapshot } from "./types";
 
 const Explorer = lazy(() => import("./Explorer"));
+const Health = lazy(() => import("./Health"));
 
 function Tile({ label, value, note }: { label: string; value: string; note?: string }) {
   return (
@@ -20,6 +21,7 @@ export function App() {
   const [snap, setSnap] = useState<Snapshot | null>(null);
   const [error, setError] = useState("");
   const [showExplorer, setShowExplorer] = useState(false);
+  const [showHealth, setShowHealth] = useState(false);
 
   useEffect(() => {
     fetch("/publish/latest/pg1.json", { cache: "no-cache" })
@@ -139,6 +141,17 @@ export function App() {
             <Suspense fallback={<p className="muted">Loading explorer…</p>}><Explorer /></Suspense>
           ) : (
             <button onClick={() => setShowExplorer(true)}>Open explorer</button>
+          )}
+        </section>
+      )}
+
+      {snap.m2_kpis && (
+        <section className="card" aria-labelledby="health-title">
+          <h2 id="health-title">Pipeline and data health</h2>
+          {showHealth ? (
+            <Suspense fallback={<p className="muted">Loading health…</p>}><Health /></Suspense>
+          ) : (
+            <button onClick={() => setShowHealth(true)}>Open health</button>
           )}
         </section>
       )}
