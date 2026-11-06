@@ -14,7 +14,15 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 1. M2-03 close-out: register `M2KpiTools` with the analyst (needs `mc_pipelines` in the agents image, so one deploy; changes the agent tool set, so re-record replay fixtures first, ops `record-fixtures`), then tick M2-03 in PLAN.md §17. Contracts doc, lineage, scorecard, drift checks are done.
 2. M2-01 close-out: Step Functions backfill over 19 monthly chunks, one deploy under §8.2 if the cost gate stays <= $3.00, verify AWS gold = local gold, then tick M2-01.
-3. M2-04 remaining: PG-2 Cost-to-Serve Explorer, PG-8 tabs, dogfood telemetry (PG-1 is complete).
+3. M2-04 remaining: PG-2 page (ADR-009 spike: pinned DuckDB-WASM, self-hosted bundles, range reads of `publish/latest/explore.parquet`; fall back to JSON if it fails), PG-8 tabs, dogfood telemetry. PG-1 is complete.
+
+## 2026-11-06 (autopilot run 20, task 2)
+
+- **Task:** M2-04 step 2a: publish writes `publish/latest/explore.parquet` (cost to serve, tenant x feature x month, sums only, fails over 5 MB) when the M2 marts exist, for PG-2. Test: sums equal `fct_cost_to_serve`. Pipelines 67 passed, ruff clean.
+- **Decisions (§8.2):** sums only, so the browser rolls up any slice without ratios.
+- **PR / CI / deploy:** PR #77, all checks green on the head commit; fast-forwarded to `main`; `ci` push run and `deploy to dev` green. Cost $0.
+- **Run end:** past 35 min; 2 tasks done.
+- **Next:** see Next section.
 
 ## 2026-11-06 (autopilot run 20, task 1)
 
