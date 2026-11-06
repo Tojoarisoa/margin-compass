@@ -160,7 +160,19 @@ def build_pg2(gold: Path, run_id: str) -> dict:
     by_feature = view(["c.feature_id"], ["feature_id"])
     for r in by_feature:
         r["feature_name"] = names.get(r["feature_id"])
+    waterfall = [{"tenant_id": r[0], "revenue_usd": _money(r[1]), "discount_usd": _money(r[2]), "llm_cost_usd": _money(r[3]),
+                  "infra_cost_usd": _money(r[4]), "margin_usd": _money(r[5])}
+                 for r in con.execute(f"""
+        SELECT tenant_id, sum(revenue_usd), sum(discount_usd), sum(llm_cost_usd), sum(infra_cost_usd), sum(margin_usd)
+        FROM read_parquet('{g}/fct_m2_tenant_margin.parquet') GROUP BY 1 ORDER BY sum(margin_usd), 1""").fetchall()]
+    coverage = [{"month": r[0].isoformat(), "allocated_usd": _money(r[1]), "unallocated_usd": _money(r[2]),
+                 "coverage": _ratio(Decimal(r[1]), Decimal(r[1]) + Decimal(r[2]))}
+                for r in con.execute(f"""
+        SELECT date_trunc('month', cost_date)::DATE, coalesce(sum(allocated_cost_usd) FILTER (WHERE rule_id <> 'UNALLOCATED'), 0),
+               coalesce(sum(allocated_cost_usd) FILTER (WHERE rule_id = 'UNALLOCATED'), 0)
+        FROM read_parquet('{g}/fct_infra_cost_allocated.parquet') GROUP BY 1 ORDER BY 1""").fetchall()]
     return {"schema_version": "pg2.v0", "run_id": run_id, "data_label": "synthetic",
+            "margin_waterfall": waterfall, "attribution_by_month": coverage,
             "by_tenant": view(["c.tenant_id"], ["tenant_id"]), "by_feature": by_feature,
             "by_month": view(["date_trunc('month', c.cost_date)::DATE"], ["month"]),
             "by_tenant_feature": view(["c.tenant_id", "c.feature_id"], ["tenant_id", "feature_id"])}

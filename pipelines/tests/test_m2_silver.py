@@ -507,6 +507,11 @@ def test_pg2_views_each_total_to_the_cost_to_serve_mart(tmp_path):
         assert sum(r["cost_to_serve_usd"] for r in pg2[view]) == pytest.approx(float(total[0]), abs=0.01 * len(pg2[view])), view  # rows are rounded to cents
         assert sum(r["requests"] for r in pg2[view]) == total[1], view
     assert all(r["feature_name"] for r in pg2["by_feature"])
+    mart = duckdb.sql(f"select sum(margin_usd), count(distinct tenant_id) from read_parquet('{gold}/fct_m2_tenant_margin.parquet')").fetchall()[0]
+    wf = pg2["margin_waterfall"]
+    assert len(wf) == mart[1] and sum(r["margin_usd"] for r in wf) == pytest.approx(float(mart[0]), abs=0.01 * len(wf))
+    assert [r["margin_usd"] for r in wf] == sorted(r["margin_usd"] for r in wf)
+    assert pg2["attribution_by_month"] and all(0 <= r["coverage"] <= 1 for r in pg2["attribution_by_month"])
     assert len(json.dumps(pg2)) <= PG2_MAX_BYTES
 
 

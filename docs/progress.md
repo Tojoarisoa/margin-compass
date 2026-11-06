@@ -14,7 +14,13 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 1. M2-03 close-out: register `M2KpiTools` with the analyst (needs `mc_pipelines` in the agents image, so one deploy; changes the agent tool set, so re-record replay fixtures first, ops `record-fixtures`), then tick M2-03 in PLAN.md §17. Contracts doc, lineage, scorecard, drift checks are done.
 2. M2-01 close-out: Step Functions backfill over 19 monthly chunks, one deploy under §8.2 if the cost gate stays <= $3.00, verify AWS gold = local gold, then tick M2-01.
-3. M2-04 remaining: PG-2 extras (margin waterfall, margin-vs-usage scatter, attribution coverage; add to `pg2.json`), PG-8 tabs, dogfood telemetry. PG-1 is complete; PG-2 has the cost explorer (JSON).
+3. M2-04 remaining: PG-2 margin-vs-usage scatter (add to `pg2.json`), PG-8 tabs, dogfood telemetry. PG-1 is complete; PG-2 has the cost explorer, margin waterfall table and attribution coverage (JSON).
+
+## 2026-11-06 (autopilot run 21, task 2)
+
+- **Task:** M2-04 step 2c: `pg2.json` gets `margin_waterfall` (per tenant: revenue, discount, LLM, infrastructure, margin; lowest first) and `attribution_by_month` (allocated vs unallocated shared infrastructure); both shown in the explorer card. Test: sums equal the marts. Pipelines test + ruff clean, dashboard build clean.
+- **Decisions (§8.2):** waterfall as a table, not a chart, for now.
+- **PR / CI / deploy:** see PR below.
 
 ## 2026-11-06 (autopilot run 21, task 1)
 
