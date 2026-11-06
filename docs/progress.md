@@ -20,7 +20,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 - **Task:** M2-04 step 2b: PG-2 spike + page. DuckDB-WASM 1.32.0 (npm audit clean) loads its Parquet reader from `extensions.duckdb.org` at run time, which ADR-009 forbids and the sandbox can't reach, so under the ADR's own fallback (§8.2) PG-2 is pre-aggregated JSON: `publish/latest/pg2.json` (by tenant, feature, month, tenant x feature; each view totals to `fct_cost_to_serve`) and a lazy "Cost-to-serve explorer" card on the page. Pipelines 68 passed, ruff clean, dashboard build clean. ADR-009 spike result and PLAN Change Log noted.
 - **Decisions (§8.2):** JSON fallback (ADR-009); `explore.parquet` kept for a later retry with a self-hosted extension.
-- **PR / CI / deploy:** see PR below.
+- **PR / CI / deploy:** PR #78, all checks green on the head commit (first `attribution` failure superseded after removing the proxy-added footer); fast-forwarded to `main`; `ci` push run and `deploy to dev` green. Cost $0.
 
 ## 2026-11-06 (autopilot run 20, task 2)
 
