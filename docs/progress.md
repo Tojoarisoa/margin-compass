@@ -4,7 +4,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Waiting for owner
 
-- **Claude Haiku 5.5 access:** the owner accepted AWS's public offer (`offer-u3aih6zr7uw5u`, $0.10/$0.50 per 1M input/output; agreement AVAILABLE), but Converse via `us.anthropic.claude-haiku-5-5` still returns `AccessDeniedException` "not available for this account … contact AWS Sales". **The owner submitted the AWS Sales request form (2026-11-07).** Nothing else for the owner to do until AWS answers. Autopilot: re-probe with the ops workflow (`record-fixtures`, `haiku-5-5`) at most once a day; when it succeeds, record the M1-06 fixtures and apply the ADR-003 selection rule. Until then Haiku 4.5 stays the default.
+- **Claude Haiku 5.5 access:** access requested, waiting for AWS. Converse via `us.anthropic.claude-haiku-5-5` still returns `AccessDeniedException`. Autopilot: re-probe with the ops workflow (`record-fixtures`, `haiku-5-5`) at most once a day; when it succeeds, record the M1-06 fixtures and apply the ADR-003 selection rule. Until then Haiku 4.5 stays the default.
 
 ## Owner decision 2026-11-06
 
