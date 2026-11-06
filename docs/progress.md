@@ -14,9 +14,16 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 Follow `docs/plans/m2-plan.md` §3 sequencing (AWS backfill comes after M2-03):
 
-1. M2-03 remaining: registry in the dbt marts (`to_sql`), the PG-1 snapshot (`m2_kpis` fields) and the agent tools, with parity tests; call `run_m2_dbt` from the Lambda handler / CLI path (image now has `reference/` and `metrics/`); lineage.
+1. M2-03 remaining: registry in the dbt marts (`to_sql`), the agent tools (the PG-1 snapshot `m2_kpis` block is done), with parity tests; call `run_m2_dbt` from the Lambda handler / CLI path (image now has `reference/` and `metrics/`); lineage.
 2. M2-01 close-out: Step Functions backfill over 19 monthly chunks, one deploy under §8.2 if the cost gate stays <= $3.00, verify AWS gold = local gold, then tick M2-01.
 3. M2-04.
+
+## 2026-11-06 (autopilot run 17, task 1)
+
+- **Task:** M2-03 step 5b: `build_pg1` adds an additive `m2_kpis` block (registry KPIs) to the PG-1 snapshot when all M2 marts exist in gold; M1-only gold is unchanged. 1 test; pipelines 63 passed, ruff clean.
+- **Decisions (§8.2):** none needed.
+- **PR / CI / deploy:** PR #70, all checks green on the head commit (earlier `attribution` failures were superseded after the PR-description footer was removed); fast-forwarded to `main`; `ci` push run and `deploy to dev` green. Cost $0.
+- **Next:** see Next section.
 
 ## 2026-11-06 (autopilot run 16, task 1)
 
