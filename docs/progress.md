@@ -17,9 +17,16 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 Follow `docs/plans/m2-plan.md` §3 sequencing (AWS backfill comes after M2-03):
 
-1. M2-03 remaining (`cost_per_outcome_usd` is now in the registry): use the registry in the dbt marts (`to_sql`), the publish step and the agent tools, with parity tests; data contracts for the M2 marts (`docs/data-contracts/gold-marts-m2.md`); statistical checks (PT-13 seasonality guard must not alert); scorecard and lineage. Wire the M2 dbt build (`m2_gates` var, allocation rules var) into `mc_pipelines`; the Lambda image copies `pipelines/` only, so `reference/allocation_rules.yml` and `metrics/` must be copied in too.
+1. M2-03 remaining (`cost_per_outcome_usd` is now in the registry): use the registry in the dbt marts (`to_sql`), the publish step and the agent tools, with parity tests; statistical checks (PT-13 seasonality guard must not alert); scorecard and lineage. Wire the M2 dbt build (`m2_gates` var, allocation rules var) into `mc_pipelines`; the Lambda image copies `pipelines/` only, so `reference/allocation_rules.yml` and `metrics/` must be copied in too.
 2. M2-01 close-out: Step Functions backfill over 19 monthly chunks, one deploy under §8.2 if the cost gate stays <= $3.00, verify AWS gold = local gold, then tick M2-01.
 3. M2-04.
+
+## 2026-11-06 (autopilot run 13, task 2)
+
+- **Task:** M2-03 step 2: `docs/data-contracts/gold-marts-m2.md` (owner, SLA, PII class, grain, columns, tests, consumers for the 7 M2 marts and 3 dims; gates; roll-up rule).
+- **Decisions (§8.2):** none needed. Docs only.
+- **PR / CI / deploy:** PR #54, all checks green on the head commit (attribution passed after the body was edited via the GitHub MCP tool). Fast-forwarded to `main`; `deploy to dev` green. Cost $0.
+- **Next:** rest of M2-03 (registry in marts/publish/tools, statistical checks, scorecard and lineage).
 
 ## 2026-11-06 (autopilot run 13, task 1)
 
