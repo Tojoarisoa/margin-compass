@@ -14,9 +14,16 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 Follow `docs/plans/m2-plan.md` §3 sequencing (AWS backfill comes after M2-03):
 
-1. M2-03 remaining: publish `m2_kpis` is done; use the registry in the dbt marts (`to_sql`), the PG-1 snapshot and the agent tools, with parity tests; call `write_m2_scorecard` (`mc_pipelines/drift.py`) from the pipeline run once the M2 dbt build is wired in; lineage. Wire the M2 dbt build (`m2_gates` var, allocation rules var) into `mc_pipelines`; the Lambda image copies `pipelines/` only, so `reference/allocation_rules.yml` and `metrics/` must be copied in too.
+1. M2-03 remaining: registry in the dbt marts (`to_sql`), the PG-1 snapshot (`m2_kpis` fields) and the agent tools, with parity tests; call `run_m2_dbt` from the Lambda handler / CLI path (image now has `reference/` and `metrics/`); lineage.
 2. M2-01 close-out: Step Functions backfill over 19 monthly chunks, one deploy under §8.2 if the cost gate stays <= $3.00, verify AWS gold = local gold, then tick M2-01.
 3. M2-04.
+
+## 2026-11-06 (autopilot run 16, task 1)
+
+- **Task:** M2-03 step 4c: the Lambda image copies `reference/` and `metrics/` (also in `.dockerignore` allow-list) and sets `MC_REFERENCE_DIR` / `MC_METRICS_DIR`; `allocation.RULES_PATH` and `metrics.REGISTRY_PATH` follow them. 1 test.
+- **Decisions (§8.2):** none needed.
+- **PR / CI / deploy:** PR #67, all checks green on the head commit; fast-forwarded to `main` (rebased twice: the owner pushed docs to `main` meanwhile); `deploy to dev` green. Cost $0.
+- **Next:** see Next section.
 
 ## 2026-11-06 (owner session: dashboard domain)
 
