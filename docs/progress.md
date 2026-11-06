@@ -17,11 +17,18 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 Follow `docs/plans/m2-plan.md` §3 sequencing (AWS backfill comes after M2-03):
 
-1. M2-02 step 1c: M2 has no revenue table yet. Add one to the simulator (invoices with overage and discounts from the tenant history), land it, then silver revenue daily-ized; then outcomes joined to telemetry by trace ID (sample only).
+1. M2-02 step 1d: silver outcomes joined to telemetry by trace ID (sample only). Overage revenue is not simulated yet (flat add-on only); decide whether to add it before the gold margin mart.
 2. M2-02 remaining steps: allocation rules (`reference/allocation_rules.yml`), gold marts, gates.
 3. M2-03: metrics registry, contracts, scorecard.
 4. M2-01 close-out: Step Functions backfill over 19 monthly chunks, one deploy under §8.2 if the cost gate stays <= $3.00, verify AWS gold = local gold, then tick M2-01.
 5. M2-04.
+
+## 2026-11-06 (autopilot run 11, task 3)
+
+- **Task:** M2-02 step 1c, revenue: `m2_revenue.py` (monthly invoices from the SCD2 plan history: subscription, AI add-on, discount as a negative line), `write_revenue` lands `s3_revenue/invoices.parquet`, `slv_m2_revenue_daily` daily-izes to the cent. 5 simulator tests and 1 dbt test (daily rows sum to every invoice line).
+- **Decisions (§8.2):** none needed. Labeled assumptions: first month billed in full (no proration); tenants onboarded before the window bill from 2025-04; overage not simulated (0).
+- **PR / CI / deploy:** PR #44, all checks green on the head commit (attribution failed on the proxy footer before, so the body was edited via the GitHub MCP tool first). Fast-forwarded to `main`; `deploy to dev` green. Cost $0.
+- **Next:** M2-02 step 1d (outcomes joined by trace ID).
 
 ## 2026-11-06 (autopilot run 11, task 2)
 
