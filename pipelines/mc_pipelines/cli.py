@@ -191,6 +191,9 @@ def main(argv: list[str] | None = None) -> int:
     run.add_argument("--landing", type=Path, default=Path("../data/local/landing/booncore"))
     run.add_argument("--data-root", type=Path, default=Path("../data/local"))
     run.add_argument("--ingest-date", default=date.today().isoformat())
+    m2 = sub.add_parser("run-m2", help="Build the M2 silver/gold marts (with gates) from an M2 landing tree")
+    m2.add_argument("--landing", type=Path, default=Path("../data/local/landing/booncore_m2"))
+    m2.add_argument("--data-root", type=Path, default=Path("../data/local"))
     args = parser.parse_args(argv)
 
     run_id = str(uuid.uuid4())
@@ -199,6 +202,12 @@ def main(argv: list[str] | None = None) -> int:
     log.handlers[:] = [handler]
     log.setLevel(logging.INFO)
     log.propagate = False
+
+    if args.command == "run-m2":
+        log.info("m2_pipeline_started", extra={"fields": {"env": "local"}})
+        summary = run_m2_dbt(args.landing, args.data_root, run_id)
+        log.log(logging.INFO if summary["success"] else logging.ERROR, "m2_dbt_build_finished", extra={"fields": summary})
+        return 0 if summary["success"] else 3
 
     log.info("pipeline_started", extra={"fields": {"env": "local", "ingest_date": args.ingest_date}})
     try:

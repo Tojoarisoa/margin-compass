@@ -369,3 +369,19 @@ def test_run_m2_dbt_builds_all_marts_with_gates_and_writes_the_scorecard(tmp_pat
         assert (gold / f"{mart}.parquet").exists(), mart
     assert (gold / "_quality" / "m2_scorecard.json").exists()
     assert summary["statuses"].get("pass", 0) >= len(M2_GATES)  # the four gates ran
+
+
+def test_cli_run_m2_builds_the_marts_and_returns_zero(tmp_path):
+    from booncore_sim.m2_writer import write_dimensions, write_focus, write_revenue
+    from mc_pipelines.cli import main
+
+    tenants, history = generate_m2_tenants(42)
+    landing = tmp_path / "landing"
+    write_month(landing, 42, tenants, 5)
+    _write(landing, "tenants/tenants.parquet", tenants, 42, "tenants")
+    write_focus(landing, 42, tenants)
+    write_revenue(landing, 42, tenants, history)
+    write_dimensions(landing, 42, history)
+    _write(landing, "s5_price_catalog/price_catalog.parquet", list(PRICE_CATALOG_V2), 42, "price catalog")
+    assert main(["run-m2", "--landing", str(landing), "--data-root", str(tmp_path / "data")]) == 0
+    assert (tmp_path / "data" / "gold" / "fct_m2_tenant_margin.parquet").exists()
