@@ -26,7 +26,7 @@ Follow `docs/plans/m2-plan.md` §3 sequencing (AWS backfill comes after M2-03):
 
 - **Task:** M2-02 step 2, allocation rules: `reference/allocation_rules.yml` (6 effective-dated rules, D2 defaults), loader `mc_pipelines/allocation.py` (passes rules as a dbt var), models `int_m2_alloc_drivers` and gold `fct_infra_cost_allocated` (day x tenant x feature x rule). Split is exact in 0.0001 USD units (integer weights, leftover units to the largest drivers). 2 new tests: allocated + unallocated = landed FOCUS billed, exactly (Sep 2025); each rule used, no negatives, unallocated rows have no tenant.
 - **Decisions (§8.2):** none beyond D2. Labeled assumptions: vector storage share is proxied by cumulative F3 input tokens (no stored-volume data is simulated); all staging (x-env=staging, incl. the PT-12 idle GPU) goes to UNALLOCATED as overhead; third-party APIs spread by F4 request share.
-- **PR / CI / deploy:** see below. Cost $0.
+- **PR / CI / deploy:** PR #46, all checks green on the head commit (attribution passed after the body was edited via the GitHub MCP tool). Fast-forwarded to `main`; `deploy to dev` green. Cost $0.
 - **Next:** gold marts and gates.
 
 ## 2026-11-06 (autopilot run 12, task 1)
