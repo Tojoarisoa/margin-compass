@@ -17,9 +17,17 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 Follow `docs/plans/m2-plan.md` §3 sequencing (AWS backfill comes after M2-03):
 
-1. M2-03: metrics registry (one definition per metric: gross margin $ and %, cost per outcome, attribution coverage, unit cost, safety-event recall), data contracts for the M2 marts (`docs/data-contracts/gold-marts-m2.md`), statistical checks (PT-13 seasonality guard must not alert), scorecard and lineage. Wire the M2 dbt build (`m2_gates` var, allocation rules var) into `mc_pipelines` so the Lambda image can run it; the image copies `pipelines/` only, so `reference/allocation_rules.yml` must be copied in too.
+1. M2-03 remaining: add `cost_per_outcome` to the metric registry (needs cost and outcomes at one grain: tenant x day from `fct_m2_tenant_margin` and `fct_quality`); use the registry in the dbt marts (`to_sql`), the publish step and the agent tools, with parity tests; data contracts for the M2 marts (`docs/data-contracts/gold-marts-m2.md`); statistical checks (PT-13 seasonality guard must not alert); scorecard and lineage. Wire the M2 dbt build (`m2_gates` var, allocation rules var) into `mc_pipelines`; the Lambda image copies `pipelines/` only, so `reference/allocation_rules.yml` and `metrics/` must be copied in too.
 2. M2-01 close-out: Step Functions backfill over 19 monthly chunks, one deploy under §8.2 if the cost gate stays <= $3.00, verify AWS gold = local gold, then tick M2-01.
 3. M2-04.
+
+## 2026-11-06 (autopilot run 12, task 8)
+
+- **Task:** M2-03 step 1a, metric registry: `metrics/metrics.yml` (gross margin $ and %, unit cost per request, safety-event recall, attribution coverage; all sums or ratios of sums) compiled by `mc_pipelines/metrics.py` to a SQL expression (`to_sql`) and to Python (`compute`). 8 tests: SQL and Python agree per metric on the same rows, known values, recall rolls up from summed counts (not the mean of daily ratios), empty denominator is NULL in both forms, bad definitions rejected.
+- **Decisions (§8.2):** none needed (D4 approved). `cost_per_outcome` is left for the next step because it spans two marts.
+- **PR / CI / deploy:** PENDING. Cost $0.
+- **Run end:** 8 tasks done (the per-run limit).
+- **Next:** rest of M2-03.
 
 ## 2026-11-06 (autopilot run 12, task 7)
 

@@ -1,0 +1,39 @@
+# Metric registry: one definition per metric (m2-plan.md decision D4, M2-03.1). Synthetic-data project.
+# Every metric is built from sums over the rows in scope, so it recomputes correctly at any roll-up grain
+# (never an average of row-level ratios). `compiled` forms: SQL (dbt marts) via mc_pipelines.metrics.to_sql,
+# Python (publish step, agent tools, evaluations) via mc_pipelines.metrics.compute; a parity test keeps them equal.
+#
+# kind: sum   -> terms: signed column sums
+# kind: ratio -> numerator / denominator, each a list of signed terms; NULL when the denominator is 0
+# A term is {col, sign (+1 default), where: {column: {eq|ne: value}}}.
+version: 1
+metrics:
+  - name: gross_margin_usd
+    description: Revenue minus fully loaded cost to serve
+    source: fct_m2_tenant_margin
+    kind: sum
+    terms: [{col: revenue_usd}, {col: cost_to_serve_usd, sign: -1}]
+  - name: gross_margin_pct
+    description: Gross margin as a share of revenue
+    source: fct_m2_tenant_margin
+    kind: ratio
+    numerator: [{col: revenue_usd}, {col: cost_to_serve_usd, sign: -1}]
+    denominator: [{col: revenue_usd}]
+  - name: unit_cost_per_request_usd
+    description: LLM cost per request
+    source: fct_unit_cost
+    kind: ratio
+    numerator: [{col: llm_cost_usd}]
+    denominator: [{col: requests}]
+  - name: safety_event_recall
+    description: Labeled safety events that F0 flagged, over all labeled events
+    source: fct_quality
+    kind: ratio
+    numerator: [{col: safety_events_flagged}]
+    denominator: [{col: safety_events_labeled}]
+  - name: attribution_coverage
+    description: Share of shared infrastructure cost allocated to a tenant and feature (not UNALLOCATED)
+    source: fct_infra_cost_allocated
+    kind: ratio
+    numerator: [{col: allocated_cost_usd, where: {rule_id: {ne: UNALLOCATED}}}]
+    denominator: [{col: allocated_cost_usd}]
