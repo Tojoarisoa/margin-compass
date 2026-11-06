@@ -408,3 +408,9 @@ def test_publish_m2_kpis_come_from_the_registry_and_match_the_marts(tmp_path):
     assert kpis["gross_margin_usd"] == pytest.approx(float(rev - cost), abs=1e-6)
     assert kpis["gross_margin_pct"] == pytest.approx(float((rev - cost) / rev), abs=1e-6)
     assert set(kpis) >= {"unit_cost_per_request_usd", "cost_per_outcome_usd", "safety_event_recall", "attribution_coverage"}
+
+
+def test_pg1_snapshot_carries_m2_kpis_only_when_the_m2_marts_exist(tmp_path):
+    from mc_pipelines.publish import _m2_marts_present
+
+    assert not _m2_marts_present(tmp_path)  # M1-only gold: the snapshot stays as before

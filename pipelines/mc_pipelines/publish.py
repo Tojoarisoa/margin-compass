@@ -69,7 +69,8 @@ def build_pg1(gold: Path, run_id: str, ingest_date: str) -> dict:
     fc = con.execute(f"""SELECT forecast_date, target_date, p10_usd, p50_usd, p90_usd, model_version, model_alias
                          FROM read_parquet('{g}/fct_forecasts.parquet') WHERE metric = 'ai_cogs_usd' ORDER BY target_date""").fetchall()
 
-    return {
+    m2 = m2_kpis(g) if _m2_marts_present(g) else None
+    snapshot = {
         "schema_version": SCHEMA_VERSION,
         "page": "PG-1 Executive Margin Overview (v0)",
         "generated_at": datetime.now(UTC).isoformat(timespec="seconds"),
@@ -96,6 +97,10 @@ def build_pg1(gold: Path, run_id: str, ingest_date: str) -> dict:
             "arr_at_risk": "M2", "plan_target": "M2", "daily_margin_brief": "M5",
         },
     }
+    if m2 is not None:
+        snapshot["m2_kpis"] = m2  # additive (PG-1 M2-04): registry KPIs over the whole window, metrics/metrics.yml
+        snapshot["not_yet_available"].pop("cost_per_outcome", None)
+    return snapshot
 
 
 def publish(data_root: Path, run_id: str, ingest_date: str) -> dict:
@@ -109,6 +114,10 @@ def publish(data_root: Path, run_id: str, ingest_date: str) -> dict:
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_bytes(body)
     return {"bytes": len(body), "files": [str(p.relative_to(root)) for p in paths], "days": snapshot["window"]["days"]}
+
+
+def _m2_marts_present(gold: Path) -> bool:
+    return all((Path(gold) / f"{m['source']}.parquet").exists() for m in registry.load().values())
 
 
 def m2_kpis(gold: Path, names: tuple[str, ...] | None = None) -> dict[str, float | None]:
