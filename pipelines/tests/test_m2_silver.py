@@ -86,3 +86,34 @@ def test_focus_staging_matches_the_generator(tmp_path):
     rows = m2_focus.generate_all(42, tenants)
     assert n == len(rows) and abs(float(total) - sum(r.effective_cost for r in rows)) < 0.5
     assert untagged == 0
+
+
+def test_revenue_daily_sums_to_each_invoice_line_to_the_cent(tmp_path):
+    from dbt.cli.main import dbtRunner
+
+    from booncore_sim.m2_writer import write_revenue
+
+    tenants, history = generate_m2_tenants(42)
+    landing = tmp_path / "landing"
+    write_revenue(landing, 42, tenants, history)
+    (tmp_path / "silver").mkdir()
+    os.environ["MC_DUCKDB_PATH"] = str(tmp_path / "r.duckdb")
+    variables = {"m2_landing_path": str(landing), "silver_path": str(tmp_path / "silver"), "bronze_path": "x",
+                 "gold_path": "x"}
+    result = dbtRunner().invoke([
+        "build", "--select", "+slv_m2_revenue_daily", "--project-dir", str(TRANSFORM_DIR),
+        "--profiles-dir", str(TRANSFORM_DIR), "--target-path", str(tmp_path / "t"), "--log-path", str(tmp_path / "l"),
+        "--vars", json.dumps(variables), "--quiet"])
+    assert result.success, result.exception
+    out = tmp_path / "silver" / "slv_m2_revenue_daily.parquet"
+    bad = duckdb.sql(f"""
+        select count(*) from (
+          select invoice_id, revenue_component, sum(amount_usd) as daily
+          from '{out}' group by 1, 2) d
+        join (select invoice_id, line_type, sum(amount_usd) as inv
+              from '{landing}/s3_revenue/invoices.parquet' group by 1, 2) i
+          on i.invoice_id = d.invoice_id and i.line_type = d.revenue_component
+        where d.daily <> i.inv""").fetchall()[0][0]
+    assert bad == 0
+    n_days, n_neg = duckdb.sql(f"select count(*), count(*) filter (where amount_usd < 0) from '{out}'").fetchall()[0]
+    assert n_days > 0 and n_neg > 0

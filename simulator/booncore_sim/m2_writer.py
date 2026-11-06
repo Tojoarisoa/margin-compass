@@ -16,11 +16,11 @@ from pathlib import Path
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-from . import GENERATOR, __version__, m2_focus, m2_outcomes
+from . import GENERATOR, __version__, m2_focus, m2_outcomes, m2_revenue
 from .m2_catalog import PRICE_CATALOG_V2
 from .m2_run import PatternedRun, patterned_month
 from .m2_telemetry import month_days
-from .m2_tenants import WINDOW_END, WINDOW_START, M2Tenant
+from .m2_tenants import WINDOW_END, WINDOW_START, M2Tenant, TenantVersion
 
 
 def _table(rows: list, seed: int, kind: str) -> pa.Table:
@@ -70,6 +70,12 @@ def write_focus(out_dir: Path, seed: int, tenants: list[M2Tenant]) -> list[dict]
     return [_write(out_dir, "s2_focus/focus.parquet", m2_focus.generate_all(seed, tenants), seed, "focus rows")]
 
 
+def write_revenue(out_dir: Path, seed: int, tenants: list[M2Tenant], history: list[TenantVersion]) -> list[dict]:
+    """S3: monthly invoice lines (subscription, AI add-on, discount) for the whole window."""
+    invoices = m2_revenue.generate_invoices(tenants, history)
+    return [_write(out_dir, "s3_revenue/invoices.parquet", invoices, seed, "invoice lines")]
+
+
 def write_manifest(out_dir: Path, seed: int, files: list[dict]) -> dict:
     manifest = {
         "generator": GENERATOR, "generator_version": __version__, "synthetic": True, "profile": "m2", "seed": seed,
@@ -81,4 +87,4 @@ def write_manifest(out_dir: Path, seed: int, files: list[dict]) -> dict:
     return manifest
 
 
-__all__ = ["write_month", "write_static", "write_focus", "write_manifest"]
+__all__ = ["write_month", "write_static", "write_focus", "write_revenue", "write_manifest"]
