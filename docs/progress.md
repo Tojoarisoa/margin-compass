@@ -4,6 +4,8 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Waiting for owner
 
+- **GitHub Actions billing (2026-11-06 ~07:46 UTC, hard stop §8.3):** jobs no longer start: "recent account payments have failed or your spending limit needs to be increased" (Billing & plans). Effects: `deploy to dev` for `8aa0229` (docs-only) failed, and every job of the push run for `b0dc936` failed in 2 s, so dev is still on the `ee611b4` deploy. `b0dc936` itself passed all 12 checks on the PR head before the fast-forward, and only adds `run_m2_dbt` (not called by the Lambda), so no deploy is needed to keep dev consistent. Owner action: fix billing or raise the spending limit; then re-run the `ci` push run for `b0dc936` (or let the next merge deploy). Autopilot makes no further code merges until CI starts again.
+
 - **Claude Haiku 5.5 access** (support case): when granted, record its M1-06 fixtures (`task: record-fixtures`, model `haiku-5-5`) and apply the ADR-003 selection rule.
 
 - **Haiku 5.5 access:** only the owner can follow up on the support case; autopilot re-probes it with the ops workflow (`record-fixtures`, `haiku-5-5`) at most once a day.
@@ -20,6 +22,14 @@ Follow `docs/plans/m2-plan.md` §3 sequencing (AWS backfill comes after M2-03):
 1. M2-03 remaining (`cost_per_outcome_usd` is now in the registry): use the registry in the dbt marts (`to_sql`), the publish step and the agent tools, with parity tests; call `write_m2_scorecard` (`mc_pipelines/drift.py`) from the pipeline run once the M2 dbt build is wired in; lineage. Wire the M2 dbt build (`m2_gates` var, allocation rules var) into `mc_pipelines`; the Lambda image copies `pipelines/` only, so `reference/allocation_rules.yml` and `metrics/` must be copied in too.
 2. M2-01 close-out: Step Functions backfill over 19 monthly chunks, one deploy under §8.2 if the cost gate stays <= $3.00, verify AWS gold = local gold, then tick M2-01.
 3. M2-04.
+
+## 2026-11-06 (autopilot run 13, task 6)
+
+- **Task:** M2-03 step 4a: `run_m2_dbt` in `mc_pipelines/cli.py` builds `path:models/m2` with `m2_gates` and the allocation rules, then writes the M2 scorecard. Separate from `run_dbt`, so the M1 run is unchanged. 1 test (all 9 marts and dims built from a one-month landing, 4 gates pass, scorecard written).
+- **Decisions (§8.2):** none needed.
+- **PR / CI / deploy:** PR #58, all 12 checks green on the head commit; fast-forwarded to `main`. The push run then failed to start (Actions billing, see Waiting for owner), so there is no post-merge deploy or smoke test. Cost $0.
+- **Run end:** hard stop (§8.3). 6 tasks done.
+- **Next:** call `run_m2_dbt` from the CLI/Lambda (copy `reference/` and `metrics/` into the image), then lineage and the registry in marts/publish/tools.
 
 ## 2026-11-06 (autopilot run 13, task 5)
 
