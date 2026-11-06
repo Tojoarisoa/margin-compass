@@ -19,7 +19,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 ## 2026-11-06 (autopilot run 19, task 1)
 
 - **Task:** M2-04 step 1b: PG-1 snapshot gets additive `m2_features` (fully loaded cost to serve per feature by component, share of cost; from `fct_cost_to_serve` + `dim_feature`) and a dashboard table. Revenue is per tenant, so no per-feature margin % (auto-decided under §8.2: show cost and share, never invent a split). Pipelines 64 passed, ruff clean, dashboard typecheck + build clean.
-- **PR / CI / deploy:** see PR. Cost $0.
+- **PR / CI / deploy:** PR #74, all checks green on the head commit (earlier `attribution` failures superseded after removing the proxy-added PR footer); fast-forwarded to `main`; `ci` push run and `deploy to dev` green. Cost $0.
 - **Next:** see Next section.
 
 ## 2026-11-06 (autopilot run 18, task 2)
