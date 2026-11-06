@@ -5,6 +5,8 @@
 !pipelines/
 !rag/
 !knowledge/
+!reference/
+!metrics/
 !agents/
 **/.venv
 **/__pycache__

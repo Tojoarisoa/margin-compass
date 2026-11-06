@@ -81,3 +81,14 @@ def test_registry_rejects_bad_definitions(tmp_path):
     bad.write_text("metrics:\n  - {name: x, kind: sum, source: t, terms: [{col: a}]}\n  - {name: x, kind: sum, source: t, terms: [{col: a}]}\n")
     with pytest.raises(ValueError):
         metrics.load(bad)
+
+
+def test_registry_and_rules_paths_follow_env(tmp_path):
+    """The Lambda image sets MC_METRICS_DIR / MC_REFERENCE_DIR (its code lives in site-packages)."""
+    import subprocess
+    import sys
+
+    code = "from mc_pipelines import metrics, allocation; print(metrics.REGISTRY_PATH, allocation.RULES_PATH)"
+    env = {**__import__("os").environ, "MC_METRICS_DIR": str(tmp_path / "m"), "MC_REFERENCE_DIR": str(tmp_path / "r")}
+    out = subprocess.run([sys.executable, "-c", code], env=env, capture_output=True, text=True, check=True).stdout.split()
+    assert out == [str(tmp_path / "m" / "metrics.yml"), str(tmp_path / "r" / "allocation_rules.yml")]

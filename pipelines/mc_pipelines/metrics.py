@@ -7,12 +7,13 @@ tools and evaluations. A parity test runs both on the same rows.
 
 from __future__ import annotations
 
+import os
 from decimal import Decimal
 from pathlib import Path
 
 import yaml
 
-REGISTRY_PATH = Path(__file__).resolve().parents[2] / "metrics" / "metrics.yml"
+REGISTRY_PATH = Path(os.environ["MC_METRICS_DIR"]) / "metrics.yml" if os.environ.get("MC_METRICS_DIR") else Path(__file__).resolve().parents[2] / "metrics" / "metrics.yml"
 
 
 def load(path: Path = REGISTRY_PATH) -> dict[str, dict]:

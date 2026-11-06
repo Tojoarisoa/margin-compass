@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import yaml
 
-RULES_PATH = Path(__file__).resolve().parents[2] / "reference" / "allocation_rules.yml"
+RULES_PATH = Path(os.environ["MC_REFERENCE_DIR"]) / "allocation_rules.yml" if os.environ.get("MC_REFERENCE_DIR") else Path(__file__).resolve().parents[2] / "reference" / "allocation_rules.yml"
 DRIVERS = ("requests", "tokens", "cumulative_input_tokens")
 
 

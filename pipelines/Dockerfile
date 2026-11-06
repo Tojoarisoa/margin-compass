@@ -21,12 +21,16 @@ COPY ml /build/ml
 COPY rag /build/rag
 COPY pipelines /build/pipelines
 COPY knowledge ${LAMBDA_TASK_ROOT}/knowledge
+COPY reference ${LAMBDA_TASK_ROOT}/reference
+COPY metrics ${LAMBDA_TASK_ROOT}/metrics
 RUN uv pip install --system --no-cache --no-deps /build/simulator /build/ml /build/rag /build/pipelines \
  && cp -r /build/pipelines/transform ${LAMBDA_TASK_ROOT}/transform \
  && rm -rf /build /usr/local/bin/uv
 
 ENV MC_TRANSFORM_DIR=${LAMBDA_TASK_ROOT}/transform \
     MC_KNOWLEDGE_DIR=${LAMBDA_TASK_ROOT}/knowledge \
+    MC_REFERENCE_DIR=${LAMBDA_TASK_ROOT}/reference \
+    MC_METRICS_DIR=${LAMBDA_TASK_ROOT}/metrics \
     DBT_SEND_ANONYMOUS_USAGE_STATS=false \
     HOME=/tmp
 
