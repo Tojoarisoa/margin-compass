@@ -1,0 +1,64 @@
+"""M2-02 step 1: the M2 silver pricing model, against the simulator's own Python pricing (one month, seed 42)."""
+
+from __future__ import annotations
+
+import json
+import os
+from datetime import date
+from pathlib import Path
+
+import duckdb
+import pytest
+
+from booncore_sim.m2_catalog import PRICE_CATALOG_V2, price_on, request_cost_usd
+from booncore_sim.m2_tenants import generate_m2_tenants
+from booncore_sim.m2_writer import _write, write_month
+from mc_pipelines.cli import TRANSFORM_DIR
+
+pytestmark = pytest.mark.filterwarnings("ignore")
+
+
+@pytest.fixture(scope="module")
+def built(tmp_path_factory) -> Path:
+    from dbt.cli.main import dbtRunner
+
+    root = tmp_path_factory.mktemp("m2")
+    landing = root / "landing"
+    tenants = generate_m2_tenants(42)[0]
+    month = 5  # 2025-09: before the b-mid price cut, so cutover is covered by a unit test below
+    write_month(landing, 42, tenants, month)
+    _write(landing, "s5_price_catalog/price_catalog.parquet", list(PRICE_CATALOG_V2), 42, "price catalog")
+    (root / "silver").mkdir()
+    os.environ["MC_DUCKDB_PATH"] = str(root / "m2.duckdb")
+    variables = {"m2_landing_path": str(landing), "silver_path": str(root / "silver"),
+                 "bronze_path": "x", "gold_path": str(root / "gold")}
+    result = dbtRunner().invoke([
+        "build", "--select", "stg_m2_telemetry", "stg_m2_price_catalog", "slv_m2_llm_usage_priced",
+        "--project-dir", str(TRANSFORM_DIR), "--profiles-dir", str(TRANSFORM_DIR),
+        "--target-path", str(root / "target"), "--log-path", str(root / "logs"),
+        "--vars", json.dumps(variables), "--quiet"])
+    assert result.success, result.exception
+    return root / "silver" / "slv_m2_llm_usage_priced.parquet"
+
+
+def test_every_row_is_priced_and_matches_python_pricing(built):
+    rows = duckdb.sql(
+        f"select usage_date, model_id, is_batch, input_tokens, cached_input_tokens, output_tokens, llm_cost_usd "
+        f"from '{built}' using sample 300 rows (reservoir, 1)").fetchall()
+    assert rows
+    for d, model, batch, i, c, o, cost in rows:
+        want = request_cost_usd(price_on(model, d), input_tokens=i, cache_read_tokens=c, output_tokens=o, batch=batch)
+        assert abs(float(cost) - want) < 2e-6
+
+
+def test_no_unpriced_rows_and_batch_rows_are_priced(built):
+    n_null, n_rows, n_batch = duckdb.sql(
+        f"select count(*) filter (where llm_cost_usd is null), count(*), count(*) filter (where is_batch) from '{built}'"
+    ).fetchall()[0]
+    assert n_null == 0 and n_rows > 0 and n_batch > 0
+
+
+def test_price_change_boundary_is_exclusive_on_effective_to():
+    cut = date(2026, 3, 1)
+    assert price_on("b-mid", date(2026, 2, 28)).effective_to == cut
+    assert price_on("b-mid", cut).effective_from == cut

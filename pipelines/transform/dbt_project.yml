@@ -34,3 +34,6 @@ models:
     gold:
       +materialized: external
       +format: parquet
+    m2:
+      +materialized: external
+      +format: parquet

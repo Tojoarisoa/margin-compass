@@ -1,0 +1,8 @@
+version: 2
+models:
+  - name: slv_m2_llm_usage_priced
+    columns:
+      - name: llm_cost_usd
+        data_tests: [not_null]
+      - name: tenant_id
+        data_tests: [not_null]
