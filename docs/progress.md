@@ -26,7 +26,7 @@ Follow `docs/plans/m2-plan.md` §3 sequencing (AWS backfill comes after M2-03):
 
 - **Task:** M2-02 step 3a, gold `fct_cost_to_serve` (day x tenant x feature): LLM cost plus allocated infra by component (agent compute, vector, network/observability, third-party). Unallocated infra stays in `fct_infra_cost_allocated`. 1 new test: LLM total and allocated infra total match their sources exactly (no loss or doubling in the full outer join), total = LLM + infra, no duplicate grain.
 - **Decisions (§8.2):** none needed.
-- **PR / CI / deploy:** PENDING. Cost $0.
+- **PR / CI / deploy:** PR #47, all checks green on the head commit (attribution passed after the body was edited via the GitHub MCP tool). Fast-forwarded to `main`; `deploy to dev` green. Cost $0.
 - **Next:** unit cost, quality, dims, margin.
 
 ## 2026-11-06 (autopilot run 12, task 2)
