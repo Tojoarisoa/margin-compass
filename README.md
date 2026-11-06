@@ -2,6 +2,8 @@
 
 **AI cost-to-serve and gross-margin intelligence for B2B SaaS companies that ship AI features.**
 
+**Dashboard:** [medtech.booncore.com](https://medtech.booncore.com)
+
 Generative-AI features turned software's near-zero marginal cost into a real per-interaction inference cost. Yet most SaaS companies still can't answer three questions:
 
 - Which customers and features make money after AI costs?
