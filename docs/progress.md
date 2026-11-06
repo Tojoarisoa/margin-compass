@@ -4,8 +4,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Waiting for owner
 
-- **GitHub Actions minutes (2026-11-06):** exhausted (private repo). Owner decision: not a hard stop; AGENTS.md §8.1 now says how to continue without CI. Unverified (no CI/deploy ran after the merge): PR #61 (`m2_kpis`, code-only, local suite green), PR #60 (`run-m2` CLI, code-only, local suite green), `b0dc936` (code-only; PR head had passed all 12 checks) and `8aa0229`/progress commits (docs only). When minutes are back, re-run the `ci` push workflow on `main` and confirm `deploy to dev`.
-  - **Update 2026-11-06 (owner session):** the owner is making the repository **public** (free Actions minutes). Account values moved from repository variables to secrets (`MC_AWS_ENABLED` var gates AWS jobs), old workflow runs deleted. Once CI runs again, re-run the `ci` push workflow on `main`, confirm `deploy to dev`, then remove this item.
+- **CI check after going public (2026-11-06):** the repository is public since 2026-11-06 ~13:20 UTC (free Actions minutes). If the `ci` push run on `main` for the commit that added this line isn't green with `deploy to dev` passing, fix that first; it covers the merges made without CI (`b0dc936`, PR #60, PR #61, PR #62). Remove this item once it's green.
 
 - **Claude Haiku 5.5 access** (support case): when granted, record its M1-06 fixtures (`task: record-fixtures`, model `haiku-5-5`) and apply the ADR-003 selection rule.
 
@@ -23,6 +22,13 @@ Follow `docs/plans/m2-plan.md` §3 sequencing (AWS backfill comes after M2-03):
 1. M2-03 remaining: publish `m2_kpis` is done; use the registry in the dbt marts (`to_sql`), the PG-1 snapshot and the agent tools, with parity tests; call `write_m2_scorecard` (`mc_pipelines/drift.py`) from the pipeline run once the M2 dbt build is wired in; lineage. Wire the M2 dbt build (`m2_gates` var, allocation rules var) into `mc_pipelines`; the Lambda image copies `pipelines/` only, so `reference/allocation_rules.yml` and `metrics/` must be copied in too.
 2. M2-01 close-out: Step Functions backfill over 19 monthly chunks, one deploy under §8.2 if the cost gate stays <= $3.00, verify AWS gold = local gold, then tick M2-01.
 3. M2-04.
+
+## 2026-11-06 (owner session: repository public)
+
+- **Why:** GitHub Actions minutes for the private repository were exhausted (1,963 of 2,019 used in November).
+- **Checks before switching:** full history of every ref scanned (account ID, alert e-mail, ARNs, key/token patterns, high-entropy strings): clean. Commits on `main` all use the owner's noreply identity. Actions logs printed the alert e-mail and account ID (repository variables aren't masked), so the account values moved to secrets (PR #62) and all 248 old workflow runs and their artifacts were deleted. Claude Code footers removed from PRs #15, #60, #61.
+- **Settings:** public; secret scanning with push protection; Dependabot alerts; workflow runs from outside contributors need approval; ruleset `protect-main` blocks force pushes and deletion of `main` (fast-forward pushes still work); default `GITHUB_TOKEN` read-only.
+- **Autopilot:** CI works again, so the normal §8.1 loop applies (wait for every check, then fast-forward).
 
 ## 2026-11-06 (autopilot run 15, task 1)
 
