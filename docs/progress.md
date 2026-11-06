@@ -17,11 +17,17 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 Follow `docs/plans/m2-plan.md` §3 sequencing (AWS backfill comes after M2-03):
 
-1. M2-02 step 1d: silver outcomes joined to telemetry by trace ID (sample only). Needs a simulator change first: `TicketOutcome` has no `trace_id` and `RawRequest` has no `ticket_id`, so link them (a new column on the 10% ticket sample referencing sampled raw requests; this changes landed bytes, update the determinism tests). Otherwise skip to step 2 and join at tenant x day. Overage revenue is not simulated yet (flat add-on only); decide whether to add it before the gold margin mart.
-2. M2-02 remaining steps: allocation rules (`reference/allocation_rules.yml`), gold marts, gates.
-3. M2-03: metrics registry, contracts, scorecard.
-4. M2-01 close-out: Step Functions backfill over 19 monthly chunks, one deploy under §8.2 if the cost gate stays <= $3.00, verify AWS gold = local gold, then tick M2-01.
-5. M2-04.
+1. M2-02 remaining steps: allocation rules (`reference/allocation_rules.yml`), gold marts, gates. Overage revenue is not simulated yet (flat add-on only); decide whether to add it before the gold margin mart.
+2. M2-03: metrics registry, contracts, scorecard.
+3. M2-01 close-out: Step Functions backfill over 19 monthly chunks, one deploy under §8.2 if the cost gate stays <= $3.00, verify AWS gold = local gold, then tick M2-01.
+4. M2-04.
+
+## 2026-11-06 (autopilot run 12, task 1)
+
+- **Task:** M2-02 step 1d, silver outcomes: `stg_m2_outcomes_daily`, `stg_m2_tickets`, `slv_m2_outcomes_daily` (tenant x day outcomes joined to priced usage: requests and LLM cost). 1 new test (row count and ticket total match the generator, no join fan-out).
+- **Decisions (§8.2):** joined at tenant x day instead of by trace ID. Options: (a) add `trace_id` to tickets, which needs the raw sample inside the outcomes generator and changes landed bytes; (b) tenant x day join. Chose (b), the fallback already named in Next: no simulator change, and margin marts work at tenant x day. Per-ticket rows stay in `stg_m2_tickets` for quality gates.
+- **PR / CI / deploy:** see below. Cost $0.
+- **Next:** M2-02 allocation rules.
 
 ## 2026-11-06 (autopilot run 11, task 3)
 

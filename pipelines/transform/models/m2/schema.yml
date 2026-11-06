@@ -16,3 +16,11 @@ models:
     columns:
       - name: amount_usd
         data_tests: [not_null]
+  - name: stg_m2_outcomes_daily
+    columns:
+      - name: tickets
+        data_tests: [not_null]
+  - name: slv_m2_outcomes_daily
+    columns:
+      - name: llm_cost_usd
+        data_tests: [not_null]

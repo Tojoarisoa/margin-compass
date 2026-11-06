@@ -117,3 +117,34 @@ def test_revenue_daily_sums_to_each_invoice_line_to_the_cent(tmp_path):
     assert bad == 0
     n_days, n_neg = duckdb.sql(f"select count(*), count(*) filter (where amount_usd < 0) from '{out}'").fetchall()[0]
     assert n_days > 0 and n_neg > 0
+
+
+def test_outcomes_daily_joins_usage_at_tenant_day(tmp_path):
+    from dbt.cli.main import dbtRunner
+
+    from booncore_sim import m2_outcomes
+
+    tenants = generate_m2_tenants(42)[0]
+    landing = tmp_path / "landing"
+    month = 5
+    write_month(landing, 42, tenants, month)
+    _write(landing, "s5_price_catalog/price_catalog.parquet", list(PRICE_CATALOG_V2), 42, "price catalog")
+    (tmp_path / "silver").mkdir()
+    os.environ["MC_DUCKDB_PATH"] = str(tmp_path / "o.duckdb")
+    variables = {"m2_landing_path": str(landing), "silver_path": str(tmp_path / "silver"), "bronze_path": "x",
+                 "gold_path": "x"}
+    result = dbtRunner().invoke([
+        "build", "--select", "+slv_m2_outcomes_daily", "stg_m2_tickets", "--project-dir", str(TRANSFORM_DIR),
+        "--profiles-dir", str(TRANSFORM_DIR), "--target-path", str(tmp_path / "t"), "--log-path", str(tmp_path / "l"),
+        "--vars", json.dumps(variables), "--quiet"])
+    assert result.success, result.exception
+    out = tmp_path / "silver" / "slv_m2_outcomes_daily.parquet"
+    daily, _ = m2_outcomes.generate_month(42, tenants, month)
+    n, tickets, dup, with_usage = duckdb.sql(
+        f"select count(*), sum(tickets), count(*) - count(distinct (tenant_id, outcome_date)), "
+        f"count(*) filter (where requests > 0) from '{out}'").fetchall()[0]
+    assert n == len(daily) and tickets == sum(r.tickets for r in daily)
+    assert dup == 0  # the usage join must not fan out outcome rows
+    assert with_usage > 0.9 * n
+    db = duckdb.connect(str(tmp_path / "o.duckdb"))
+    assert db.sql("select count(*) from stg_m2_tickets").fetchall()[0][0] > 0
