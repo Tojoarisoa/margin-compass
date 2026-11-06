@@ -25,7 +25,7 @@ Follow `docs/plans/m2-plan.md` §3 sequencing (AWS backfill comes after M2-03):
 
 - **Task:** M2-03 step 1a, metric registry: `metrics/metrics.yml` (gross margin $ and %, unit cost per request, safety-event recall, attribution coverage; all sums or ratios of sums) compiled by `mc_pipelines/metrics.py` to a SQL expression (`to_sql`) and to Python (`compute`). 8 tests: SQL and Python agree per metric on the same rows, known values, recall rolls up from summed counts (not the mean of daily ratios), empty denominator is NULL in both forms, bad definitions rejected.
 - **Decisions (§8.2):** none needed (D4 approved). `cost_per_outcome` is left for the next step because it spans two marts.
-- **PR / CI / deploy:** PENDING. Cost $0.
+- **PR / CI / deploy:** PR #52, all checks green on the head commit (attribution passed after the body was edited via the GitHub MCP tool). Fast-forwarded to `main`; `deploy to dev` green. Cost $0.
 - **Run end:** 8 tasks done (the per-run limit).
 - **Next:** rest of M2-03.
 
