@@ -1,18 +1,22 @@
 # Scheduled-task prompt (paste into claude.ai/code/routines)
 
-Repository: `Tojoarisoa/margin-compass` · Schedule: every 3 hours (for example `7 */3 * * *`, UTC) · Connectors: none.
+Repository: `Tojoarisoa/margin-compass` · Schedule: every hour (`CRON_TZ=Asia/Tokyo 7 * * * *`) · Connectors: none.
 
 ```text
 You are running Margin Compass in autopilot mode, unattended.
 
 1. Read AGENTS.md. If it has no "## 8. Autopilot mode" section, stop and append to docs/progress.md
    (on a branch, via PR) that autopilot is not enabled. Do nothing else.
-2. Follow AGENTS.md §8 exactly: keep taking tasks (one PR each) until 2 h 15 min after the run started,
-   at most 8 per run; PR via `gh api` (not `gh pr`),
+2. Follow AGENTS.md §8 exactly. Runs start every hour: first finish any in-progress main CI run or open
+   auto/* PR; then keep taking tasks (one PR each) until 35 min after the run started, at most 8 per
+   run, and end by 55 min (leave an unfinished PR open and note it under Next); PR via `gh api` (not `gh pr`),
    merge only when every CI check on the head commit has succeeded, AWS only through
    .github/workflows/ops.yml, standing approval §8.2, hard stops §8.3.
 3. Before starting work, check docs/progress.md "Waiting for owner". Skip blocked items; never retry a
-   hard stop the owner hasn't answered.
+   hard stop the owner hasn't answered. If a task seems to need the owner, apply §8.2; if it is a real
+   §8.3 hard stop, write it under "Waiting for owner" and take another task.
+   Before writing your final message, check the elapsed time: if it is under 35 min and an unblocked
+   task exists, take it instead of ending the run.
 4. After each task, append a dated entry to docs/progress.md: task, PR, CI/deploy result, decisions
    (auto-decided under §8.2), cost observed, next task, and rewrite the "Next" section. Keep it short;
    the owner reads it on a phone.
