@@ -7,7 +7,7 @@ from datetime import date, timedelta
 
 from booncore_sim.m2_telemetry import generate_month
 from booncore_sim.m2_tenants import generate_m2_tenants
-from mc_pipelines.drift import volume_drift
+from mc_pipelines.drift import ratio_drift, volume_drift
 
 
 def _weekly(days: int, start: date = date(2026, 1, 5)) -> dict[date, float]:
@@ -41,3 +41,31 @@ def test_pt13_guard_baseline_seasonality_never_alerts():
             daily[r.usage_ts.date()] += r.request_count
     assert len(daily) > 100
     assert volume_drift(daily) == []
+
+
+def test_ratio_drift_warns_on_a_shifted_ratio_only():
+    start = date(2026, 1, 5)
+    den = {start + timedelta(d): 1000.0 * (0.4 if (start + timedelta(d)).weekday() >= 5 else 1.0) for d in range(60)}
+    num = {d: v * 800 for d, v in den.items()}  # 800 tokens per request every day, weekends included
+    assert ratio_drift(num, den) == []
+    shifted = date(2026, 2, 20)
+    num[shifted] *= 2.5  # tokens per request jumps with the same volume
+    assert [w.day for w in ratio_drift(num, den)] == [shifted]
+
+
+def test_ratio_drift_needs_a_baseline():
+    d = date(2026, 1, 5)
+    assert ratio_drift({d: 9.0}, {d: 1.0}) == []
+
+
+def test_pt13_guard_tokens_per_request_baseline_never_alerts():
+    tenants = generate_m2_tenants(42)[0]
+    tokens: dict[date, float] = defaultdict(float)
+    requests: dict[date, float] = defaultdict(float)
+    for month in (9, 10, 11, 12):
+        rows, _ = generate_month(42, tenants, month)
+        for r in rows:
+            day = r.usage_ts.date()
+            tokens[day] += r.gen_ai_usage_input_tokens + r.gen_ai_usage_output_tokens
+            requests[day] += r.request_count
+    assert ratio_drift(tokens, requests) == []

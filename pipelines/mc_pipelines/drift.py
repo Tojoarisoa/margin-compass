@@ -39,3 +39,33 @@ def volume_drift(series: dict[date, float], low: float = LOW, high: float = HIGH
         if ratio < low or ratio > high:
             out.append(DriftWarning(day, series[day], expected, ratio))
     return out
+
+
+PRIOR_DAYS = 28
+MIN_PRIOR_DAYS = 14
+BAND = 0.5
+
+
+def ratio_drift(numerator: dict[date, float], denominator: dict[date, float], band: float = BAND) -> list[DriftWarning]:
+    """Distribution drift of a ratio of sums (tokens per request, cost per request, ...).
+
+    Each day's ratio is compared with the ratio of the sums over the previous 28 days (at least 14 of them present),
+    never with an average of daily ratios. Warns when it moves more than `band` (50%) either way. The slow
+    seasonal and growth moves of PT-13 stay inside the band.
+    """
+    out = []
+    for day in sorted(denominator):
+        if denominator[day] <= 0 or day not in numerator:
+            continue
+        prior = [day - timedelta(days=d) for d in range(1, PRIOR_DAYS + 1)]
+        prior = [d for d in prior if denominator.get(d, 0) > 0 and d in numerator]
+        if len(prior) < MIN_PRIOR_DAYS:
+            continue
+        expected = sum(numerator[d] for d in prior) / sum(denominator[d] for d in prior)
+        if expected <= 0:
+            continue
+        value = numerator[day] / denominator[day]
+        ratio = value / expected
+        if abs(ratio - 1) > band:
+            out.append(DriftWarning(day, value, expected, ratio))
+    return out
