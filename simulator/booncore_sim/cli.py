@@ -70,17 +70,24 @@ def run_m2(seed: int | None, out_dir: Path, mode: str, month: int | None) -> dic
     log.info("simulation_started", extra={"fields": {"profile": "m2", "seed": seed, "mode": mode, "out": str(out_dir)}})
     files: list[dict] = []
     manifest_dir = out_dir
+
+    def whole_window(tenants: list) -> list[dict]:  # month-independent sources: FOCUS, invoices, dimensions
+        history = generate_m2_tenants(seed)[1]
+        return (m2_writer.write_focus(out_dir, seed, tenants) + m2_writer.write_revenue(out_dir, seed, tenants, history)
+                + m2_writer.write_dimensions(out_dir, seed, history))
+
     if mode == "month":
         if month is None or not 0 <= month < MONTHS:
             raise SystemExit(f"--month must be 0..{MONTHS - 1} in month mode")
         files += m2_writer.write_month(out_dir, seed, generate_m2_tenants(seed)[0], month)
         manifest_dir = out_dir / "_manifests" / f"month-{month:02d}"
     elif mode == "static":
-        files += m2_writer.write_static(out_dir, seed, generate_patterned(seed))
+        static = generate_patterned(seed)
+        files += m2_writer.write_static(out_dir, seed, static) + whole_window(static.tenants)
         manifest_dir = out_dir / "_manifests" / "static"
     else:
         run_all = generate_patterned(seed)
-        files += m2_writer.write_static(out_dir, seed, run_all)
+        files += m2_writer.write_static(out_dir, seed, run_all) + whole_window(run_all.tenants)
         for i in range(MONTHS):
             files += m2_writer.write_month(out_dir, seed, run_all.tenants, i)
     manifest = m2_writer.write_manifest(manifest_dir, seed, files)

@@ -17,10 +17,17 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 Follow `docs/plans/m2-plan.md` §3 sequencing (AWS backfill comes after M2-03):
 
-1. M2-02 remaining steps: `dim_tenant` (SCD2), `dim_feature`, `dim_model_price`, and the M2 gate tests with break-on-purpose checks (revenue preservation per invoice line and period, cost preservation for LLM and infra, as dbt tests). Then tick M2-02 in PLAN.md §17 and add the Change Log entry.
+1. M2-02 gate tests: revenue preservation per invoice line and period, cost preservation for LLM and infra, as dbt tests under `pipelines/transform/tests` (M2-only, gated on `m2_landing_path`), each with a break-on-purpose check. Then tick M2-02 in PLAN.md §17 and add the Change Log entry.
 2. M2-03: metrics registry, contracts, scorecard.
 3. M2-01 close-out: Step Functions backfill over 19 monthly chunks, one deploy under §8.2 if the cost gate stays <= $3.00, verify AWS gold = local gold, then tick M2-01.
 4. M2-04.
+
+## 2026-11-06 (autopilot run 12, task 6)
+
+- **Task:** M2-02 step 3d, dimensions: `dim_tenant` (SCD2 from the plan history), `dim_feature`, `dim_model_price`. The CLI `--profile m2` static and all modes did not land the FOCUS export or invoices (only the writer functions existed), so they now also write `s2_focus`, `s3_revenue`, `tenants/plan_history` and `features` (new `write_dimensions`). Existing landed files are unchanged. 2 new tests (CLI static lands the four files; dim_tenant has exactly one current row per tenant and contiguous versions).
+- **Decisions (§8.2):** none needed. Static-mode CLI test adds about 1 min to the simulator CI job.
+- **PR / CI / deploy:** PENDING. Cost $0.
+- **Next:** gate tests, then tick M2-02.
 
 ## 2026-11-06 (autopilot run 12, task 5)
 

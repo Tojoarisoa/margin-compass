@@ -250,3 +250,35 @@ def test_fully_loaded_margin_keeps_revenue_and_cost(allocated):
     assert rev == rev_src and cost == cost_src and dup == 0
     assert margin == rev - cost
     assert discounts < 0  # discounts stay visible as their own negative component
+
+
+def test_dimensions_scd2_has_one_current_row_and_no_gaps(tmp_path):
+    from dbt.cli.main import dbtRunner
+
+    from booncore_sim.m2_writer import write_dimensions
+
+    tenants, history = generate_m2_tenants(42)
+    landing = tmp_path / "landing"
+    _write(landing, "tenants/tenants.parquet", tenants, 42, "tenants")
+    _write(landing, "s5_price_catalog/price_catalog.parquet", list(PRICE_CATALOG_V2), 42, "price catalog")
+    write_dimensions(landing, 42, history)
+    (tmp_path / "gold").mkdir()
+    os.environ["MC_DUCKDB_PATH"] = str(tmp_path / "d.duckdb")
+    variables = {"m2_landing_path": str(landing), "silver_path": str(tmp_path / "s"), "bronze_path": "x",
+                 "gold_path": str(tmp_path / "gold")}
+    result = dbtRunner().invoke([
+        "build", "--select", "dim_tenant", "dim_feature", "dim_model_price", "stg_m2_price_catalog",
+        "--project-dir", str(TRANSFORM_DIR), "--profiles-dir", str(TRANSFORM_DIR), "--target-path", str(tmp_path / "t"),
+        "--log-path", str(tmp_path / "l"), "--vars", json.dumps(variables), "--quiet"])
+    assert result.success, result.exception
+    g = tmp_path / "gold"
+    bad_current = duckdb.sql(
+        f"select count(*) from (select tenant_id from '{g}/dim_tenant.parquet' group by 1 "
+        f"having count(*) filter (where is_current) <> 1)").fetchall()[0][0]
+    # Versions of a tenant are contiguous: each valid_to equals the next valid_from.
+    gaps = duckdb.sql(
+        f"select count(*) from (select valid_to, lead(valid_from) over (partition by tenant_id order by valid_from) as nxt "
+        f"from '{g}/dim_tenant.parquet') where valid_to is not null and valid_to <> nxt").fetchall()[0][0]
+    assert bad_current == 0 and gaps == 0
+    assert duckdb.sql(f"select count(*) from '{g}/dim_feature.parquet'").fetchall()[0][0] == 5
+    assert duckdb.sql(f"select count(distinct tenant_id) from '{g}/dim_tenant.parquet'").fetchall()[0][0] == len(tenants)

@@ -52,3 +52,15 @@ def test_cli_m2_month_and_static_modes(tmp_path):
     assert all("month=2025-04" in f["path"] for f in man["files"])
     with pytest.raises(SystemExit):
         main(["--profile", "m2", "--mode", "month", "--out", str(tmp_path)])
+
+
+def test_cli_static_mode_lands_focus_invoices_and_dimensions(tmp_path):
+    import json
+
+    from booncore_sim.cli import main
+
+    assert main(["--profile", "m2", "--mode", "static", "--out", str(tmp_path)]) == 0
+    man = json.loads((tmp_path / "_manifests" / "static" / "manifest.json").read_text())
+    paths = {f["path"] for f in man["files"]}
+    assert {"s2_focus/focus.parquet", "s3_revenue/invoices.parquet", "tenants/plan_history.parquet",
+            "features/features.parquet"} <= paths

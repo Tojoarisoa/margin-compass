@@ -3,7 +3,8 @@
 Each monthly chunk writes only that month's telemetry, raw sample and outcomes, so a backfill Lambda can run one
 month at a time; `write_static` writes the tables that don't depend on the month. Files carry synthetic-data
 metadata, nothing time-dependent is written, and a manifest lists every file with its sha256 (same seed gives
-byte-identical output). Column types come from the dataclasses. Not wired into the CLI. All output is synthetic.
+byte-identical output). Column types come from the dataclasses. The CLI's static and all modes also land the
+FOCUS export, invoices and dimension sources. All output is synthetic.
 """
 
 from __future__ import annotations
@@ -17,7 +18,7 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 
 from . import GENERATOR, __version__, m2_focus, m2_outcomes, m2_revenue
-from .m2_catalog import PRICE_CATALOG_V2
+from .m2_catalog import FEATURES, PRICE_CATALOG_V2
 from .m2_run import PatternedRun, patterned_month
 from .m2_telemetry import month_days
 from .m2_tenants import WINDOW_END, WINDOW_START, M2Tenant, TenantVersion
@@ -74,6 +75,14 @@ def write_revenue(out_dir: Path, seed: int, tenants: list[M2Tenant], history: li
     """S3: monthly invoice lines (subscription, AI add-on, discount) for the whole window."""
     invoices = m2_revenue.generate_invoices(tenants, history)
     return [_write(out_dir, "s3_revenue/invoices.parquet", invoices, seed, "invoice lines")]
+
+
+def write_dimensions(out_dir: Path, seed: int, history: list[TenantVersion]) -> list[dict]:
+    """Dimension sources: the SCD2 plan history (dim_tenant) and the feature list (dim_feature)."""
+    return [
+        _write(out_dir, "tenants/plan_history.parquet", history, seed, "plan history"),
+        _write(out_dir, "features/features.parquet", list(FEATURES.values()), seed, "features"),
+    ]
 
 
 def write_manifest(out_dir: Path, seed: int, files: list[dict]) -> dict:
