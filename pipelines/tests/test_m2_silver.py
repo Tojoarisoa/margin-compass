@@ -62,3 +62,27 @@ def test_price_change_boundary_is_exclusive_on_effective_to():
     cut = date(2026, 3, 1)
     assert price_on("b-mid", date(2026, 2, 28)).effective_to == cut
     assert price_on("b-mid", cut).effective_from == cut
+
+
+def test_focus_staging_matches_the_generator(tmp_path):
+    from dbt.cli.main import dbtRunner
+
+    from booncore_sim import m2_focus
+    from booncore_sim.m2_writer import write_focus
+
+    tenants = generate_m2_tenants(42)[0]
+    landing = tmp_path / "landing"
+    write_focus(landing, 42, tenants)
+    os.environ["MC_DUCKDB_PATH"] = str(tmp_path / "f.duckdb")
+    variables = {"m2_landing_path": str(landing), "silver_path": str(tmp_path / "s"), "bronze_path": "x",
+                 "gold_path": "x"}
+    result = dbtRunner().invoke([
+        "build", "--select", "stg_m2_focus", "--project-dir", str(TRANSFORM_DIR), "--profiles-dir", str(TRANSFORM_DIR),
+        "--target-path", str(tmp_path / "t"), "--log-path", str(tmp_path / "l"), "--vars", json.dumps(variables), "--quiet"])
+    assert result.success, result.exception
+    db = duckdb.connect(str(tmp_path / "f.duckdb"))
+    n, total, untagged = db.sql("select count(*), sum(effective_cost), count(*) filter (where feature_tag is null) "
+                                "from stg_m2_focus").fetchall()[0]
+    rows = m2_focus.generate_all(42, tenants)
+    assert n == len(rows) and abs(float(total) - sum(r.effective_cost for r in rows)) < 0.5
+    assert untagged == 0

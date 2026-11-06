@@ -16,7 +16,7 @@ from pathlib import Path
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-from . import GENERATOR, __version__, m2_outcomes
+from . import GENERATOR, __version__, m2_focus, m2_outcomes
 from .m2_catalog import PRICE_CATALOG_V2
 from .m2_run import PatternedRun, patterned_month
 from .m2_telemetry import month_days
@@ -65,6 +65,11 @@ def write_static(out_dir: Path, seed: int, run: PatternedRun) -> list[dict]:
     ]
 
 
+def write_focus(out_dir: Path, seed: int, tenants: list[M2Tenant]) -> list[dict]:
+    """S2: the shared-infrastructure FOCUS 1.2 export for the whole window (about 4.5k daily rows, so one file)."""
+    return [_write(out_dir, "s2_focus/focus.parquet", m2_focus.generate_all(seed, tenants), seed, "focus rows")]
+
+
 def write_manifest(out_dir: Path, seed: int, files: list[dict]) -> dict:
     manifest = {
         "generator": GENERATOR, "generator_version": __version__, "synthetic": True, "profile": "m2", "seed": seed,
@@ -76,4 +81,4 @@ def write_manifest(out_dir: Path, seed: int, files: list[dict]) -> dict:
     return manifest
 
 
-__all__ = ["write_month", "write_static", "write_manifest"]
+__all__ = ["write_month", "write_static", "write_focus", "write_manifest"]
