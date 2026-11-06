@@ -143,6 +143,47 @@ def run_dbt(data_root: Path, ingest_date: str, window: dict, run_id: str, transf
     return summary
 
 
+def run_m2_dbt(landing: Path, data_root: Path, run_id: str, transform_dir: Path | None = None) -> dict:
+    """Build the M2 silver and gold marts from an M2 landing tree, with the M2 gates on, then write the M2 scorecard.
+
+    Separate from `run_dbt` so the M1 build is unchanged (the M2 models are enabled only by var `m2_landing_path`).
+    Error-severity gate failures make `success` false; drift findings are warnings in `gold/_quality/m2_scorecard.json`.
+    """
+    if os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
+        _make_dbt_lambda_safe()
+    from dbt.cli.main import dbtRunner
+
+    from .allocation import load_rules
+    from .drift import write_m2_scorecard
+
+    root = data_root.resolve()
+    variables = {
+        "m2_landing_path": str(landing.resolve()), "bronze_path": str(root / "bronze"), "silver_path": str(root / "silver"),
+        "gold_path": str(root / "gold"), "m2_gates": True, "allocation_rules": load_rules(), "run_id": run_id,
+    }
+    os.environ["MC_DUCKDB_PATH"] = str(root / "margin_compass_m2.duckdb")
+    (root / "silver").mkdir(parents=True, exist_ok=True)
+    (root / "gold").mkdir(parents=True, exist_ok=True)
+    td = str(transform_dir or TRANSFORM_DIR)
+    result = dbtRunner().invoke([
+        "build", "--select", "path:models/m2", "tag:m2", "--project-dir", td, "--profiles-dir", td,
+        "--target-path", str(root / "dbt_m2" / "target"), "--log-path", str(root / "dbt_m2" / "logs"),
+        "--vars", json.dumps(variables), "--quiet"])
+    statuses: dict[str, int] = {}
+    failures = []
+    for r in (result.result or []):
+        status = str(r.status)
+        statuses[status] = statuses.get(status, 0) + 1
+        if status not in ("success", "pass"):
+            failures.append({"node": r.node.unique_id, "status": status, "message": (r.message or "")[:300]})
+    summary = {"success": bool(result.success), "statuses": statuses, "failures": failures}
+    if result.exception:
+        summary["exception"] = str(result.exception)[:300]
+    if result.success:
+        summary["drift_warnings"] = len(write_m2_scorecard(root / "gold", run_id)["warnings"])
+    return summary
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Run the Margin Compass pipeline (ingest + dbt build).")
     sub = parser.add_subparsers(dest="command", required=True)

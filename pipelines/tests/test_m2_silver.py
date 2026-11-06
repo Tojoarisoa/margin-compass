@@ -347,3 +347,25 @@ def test_m2_gates_pass_and_break_on_purpose(allocated):
     bad = _dbt(root, ["test", "--select", *M2_GATES], variables)
     failed = [r.node.name for r in bad.result.results if r.status != "pass"]
     assert set(failed) == set(M2_GATES), failed
+
+
+def test_run_m2_dbt_builds_all_marts_with_gates_and_writes_the_scorecard(tmp_path):
+    from booncore_sim.m2_writer import write_dimensions, write_focus, write_revenue
+    from mc_pipelines.cli import run_m2_dbt
+
+    tenants, history = generate_m2_tenants(42)
+    landing = tmp_path / "landing"
+    write_month(landing, 42, tenants, 5)
+    _write(landing, "tenants/tenants.parquet", tenants, 42, "tenants")
+    write_focus(landing, 42, tenants)
+    write_revenue(landing, 42, tenants, history)
+    write_dimensions(landing, 42, history)
+    _write(landing, "s5_price_catalog/price_catalog.parquet", list(PRICE_CATALOG_V2), 42, "price catalog")
+    summary = run_m2_dbt(landing, tmp_path / "data", "run-m2")
+    assert summary["success"], summary
+    gold = tmp_path / "data" / "gold"
+    for mart in ("fct_infra_cost_allocated", "fct_cost_to_serve", "fct_unit_cost", "fct_quality", "fct_m2_tenant_margin",
+                 "agg_m2_cost_per_outcome", "dim_tenant", "dim_feature", "dim_model_price"):
+        assert (gold / f"{mart}.parquet").exists(), mart
+    assert (gold / "_quality" / "m2_scorecard.json").exists()
+    assert summary["statuses"].get("pass", 0) >= len(M2_GATES)  # the four gates ran
