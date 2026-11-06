@@ -155,6 +155,7 @@ def run_m2_dbt(landing: Path, data_root: Path, run_id: str, transform_dir: Path 
 
     from .allocation import load_rules
     from .drift import write_m2_scorecard
+    from .quality import publish_m2_quality, write_m2_lineage
 
     root = data_root.resolve()
     variables = {
@@ -181,6 +182,8 @@ def run_m2_dbt(landing: Path, data_root: Path, run_id: str, transform_dir: Path 
         summary["exception"] = str(result.exception)[:300]
     if result.success:
         summary["drift_warnings"] = len(write_m2_scorecard(root / "gold", run_id)["warnings"])
+        write_m2_lineage(root, root / "dbt_m2" / "target", run_id)
+        summary["published"] = publish_m2_quality(root)
     return summary
 
 

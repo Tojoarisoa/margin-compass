@@ -369,6 +369,12 @@ def test_run_m2_dbt_builds_all_marts_with_gates_and_writes_the_scorecard(tmp_pat
         assert (gold / f"{mart}.parquet").exists(), mart
     assert (gold / "_quality" / "m2_scorecard.json").exists()
     assert summary["statuses"].get("pass", 0) >= len(M2_GATES)  # the four gates ran
+    import json
+
+    lineage = json.loads((tmp_path / "data" / "gold" / "_quality" / "m2_lineage.json").read_text())
+    assert "fct_m2_tenant_margin" in lineage["models"] and lineage["metrics_by_mart"]["fct_m2_tenant_margin"]
+    assert set(summary["published"]) == {"publish/latest/m2_scorecard.json", "publish/latest/m2_lineage.json"}
+    assert (tmp_path / "data" / "publish" / "latest" / "m2_lineage.json").exists()
 
 
 def test_cli_run_m2_builds_the_marts_and_returns_zero(tmp_path):

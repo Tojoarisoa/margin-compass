@@ -69,6 +69,39 @@ def write_scorecard(data_root: Path, target_dir: Path, run_id: str, ingest_date:
     return scorecard
 
 
+def write_m2_lineage(data_root: Path, target_dir: Path, run_id: str) -> dict:
+    """gold/_quality/m2_lineage.json: model -> upstream models from the M2 dbt manifest, plus the metrics each mart feeds (PG-8)."""
+    from . import metrics as registry
+
+    nodes = json.loads((target_dir / "manifest.json").read_text())["nodes"]
+    models = {
+        n["name"]: sorted(nodes[p]["name"] for p in n["depends_on"]["nodes"] if p in nodes)
+        for n in nodes.values()
+        if n.get("resource_type") == "model" and "m2" in n.get("tags", []) + list(n.get("path", "").split("/"))
+    }
+    feeds: dict[str, list[str]] = {}
+    for name, metric in registry.load().items():
+        feeds.setdefault(metric["source"], []).append(name)
+    doc = {"run_id": run_id, "models": models, "metrics_by_mart": {k: sorted(v) for k, v in sorted(feeds.items())}, "synthetic": True}
+    out = data_root / "gold" / "_quality"
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "m2_lineage.json").write_text(json.dumps(doc, indent=2, sort_keys=True) + "\n")
+    return doc
+
+
+def publish_m2_quality(data_root: Path) -> list[str]:
+    """Copy the M2 scorecard and lineage to publish/latest/ for the PG-8 tab (small JSON, no per-row data)."""
+    out = data_root / "publish" / "latest"
+    out.mkdir(parents=True, exist_ok=True)
+    copied = []
+    for name in ("m2_scorecard.json", "m2_lineage.json"):
+        src = data_root / "gold" / "_quality" / name
+        if src.exists():
+            shutil.copyfile(src, out / name)
+            copied.append(f"publish/latest/{name}")
+    return copied
+
+
 def quarantine_partition(data_root: Path, ingest_date: str, reason: str) -> list[str]:
     """Move every bronze partition for ingest_date to quarantine/ (Stage 3: error quarantines)."""
     moved = []
