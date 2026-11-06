@@ -17,10 +17,16 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 Follow `docs/plans/m2-plan.md` §3 sequencing (AWS backfill comes after M2-03):
 
-1. M2-02 gate tests: revenue preservation per invoice line and period, cost preservation for LLM and infra, as dbt tests under `pipelines/transform/tests` (M2-only, gated on `m2_landing_path`), each with a break-on-purpose check. Then tick M2-02 in PLAN.md §17 and add the Change Log entry.
-2. M2-03: metrics registry, contracts, scorecard.
-3. M2-01 close-out: Step Functions backfill over 19 monthly chunks, one deploy under §8.2 if the cost gate stays <= $3.00, verify AWS gold = local gold, then tick M2-01.
-4. M2-04.
+1. M2-03: metrics registry (one definition per metric: gross margin $ and %, cost per outcome, attribution coverage, unit cost, safety-event recall), data contracts for the M2 marts (`docs/data-contracts/gold-marts-m2.md`), statistical checks (PT-13 seasonality guard must not alert), scorecard and lineage. Wire the M2 dbt build (`m2_gates` var, allocation rules var) into `mc_pipelines` so the Lambda image can run it; the image copies `pipelines/` only, so `reference/allocation_rules.yml` must be copied in too.
+2. M2-01 close-out: Step Functions backfill over 19 monthly chunks, one deploy under §8.2 if the cost gate stays <= $3.00, verify AWS gold = local gold, then tick M2-01.
+3. M2-04.
+
+## 2026-11-06 (autopilot run 12, task 7)
+
+- **Task:** M2-02 gates and close-out: four dbt gates in `pipelines/transform/tests/m2_*.sql` (infra cost, LLM cost, revenue per invoice line, revenue per tenant and period), enabled only with var `m2_gates`. One test runs them green, then breaks each on purpose (drops rows from the guarded facts) and checks every gate fails. M2-02 ticked in PLAN.md §17; Change Log entry added.
+- **Decisions (§8.2):** gates sit behind `m2_gates` so subset builds in tests (and the M1 build) don't pick them up. The deviations from the M2-02 text (tenant x day join, separate margin model name, no overage) are in the Change Log.
+- **PR / CI / deploy:** PENDING. Cost $0.
+- **Next:** M2-03.
 
 ## 2026-11-06 (autopilot run 12, task 6)
 

@@ -988,7 +988,7 @@ Each milestone ends with a demoable increment and exit criteria. Effort assumes 
 ### M2: Cost-to-Serve Platform (~2 weeks)
 
 - [ ] M2-01 Full simulator: ~400 tenants, F0–F4, 3 tiers, price-catalog changes, full pattern library, 19-month chunked backfill (fiscal-year aligned: 2025-04-01 → 2026-10-31)
-- [ ] M2-02 FOCUS infrastructure ingestion + allocation rules → `fct_cost_to_serve`; `fct_unit_cost`, `fct_quality`
+- [x] M2-02 FOCUS infrastructure ingestion + allocation rules → `fct_cost_to_serve`; `fct_unit_cost`, `fct_quality`
 - [ ] M2-03 Semantic metrics, contracts for all marts, data-quality scorecard, lineage
 - [ ] M2-04 PG-1 complete; PG-2 Cost-to-Serve Explorer; PG-8 *Pipeline & Data Health* and *Platform FinOps* tabs; dogfood telemetry (S7)
 
@@ -1170,6 +1170,7 @@ Status: all ADRs are written up in `docs/adr/` and **accepted** (ADR-017 on 2026
 | 2026-11-04 | 0.4 | M1-08 follow-up: the GitHub deploy role trusts the repository's **immutable OIDC subject** (`repo:<owner>@<id>/<repo>@<id>:ref:refs/heads/main`, new context `mc:githubOidcSubjectPrefix`); first CI deploy to dev succeeded | tojoarisoa |
 | 2026-11-04 | 0.4 | M2 plan approved (`docs/plans/m2-plan.md`). Owner decisions: (D1) gold schema adds `fct_infra_cost_allocated`, `fct_cost_to_serve`, `fct_unit_cost`, `fct_quality`, `dim_tenant` (SCD2), `dim_feature`, `dim_model_price`, and `fct_tenant_margin` becomes fully loaded; (D3) simulated shared infrastructure + vector + third-party ≈ 15% of AI COGS *(assumption)*; (D4) semantic metrics as a YAML metric registry compiled to SQL and Python with parity tests; (D7) PG-8 *Platform FinOps* may publish the real AWS bill with account ID, ARNs, and resource IDs stripped | tojoarisoa |
 | 2026-11-06 | 0.4 | Owner decision: BoonCore's fiscal year starts April 1 (FY2025 = 2025-04-01 → 2026-03-31). The simulation window moves to **2025-04-01 → 2026-10-31** (19 months, 579 days; was 2025-05-01, 18 months). Measured at seed 42: telemetry 2.71M rows (budget 1.5–3M), raw sample 0.44M, outcome storage 0.68M (< 1M), shared infrastructure 16.5% of AI COGS (D3 band 12–18%). Spec §1 and §10, `m2_tenants.WINDOW_START`, and a `fiscal_year()` helper updated | tojoarisoa |
+| 2026-11-06 | 0.4 | M2-02 done locally (**auto-decided under AGENTS.md §8.2**): silver priced telemetry, FOCUS staging, daily-ized revenue, outcomes; allocation rules (`reference/allocation_rules.yml`, six effective-dated rules, exact to 0.0001 USD, explicit UNALLOCATED bucket); gold `fct_infra_cost_allocated`, `fct_cost_to_serve`, `fct_unit_cost`, `fct_quality`, `dim_tenant` (SCD2), `dim_feature`, `dim_model_price`, and the fully loaded margin `fct_m2_tenant_margin` (separate name beside the M1 `fct_tenant_margin`); four M2 gates with break-on-purpose tests (var `m2_gates`). Decisions: outcomes join telemetry at tenant x day (tickets have no trace ID); vector storage share proxied by cumulative F3 input tokens; staging cost is UNALLOCATED overhead; overage revenue stays out (flat add-on only). Cost $0. | tojoarisoa |
 
 #### v0.3 refocus summary
 

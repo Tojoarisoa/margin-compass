@@ -282,3 +282,41 @@ def test_dimensions_scd2_has_one_current_row_and_no_gaps(tmp_path):
     assert bad_current == 0 and gaps == 0
     assert duckdb.sql(f"select count(*) from '{g}/dim_feature.parquet'").fetchall()[0][0] == 5
     assert duckdb.sql(f"select count(distinct tenant_id) from '{g}/dim_tenant.parquet'").fetchall()[0][0] == len(tenants)
+
+
+M2_GATES = ["m2_preservation_infra_cost", "m2_preservation_llm_cost", "m2_preservation_revenue_invoice_line",
+            "m2_preservation_revenue_period"]
+
+
+def _dbt(root: Path, args: list[str], variables: dict):
+    from dbt.cli.main import dbtRunner
+
+    return dbtRunner().invoke([
+        *args, "--project-dir", str(TRANSFORM_DIR), "--profiles-dir", str(TRANSFORM_DIR),
+        "--target-path", str(root / "t"), "--log-path", str(root / "l"), "--vars", json.dumps(variables), "--quiet"])
+
+
+def test_m2_gates_pass_and_break_on_purpose(allocated):
+    out, landing = allocated
+    root = out.parent.parent
+    os.environ["MC_DUCKDB_PATH"] = str(root / "a.duckdb")  # the views built by the fixture
+    variables = {"m2_landing_path": str(landing), "silver_path": str(root / "silver"), "bronze_path": "x",
+                 "gold_path": str(root / "gold"), "m2_gates": True,
+                 "allocation_rules": __import__("mc_pipelines.allocation", fromlist=["load_rules"]).load_rules()}
+    ok = _dbt(root, ["test", "--select", *M2_GATES], variables)
+    assert ok.success, ok.exception
+    assert len(ok.result.results) == len(M2_GATES)
+    # Break each gate on purpose: drop rows from the facts they guard, and the gates must fail.
+    gold = root / "gold"
+    for f in ("fct_infra_cost_allocated", "fct_cost_to_serve", "fct_unit_cost", "fct_m2_tenant_margin"):
+        path = gold / f"{f}.parquet"
+        keep = path.with_suffix(".keep")
+        path.rename(keep)
+        duckdb.sql(f"copy (select * from read_parquet('{keep}') using sample 90 percent (bernoulli, 3)) to '{path}' (format parquet)")
+    silver = root / "silver" / "slv_m2_revenue_daily.parquet"
+    keep = silver.with_suffix(".keep")
+    silver.rename(keep)
+    duckdb.sql(f"copy (select * from read_parquet('{keep}') using sample 90 percent (bernoulli, 3)) to '{silver}' (format parquet)")
+    bad = _dbt(root, ["test", "--select", *M2_GATES], variables)
+    failed = [r.node.name for r in bad.result.results if r.status != "pass"]
+    assert set(failed) == set(M2_GATES), failed
