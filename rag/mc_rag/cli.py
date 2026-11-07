@@ -13,9 +13,12 @@ import argparse
 import json
 from pathlib import Path
 
+from .bm25 import BM25Index
+from .corpus import load_corpus
 from .embed import DIMENSIONS, HashingEmbedder, TitanEmbedder
+from .golden import GOLDEN_PATH, evaluate, load_cases
 from .index import index_corpus
-from .retrieve import retrieve
+from .retrieve import hybrid_retrieve, retrieve
 from .store import LocalVectorStore, S3VectorsStore
 
 
@@ -29,14 +32,19 @@ def _store(args):
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="mc-rag")
     sub = p.add_subparsers(dest="cmd", required=True)
-    for name in ("index", "query"):
+    for name in ("index", "query", "eval"):
         s = sub.add_parser(name)
         s.add_argument("--embedder", choices=("hashing", "titan"), default="hashing")
         s.add_argument("--store", default="../data/local/rag/index.json")
         s.add_argument("--s3vectors", default="", help="BUCKET/INDEX in S3 Vectors")
-        if name == "index":
+        if name in ("index", "eval"):
             s.add_argument("--knowledge", default="../knowledge")
-        else:
+        if name == "eval":
+            s.add_argument("--golden", default=str(GOLDEN_PATH))
+            s.add_argument("--top-k", type=int, default=5)
+        elif name == "query":
+            s.add_argument("--mode", choices=("hybrid", "vector"), default="hybrid")
+            s.add_argument("--knowledge", default="../knowledge")
             s.add_argument("--tenant", required=True)
             s.add_argument("--top-k", type=int, default=5)
             s.add_argument("text")
@@ -45,8 +53,19 @@ def main(argv: list[str] | None = None) -> int:
     store = _store(args)
     if args.cmd == "index":
         print(json.dumps(index_corpus(Path(args.knowledge), embedder, store)))
+    elif args.cmd == "eval":
+        # Index promotion gate: exit 1 unless recall@k meets the EV-04 gate with no cross-tenant hits.
+        result = evaluate(load_cases(Path(args.golden)), embedder=embedder, store=store,
+                          bm25=BM25Index(load_corpus(Path(args.knowledge))), top_k=args.top_k)
+        print(json.dumps(result))
+        return 0 if result["passed"] else 1
     else:
-        for h in retrieve(args.text, tenant_id=args.tenant, embedder=embedder, store=store, top_k=args.top_k):
+        if args.mode == "hybrid":
+            hits = hybrid_retrieve(args.text, tenant_id=args.tenant, embedder=embedder, store=store,
+                                   bm25=BM25Index(load_corpus(Path(args.knowledge))), top_k=args.top_k)
+        else:
+            hits = retrieve(args.text, tenant_id=args.tenant, embedder=embedder, store=store, top_k=args.top_k)
+        for h in hits:
             print(json.dumps({"key": h.key, "score": round(h.score, 4), "tenant_id": h.tenant_id,
                               "clause_type": h.clause_type, "heading": h.heading}))
     return 0
