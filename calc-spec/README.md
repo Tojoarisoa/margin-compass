@@ -45,3 +45,16 @@ routing), `guardrail_bps` (largest allowed quality loss), `recall_bps` (safety-e
 6. `applied_savings = savings if allowed else 0`
 
 Vectors: `vectors/levers_v1.json`. Python: `agents/mc_agents/tools/levers.py`. TypeScript: `dashboard/src/levers.ts`. Same `npm run parity` check.
+
+## Churn-adjusted revenue v1
+
+Integer cents and basis points, same `round_div`. Inputs: `revenue_cents` and `cost_cents` (one month, from the pricing
+engine), `churn_bps` (monthly churn probability, from the churn model), `months` (horizon, 1 to 60). Month 1 is billed in full;
+churn applies at each renewal after it.
+
+1. `survival_1 = 10000`; `survival_(k+1) = round_div(survival_k * (10000 - churn_bps), 10000)`
+2. `expected_months_bps = sum(survival_1 .. survival_months)`; `survival_bps = survival_(months+1)`
+3. `adj_revenue = round_div(revenue * expected_months_bps, 10000)`; `adj_cost` likewise (a churned tenant costs nothing)
+4. `adj_margin = adj_revenue - adj_cost`
+
+Vectors: `vectors/churn_v1.json`. Python: `agents/mc_agents/tools/churn_adjust.py`. TypeScript: `dashboard/src/churnAdjust.ts`. Same `npm run parity` check.

@@ -1,0 +1,130 @@
+[
+ {
+  "name": "no churn",
+  "input": {
+   "revenue_cents": 650000,
+   "cost_cents": 150000,
+   "churn_bps": 0,
+   "months": 12
+  },
+  "expected": {
+   "expected_months_bps": 120000,
+   "survival_bps": 10000,
+   "adj_revenue_cents": 7800000,
+   "adj_cost_cents": 1800000,
+   "adj_margin_cents": 6000000
+  }
+ },
+ {
+  "name": "one month",
+  "input": {
+   "revenue_cents": 650000,
+   "cost_cents": 150000,
+   "churn_bps": 800,
+   "months": 1
+  },
+  "expected": {
+   "expected_months_bps": 10000,
+   "survival_bps": 9200,
+   "adj_revenue_cents": 650000,
+   "adj_cost_cents": 150000,
+   "adj_margin_cents": 500000
+  }
+ },
+ {
+  "name": "8% monthly over 12 months",
+  "input": {
+   "revenue_cents": 650000,
+   "cost_cents": 150000,
+   "churn_bps": 800,
+   "months": 12
+  },
+  "expected": {
+   "expected_months_bps": 79044,
+   "survival_bps": 3676,
+   "adj_revenue_cents": 5137860,
+   "adj_cost_cents": 1185660,
+   "adj_margin_cents": 3952200
+  }
+ },
+ {
+  "name": "high churn",
+  "input": {
+   "revenue_cents": 650000,
+   "cost_cents": 150000,
+   "churn_bps": 5000,
+   "months": 6
+  },
+  "expected": {
+   "expected_months_bps": 19688,
+   "survival_bps": 157,
+   "adj_revenue_cents": 1279720,
+   "adj_cost_cents": 295320,
+   "adj_margin_cents": 984400
+  }
+ },
+ {
+  "name": "certain churn",
+  "input": {
+   "revenue_cents": 650000,
+   "cost_cents": 150000,
+   "churn_bps": 10000,
+   "months": 12
+  },
+  "expected": {
+   "expected_months_bps": 10000,
+   "survival_bps": 0,
+   "adj_revenue_cents": 650000,
+   "adj_cost_cents": 150000,
+   "adj_margin_cents": 500000
+  }
+ },
+ {
+  "name": "loss-making tenant",
+  "input": {
+   "revenue_cents": 100000,
+   "cost_cents": 150000,
+   "churn_bps": 300,
+   "months": 12
+  },
+  "expected": {
+   "expected_months_bps": 102050,
+   "survival_bps": 6938,
+   "adj_revenue_cents": 1020500,
+   "adj_cost_cents": 1530750,
+   "adj_margin_cents": -510250
+  }
+ },
+ {
+  "name": "zero revenue",
+  "input": {
+   "revenue_cents": 0,
+   "cost_cents": 150000,
+   "churn_bps": 500,
+   "months": 6
+  },
+  "expected": {
+   "expected_months_bps": 52982,
+   "survival_bps": 7351,
+   "adj_revenue_cents": 0,
+   "adj_cost_cents": 794730,
+   "adj_margin_cents": -794730
+  }
+ },
+ {
+  "name": "odd rounding",
+  "input": {
+   "revenue_cents": 123457,
+   "cost_cents": 98765,
+   "churn_bps": 333,
+   "months": 7
+  },
+  "expected": {
+   "expected_months_bps": 63382,
+   "survival_bps": 7889,
+   "adj_revenue_cents": 782495,
+   "adj_cost_cents": 625992,
+   "adj_margin_cents": 156503
+  }
+ }
+]
