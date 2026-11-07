@@ -183,6 +183,12 @@ def run_m2_dbt(landing: Path, data_root: Path, run_id: str, transform_dir: Path 
     if result.success:
         summary["drift_warnings"] = len(write_m2_scorecard(root / "gold", run_id)["warnings"])
         write_m2_lineage(root, root / "dbt_m2" / "target", run_id)
+        try:  # M3-02: margin-leak detector over the new gold; a detector problem never fails the data build
+            from mc_ml.leak_detector.run import run_detector
+
+            summary["leaks"] = run_detector(root / "gold", landing / "labels" / "patterns.parquet", run_id)
+        except Exception as exc:  # noqa: BLE001
+            summary["leaks"] = {"error": str(exc)[:200]}
         summary["published"] = publish_m2_quality(root)
     return summary
 

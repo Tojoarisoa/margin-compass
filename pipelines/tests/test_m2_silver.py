@@ -368,6 +368,7 @@ def test_run_m2_dbt_builds_all_marts_with_gates_and_writes_the_scorecard(tmp_pat
                  "agg_m2_cost_per_outcome", "dim_tenant", "dim_feature", "dim_model_price"):
         assert (gold / f"{mart}.parquet").exists(), mart
     assert (gold / "_quality" / "m2_scorecard.json").exists()
+    assert "error" not in summary["leaks"] and (gold / "fct_margin_leaks.parquet").exists()
     assert summary["statuses"].get("pass", 0) >= len(M2_GATES)  # the four gates ran
     import json
 
