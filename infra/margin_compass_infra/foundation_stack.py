@@ -365,9 +365,11 @@ class FoundationStack(cdk.Stack):
         )
         statements = [
             ("RunPipeline", ["lambda:InvokeFunction"], [f"arn:aws:lambda:{region}:{acct}:function:mc-*-data-pipeline"]),
-            ("StartNightly", ["states:StartExecution"], [f"arn:aws:states:{region}:{acct}:stateMachine:mc-*-data-nightly"]),
+            ("StartNightly", ["states:StartExecution"],
+             [f"arn:aws:states:{region}:{acct}:stateMachine:mc-*-data-{m}" for m in ("nightly", "backfill")]),
             ("ReadNightly", ["states:DescribeExecution", "states:ListExecutions"],
-             [f"arn:aws:states:{region}:{acct}:execution:mc-*-data-nightly:*", f"arn:aws:states:{region}:{acct}:stateMachine:mc-*-data-nightly"]),
+             [f"arn:aws:states:{region}:{acct}:execution:mc-*-data-{m}:*" for m in ("nightly", "backfill")]
+             + [f"arn:aws:states:{region}:{acct}:stateMachine:mc-*-data-{m}" for m in ("nightly", "backfill")]),
             ("InvokeAgentModels", ["bedrock:InvokeModel"],
              [f"arn:aws:bedrock:{region}:{acct}:inference-profile/us.anthropic.claude-haiku-{m}" for m in OPS_MODEL_SUFFIXES]
              + [f"arn:aws:bedrock:{r}::foundation-model/anthropic.claude-haiku-{m}" for r in US_PROFILE_REGIONS for m in OPS_MODEL_SUFFIXES]),
