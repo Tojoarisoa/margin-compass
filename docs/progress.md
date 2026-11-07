@@ -23,8 +23,8 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## 2026-11-07 (autopilot run 32, task 2)
 
-- **Task:** M3-01 step 4 (PR below): `ev02_gate` (GBM must beat both baselines on WAPE and pinball on every scored feature) recorded as `ev02` in `backtest.json`. Promotion and `fct_forecasts` unchanged (still seasonal naive). ml 24 tests, ruff clean. Cost $0.
-- **Run end:** past 35 min after task 2 completes.
+- **Task:** M3-01 step 4 (PR #100, `838d730`, all checks green, `ci` push and `deploy to dev` green): `ev02_gate` (GBM must beat both baselines on WAPE and pinball on every scored feature) recorded as `ev02` in `backtest.json`. Promotion and `fct_forecasts` unchanged (still seasonal naive). ml 24 tests, ruff clean. Cost $0.
+- **Run end:** past 35 min after 2 tasks.
 
 ## 2026-11-07 (autopilot run 32, task 1)
 
