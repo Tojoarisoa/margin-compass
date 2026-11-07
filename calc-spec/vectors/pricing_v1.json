@@ -1,0 +1,218 @@
+[
+ {
+  "name": "flat add-on only",
+  "input": {
+   "seats": 100,
+   "seat_price_cents": 4500,
+   "addon_cents": 200000,
+   "included_units": 1000,
+   "overage_rate_micro": 600000,
+   "usage_units": 1000,
+   "outcome_price_micro": 0,
+   "outcomes": 0,
+   "usage_cap_cents": null,
+   "discount_bps": 0,
+   "cost_cents": 150000
+  },
+  "expected": {
+   "seat_cents": 450000,
+   "overage_cents": 0,
+   "outcome_cents": 0,
+   "usage_cents": 0,
+   "gross_cents": 650000,
+   "discount_cents": 0,
+   "revenue_cents": 650000,
+   "margin_cents": 500000,
+   "margin_bps": 7692
+  }
+ },
+ {
+  "name": "overage 250 units",
+  "input": {
+   "seats": 100,
+   "seat_price_cents": 4500,
+   "addon_cents": 200000,
+   "included_units": 1000,
+   "overage_rate_micro": 600000,
+   "usage_units": 1250,
+   "outcome_price_micro": 0,
+   "outcomes": 0,
+   "usage_cap_cents": null,
+   "discount_bps": 0,
+   "cost_cents": 150000
+  },
+  "expected": {
+   "seat_cents": 450000,
+   "overage_cents": 15000,
+   "outcome_cents": 0,
+   "usage_cents": 15000,
+   "gross_cents": 665000,
+   "discount_cents": 0,
+   "revenue_cents": 665000,
+   "margin_cents": 515000,
+   "margin_bps": 7744
+  }
+ },
+ {
+  "name": "cap binds",
+  "input": {
+   "seats": 100,
+   "seat_price_cents": 4500,
+   "addon_cents": 200000,
+   "included_units": 1000,
+   "overage_rate_micro": 600000,
+   "usage_units": 3000,
+   "outcome_price_micro": 0,
+   "outcomes": 0,
+   "usage_cap_cents": 50000,
+   "discount_bps": 0,
+   "cost_cents": 150000
+  },
+  "expected": {
+   "seat_cents": 450000,
+   "overage_cents": 120000,
+   "outcome_cents": 0,
+   "usage_cents": 50000,
+   "gross_cents": 700000,
+   "discount_cents": 0,
+   "revenue_cents": 700000,
+   "margin_cents": 550000,
+   "margin_bps": 7857
+  }
+ },
+ {
+  "name": "outcome pricing, rounding half up",
+  "input": {
+   "seats": 100,
+   "seat_price_cents": 4500,
+   "addon_cents": 200000,
+   "included_units": 0,
+   "overage_rate_micro": 600000,
+   "usage_units": 0,
+   "outcome_price_micro": 604500,
+   "outcomes": 333,
+   "usage_cap_cents": null,
+   "discount_bps": 0,
+   "cost_cents": 150000
+  },
+  "expected": {
+   "seat_cents": 450000,
+   "overage_cents": 0,
+   "outcome_cents": 20130,
+   "usage_cents": 20130,
+   "gross_cents": 670130,
+   "discount_cents": 0,
+   "revenue_cents": 670130,
+   "margin_cents": 520130,
+   "margin_bps": 7762
+  }
+ },
+ {
+  "name": "discount 12.5%",
+  "input": {
+   "seats": 100,
+   "seat_price_cents": 4500,
+   "addon_cents": 200000,
+   "included_units": 1000,
+   "overage_rate_micro": 600000,
+   "usage_units": 1100,
+   "outcome_price_micro": 0,
+   "outcomes": 0,
+   "usage_cap_cents": null,
+   "discount_bps": 1250,
+   "cost_cents": 150000
+  },
+  "expected": {
+   "seat_cents": 450000,
+   "overage_cents": 6000,
+   "outcome_cents": 0,
+   "usage_cents": 6000,
+   "gross_cents": 656000,
+   "discount_cents": 82000,
+   "revenue_cents": 574000,
+   "margin_cents": 424000,
+   "margin_bps": 7387
+  }
+ },
+ {
+  "name": "negative margin",
+  "input": {
+   "seats": 100,
+   "seat_price_cents": 4500,
+   "addon_cents": 200000,
+   "included_units": 1000,
+   "overage_rate_micro": 600000,
+   "usage_units": 1000,
+   "outcome_price_micro": 0,
+   "outcomes": 0,
+   "usage_cap_cents": null,
+   "discount_bps": 0,
+   "cost_cents": 900000
+  },
+  "expected": {
+   "seat_cents": 450000,
+   "overage_cents": 0,
+   "outcome_cents": 0,
+   "usage_cents": 0,
+   "gross_cents": 650000,
+   "discount_cents": 0,
+   "revenue_cents": 650000,
+   "margin_cents": -250000,
+   "margin_bps": -3846
+  }
+ },
+ {
+  "name": "zero revenue",
+  "input": {
+   "seats": 0,
+   "seat_price_cents": 4500,
+   "addon_cents": 0,
+   "included_units": 1000,
+   "overage_rate_micro": 600000,
+   "usage_units": 1000,
+   "outcome_price_micro": 0,
+   "outcomes": 0,
+   "usage_cap_cents": null,
+   "discount_bps": 0,
+   "cost_cents": 500
+  },
+  "expected": {
+   "seat_cents": 0,
+   "overage_cents": 0,
+   "outcome_cents": 0,
+   "usage_cents": 0,
+   "gross_cents": 0,
+   "discount_cents": 0,
+   "revenue_cents": 0,
+   "margin_cents": -500,
+   "margin_bps": null
+  }
+ },
+ {
+  "name": "negative margin rounding",
+  "input": {
+   "seats": 100,
+   "seat_price_cents": 4500,
+   "addon_cents": 200000,
+   "included_units": 1000,
+   "overage_rate_micro": 600000,
+   "usage_units": 1000,
+   "outcome_price_micro": 0,
+   "outcomes": 0,
+   "usage_cap_cents": null,
+   "discount_bps": 333,
+   "cost_cents": 661234
+  },
+  "expected": {
+   "seat_cents": 450000,
+   "overage_cents": 0,
+   "outcome_cents": 0,
+   "usage_cents": 0,
+   "gross_cents": 650000,
+   "discount_cents": 21645,
+   "revenue_cents": 628355,
+   "margin_cents": -32879,
+   "margin_bps": -523
+  }
+ }
+]
