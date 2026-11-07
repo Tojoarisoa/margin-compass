@@ -12,7 +12,7 @@ them, chunks them by `##` section, embeds each chunk, and upserts it into the ve
 | `policies/` | 1. Pricing, fair-use, discount-authority, and compliance policies | `all` |
 | `contracts/` | 2. Per-tenant contract clauses | the tenant, e.g. `bc-t0003` |
 
-M1-05 ships the fair-use policy and three contracts. The rest of the corpus arrives in M4.
+M1-05 shipped the fair-use policy and three contracts; M4-01 adds the discount-authority matrix and the compliance-constraint policy. Playbooks and schema and metric cards follow.
 
 ## File format
 

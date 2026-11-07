@@ -43,7 +43,7 @@ def test_standard_tenant_never_sees_another_tenants_unlimited_clause(store):
 def test_clause_type_filter(store):
     hits = retrieve("response times", tenant_id="bc-t0012", embedder=HashingEmbedder(), store=store,
                     top_k=20, clause_types=["sla", "data_residency"])
-    assert {h.key for h in hits} == {"contract-bc-t0012#4", "contract-bc-t0012#5"}
+    assert {h.key for h in hits} == {"contract-bc-t0012#4", "contract-bc-t0012#5", "policy-compliance#4"}  # + shared policy
 
 
 def test_unknown_tenant_gets_policy_only(store):

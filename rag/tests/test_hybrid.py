@@ -59,3 +59,12 @@ def test_hybrid_fails_closed_if_bm25_returns_foreign_chunk(parts, knowledge_dir)
 
     with pytest.raises(TenantIsolationError):
         hybrid_retrieve("x", tenant_id="bc-t0003", embedder=HashingEmbedder(), store=store, bm25=Leaky())
+
+
+def test_policy_questions_find_the_right_document(parts):
+    store, bm = parts
+    for q, doc in [("Who may approve a 20% discount?", "policy-discount-authority"),
+                   ("Can safety screening move to a cheaper model if recall drops?", "policy-compliance"),
+                   ("Is processing restricted to the EU for this tenant?", "policy-compliance")]:
+        hits = hybrid_retrieve(q, tenant_id="bc-t0009", embedder=HashingEmbedder(), store=store, bm25=bm, top_k=3)
+        assert doc in {h.doc_id for h in hits}, q

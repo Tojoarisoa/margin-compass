@@ -10,7 +10,7 @@ from mc_rag.corpus import CorpusError, load_corpus
 
 def test_every_chunk_carries_tenant_and_clause_metadata(knowledge_dir):
     chunks = load_corpus(knowledge_dir)
-    assert {c.doc_id for c in chunks} == {"policy-fair-use", "contract-bc-t0003", "contract-bc-t0009", "contract-bc-t0012"}
+    assert {c.doc_id for c in chunks} == {"policy-fair-use", "policy-discount-authority", "policy-compliance", "contract-bc-t0003", "contract-bc-t0009", "contract-bc-t0012"}
     for c in chunks:
         if c.source_type == "policy":
             assert c.tenant_id == "all"
