@@ -31,7 +31,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## 2026-11-07 (autopilot run 41, task 3)
 
-- **Task:** M3-05 step 4: PG-8 AI Quality. `publish_pg8_quality` writes `publish/latest/quality.json` (EV-03 and EV-11 gate results of each build); the Health tab shows them. Pipelines tests, ruff, dashboard typecheck and build green locally. Cost $0.
+- **Task:** M3-05 step 4: PG-8 AI Quality. `publish_pg8_quality` writes `publish/latest/quality.json` (EV-03 and EV-11 gate results of each build); the Health tab shows them. PR #117 (`e50d82d`): all checks green, `ci` push and `deploy to dev` green. Cost $0.
 - **Decisions (§8.2):** gate results shown whether they pass or not; backtest trends need run history (later). M3-05 not ticked (PG-5 remains).
 
 ## 2026-11-07 (autopilot run 41, task 2)
