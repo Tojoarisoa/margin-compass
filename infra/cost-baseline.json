@@ -11,7 +11,7 @@
       "AWS::S3::BucketPolicy": 1,
       "AWS::S3Vectors::Index": 1,
       "AWS::S3Vectors::VectorBucket": 1,
-      "AWS::Scheduler::Schedule": 1,
+      "AWS::Scheduler::Schedule": 2,
       "AWS::StepFunctions::StateMachine": 2
     },
     "mc-dev-state": {
