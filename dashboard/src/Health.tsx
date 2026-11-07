@@ -62,6 +62,25 @@ function Dogfood() {
   );
 }
 
+interface Runs { runs: { run_id: string; finished_at: string; status: string; models: number }[] }
+
+function RunHistory() {
+  const [runs, setRuns] = useState<Runs | null>(null);
+  useEffect(() => { get<Runs>("runs.json").then(setRuns).catch(() => setRuns(null)); }, []);
+  if (!runs || runs.runs.length === 0) return null;
+  return (
+    <>
+      <h3>Run history</h3>
+      <div className="table-wrap">
+        <table>
+          <thead><tr><th scope="col">Run</th><th scope="col">Finished (UTC)</th><th scope="col">Status</th><th scope="col" className="num">Models</th></tr></thead>
+          <tbody>{runs.runs.map((r) => <tr key={r.run_id}><td>{r.run_id}</td><td>{r.finished_at.replace("T", " ").slice(0, 16)}</td><td>{r.status}</td><td className="num">{r.models}</td></tr>)}</tbody>
+        </table>
+      </div>
+    </>
+  );
+}
+
 export default function Health() {
   const [card, setCard] = useState<Card | null>(null);
   const [lin, setLin] = useState<Lineage | null>(null);
@@ -106,6 +125,7 @@ export default function Health() {
           <tbody>{Object.entries(lin.models).sort().map(([m, up]) => <tr key={m}><td>{m}</td><td>{up.join(", ") || "none"}</td></tr>)}</tbody>
         </table>
       </div>
+      <RunHistory />
       <Finops />
       <Dogfood />
       <h3>Metrics each mart feeds</h3>

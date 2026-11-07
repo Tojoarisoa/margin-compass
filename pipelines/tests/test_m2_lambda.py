@@ -1,3 +1,4 @@
+import json
 import shutil
 from pathlib import Path
 
@@ -63,6 +64,10 @@ def test_static_month_and_build_round_trip_through_s3(tmp_path, monkeypatch):
     assert out["status"] == "success", out
     assert (tmp_path / "s3" / "lake" / "gold" / "fct_cost_to_serve.parquet").exists()
     assert (tmp_path / "s3" / "lake" / "gold" / "_quality" / "m2_scorecard.json").exists()
+    runs = tmp_path / "s3" / "lake" / "publish" / "latest" / "runs.json"
+    assert json.loads(runs.read_text())["runs"][0]["run_id"] == "r"
+    m2_lambda.handle({"profile": "m2", "step": "build"}, "r2", s3)  # a second build is added, newest first
+    assert [r["run_id"] for r in json.loads(runs.read_text())["runs"]] == ["r2", "r"]
 
 
 def test_build_without_landing_reports_it(tmp_path, monkeypatch):

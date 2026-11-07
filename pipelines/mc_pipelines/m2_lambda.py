@@ -41,6 +41,31 @@ def _download(s3: Any, bucket: str, prefix: str, dest: Path) -> int:
     return n
 
 
+RUN_HISTORY_KEY = "publish/latest/runs.json"
+RUN_HISTORY_KEEP = 30
+
+
+def append_run_history(s3: Any, bucket: str, data: Path, run_id: str, summary: dict, now: str) -> int:
+    """Add this build to `publish/latest/runs.json` (newest first, last 30); written under `data/` so the upload ships it."""
+    import json
+
+    old: list[dict] = []
+    if bucket:
+        tmp = WORK / "runs_old.json"
+        try:
+            s3.download_file(bucket, RUN_HISTORY_KEY, str(tmp))
+            old = json.loads(tmp.read_text())["runs"]
+        except Exception as e:  # first build: no history yet
+            if "404" not in str(e) and "NoSuchKey" not in str(e) and not isinstance(e, FileNotFoundError):
+                raise
+    entry = {"run_id": run_id, "finished_at": now, "status": "success", "models": len(summary.get("statuses") or {})}
+    runs = ([entry] + [r for r in old if r.get("run_id") != run_id])[:RUN_HISTORY_KEEP]
+    out = data / RUN_HISTORY_KEY
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps({"runs": runs, "synthetic": True}))
+    return len(runs)
+
+
 def handle(event: dict, run_id: str, s3: Any = None) -> dict:
     from .lambda_handler import _extra_args
 
@@ -80,6 +105,9 @@ def handle(event: dict, run_id: str, s3: Any = None) -> dict:
             if bucket and (data / "gold" / "_quality").exists():
                 _upload(s3, bucket, data / "gold" / "_quality", "gold/_quality", _extra_args)
             return {"status": "dbt_failed", "run_id": run_id, "failures": summary.get("failures")}
+        from datetime import UTC, datetime
+
+        append_run_history(s3, bucket, data, run_id, summary, datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"))
         uploaded = 0
         if bucket:
             for prefix in UPLOAD_PREFIXES:
