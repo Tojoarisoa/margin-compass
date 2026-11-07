@@ -17,9 +17,14 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 -1. Dispatch ops `start-backfill` (blocked, see Waiting for owner); then item 2.
 
 0. Wire `MC_FINOPS_FOCUS_GLOB` once the S7 export has data (PR #82 is merged and deployed).
-1. M2-03 close-out: `kpi` tool is wired into the analyst and `mc_pipelines` is in the agents image (run 25). Remaining: have M2 gold sit beside M1 gold for the analyst; then tick M2-03 in PLAN.md §17. The replay set runs on M1 gold, so its fixtures are unchanged.
 2. M2-01 close-out: backfill state machine `mc-dev-data-backfill` is deployed (pipeline Lambda 3,008 MB / 4 GB tmp / 15 min). Next: start one execution via the ops workflow (extend it if it can't start executions), check the build fits in 3,008 MB, verify AWS gold = local gold, then tick M2-01. If the build runs out of memory, log it under Waiting for owner (quota increase).
 3. M2-04 remaining: PG-8 *Platform FinOps* tab (real AWS bill by lifecycle stage, budget burn-down; shows "awaiting first export" while the FOCUS export is empty), PG-8 freshness and run history in the health card, dogfood telemetry (S7). The health card (scorecard, lineage) is done. PG-1 and PG-2 are complete (PG-2: cost explorer, margin waterfall table, attribution coverage, margin-vs-usage scatter).
+
+## 2026-11-07 (autopilot run 28, task 1)
+
+- **Task:** M2-03 close-out (PR #90, `93964a6`): analyst API syncs M2 marts beside M1 gold when they exist in S3; API role may read `gold/*.parquet`. M2-03 ticked. Agents 59, infra 75 passed, ruff clean.
+- **CI / deploy:** all checks green (`attribution` needed the proxy footer removed via the MCP `update_pull_request`; `gh api` PATCH re-adds it); merged, `ci` push and `deploy to dev` green. Cost $0.
+- **Decisions (§8.2):** missing M2 marts are skipped (403/404) so M1-only gold is unchanged.
 
 ## 2026-11-07 (autopilot run 27, task 1)
 

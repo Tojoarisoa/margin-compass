@@ -989,7 +989,7 @@ Each milestone ends with a demoable increment and exit criteria. Effort assumes 
 
 - [ ] M2-01 Full simulator: ~400 tenants, F0–F4, 3 tiers, price-catalog changes, full pattern library, 19-month chunked backfill (fiscal-year aligned: 2025-04-01 → 2026-10-31)
 - [x] M2-02 FOCUS infrastructure ingestion + allocation rules → `fct_cost_to_serve`; `fct_unit_cost`, `fct_quality`
-- [ ] M2-03 Semantic metrics, contracts for all marts, data-quality scorecard, lineage
+- [x] M2-03 Semantic metrics, contracts for all marts, data-quality scorecard, lineage
 - [ ] M2-04 PG-1 complete; PG-2 Cost-to-Serve Explorer; PG-8 *Pipeline & Data Health* and *Platform FinOps* tabs; dogfood telemetry (S7)
 
 **Exit:** EV-01 passes; attribution coverage meets KPI-03; snapshots stay within the §7.5 limits.
@@ -1190,3 +1190,4 @@ Status: all ADRs are written up in `docs/adr/` and **accepted** (ADR-017 on 2026
 | Positioning | Implicit | §3: explicit differentiation, customer benefits, cited industry context | Answers "why does this exist?" |
 | Unchanged | | AWS $0 architecture, guardrails, LangGraph patterns, evaluation tiers, walking-skeleton roadmap | Already well optimized in v0.2 |
 | 2026-11-06 | 0.4 | M2-04 PG-2 spike result (**auto-decided under AGENTS.md §8.2**, following ADR-009's own fallback): `@duckdb/duckdb-wasm` 1.32.0 (advisory-free per `npm audit`) loads the Parquet reader as an extension from `extensions.duckdb.org` at run time, which ADR-009 rules out (no public CDN) and which could not be self-hosted or tested from the autopilot sandbox. PG-2 therefore uses pre-aggregated JSON `publish/latest/pg2.json` (views by tenant, feature, month, tenant x feature; every view totals to `fct_cost_to_serve`; cap 1 MB). `explore.parquet` stays published for a later retry with a self-hosted extension. ADR not changed. |
+| 2026-11-07 | 0.4 | M2-03 done (**auto-decided under AGENTS.md §8.2**): agent API `sync_gold` also fetches the registry M2 marts when present in S3 (absent ones skipped, so M1 gold keeps the M1 tool set and replay fixtures); API role read widened from one object to `gold/*.parquet` in the lake bucket. Cost $0. | tojoarisoa |
