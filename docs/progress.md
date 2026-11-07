@@ -14,12 +14,16 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
--2. M3-01 step 5: use `backtest.json` `ev02.passed` to promote the GBM (needs a decision on registering it as a model version and writing `fct_forecasts` from it; apply §8.2), then serve it.
+-2. M3-01 close-out: run training via ops on real gold, read `ev02.passed` in `backtest.json`, then tick M3-01. Step 5 (promotion) is merged.
 -1. Dispatch ops `start-backfill` (blocked, see Waiting for owner); then item 2.
 
 0. Wire `MC_FINOPS_FOCUS_GLOB` once the S7 export has data (PR #82 is merged and deployed).
 2. M2-01 close-out: backfill state machine `mc-dev-data-backfill` is deployed (pipeline Lambda 3,008 MB / 4 GB tmp / 15 min). Next: start one execution via the ops workflow (extend it if it can't start executions), check the build fits in 3,008 MB, verify AWS gold = local gold, then tick M2-01. If the build runs out of memory, log it under Waiting for owner (quota increase).
 3. M2-04 remaining: S7 dogfood is complete in code and infra (schedule is off until `mc:nightlyEnabled=true`); PG-8 *Platform FinOps* tab (real AWS bill by lifecycle stage, budget burn-down; shows "awaiting first export" while the FOCUS export is empty), PG-8 freshness and run history are done; PG-8 and S7 are complete once the first backfill runs (M2-04 can then be ticked). The health card (scorecard, lineage) is done. PG-1 and PG-2 are complete (PG-2: cost explorer, margin waterfall table, attribution coverage, margin-vs-usage scatter).
+
+## 2026-11-07 (autopilot run 33, task 1)
+
+- **Task:** finished PR #101 (M3-01 step 5, `05424bb`): GBM served and promoted only when `ev02.passed`. All checks green (latest `attribution` runs succeeded); fast-forwarded to `main`; `ci` push and `deploy to dev` green. Cost $0.
 
 ## 2026-11-07 (autopilot run 32, task 2)
 
