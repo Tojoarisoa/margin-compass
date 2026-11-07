@@ -1,0 +1,226 @@
+[
+ {
+  "name": "no change",
+  "input": {
+   "cost_cents": 1000000,
+   "route_bps": 0,
+   "cheap_cost_ratio_bps": 2000,
+   "cache_hit_bps": 0,
+   "quality_bps": 9200,
+   "quality_drop_bps": 300,
+   "guardrail_bps": 100,
+   "recall_bps": 9950,
+   "recall_drop_bps": 0
+  },
+  "expected": {
+   "routed_base_cents": 0,
+   "routed_new_cents": 0,
+   "cache_saved_cents": 0,
+   "new_cost_cents": 1000000,
+   "savings_cents": 0,
+   "quality_loss_bps": 0,
+   "quality_after_bps": 9200,
+   "recall_after_bps": 9950,
+   "quality_ok": true,
+   "recall_ok": true,
+   "allowed": true,
+   "applied_savings_cents": 0
+  }
+ },
+ {
+  "name": "route 50% within guardrail",
+  "input": {
+   "cost_cents": 1000000,
+   "route_bps": 5000,
+   "cheap_cost_ratio_bps": 2000,
+   "cache_hit_bps": 0,
+   "quality_bps": 9200,
+   "quality_drop_bps": 150,
+   "guardrail_bps": 100,
+   "recall_bps": 9950,
+   "recall_drop_bps": 0
+  },
+  "expected": {
+   "routed_base_cents": 500000,
+   "routed_new_cents": 100000,
+   "cache_saved_cents": 0,
+   "new_cost_cents": 600000,
+   "savings_cents": 400000,
+   "quality_loss_bps": 75,
+   "quality_after_bps": 9125,
+   "recall_after_bps": 9950,
+   "quality_ok": true,
+   "recall_ok": true,
+   "allowed": true,
+   "applied_savings_cents": 400000
+  }
+ },
+ {
+  "name": "route 100% breaks quality guardrail",
+  "input": {
+   "cost_cents": 1000000,
+   "route_bps": 10000,
+   "cheap_cost_ratio_bps": 2000,
+   "cache_hit_bps": 0,
+   "quality_bps": 9200,
+   "quality_drop_bps": 300,
+   "guardrail_bps": 100,
+   "recall_bps": 9950,
+   "recall_drop_bps": 0
+  },
+  "expected": {
+   "routed_base_cents": 1000000,
+   "routed_new_cents": 200000,
+   "cache_saved_cents": 0,
+   "new_cost_cents": 200000,
+   "savings_cents": 800000,
+   "quality_loss_bps": 300,
+   "quality_after_bps": 8900,
+   "recall_after_bps": 9950,
+   "quality_ok": false,
+   "recall_ok": true,
+   "allowed": false,
+   "applied_savings_cents": 0
+  }
+ },
+ {
+  "name": "cache only",
+  "input": {
+   "cost_cents": 1000000,
+   "route_bps": 0,
+   "cheap_cost_ratio_bps": 2000,
+   "cache_hit_bps": 1500,
+   "quality_bps": 9200,
+   "quality_drop_bps": 300,
+   "guardrail_bps": 100,
+   "recall_bps": 9950,
+   "recall_drop_bps": 0
+  },
+  "expected": {
+   "routed_base_cents": 0,
+   "routed_new_cents": 0,
+   "cache_saved_cents": 150000,
+   "new_cost_cents": 850000,
+   "savings_cents": 150000,
+   "quality_loss_bps": 0,
+   "quality_after_bps": 9200,
+   "recall_after_bps": 9950,
+   "quality_ok": true,
+   "recall_ok": true,
+   "allowed": true,
+   "applied_savings_cents": 150000
+  }
+ },
+ {
+  "name": "route 30% plus cache 10%",
+  "input": {
+   "cost_cents": 1000000,
+   "route_bps": 3000,
+   "cheap_cost_ratio_bps": 2000,
+   "cache_hit_bps": 1000,
+   "quality_bps": 9200,
+   "quality_drop_bps": 200,
+   "guardrail_bps": 100,
+   "recall_bps": 9950,
+   "recall_drop_bps": 0
+  },
+  "expected": {
+   "routed_base_cents": 300000,
+   "routed_new_cents": 60000,
+   "cache_saved_cents": 76000,
+   "new_cost_cents": 684000,
+   "savings_cents": 316000,
+   "quality_loss_bps": 60,
+   "quality_after_bps": 9140,
+   "recall_after_bps": 9950,
+   "quality_ok": true,
+   "recall_ok": true,
+   "allowed": true,
+   "applied_savings_cents": 316000
+  }
+ },
+ {
+  "name": "safety recall floor rejects",
+  "input": {
+   "cost_cents": 1000000,
+   "route_bps": 4000,
+   "cheap_cost_ratio_bps": 2000,
+   "cache_hit_bps": 0,
+   "quality_bps": 9200,
+   "quality_drop_bps": 0,
+   "guardrail_bps": 100,
+   "recall_bps": 9950,
+   "recall_drop_bps": 200
+  },
+  "expected": {
+   "routed_base_cents": 400000,
+   "routed_new_cents": 80000,
+   "cache_saved_cents": 0,
+   "new_cost_cents": 680000,
+   "savings_cents": 320000,
+   "quality_loss_bps": 0,
+   "quality_after_bps": 9200,
+   "recall_after_bps": 9870,
+   "quality_ok": true,
+   "recall_ok": false,
+   "allowed": false,
+   "applied_savings_cents": 0
+  }
+ },
+ {
+  "name": "rounding half up",
+  "input": {
+   "cost_cents": 333,
+   "route_bps": 5000,
+   "cheap_cost_ratio_bps": 3333,
+   "cache_hit_bps": 1250,
+   "quality_bps": 9200,
+   "quality_drop_bps": 100,
+   "guardrail_bps": 100,
+   "recall_bps": 9950,
+   "recall_drop_bps": 0
+  },
+  "expected": {
+   "routed_base_cents": 167,
+   "routed_new_cents": 56,
+   "cache_saved_cents": 28,
+   "new_cost_cents": 194,
+   "savings_cents": 139,
+   "quality_loss_bps": 50,
+   "quality_after_bps": 9150,
+   "recall_after_bps": 9950,
+   "quality_ok": true,
+   "recall_ok": true,
+   "allowed": true,
+   "applied_savings_cents": 139
+  }
+ },
+ {
+  "name": "pricier tier loses money",
+  "input": {
+   "cost_cents": 1000000,
+   "route_bps": 2000,
+   "cheap_cost_ratio_bps": 12000,
+   "cache_hit_bps": 0,
+   "quality_bps": 9200,
+   "quality_drop_bps": 0,
+   "guardrail_bps": 100,
+   "recall_bps": 9950,
+   "recall_drop_bps": 0
+  },
+  "expected": {
+   "routed_base_cents": 200000,
+   "routed_new_cents": 240000,
+   "cache_saved_cents": 0,
+   "new_cost_cents": 1040000,
+   "savings_cents": -40000,
+   "quality_loss_bps": 0,
+   "quality_after_bps": 9200,
+   "recall_after_bps": 9950,
+   "quality_ok": true,
+   "recall_ok": true,
+   "allowed": true,
+   "applied_savings_cents": -40000
+  }
+ }
+]

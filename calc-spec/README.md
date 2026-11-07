@@ -28,3 +28,20 @@ Output fields: the names above (`seat_cents` … `margin_bps`).
 
 Vectors: `vectors/pricing_v1.json`, a list of `{name, input, expected}`. Both implementations must match exactly.
 Python: `agents/mc_agents/tools/pricing.py`. TypeScript: `dashboard/src/pricing.ts`; EV-12 parity check: `npm run parity` in `dashboard/` (runs in CI).
+
+## Lever replay v1 (engineering levers: routing and caching)
+
+Integer cents and basis points, same `round_div`. Inputs (one feature, one month): `cost_cents` (baseline AI cost),
+`route_bps` (traffic share moved to a cheaper tier), `cheap_cost_ratio_bps` (cheaper tier cost per call vs baseline),
+`cache_hit_bps` (share of remaining spend avoided by caching), `quality_bps`, `quality_drop_bps` (quality lost at 100%
+routing), `guardrail_bps` (largest allowed quality loss), `recall_bps` (safety-event recall), `recall_drop_bps`
+(recall lost at 100% routing). Percent-like inputs are at most 10000.
+
+1. `routed_base = round_div(cost * route_bps, 10000)`; `routed_new = round_div(routed_base * cheap_cost_ratio_bps, 10000)`
+2. `kept = cost - routed_base`; `cache_saved = round_div((kept + routed_new) * cache_hit_bps, 10000)`
+3. `new_cost = kept + routed_new - cache_saved`; `savings = cost - new_cost` (negative if the tier costs more)
+4. `quality_loss = round_div(quality_drop_bps * route_bps, 10000)`; `recall_after = max(0, recall_bps - round_div(recall_drop_bps * route_bps, 10000))`
+5. `quality_ok = quality_loss <= guardrail_bps`; `recall_ok = recall_after >= 9900` (KPI-08b hard floor); `allowed = both`
+6. `applied_savings = savings if allowed else 0`
+
+Vectors: `vectors/levers_v1.json`. Python: `agents/mc_agents/tools/levers.py`. TypeScript: `dashboard/src/levers.ts`. Same `npm run parity` check.
