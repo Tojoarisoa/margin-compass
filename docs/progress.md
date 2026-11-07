@@ -26,7 +26,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## 2026-11-07 (autopilot run 39, task 2)
 
-- **Task:** ticked M3-04 (PR #113, `86e6c3f`, all checks green; `deploy to dev` skipped on the PR, `ci` push run to be checked next run). EV-12 passes in CI (24 vectors, Python and TypeScript). Docs only. Cost $0.
+- **Task:** ticked M3-04 (PR #113, `86e6c3f`, all checks green; `ci` push and `deploy to dev` green). EV-12 passes in CI (24 vectors, Python and TypeScript). Docs only. Cost $0.
 - **Decisions (§8.2):** traffic replay scope = routing and caching levers (full request-level replay deferred).
 
 ## 2026-11-07 (autopilot run 39, task 1)
