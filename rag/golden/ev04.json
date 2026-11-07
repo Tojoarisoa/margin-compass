@@ -1,0 +1,172 @@
+[
+ {
+  "question": "Is AI usage unlimited for this tenant?",
+  "tenant_id": "bc-t0003",
+  "expected": [
+   "contract-bc-t0003#3"
+  ]
+ },
+ {
+  "question": "Which models are approved in this tenant's contract?",
+  "tenant_id": "bc-t0003",
+  "expected": [
+   "contract-bc-t0003#4"
+  ]
+ },
+ {
+  "question": "What is the response-time SLA?",
+  "tenant_id": "bc-t0003",
+  "expected": [
+   "contract-bc-t0003#5"
+  ]
+ },
+ {
+  "question": "What are the subscription fees and AI add-on price?",
+  "tenant_id": "bc-t0003",
+  "expected": [
+   "contract-bc-t0003#2"
+  ]
+ },
+ {
+  "question": "When does the contract term end and renew?",
+  "tenant_id": "bc-t0003",
+  "expected": [
+   "contract-bc-t0003#1"
+  ]
+ },
+ {
+  "question": "How much AI usage is included in this contract?",
+  "tenant_id": "bc-t0009",
+  "expected": [
+   "contract-bc-t0009#3"
+  ]
+ },
+ {
+  "question": "What is the SLA for response times?",
+  "tenant_id": "bc-t0009",
+  "expected": [
+   "contract-bc-t0009#5"
+  ]
+ },
+ {
+  "question": "Which AI models may be used for this tenant?",
+  "tenant_id": "bc-t0009",
+  "expected": [
+   "contract-bc-t0009#4"
+  ]
+ },
+ {
+  "question": "What discount does the order form give?",
+  "tenant_id": "bc-t0009",
+  "expected": [
+   "contract-bc-t0009#2"
+  ]
+ },
+ {
+  "question": "Where must this tenant's data be processed?",
+  "tenant_id": "bc-t0012",
+  "expected": [
+   "contract-bc-t0012#4",
+   "policy-compliance#4"
+  ]
+ },
+ {
+  "question": "Is there an unlimited AI clause in this contract?",
+  "tenant_id": "bc-t0012",
+  "expected": [
+   "contract-bc-t0012#3"
+  ]
+ },
+ {
+  "question": "What response time does the SLA promise?",
+  "tenant_id": "bc-t0012",
+  "expected": [
+   "contract-bc-t0012#5"
+  ]
+ },
+ {
+  "question": "When does this tenant's term start?",
+  "tenant_id": "bc-t0012",
+  "expected": [
+   "contract-bc-t0012#1"
+  ]
+ },
+ {
+  "question": "Who may approve a 20% discount?",
+  "tenant_id": "bc-t0003",
+  "expected": [
+   "policy-discount-authority#2"
+  ]
+ },
+ {
+  "question": "Which limits can no role waive?",
+  "tenant_id": "bc-t0003",
+  "expected": [
+   "policy-discount-authority#4"
+  ]
+ },
+ {
+  "question": "Can safety screening move to a cheaper model if recall drops?",
+  "tenant_id": "bc-t0009",
+  "expected": [
+   "policy-compliance#2",
+   "playbook-cost-levers#4"
+  ]
+ },
+ {
+  "question": "Which providers are covered by a BAA?",
+  "tenant_id": "bc-t0009",
+  "expected": [
+   "policy-compliance#3"
+  ]
+ },
+ {
+  "question": "How many AI-assisted tickets does each plan include per month?",
+  "tenant_id": "bc-t0009",
+  "expected": [
+   "policy-fair-use#2"
+  ]
+ },
+ {
+  "question": "What happens when usage goes above the allowance?",
+  "tenant_id": "bc-t0009",
+  "expected": [
+   "policy-fair-use#4"
+  ]
+ },
+ {
+  "question": "How are legacy unlimited AI clauses treated?",
+  "tenant_id": "bc-t0003",
+  "expected": [
+   "policy-fair-use#5"
+  ]
+ },
+ {
+  "question": "How much can prompt caching save?",
+  "tenant_id": "bc-t0003",
+  "expected": [
+   "playbook-cost-levers#2"
+  ]
+ },
+ {
+  "question": "What should we do at renewal for a tenant with negative AI margin?",
+  "tenant_id": "bc-t0003",
+  "expected": [
+   "playbook-cost-levers#5"
+  ]
+ },
+ {
+  "question": "Which grain does fct_unit_cost have?",
+  "tenant_id": "bc-t0003",
+  "expected": [
+   "schema-gold-tables#1"
+  ]
+ },
+ {
+  "question": "How is attribution coverage defined and what are its targets?",
+  "tenant_id": "bc-t0003",
+  "expected": [
+   "metric-kpi-cards#2"
+  ]
+ }
+]
