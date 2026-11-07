@@ -26,7 +26,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## 2026-11-07 (autopilot run 40, task 1)
 
-- **Task:** M3-05 step 1: PG-3 Margin Leaks. `publish_pg3` writes `publish/latest/pg3.json` (leaks by impact, daily LLM cost per feature) after the leak detector in `run_m2_dbt`; `dashboard/src/Leaks.tsx` shows the table and a per-feature cost chart with leaks shaded. Pipelines tests + ruff clean, dashboard build ok. Cost $0.
+- **Task:** M3-05 step 1: PG-3 Margin Leaks. `publish_pg3` writes `publish/latest/pg3.json` (leaks by impact, daily LLM cost per feature) after the leak detector in `run_m2_dbt`; `dashboard/src/Leaks.tsx` shows the table and a per-feature cost chart with leaks shaded. PR #114 (`9baa95d`), all checks green after two CI fixes (import order, expected published set); `ci` push and `deploy to dev` green. Cost $0.
 - **Decisions (§8.2):** RCA narrative and release annotations deferred to the agent (M4); detector errors or publish errors never fail the data build. M3-05 not ticked (PG-4, PG-5, PG-8 AI Quality remain).
 
 ## 2026-11-07 (autopilot run 39, task 2)
