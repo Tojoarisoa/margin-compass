@@ -22,19 +22,23 @@ _SCHEMA = pa.schema([
 ])
 
 
-def parse_events(lines: Iterable[str]) -> list[dict]:
-    """Keep well-formed `gen_ai_call` events; skip everything else (other log lines, bad JSON)."""
+def parse_events(lines: Iterable[str], date: str | None = None) -> list[dict]:
+    """Keep well-formed `gen_ai_call` events; skip everything else (other log lines, bad JSON).
+
+    The API logs `{"level", "event": "gen_ai_call", <flat fields>}` with no timestamp, so `date` (the UTC day of the
+    CloudWatch event) is used when the line has none.
+    """
     out = []
     for line in lines:
         try:
             ev = json.loads(line)
         except ValueError:
             continue
-        if not isinstance(ev, dict) or ev.get("message", ev.get("msg")) != "gen_ai_call":
+        if not isinstance(ev, dict) or ev.get("event", ev.get("message", ev.get("msg"))) != "gen_ai_call":
             continue
         f = ev.get("fields", ev)
         try:
-            out.append({"date": str(ev.get("timestamp", ev.get("ts")))[:10], "model_id": str(f["gen_ai.request.model"]),
+            out.append({"date": str(ev.get("timestamp", ev.get("ts", date)))[:10], "model_id": str(f["gen_ai.request.model"]),
                         "input_tokens": int(f["gen_ai.usage.input_tokens"]),
                         "output_tokens": int(f["gen_ai.usage.output_tokens"]),
                         "cost_usd": Decimal(str(f["mc.cost_usd"])), "latency_ms": int(f.get("mc.latency_ms", 0))})
@@ -86,3 +90,35 @@ def read_summary(path: Path, run_id: str) -> dict:
     """Summary of a compacted `telemetry/dogfood.parquet`."""
     rows = [{**r, "date": r["date"].isoformat()} for r in pq.read_table(path).to_pylist()]
     return summary(rows, run_id)
+
+
+def export_day(logs, s3, bucket: str, log_group: str, day: str, work: Path) -> dict:
+    """Compact one UTC day of `gen_ai_call` events from CloudWatch Logs into `telemetry/dogfood.parquet`.
+
+    Re-running a day replaces that day's rows, so the export is idempotent. `logs` and `s3` are boto3 clients.
+    """
+    from datetime import UTC, date, datetime, timedelta
+    start = datetime.fromisoformat(day).replace(tzinfo=UTC)
+    kw = {"logGroupName": log_group, "filterPattern": '"gen_ai_call"',
+          "startTime": int(start.timestamp() * 1000), "endTime": int((start + timedelta(days=1)).timestamp() * 1000) - 1}
+    lines: list[str] = []
+    while True:
+        page = logs.filter_log_events(**kw)
+        lines += [e["message"] for e in page.get("events", [])]
+        if not page.get("nextToken"):
+            break
+        kw["nextToken"] = page["nextToken"]
+    rows = compact(parse_events(lines, day))
+    key, path = "telemetry/dogfood.parquet", work / "dogfood.parquet"
+    work.mkdir(parents=True, exist_ok=True)
+    old: list[dict] = []
+    try:
+        s3.download_file(bucket, key, str(path))
+        old = [{**r, "date": r["date"].isoformat()} for r in pq.read_table(path).to_pylist() if r["date"] != date.fromisoformat(day)]
+    except Exception as e:  # first run: nothing stored yet
+        if "404" not in str(e) and "NoSuchKey" not in str(e) and not isinstance(e, FileNotFoundError):
+            raise
+    merged = sorted(old + rows, key=lambda r: (r["date"], r["model_id"]))
+    write_parquet(merged, path)
+    s3.upload_file(str(path), bucket, key)
+    return {"day": day, "events": len(lines), "rows": len(merged)}

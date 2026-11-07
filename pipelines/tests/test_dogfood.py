@@ -35,3 +35,44 @@ def test_compact_summary_and_parquet(tmp_path):
 
 def test_empty_summary():
     assert dogfood.summary([], "r1")["status"] == "awaiting_first_events"
+
+
+class FakeLogs:
+    def __init__(self, pages):
+        self.pages, self.calls = pages, []
+
+    def filter_log_events(self, **kw):
+        self.calls.append(kw)
+        return self.pages[len(self.calls) - 1]
+
+
+class FakeS3:
+    def __init__(self, root):
+        self.root = root
+
+    def download_file(self, bucket, key, dst):
+        import shutil
+        shutil.copy(self.root / bucket / key, dst)
+
+    def upload_file(self, src, bucket, key):
+        import shutil
+        dst = self.root / bucket / key
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy(src, dst)
+
+
+def _api(model, cost):
+    return json.dumps({"level": "INFO", "event": "gen_ai_call", "gen_ai.request.model": model,
+                       "gen_ai.usage.input_tokens": 10, "gen_ai.usage.output_tokens": 2, "mc.cost_usd": cost, "mc.latency_ms": 50})
+
+
+def test_export_day_is_idempotent_and_replaces_only_that_day(tmp_path):
+    s3 = FakeS3(tmp_path / "s3")
+    pages = [{"events": [{"message": _api("haiku", "0.001")}], "nextToken": "t"}, {"events": [{"message": _api("haiku", "0.002")}]}]
+    out = dogfood.export_day(FakeLogs(pages), s3, "b", "grp", "2026-11-06", tmp_path / "w")
+    assert out == {"day": "2026-11-06", "events": 2, "rows": 1}
+    again = dogfood.export_day(FakeLogs(pages), s3, "b", "grp", "2026-11-06", tmp_path / "w")
+    assert again["rows"] == 1
+    dogfood.export_day(FakeLogs([{"events": [{"message": _api("sonnet", "0.01")}]}]), s3, "b", "grp", "2026-11-07", tmp_path / "w")
+    s = dogfood.read_summary(tmp_path / "s3" / "b" / "telemetry" / "dogfood.parquet", "r")
+    assert s["total_calls"] == 3 and s["first_date"] == "2026-11-06" and s["last_date"] == "2026-11-07"
