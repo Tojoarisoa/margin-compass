@@ -97,9 +97,14 @@ def m2_drift_checks(gold: Path) -> list[dict]:
 def write_m2_scorecard(gold: Path, run_id: str) -> dict:
     """gold/_quality/m2_scorecard.json: the M2 statistical warnings, for PG-8 (M2-03.4). Synthetic data."""
     import json
+    from datetime import UTC, datetime
+
+    import duckdb
 
     warnings = m2_drift_checks(gold)
-    card = {"run_id": run_id, "checks": ["volume_requests", "ratio_tokens_per_request", "ratio_cost_per_request"],
+    through = duckdb.sql(f"select max(cost_date) from '{gold}/fct_unit_cost.parquet'").fetchall()[0][0]
+    card = {"run_id": run_id, "generated_at": datetime.now(UTC).isoformat(timespec="seconds"),
+            "data_through": through.isoformat() if through else None, "checks": ["volume_requests", "ratio_tokens_per_request", "ratio_cost_per_request"],
             "warnings": warnings, "synthetic": True}
     out = gold / "_quality"
     out.mkdir(parents=True, exist_ok=True)

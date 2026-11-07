@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 
 interface Warn { check: string; category: string; severity: string; day: string; value: number; expected: number; ratio: number }
-interface Card { run_id: string; checks: string[]; warnings: Warn[]; synthetic: boolean }
+interface Card { run_id: string; generated_at?: string; data_through?: string | null; checks: string[]; warnings: Warn[]; synthetic: boolean }
 interface Lineage { run_id: string; models: Record<string, string[]>; metrics_by_mart: Record<string, string[]>; synthetic: boolean }
 
 const get = <T,>(name: string): Promise<T> =>
@@ -55,7 +55,7 @@ export default function Health() {
   const perCheck = card.checks.map((c) => ({ check: c, n: card.warnings.filter((w) => w.check === c).length }));
   return (
     <div>
-      <p className="muted small">Run {card.run_id}. Synthetic data. Drift findings are statistical warnings, never errors.</p>
+      <p className="muted small">Run {card.run_id}{card.generated_at ? `, built ${card.generated_at.replace("T", " ").slice(0, 16)} UTC` : ""}{card.data_through ? `, data through ${card.data_through}` : ""}. Synthetic data. Drift findings are statistical warnings, never errors.</p>
       <h3>Drift checks</h3>
       <div className="table-wrap">
         <table>
