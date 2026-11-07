@@ -14,7 +14,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
--7. M4-01 next steps: add playbooks, schema and metric cards to `knowledge/`; EV-04 golden set (recall@5 >= 0.85, tenant-filtered contract questions); then wire `hybrid_retrieve` into `mc-rag` CLI and the index promotion gate.
+-7. M4-01 next steps: EV-04 golden set (recall@5 >= 0.85, tenant-filtered contract questions); then wire `hybrid_retrieve` into `mc-rag` CLI and the index promotion gate.
 -6. M3-03 close-out: after the backfill, read `churn.ev11.passed` in the M2 build summary on real gold, then tick M3-03. GBM challenger is optional.
 -4. M3-05 is ticked (PG-3, PG-4, PG-5, PG-8 merged). RCA narrative and release annotations wait for M4. Wiring the Python tools into the agent tool layer is M4-02.
 -3. M3-02 step 4: read EV-03 (`leaks.ev03` in the M2 build summary) on real gold once the backfill runs, then add tenant-level and cache-hit series for PT-02/04/06/07 if recall is short.
@@ -24,6 +24,11 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 0. Wire `MC_FINOPS_FOCUS_GLOB` once the S7 export has data (PR #82 is merged and deployed).
 2. M2-01 close-out: backfill state machine `mc-dev-data-backfill` is deployed (pipeline Lambda 3,008 MB / 4 GB tmp / 15 min). Next: start one execution via the ops workflow (extend it if it can't start executions), check the build fits in 3,008 MB, verify AWS gold = local gold, then tick M2-01. If the build runs out of memory, log it under Waiting for owner (quota increase).
 3. M2-04 remaining: S7 dogfood is complete in code and infra (schedule is off until `mc:nightlyEnabled=true`); PG-8 *Platform FinOps* tab (real AWS bill by lifecycle stage, budget burn-down; shows "awaiting first export" while the FOCUS export is empty), PG-8 freshness and run history are done; PG-8 and S7 are complete once the first backfill runs (M2-04 can then be ticked). The health card (scorecard, lineage) is done. PG-1 and PG-2 are complete (PG-2: cost explorer, margin waterfall table, attribution coverage, margin-vs-usage scatter).
+
+## 2026-11-07 (autopilot run 43, task 1)
+
+- **Task:** M4-01 step 3: playbook (`knowledge/playbooks/`), gold schema cards and KPI metric cards in the corpus; new source types `playbook`, `schema`, `metric` (tenant `all`). PR #121 (`33a4e19`): all checks green (`attribution` fixed by removing the proxy footer via MCP), `ci` push and `deploy to dev` green. rag 49 passed, ruff clean. Cost $0.
+- **Decisions (§8.2):** one doc per type for now; one residency test query made more specific because BM25 IDF shifted with the larger corpus (no check weakened). M4-01 not ticked.
 
 ## 2026-11-07 (autopilot run 42, task 2)
 
