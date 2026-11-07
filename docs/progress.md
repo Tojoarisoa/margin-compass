@@ -26,7 +26,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## 2026-11-07 (autopilot run 38, task 1)
 
-- **Task:** M3-03 step 4: `mc_ml.churn.run.run_churn` fits on the earliest 70% of the landing's renewals, judges EV-11 on the latest 30%, writes `gold/fct_churn_scores.parquet`; `run_m2_dbt` calls it after the leak detector (`summary["churn"]`, errors never fail the build). ml 42 passed, pipelines 77 passed, ruff clean. Cost $0.
+- **Task:** M3-03 step 4 (PR #111, `2279f1d`, all checks green, `ci` push and `deploy to dev` green): `mc_ml.churn.run.run_churn` fits on the earliest 70% of the landing's renewals, judges EV-11 on the latest 30%, writes `gold/fct_churn_scores.parquet`; `run_m2_dbt` calls it after the leak detector (`summary["churn"]`, errors never fail the build). ml 42 passed, pipelines 77 passed, ruff clean. Cost $0.
 - **Decisions (§8.2):** time split inside one landing tree (pipelines has no simulator dependency for multi-seed training); GBM challenger deferred. M3-03 not ticked until EV-11 is read on real gold.
 
 ## 2026-11-07 (autopilot run 37, task 2)
