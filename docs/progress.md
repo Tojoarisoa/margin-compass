@@ -24,7 +24,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## 2026-11-07 (autopilot run 34, task 1)
 
-- **Task:** M3-02 step 2: `leak_detector/run.py` reads `fct_unit_cost` (daily LLM cost per feature), runs the detector, writes `fct_margin_leaks.parquet`, and scores per feature against PT-01..PT-07 labels (EV-03). ml 34 tests, ruff clean. Cost $0.
+- **Task:** M3-02 step 2: `leak_detector/run.py` reads `fct_unit_cost` (daily LLM cost per feature), runs the detector, writes `fct_margin_leaks.parquet`, and scores per feature against PT-01..PT-07 labels (EV-03). ml 34 tests, ruff clean. PR #103 (`e770ef7`), all checks green (`attribution` fixed by removing the proxy footer via MCP), `ci` push and `deploy to dev` green. Cost $0.
 - **Decisions (§8.2):** feature-level cost series first (tenant-level and cache-hit series are the next step); not yet run on real gold (no backfill).
 
 ## 2026-11-07 (autopilot run 33, task 2)
