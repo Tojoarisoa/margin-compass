@@ -14,12 +14,19 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
+-3. M3-02 step 2: run the detector on M2 gold (daily unit cost per feature/tenant: tokens per request, cost per outcome, cache-hit rate), score against `PT-01..PT-07` labels (EV-03), write `fct_margin_leaks`.
 -2. M3-01 close-out: run training via ops on real gold, read `ev02.passed` in `backtest.json`, then tick M3-01. Step 5 (promotion) is merged.
 -1. Dispatch ops `start-backfill` (blocked, see Waiting for owner); then item 2.
 
 0. Wire `MC_FINOPS_FOCUS_GLOB` once the S7 export has data (PR #82 is merged and deployed).
 2. M2-01 close-out: backfill state machine `mc-dev-data-backfill` is deployed (pipeline Lambda 3,008 MB / 4 GB tmp / 15 min). Next: start one execution via the ops workflow (extend it if it can't start executions), check the build fits in 3,008 MB, verify AWS gold = local gold, then tick M2-01. If the build runs out of memory, log it under Waiting for owner (quota increase).
 3. M2-04 remaining: S7 dogfood is complete in code and infra (schedule is off until `mc:nightlyEnabled=true`); PG-8 *Platform FinOps* tab (real AWS bill by lifecycle stage, budget burn-down; shows "awaiting first export" while the FOCUS export is empty), PG-8 freshness and run history are done; PG-8 and S7 are complete once the first backfill runs (M2-04 can then be ticked). The health card (scorecard, lineage) is done. PG-1 and PG-2 are complete (PG-2: cost explorer, margin waterfall table, attribution coverage, margin-vs-usage scatter).
+
+## 2026-11-07 (autopilot run 33, task 2)
+
+- **Task:** M3-02 step 1 (PR #102, `0d8dc38`, all checks green, `ci` push and `deploy to dev` green): numpy-only leak detector (`ml/mc_ml/leak_detector`: weekday-median baseline, run rule, impact $/day) and EV-03 scorer (precision, recall, MTTD vs labels). ml 32 tests, ruff clean. Cost $0.
+- **Decisions (§8.2):** no new dependency; Isolation Forest deferred. Not yet wired to gold.
+- **Run end:** 33 min elapsed, next task would pass 35 min.
 
 ## 2026-11-07 (autopilot run 33, task 1)
 
