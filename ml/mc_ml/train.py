@@ -17,6 +17,7 @@ import pyarrow as pa
 import pyarrow.compute as pc
 import pyarrow.parquet as pq
 
+from .cogs_forecast.evaluate import compare
 from .cogs_forecast.seasonal_naive import SEASON, backtest, fit
 from .registry import ModelVersion, Registry, should_promote
 
@@ -51,6 +52,10 @@ def _card(version: str, days: list[date], metrics: dict, data_sha: str) -> str:
     rows = "\n".join(
         f"| {f} | {m['wape']} | {m['p10_p90_coverage']} |" for f, m in metrics["by_feature"].items()
     )
+    multi = "\n".join(
+        f"| {f} | {name} | {sc['wape']} | {sc['pinball']} | {sc['p10_p90_coverage']} |"
+        for f, scores in metrics["multi_step"].items() if scores for name, sc in scores.items()
+    ) or "| (history too short) | | | | |"
     return f"""# Model card: {MODEL_NAME} {version}
 
 > **Synthetic data.** Trained on BoonCore's simulated usage; not a forecast of any real company.
@@ -68,6 +73,12 @@ def _card(version: str, days: list[date], metrics: dict, data_sha: str) -> str:
 
 Blended WAPE: {metrics['wape']}.
 
+## Baselines, {HORIZON_DAYS}-day horizon (rolling origin, 4 origins 7 days apart; EV-02 inputs)
+
+| Feature | Method | WAPE | Pinball | P10–P90 coverage |
+| --- | --- | --- | --- | --- |
+{multi}
+
 ## Limitations
 
 - Repeats last week, so level shifts (for example the PT-01 prompt regression) are learned only a week later, and trend or seasonality beyond the week is ignored.
@@ -78,10 +89,17 @@ Blended WAPE: {metrics['wape']}.
 
 def train_cogs_forecaster(gold: Path, models_dir: Path, registry: Registry, artifact_base_uri: str, run_id: str) -> dict:
     series, days = _daily_cost_by_feature(gold)
-    params = {"model": "seasonal_naive", "season": SEASON, "horizon_days": HORIZON_DAYS, "holdout_days": HOLDOUT_DAYS}
+    params = {"model": "seasonal_naive", "season": SEASON, "horizon_days": HORIZON_DAYS, "holdout_days": HOLDOUT_DAYS,
+              "multi_step": {"horizon": HORIZON_DAYS, "origins": 4, "step": 7, "baselines": ["seasonal_naive", "ets"]}}
     data_sha = hashlib.sha256(json.dumps({"days": [d.isoformat() for d in days], "series": series}, sort_keys=True).encode()).hexdigest()
     version = "sn-" + hashlib.sha256((data_sha + json.dumps(params, sort_keys=True)).encode()).hexdigest()[:12]
 
+    multi_step = {}
+    for feature, values in series.items():
+        try:
+            multi_step[feature] = compare(values, horizon=HORIZON_DAYS, origins=4, step=7)
+        except ValueError:  # history too short for 4 origins of 30 days
+            multi_step[feature] = None
     models, by_feature, rows = {}, {}, []
     weighted_err = weight = 0.0
     for feature, values in series.items():
@@ -95,7 +113,7 @@ def train_cogs_forecaster(gold: Path, models_dir: Path, registry: Registry, arti
         for f in model.forecast(HORIZON_DAYS):
             rows.append({"forecast_date": model.last_date, "target_date": f["target_date"], "feature_id": feature,
                          "metric": "ai_cogs_usd", **{k + "_usd": Decimal(str(round(f[k], 6))) for k in ("p10", "p50", "p90")}})
-    metrics = {"wape": round(weighted_err / weight, 6) if weight else None, "by_feature": by_feature}
+    metrics = {"wape": round(weighted_err / weight, 6) if weight else None, "by_feature": by_feature, "multi_step": multi_step}
 
     out = models_dir / MODEL_NAME / version
     out.mkdir(parents=True, exist_ok=True)
