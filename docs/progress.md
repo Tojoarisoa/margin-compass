@@ -27,7 +27,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## 2026-11-07 (autopilot run 42, task 2)
 
-- **Task:** M4-01 step 1 merged (PR #119, `1886347`): all checks green, `ci` push and `deploy to dev` green. Then M4-01 step 2: `knowledge/policies/` gets the discount-authority matrix and the compliance-constraint policy (safety floor 99%, BAA-covered providers, residency, patient data); retrieval test for policy questions. rag 47 passed, ruff clean. Cost $0.
+- **Task:** M4-01 step 1 merged (PR #119, `1886347`): all checks green, `ci` push and `deploy to dev` green. Then M4-01 step 2: `knowledge/policies/` gets the discount-authority matrix and the compliance-constraint policy (safety floor 99%, BAA-covered providers, residency, patient data); retrieval test for policy questions. PR #120 (`486eb9d`): all checks green, `ci` push and `deploy to dev` green. rag 47 passed, ruff clean. Cost $0.
 - **Decisions (§8.2):** approval thresholds are labeled assumptions; the existing clause-filter test now also expects the shared residency policy chunk (a new legitimate hit, not a weaker check). M4-01 not ticked.
 
 ## 2026-11-07 (autopilot run 42, task 1)
