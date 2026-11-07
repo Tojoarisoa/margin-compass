@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 
 import duckdb
+
 from mc_pipelines.publish import build_pg3, publish_pg3
 
 
