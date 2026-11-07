@@ -27,6 +27,7 @@ def test_compact_summary_and_parquet(tmp_path):
     p = tmp_path / "telemetry" / "dogfood.parquet"
     dogfood.write_parquet(rows, p)
     assert pq.read_table(p).num_rows == 2
+    assert dogfood.read_summary(p, "r1") == dogfood.summary(rows, "r1")
     s = dogfood.summary(rows, "r1")
     assert s["status"] == "ok" and s["total_calls"] == 3 and s["total_cost_usd"] == 0.0035
     assert s["by_model"][0]["mean_latency_ms"] == 200

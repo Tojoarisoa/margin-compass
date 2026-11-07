@@ -80,3 +80,9 @@ def summary(rows: list[dict], run_id: str) -> dict:
     return {**base, "status": "ok", "by_model": models, "first_date": min(r["date"] for r in rows),
             "last_date": max(r["date"] for r in rows), "total_calls": sum(m["calls"] for m in models),
             "total_cost_usd": float(round(sum(v["cost"] for v in by.values()), 6))}
+
+
+def read_summary(path: Path, run_id: str) -> dict:
+    """Summary of a compacted `telemetry/dogfood.parquet`."""
+    rows = [{**r, "date": r["date"].isoformat()} for r in pq.read_table(path).to_pylist()]
+    return summary(rows, run_id)

@@ -240,6 +240,11 @@ def publish(data_root: Path, run_id: str, ingest_date: str) -> dict:
     if explore is not None:
         fin = json.dumps(build_finops(os.environ.get("MC_FINOPS_FOCUS_GLOB"), run_id), separators=(",", ":"), allow_nan=False)
         (root / "publish" / "latest" / "finops.json").write_text(fin)
+    dog = root / "telemetry" / "dogfood.parquet"
+    if explore is not None and dog.exists():
+        from mc_pipelines import dogfood
+        (root / "publish" / "latest" / "dogfood.json").write_text(
+            json.dumps(dogfood.read_summary(dog, run_id), separators=(",", ":"), allow_nan=False))
     paths = [root / "publish" / "latest" / "pg1.json", root / "publish" / "history" / ingest_date / "pg1.json"]
     for p in paths:
         p.parent.mkdir(parents=True, exist_ok=True)

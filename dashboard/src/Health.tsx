@@ -38,6 +38,30 @@ function Finops() {
   );
 }
 
+interface Dog { status: string; first_date?: string; last_date?: string; total_calls: number; total_cost_usd: number; by_model: { model_id: string; calls: number; input_tokens: number; output_tokens: number; cost_usd: number; mean_latency_ms: number }[] }
+
+function Dogfood() {
+  const [d, setD] = useState<Dog | null>(null);
+  useEffect(() => { get<Dog>("dogfood.json").then(setD).catch(() => setD(null)); }, []);
+  if (!d) return null;
+  return (
+    <div>
+      <h3>Platform's own model calls (dogfood)</h3>
+      {d.status !== "ok" ? <p className="muted">Awaiting first model calls.</p> : (
+        <>
+          <p className="muted small">{d.total_calls} calls, ${d.total_cost_usd.toFixed(4)}, {d.first_date} to {d.last_date}. Real usage by the demo tenant, kept apart from BoonCore's margin. No prompt or answer content is stored.</p>
+          <div className="table-wrap">
+            <table>
+              <thead><tr><th scope="col">Model</th><th scope="col" className="num">Calls</th><th scope="col" className="num">Cost</th><th scope="col" className="num">Mean latency (ms)</th></tr></thead>
+              <tbody>{d.by_model.map((m) => <tr key={m.model_id}><td>{m.model_id}</td><td className="num">{m.calls}</td><td className="num">${m.cost_usd.toFixed(4)}</td><td className="num">{m.mean_latency_ms}</td></tr>)}</tbody>
+            </table>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 export default function Health() {
   const [card, setCard] = useState<Card | null>(null);
   const [lin, setLin] = useState<Lineage | null>(null);
@@ -83,6 +107,7 @@ export default function Health() {
         </table>
       </div>
       <Finops />
+      <Dogfood />
       <h3>Metrics each mart feeds</h3>
       <div className="table-wrap">
         <table>
