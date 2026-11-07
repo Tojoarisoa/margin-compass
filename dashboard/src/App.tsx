@@ -8,6 +8,7 @@ const Explorer = lazy(() => import("./Explorer"));
 const Health = lazy(() => import("./Health"));
 const Leaks = lazy(() => import("./Leaks"));
 const PlanDesigner = lazy(() => import("./PlanDesigner"));
+const LeverLab = lazy(() => import("./LeverLab"));
 
 function Tile({ label, value, note }: { label: string; value: string; note?: string }) {
   return (
@@ -164,7 +165,7 @@ export function App() {
         <section className="card" aria-labelledby="plans-title">
           <h2 id="plans-title">Forecast &amp; pricing simulator</h2>
           {showPlans ? (
-            <Suspense fallback={<p className="muted">Loading simulator…</p>}><PlanDesigner /></Suspense>
+            <Suspense fallback={<p className="muted">Loading simulator…</p>}><PlanDesigner /><h3>Engineering levers</h3><LeverLab /></Suspense>
           ) : (
             <button onClick={() => setShowPlans(true)}>Open plan designer</button>
           )}
