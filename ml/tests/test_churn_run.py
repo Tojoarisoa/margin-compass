@@ -1,9 +1,8 @@
 import pyarrow as pa
 import pyarrow.parquet as pq
+from test_churn_train import _rows
 
 from mc_ml.churn.run import run_churn
-
-from test_churn_train import _rows
 
 
 def test_run_churn_time_split(tmp_path):
