@@ -4,7 +4,6 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Waiting for owner
 
-- **Deploy rolled back (2026-11-07, run 25), PR #87 merged as `fe3ee86`:** `mc-dev-data` failed with "'MemorySize' value failed to satisfy constraint: Member must have value less than or equal to 3008". This AWS account's Lambda memory quota is 3,008 MB, so the 4,096 MB the M2 build needs (m2-plan D5) is refused. CloudFormation rolled back cleanly (nothing changed in AWS), but `main` now holds infra code that cannot deploy, so every later `deploy to dev` fails until this is settled. Options: (a) request a Lambda memory quota increase to 10,240 MB (Service Quotas / support case, owner only) and re-run the `ci` workflow on `main`; (b) set the pipeline Lambda to 3,008 MB and test whether the M2 build fits. I'd take (a) and, in parallel, (b) as a code PR. Autopilot did not retry (§8.3: a deploy that fails or rolls back).
 - **Claude Haiku 5.5 access:** access requested, waiting for AWS. Converse via `us.anthropic.claude-haiku-5-5` still returns `AccessDeniedException`. Autopilot: re-probe with the ops workflow (`record-fixtures`, `haiku-5-5`) at most once a day; when it succeeds, record the M1-06 fixtures and apply the ADR-003 selection rule. Until then Haiku 4.5 stays the default.
 
 ## Owner decision 2026-11-06
@@ -15,8 +14,14 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 0. Wire `MC_FINOPS_FOCUS_GLOB` once the S7 export has data (PR #82 is merged and deployed).
 1. M2-03 close-out: `kpi` tool is wired into the analyst and `mc_pipelines` is in the agents image (run 25). Remaining: have M2 gold sit beside M1 gold for the analyst; then tick M2-03 in PLAN.md §17. The replay set runs on M1 gold, so its fixtures are unchanged.
-2. BLOCKED (see Waiting for owner, Lambda memory quota): M2-01 close-out: backfill state machine `mc-dev-data-backfill` (static, Map over months 0..18 at concurrency 2, build) is in `infra/` (run 25; pipeline Lambda now 4 GB / 4 GB tmp / 15 min). After it deploys: start one execution (via the ops workflow, extend it if it can't start executions), verify AWS gold = local gold, then tick M2-01.
+2. M2-01 close-out: backfill state machine `mc-dev-data-backfill` is deployed (pipeline Lambda 3,008 MB / 4 GB tmp / 15 min). Next: start one execution via the ops workflow (extend it if it can't start executions), check the build fits in 3,008 MB, verify AWS gold = local gold, then tick M2-01. If the build runs out of memory, log it under Waiting for owner (quota increase).
 3. M2-04 remaining: PG-8 *Platform FinOps* tab (real AWS bill by lifecycle stage, budget burn-down; shows "awaiting first export" while the FOCUS export is empty), PG-8 freshness and run history in the health card, dogfood telemetry (S7). The health card (scorecard, lineage) is done. PG-1 and PG-2 are complete (PG-2: cost explorer, margin waterfall table, attribution coverage, margin-vs-usage scatter).
+
+## 2026-11-07 (owner session, M2-01 deploy fix)
+
+- **Owner decision:** drop the pipeline Lambda to 3,008 MB (the account quota) instead of a quota increase.
+- **PR #88 merged (`65c98e7`):** memory 4,096 -> 3,008 MB; tmp 4 GB and timeout 15 min unchanged. Infra 75 passed, ruff clean; all 12 checks green; `ci` push run and `deploy to dev` green, so `main` deploys again. Cost: lower GB-s, $0 change.
+- **Open:** whether the M2 build fits in 3,008 MB is unproven until the first backfill execution.
 
 ## 2026-11-07 (autopilot run 25, task 2 result)
 
