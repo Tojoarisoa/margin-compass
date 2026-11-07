@@ -27,4 +27,4 @@ Inputs (one tenant, one billing month): `seats`, `seat_price_cents`, `addon_cent
 Output fields: the names above (`seat_cents` … `margin_bps`).
 
 Vectors: `vectors/pricing_v1.json`, a list of `{name, input, expected}`. Both implementations must match exactly.
-Python: `agents/mc_agents/tools/pricing.py`. TypeScript: not yet implemented (next step, then the EV-12 parity test).
+Python: `agents/mc_agents/tools/pricing.py`. TypeScript: `dashboard/src/pricing.ts`; EV-12 parity check: `npm run parity` in `dashboard/` (runs in CI).

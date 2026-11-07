@@ -74,6 +74,7 @@ jobs:
           cache-dependency-path: dashboard/package-lock.json
       - run: npm ci --no-fund
       - run: npm audit --audit-level=moderate
+      - run: npm run parity
       - run: npm run build
 
   replay-eval:

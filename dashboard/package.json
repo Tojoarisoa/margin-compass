@@ -8,6 +8,7 @@
     "snapshot": "node scripts/copy-snapshot.mjs",
     "dev": "npm run snapshot && vite",
     "typecheck": "tsc --noEmit",
+    "parity": "node scripts/pricing-parity.ts",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview"
   },
