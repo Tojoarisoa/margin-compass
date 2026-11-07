@@ -17,6 +17,7 @@ import pyarrow as pa
 import pyarrow.compute as pc
 import pyarrow.parquet as pq
 
+from .cogs_forecast import gbm
 from .cogs_forecast.evaluate import CANDIDATES, compare, ev02_gate
 from .cogs_forecast.seasonal_naive import SEASON, backtest, fit
 from .registry import ModelVersion, Registry, should_promote
@@ -49,6 +50,13 @@ def _daily_cost_by_feature(gold: Path) -> tuple[dict[str, list[float]], list[dat
 
 
 def _card(version: str, days: list[date], metrics: dict, data_sha: str) -> str:
+    if metrics["ev02"]["passed"]:
+        served_desc = ("gradient-boosted regression trees on log1p daily cost (lags 1/7/14, 7-day mean, weekday), recursive; "
+                       "P10/P90 from in-sample residual quantiles widened by sqrt(horizon). Served because it passed EV-02 "
+                       "(beats seasonal naive and ETS on WAPE and pinball for every scored feature).")
+    else:
+        served_desc = (f"seasonal naive (season = {SEASON} days): each day repeats the same weekday of the last observed week. "
+                       "P10/P90 scale it by the 10th/90th percentile of week-over-week ratios. The GBM did not pass EV-02, so it is not served.")
     rows = "\n".join(
         f"| {f} | {m['wape']} | {m['p10_p90_coverage']} |" for f, m in metrics["by_feature"].items()
     )
@@ -60,7 +68,7 @@ def _card(version: str, days: list[date], metrics: dict, data_sha: str) -> str:
 
 > **Synthetic data.** Trained on BoonCore's simulated usage; not a forecast of any real company.
 
-- **Model:** seasonal naive (season = {SEASON} days): each day repeats the same weekday of the last observed week. P10/P90 scale it by the 10th/90th percentile of week-over-week ratios.
+- **Model:** {served_desc}
 - **Purpose (M1-04 stub):** baseline AI COGS forecast per feature, {HORIZON_DAYS} days ahead, so the registry, the forecast mart, and the dashboard can be built end to end. The trained forecaster and the ETS baseline replace it in M3-01 (EV-02).
 - **Training data:** `fct_llm_usage_daily`, daily LLM cost per feature, {days[0]} to {days[-1]} ({len(days)} days). Data SHA-256 `{data_sha}`.
 - **Scope:** {FEATURE_SCOPE}.
@@ -87,12 +95,22 @@ Blended WAPE: {metrics['wape']}.
 """
 
 
+def _promote(challenger: ModelVersion, champion: ModelVersion | None, challenger_passes_ev02: bool) -> bool:
+    """A challenger that passes EV-02 replaces a champion that has not; a champion that passed EV-02 is only
+    replaced by another challenger that passes it and does not score worse on WAPE."""
+    champion_passes = bool(champion and champion.metrics.get("ev02", {}).get("passed"))
+    if champion is None or (challenger_passes_ev02 and not champion_passes):
+        return True
+    if champion_passes and not challenger_passes_ev02:
+        return False
+    return should_promote(challenger, champion)
+
+
 def train_cogs_forecaster(gold: Path, models_dir: Path, registry: Registry, artifact_base_uri: str, run_id: str) -> dict:
     series, days = _daily_cost_by_feature(gold)
     params = {"model": "seasonal_naive", "season": SEASON, "horizon_days": HORIZON_DAYS, "holdout_days": HOLDOUT_DAYS,
               "multi_step": {"horizon": HORIZON_DAYS, "origins": 4, "step": 7, "baselines": ["seasonal_naive", "ets"]}}
     data_sha = hashlib.sha256(json.dumps({"days": [d.isoformat() for d in days], "series": series}, sort_keys=True).encode()).hexdigest()
-    version = "sn-" + hashlib.sha256((data_sha + json.dumps(params, sort_keys=True)).encode()).hexdigest()[:12]
 
     multi_step = {}
     for feature, values in series.items():
@@ -100,21 +118,31 @@ def train_cogs_forecaster(gold: Path, models_dir: Path, registry: Registry, arti
             multi_step[feature] = compare(values, CANDIDATES, horizon=HORIZON_DAYS, origins=4, step=7)
         except ValueError:  # history too short for 4 origins of 30 days
             multi_step[feature] = None
+    gate = ev02_gate(multi_step)
+    use_gbm = gate["passed"]  # EV-02: serve the GBM only when it beats both baselines on every scored feature
+    params["model"] = "gbm" if use_gbm else "seasonal_naive"
+    version = ("gbm-" if use_gbm else "sn-") + hashlib.sha256((data_sha + json.dumps(params, sort_keys=True)).encode()).hexdigest()[:12]
     models, by_feature, rows = {}, {}, []
     weighted_err = weight = 0.0
     for feature, values in series.items():
         model = fit(days, values)
         bt = backtest(values, holdout_days=HOLDOUT_DAYS)
-        models[feature] = model.to_dict()
+        served = model
+        if use_gbm:
+            try:
+                served = gbm.fit(days, values)
+            except ValueError:  # too little history for this feature: keep the baseline
+                served = model
+        models[feature] = served.to_dict()
         by_feature[feature] = bt
         actual = sum(values[-HOLDOUT_DAYS:])
         weighted_err += bt["wape"] * actual
         weight += actual
-        for f in model.forecast(HORIZON_DAYS):
+        for f in served.forecast(HORIZON_DAYS):
             rows.append({"forecast_date": model.last_date, "target_date": f["target_date"], "feature_id": feature,
                          "metric": "ai_cogs_usd", **{k + "_usd": Decimal(str(round(f[k], 6))) for k in ("p10", "p50", "p90")}})
     metrics = {"wape": round(weighted_err / weight, 6) if weight else None, "by_feature": by_feature, "multi_step": multi_step,
-               "ev02": ev02_gate(multi_step)}
+               "ev02": gate}
 
     out = models_dir / MODEL_NAME / version
     out.mkdir(parents=True, exist_ok=True)
@@ -126,12 +154,12 @@ def train_cogs_forecaster(gold: Path, models_dir: Path, registry: Registry, arti
     challenger = ModelVersion(
         model_name=MODEL_NAME, version=version, artifact_uri=f"{base}/model.json", card_uri=f"{base}/model_card.md",
         metrics=metrics, trained_on={"window_start": days[0].isoformat(), "window_end": days[-1].isoformat(), "data_sha256": data_sha},
-        run_id=run_id, baselines=["seasonal_naive"],
+        run_id=run_id, baselines=["seasonal_naive", "ets"] if use_gbm else ["seasonal_naive"],
     )
     registered = registry.register(challenger)
     champion_version = registry.get_alias(MODEL_NAME, "champion")
     champion = registry.get_version(MODEL_NAME, champion_version) if champion_version else None
-    promoted = champion_version != version and should_promote(challenger, champion)
+    promoted = champion_version != version and _promote(challenger, champion, use_gbm)
     if promoted:
         registry.set_alias(MODEL_NAME, "champion", version)
     alias = "champion" if (promoted or champion_version == version) else "challenger"

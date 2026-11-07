@@ -77,6 +77,13 @@ class GbmModel:
         row = _features(window, weekday)
         return self.base + RATE * sum(_predict_tree(t, row) for t in self.trees)
 
+    def to_dict(self) -> dict:
+        def tree(t):
+            return t if isinstance(t, float) else [t[0], t[1], tree(t[2]), tree(t[3])]
+        return {"model": "gbm", "base": self.base, "rate": RATE, "lags": list(LAGS), "last_date": self.last_date.isoformat(),
+                "window": list(self.window), "resid_p10": self.resid_p10, "resid_p90": self.resid_p90,
+                "trees": [tree(t) for t in self.trees]}
+
     def forecast(self, horizon: int) -> list[dict]:
         window, rows = list(self.window), []
         for h in range(1, horizon + 1):

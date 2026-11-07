@@ -54,3 +54,24 @@ def test_ev02_gate_needs_every_feature_to_beat_both_baselines():
     result = evaluate.ev02_gate({"a": good, "b": bad})
     assert not result["passed"] and "b: gbm wape" in result["failures"][0]
     assert not evaluate.ev02_gate({"a": None})["passed"]
+
+
+def test_promotion_follows_the_ev02_gate():
+    from mc_ml.registry import ModelVersion
+    from mc_ml.train import _promote
+
+    def mv(wape, passed):
+        return ModelVersion("m", "v", "u", "c", {"wape": wape, "ev02": {"passed": passed}}, {}, "r")
+
+    assert _promote(mv(0.5, True), None, True)
+    assert _promote(mv(0.9, True), mv(0.1, False), True)  # passing the gate beats a better one-step WAPE
+    assert not _promote(mv(0.1, False), mv(0.9, True), False)
+    assert not _promote(mv(0.9, True), mv(0.1, True), True)  # both pass: WAPE decides
+    assert _promote(mv(0.1, True), mv(0.9, True), True)
+
+
+def test_gbm_model_dict_is_json_serialisable():
+    import json
+
+    dates, values = series(98)
+    assert json.dumps(gbm.fit(dates, values).to_dict())
