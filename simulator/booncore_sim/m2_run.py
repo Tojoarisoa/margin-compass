@@ -68,4 +68,10 @@ def generate_patterned(seed: int) -> PatternedRun:
     return PatternedRun(tenants, rows, raw, labels, events, outcomes)
 
 
-__all__ = ["PatternedRun", "generate_patterned", "patterned_month", "pt12_label"]
+def renewal_events(seed: int) -> list[RenewalEvent]:
+    """PT-14 renewal events for one seed without generating telemetry (training data for the churn model)."""
+    tenants = generate_m2_tenants(seed)[0]
+    return m2_patterns_b.pt14_churn_events(seed, tenants, m2_outcomes.generate_all(seed, tenants)[0])[0]
+
+
+__all__ = ["PatternedRun", "generate_patterned", "patterned_month", "pt12_label", "renewal_events"]

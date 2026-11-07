@@ -14,7 +14,8 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
--5. M3-03 step 2: export PT-14 renewal events (many seeds for enough rows) as training data, fit `LogisticChurn` on them, check `ev11_gate` on held-out price changes, write `fct_churn_scores`; then GBM challenger and registry.
+-6. M3-03 step 3: **PT-14 signal is too weak for EV-11.** Even the true `p_churn` gives AUC 0.58 (8 seeds, 3,200 renewals, 176 churns), so no model can reach 0.75. Strengthen `CHURN_BETA` in `simulator/booncore_sim/m2_patterns_b.py` (assumed coefficients, spec §9; CSAT varies only +-0.05 between tenants, so widen its effect and raise price/Sev-1 effects), update spec §9, re-check that the true-probability AUC is about 0.8 and churn stays about 5-10%, then fit on 6 seeds and test on 2 with `train_and_score`. Gate stays 0.75; never lower it.
+-5. M3-03 step 4: `fct_churn_scores` into the M2 build / gold, GBM challenger and registry.
 -4. M3-04 step 4: churn-adjusted revenue using the churn model (after M3-03 step 2), then tick M3-04.
 -3. M3-02 step 4: read EV-03 (`leaks.ev03` in the M2 build summary) on real gold once the backfill runs, then add tenant-level and cache-hit series for PT-02/04/06/07 if recall is short.
 -2. M3-01 close-out: run training via ops on real gold, read `ev02.passed` in `backtest.json`, then tick M3-01. Step 5 (promotion) is merged.
@@ -23,6 +24,12 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 0. Wire `MC_FINOPS_FOCUS_GLOB` once the S7 export has data (PR #82 is merged and deployed).
 2. M2-01 close-out: backfill state machine `mc-dev-data-backfill` is deployed (pipeline Lambda 3,008 MB / 4 GB tmp / 15 min). Next: start one execution via the ops workflow (extend it if it can't start executions), check the build fits in 3,008 MB, verify AWS gold = local gold, then tick M2-01. If the build runs out of memory, log it under Waiting for owner (quota increase).
 3. M2-04 remaining: S7 dogfood is complete in code and infra (schedule is off until `mc:nightlyEnabled=true`); PG-8 *Platform FinOps* tab (real AWS bill by lifecycle stage, budget burn-down; shows "awaiting first export" while the FOCUS export is empty), PG-8 freshness and run history are done; PG-8 and S7 are complete once the first backfill runs (M2-04 can then be ticked). The health card (scorecard, lineage) is done. PG-1 and PG-2 are complete (PG-2: cost explorer, margin waterfall table, attribution coverage, margin-vs-usage scatter).
+
+## 2026-11-07 (autopilot run 37, task 1)
+
+- **Task:** M3-03 step 2: `ml/mc_ml/churn/train.py` (events to features, `train_and_score` with held-out EV-11, `write_scores` to `fct_churn_scores`); `RenewalEvent` gained `sensitivity` and `sev1_rate`; `m2_run.renewal_events(seed)` makes events without telemetry (about 35 s/seed). ml 40 passed, simulator 14 relevant passed, ruff clean. Cost $0.
+- **Finding:** on real PT-14 events EV-11 fails (AUC 0.57 held out) because the simulator's own true probabilities only reach AUC 0.58. Not a model bug; see Next item -6. Gate unchanged.
+- **Decisions (§8.2):** new event columns have defaults so older files still read.
 
 ## 2026-11-07 (autopilot run 36, task 2)
 

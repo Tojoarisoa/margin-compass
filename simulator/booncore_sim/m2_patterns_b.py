@@ -148,6 +148,8 @@ class RenewalEvent:
     p_downgrade: float  # conditional on not churning
     outcome: str  # renewed | downgraded | churned
     arr_usd: float
+    sensitivity: float = 0.0  # segment price sensitivity, an input to the churn model
+    sev1_rate: float = 0.0  # unresolved Sev-1 rate, an input to the churn model
 
 
 def _sigmoid(x: float) -> float:
@@ -193,7 +195,10 @@ def pt14_churn_events(
         p_down = renewal_probs(DOWNGRADE_BETA, *args) if PLAN_RANK[t.plan] > 0 else 0.0
         outcome = "churned" if u_churn < p_churn else "downgraded" if u_down < p_down else "renewed"
         events.append(
-            RenewalEvent(t.tenant_id, t.renewal_date, price, csat, tenure, p_churn, p_down, outcome, float(t.arr_usd))
+            RenewalEvent(
+                t.tenant_id, t.renewal_date, price, csat, tenure, p_churn, p_down, outcome, float(t.arr_usd),
+                SENSITIVITY[t.segment], sev1_rate,
+            )
         )
     impact = sum(e.p_churn * e.arr_usd for e in events) / _days(WINDOW_START, WINDOW_END)
     label = PatternLabel(
