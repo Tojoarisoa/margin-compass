@@ -14,12 +14,18 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
--2. M3-01 step 2: gradient-boosted global AI COGS forecaster using `mc_ml/cogs_forecast/evaluate.py`; then wire both baselines into `train.py` promotion (EV-02).
+-2. M3-01 step 3: gradient-boosted global AI COGS forecaster using `mc_ml/cogs_forecast/evaluate.py`; then gate promotion on beating both baselines (EV-02); step 2 already reports the baselines.
 -1. Dispatch ops `start-backfill` (blocked, see Waiting for owner); then item 2.
 
 0. Wire `MC_FINOPS_FOCUS_GLOB` once the S7 export has data (PR #82 is merged and deployed).
 2. M2-01 close-out: backfill state machine `mc-dev-data-backfill` is deployed (pipeline Lambda 3,008 MB / 4 GB tmp / 15 min). Next: start one execution via the ops workflow (extend it if it can't start executions), check the build fits in 3,008 MB, verify AWS gold = local gold, then tick M2-01. If the build runs out of memory, log it under Waiting for owner (quota increase).
 3. M2-04 remaining: S7 dogfood is complete in code and infra (schedule is off until `mc:nightlyEnabled=true`); PG-8 *Platform FinOps* tab (real AWS bill by lifecycle stage, budget burn-down; shows "awaiting first export" while the FOCUS export is empty), PG-8 freshness and run history are done; PG-8 and S7 are complete once the first backfill runs (M2-04 can then be ticked). The health card (scorecard, lineage) is done. PG-1 and PG-2 are complete (PG-2: cost explorer, margin waterfall table, attribution coverage, margin-vs-usage scatter).
+
+## 2026-11-07 (autopilot run 31, task 2)
+
+- **Task:** M3-01 step 2 (PR #98, `c66f8e3`): the trainer scores seasonal-naive and ETS over a 30-day horizon (4 rolling origins) per feature into `backtest.json` and the model card. Promotion and `fct_forecasts` unchanged. All 12 checks green; `ci` push and `deploy to dev` green. Cost $0.
+- **Decisions (§8.2):** version id changes (params gained the multi-step settings), so the next run registers one new version; the promotion rule is unchanged.
+- **Run end:** past 35 min after 2 tasks.
 
 ## 2026-11-07 (autopilot run 31, task 1)
 
