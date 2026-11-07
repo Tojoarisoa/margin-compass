@@ -62,11 +62,33 @@ def sync_gold(bucket: str, dest: Path = GOLD_DIR) -> None:
     s3 = _client("s3")
     dest.mkdir(parents=True, exist_ok=True)
     for name in GOLD_FILES:
-        key = f"gold/{name}"
-        etag = s3.head_object(Bucket=bucket, Key=key)["ETag"]
-        if _gold_etags.get(key) != etag or not (dest / name).exists():
-            s3.download_file(bucket, key, str(dest / name))
-            _gold_etags[key] = etag
+        _sync_one(s3, bucket, name, dest)
+    # M2 marts sit beside the M1 file once the backfill has built them; absent marts are skipped so the
+    # analyst keeps the M1 tool set (the `kpi` tool needs every registry mart, see tools/m2.py).
+    for name in _m2_files():
+        try:
+            _sync_one(s3, bucket, name, dest)
+        except Exception as exc:  # noqa: BLE001 - a missing optional object must not fail the question
+            if getattr(exc, "response", {}).get("Error", {}).get("Code") not in ("404", "403", "NoSuchKey", "NotFound", "AccessDenied"):
+                raise
+            (dest / name).unlink(missing_ok=True)
+            _gold_etags.pop(f"gold/{name}", None)
+
+
+def _sync_one(s3, bucket: str, name: str, dest: Path) -> None:
+    key = f"gold/{name}"
+    etag = s3.head_object(Bucket=bucket, Key=key)["ETag"]
+    if _gold_etags.get(key) != etag or not (dest / name).exists():
+        s3.download_file(bucket, key, str(dest / name))
+        _gold_etags[key] = etag
+
+
+def _m2_files() -> tuple[str, ...]:
+    try:
+        from mc_pipelines import metrics as registry
+    except ImportError:
+        return ()
+    return tuple(sorted({f"{m['source']}.parquet" for m in registry.load().values()}))
 
 
 def _parse_body(event: dict[str, Any]) -> dict[str, Any]:

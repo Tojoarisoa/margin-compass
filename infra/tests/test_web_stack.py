@@ -85,7 +85,7 @@ def test_api_role_least_privilege(synth):
     blob = json.dumps(bedrock["Resource"])
     assert "claude-haiku-4-5" in blob and "*" not in blob.replace("\"*\"", "")
     s3 = next(s for s in stmts if "s3:GetObject" in _actions(s))
-    assert "gold/fct_tenant_margin.parquet" in json.dumps(s3["Resource"])
+    assert "gold/*.parquet" in json.dumps(s3["Resource"])
 
 
 def test_security_headers(synth):

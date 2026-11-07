@@ -47,7 +47,7 @@ class WebStack(cdk.Stack):
         fn_name = name("api")
         role = iam.Role(self, "ApiRole", role_name=fn_name, assumed_by=iam.ServicePrincipal("lambda.amazonaws.com"),
                         description="Agent API: read gold, job/budget/rate items in the core table, invoke Haiku 4.5, own logs.")
-        role.add_to_policy(iam.PolicyStatement(actions=["s3:GetObject"], resources=[lake.arn_for_objects("gold/fct_tenant_margin.parquet")]))
+        role.add_to_policy(iam.PolicyStatement(actions=["s3:GetObject"], resources=[lake.arn_for_objects("gold/*.parquet")]))
         role.add_to_policy(iam.PolicyStatement(actions=["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:UpdateItem"],
                                                resources=[core_table.table_arn]))
         role.add_to_policy(iam.PolicyStatement(
