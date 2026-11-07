@@ -1,7 +1,7 @@
 # rag/: parsing, chunking, embedding, and tenant-filtered retrieval
 
 PLAN.md §6.2 Stage 5. M1-05 indexes the fair-use policy and three contracts from `knowledge/`
-(all synthetic) and proves tenant-filtered retrieval. Hybrid BM25 fusion (M4-01) and the full EV-04
+(all synthetic) and proves tenant-filtered retrieval. Hybrid BM25 fusion (`hybrid_retrieve`, reciprocal rank fusion) is in; the full EV-04
 gate (M4) come later.
 
 ```bash

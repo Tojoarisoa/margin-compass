@@ -14,6 +14,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
+-7. M4-01 next steps: add policies (discount-authority matrix, compliance-constraint policy), playbooks, schema and metric cards to `knowledge/`; EV-04 golden set (recall@5 >= 0.85, tenant-filtered contract questions); then wire `hybrid_retrieve` into `mc-rag` CLI and the index promotion gate.
 -6. M3-03 close-out: after the backfill, read `churn.ev11.passed` in the M2 build summary on real gold, then tick M3-03. GBM challenger is optional.
 -4. M3-05 is ticked (PG-3, PG-4, PG-5, PG-8 merged). RCA narrative and release annotations wait for M4. Wiring the Python tools into the agent tool layer is M4-02.
 -3. M3-02 step 4: read EV-03 (`leaks.ev03` in the M2 build summary) on real gold once the backfill runs, then add tenant-level and cache-hit series for PT-02/04/06/07 if recall is short.
@@ -28,6 +29,11 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 - **Task:** M3-05 step 5: PG-5 Cost-Quality Lab (`CostQualityLab.tsx`): routing sweep, frontier chart, guardrail-blocked points, best allowed point. M3-05 ticked. Typecheck, parity, build and ruff green locally. Cost $0.
 - **Decisions (§8.2):** synthetic one-feature baseline; per-model points need real data (M4/backfill).
+
+## 2026-11-07 (autopilot run 42, task 1)
+
+- **Task:** finished PR #118 (M3-05 PG-5 Cost-Quality Lab, `fdd564b`): all checks green, `ci` push and `deploy to dev` green; M3-05 is ticked. Then M4-01 step 1: `rag/mc_rag/bm25.py` (in-process BM25, tenant filter applied before scoring) and `hybrid_retrieve` (reciprocal rank fusion with the vector leg, fail-closed on foreign chunks). rag 46 passed, ruff clean. Cost $0.
+- **Decisions (§8.2):** BM25 built from the parsed corpus at load time (small corpus; an S3 index file comes only if it grows); RRF k=60. M4-01 not ticked.
 
 ## 2026-11-07 (autopilot run 41, task 1)
 
