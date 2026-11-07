@@ -14,8 +14,14 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 0. Wire `MC_FINOPS_FOCUS_GLOB` once the S7 export has data (PR #82 is merged and deployed).
 1. M2-03 close-out: `kpi` tool is wired into the analyst and `mc_pipelines` is in the agents image (run 25). Remaining: have M2 gold sit beside M1 gold for the analyst; then tick M2-03 in PLAN.md §17. The replay set runs on M1 gold, so its fixtures are unchanged.
-2. M2-01 close-out: Lambda steps `month`/`static`/`build` exist (`m2_lambda.py`, event `{"profile":"m2","step":...}`). Remaining: CDK Step Functions state machine (static, Map over months 0..18 with MaxConcurrency 2, then build) in `infra/`, one deploy under §8.2 if the cost gate stays <= $3.00 (check Lambda memory/timeout for build at 4 GB), verify AWS gold = local gold, then tick M2-01.
+2. M2-01 close-out: backfill state machine `mc-dev-data-backfill` (static, Map over months 0..18 at concurrency 2, build) is in `infra/` (run 25; pipeline Lambda now 4 GB / 4 GB tmp / 15 min). After it deploys: start one execution (via the ops workflow, extend it if it can't start executions), verify AWS gold = local gold, then tick M2-01.
 3. M2-04 remaining: PG-8 *Platform FinOps* tab (real AWS bill by lifecycle stage, budget burn-down; shows "awaiting first export" while the FOCUS export is empty), PG-8 freshness and run history in the health card, dogfood telemetry (S7). The health card (scorecard, lineage) is done. PG-1 and PG-2 are complete (PG-2: cost explorer, margin waterfall table, attribution coverage, margin-vs-usage scatter).
+
+## 2026-11-07 (autopilot run 25, task 2)
+
+- **Task:** M2-01 step 8b: CDK state machine `mc-dev-data-backfill` (Standard; static, Map over months 0..18 with MaxConcurrency 2, then build; non-success status fails the run; no schedule). Pipeline Lambda raised to 4 GB memory, 4 GB tmp, 15 min timeout (m2-plan D5). Infra tests 75 passed.
+- **Decisions (§8.2):** reuse the one pipeline Lambda; ~50 transitions per backfill and Lambda GB-s stay inside the free tier, so the cost gate should stay at $0 change (CI checks).
+- **PR / CI / deploy:** see PR.
 
 ## 2026-11-07 (autopilot run 25, task 1)
 

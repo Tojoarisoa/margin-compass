@@ -151,9 +151,9 @@ class DataStack(cdk.Stack):
                 platform=cdk.aws_ecr_assets.Platform.LINUX_AMD64,
             ),
             architecture=lambda_.Architecture.X86_64,
-            memory_size=2048,
-            ephemeral_storage_size=cdk.Size.mebibytes(1024),
-            timeout=cdk.Duration.minutes(10),
+            memory_size=4096,  # M2 build (dbt over ~3M rows) needs 4 GB (m2-plan D5); billed per use, inside the free tier
+            ephemeral_storage_size=cdk.Size.mebibytes(4096),
+            timeout=cdk.Duration.minutes(15),
             role=role,
             log_group=log_group,
             environment={
@@ -166,10 +166,50 @@ class DataStack(cdk.Stack):
         )
 
         self._nightly(name, nightly_enabled)
+        self._backfill(name)
 
         cdk.CfnOutput(self, "LakeBucket", value=self.lake.bucket_name)
         cdk.CfnOutput(self, "PipelineFunction", value=self.pipeline.function_name)
         cdk.CfnOutput(self, "KnowledgeIndexArn", value=index.attr_index_arn)
+
+    # --- M2 chunked backfill (M2-01) -------------------------------------------------------------
+    def _backfill(self, name) -> None:
+        """Standard state machine: static tables, then a Map over the 19 months (2 at a time), then one dbt build.
+
+        Started by hand (`start-execution`, no schedule). About 50 transitions per run (free allowance: 4,000 per month).
+        Any step whose payload status is not `success` fails the execution.
+        """
+        def invoke(id_: str, payload: dict, minutes: int) -> tasks.LambdaInvoke:
+            return tasks.LambdaInvoke(
+                self, id_, lambda_function=self.pipeline, payload_response_only=True,
+                payload=sfn.TaskInput.from_object({"profile": "m2", **payload}),
+                task_timeout=sfn.Timeout.duration(cdk.Duration.minutes(minutes)), retry_on_service_exceptions=True,
+            )
+
+        def step(id_: str, task: tasks.LambdaInvoke, then: sfn.IChainable) -> sfn.IChainable:
+            """task -> success? -> `then`; any other status fails the execution."""
+            bad = sfn.Fail(self, f"{id_}Failed", error=f"{id_}Failed", cause_path=sfn.JsonPath.string_at("$.status"))
+            ok = (sfn.Choice(self, f"{id_}Ok?").when(sfn.Condition.string_equals("$.status", "success"), then).otherwise(bad))
+            return task.next(ok)
+
+        run = {"run_id": sfn.JsonPath.string_at("$$.Execution.Name")}
+        month = step("Month", invoke("BackfillMonth", {"step": "month", "month": sfn.JsonPath.string_at("$"), **run}, 14),
+                     sfn.Succeed(self, "MonthDone"))
+        months = sfn.Map(self, "BackfillMonths", max_concurrency=2, items_path="$.months", result_path=sfn.JsonPath.DISCARD)
+        months.item_processor(month)
+        build = step("Build", invoke("BackfillBuild", {"step": "build", **run}, 14), sfn.Succeed(self, "BackfillDone"))
+        months.next(build)
+        plan = sfn.Pass(self, "BackfillPlan", parameters={"months": sfn.JsonPath.array_range(0, 18, 1)})
+        plan.next(months)
+        static = step("Static", invoke("BackfillStatic", {"step": "static", **run}, 14), plan)
+        role = iam.Role(self, "BackfillRole", role_name=name("backfill"), assumed_by=iam.ServicePrincipal("states.amazonaws.com"),
+                        description="M2 backfill state machine: invoke the pipeline Lambda.")
+        self.backfill = sfn.StateMachine(
+            self, "Backfill", state_machine_name=name("backfill"), state_machine_type=sfn.StateMachineType.STANDARD,
+            definition_body=sfn.DefinitionBody.from_chainable(static), role=role,
+            timeout=cdk.Duration.hours(2), comment="M2 backfill: static -> 19 monthly chunks (2 at a time) -> dbt build",
+        )
+        cdk.CfnOutput(self, "BackfillStateMachine", value=self.backfill.state_machine_arn)
 
     # --- nightly (M1-08) ------------------------------------------------------------------------
     def _nightly(self, name, enabled: bool) -> None:

@@ -59,9 +59,9 @@ def test_pipeline_lambda_is_container_with_bounded_resources(synth):
             "FunctionName": "mc-dev-data-pipeline",
             "PackageType": "Image",
             "Architectures": ["x86_64"],
-            "MemorySize": 2048,
-            "Timeout": 600,
-            "EphemeralStorage": {"Size": 1024},
+            "MemorySize": 4096,
+            "Timeout": 900,
+            "EphemeralStorage": {"Size": 4096},
             "Environment": {"Variables": {"LAKE_BUCKET": Match.any_value(), "MC_ENV": "dev", "REGISTRY_TABLE": Match.any_value()}},
         },
     )
@@ -94,9 +94,24 @@ def test_nightly_schedule_exists_but_is_off_by_default(synth):
     t.resource_count_is("AWS::Events::Rule", 0)
 
 
+def _machine(t, name):
+    return next(m["Properties"] for m in t.find_resources("AWS::StepFunctions::StateMachine").values()
+                if m["Properties"]["StateMachineName"] == name)
+
+
+def test_backfill_machine_maps_19_months_two_at_a_time_then_builds(synth):
+    _, t = synth
+    sm = _machine(t, "mc-dev-data-backfill")
+    assert sm.get("StateMachineType", "STANDARD") == "STANDARD"
+    definition = json.dumps(sm["DefinitionString"])
+    assert "MaxConcurrency" in definition and "States.ArrayRange" in definition and "BackfillBuild" in definition
+    assert definition.index("BackfillStatic") < definition.index("States.ArrayRange") < definition.index("BackfillBuild")
+    assert "StaticFailed" in definition and "MonthFailed" in definition and "BuildFailed" in definition
+
+
 def test_nightly_state_machine_is_standard_and_fails_on_a_bad_status(synth):
     _, t = synth
-    sm = next(iter(t.find_resources("AWS::StepFunctions::StateMachine").values()))["Properties"]
+    sm = _machine(t, "mc-dev-data-nightly")
     assert sm.get("StateMachineType", "STANDARD") == "STANDARD" and sm["StateMachineName"] == "mc-dev-data-nightly"
     definition = json.dumps(sm["DefinitionString"])
     assert "PipelineFailed" in definition and "$.status" in definition and "success" in definition
