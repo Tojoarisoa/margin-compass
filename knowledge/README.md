@@ -12,7 +12,7 @@ them, chunks them by `##` section, embeds each chunk, and upserts it into the ve
 | `policies/` | 1. Pricing, fair-use, discount-authority, and compliance policies | `all` |
 | `contracts/` | 2. Per-tenant contract clauses | the tenant, e.g. `bc-t0003` |
 
-M1-05 shipped the fair-use policy and three contracts; M4-01 adds the discount-authority matrix and the compliance-constraint policy. Playbooks and schema and metric cards follow.
+M1-05 shipped the fair-use policy and three contracts; M4-01 adds the discount-authority matrix and the compliance-constraint policy. Playbooks (`playbooks/`), schema cards (`schema/`) and metric cards (`metrics/`) are added too; all shared documents use `tenant_id: all`.
 
 ## File format
 
@@ -22,7 +22,7 @@ Each file starts with a front-matter block between `---` lines, with one `key: v
 | --- | --- | --- |
 | `doc_id` | yes | Stable ID; part of every chunk key. Lowercase letters, digits, `-`. |
 | `title` | yes | Human-readable title. |
-| `source_type` | yes | `policy` or `contract`. |
+| `source_type` | yes | `policy`, `contract`, `playbook`, `schema` or `metric`. |
 | `tenant_id` | yes | `all` for policies; the tenant ID for contracts. |
 | `effective_date` | yes | ISO date the document takes effect. |
 | `synthetic` | yes | Must be `true`. |

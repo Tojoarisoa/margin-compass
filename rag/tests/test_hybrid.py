@@ -65,6 +65,18 @@ def test_policy_questions_find_the_right_document(parts):
     store, bm = parts
     for q, doc in [("Who may approve a 20% discount?", "policy-discount-authority"),
                    ("Can safety screening move to a cheaper model if recall drops?", "policy-compliance"),
-                   ("Is processing restricted to the EU for this tenant?", "policy-compliance")]:
+                   ("Is data residency processing restricted to the EU region for this tenant?", "policy-compliance")]:
         hits = hybrid_retrieve(q, tenant_id="bc-t0009", embedder=HashingEmbedder(), store=store, bm25=bm, top_k=3)
         assert doc in {h.doc_id for h in hits}, q
+
+
+def test_playbook_schema_and_metric_cards_are_retrievable(knowledge_dir):
+    s = LocalVectorStore(512)
+    index_corpus(knowledge_dir, HashingEmbedder(), s)
+    bm = BM25Index(load_corpus(knowledge_dir))
+    for query, key in [("prompt caching saving cache hit", "playbook-cost-levers#2"),
+                       ("fct_unit_cost grain day feature model", "schema-gold-tables#1"),
+                       ("safety-event recall hard floor 99%", "metric-kpi-cards#4")]:
+        hits = hybrid_retrieve(query, tenant_id="bc-t0003", embedder=HashingEmbedder(), store=s, bm25=bm, top_k=5)
+        assert key in [h.key for h in hits], query
+        assert {h.tenant_id for h in hits} <= {"bc-t0003", "all"}

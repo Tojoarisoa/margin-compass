@@ -10,9 +10,10 @@ from mc_rag.corpus import CorpusError, load_corpus
 
 def test_every_chunk_carries_tenant_and_clause_metadata(knowledge_dir):
     chunks = load_corpus(knowledge_dir)
-    assert {c.doc_id for c in chunks} == {"policy-fair-use", "policy-discount-authority", "policy-compliance", "contract-bc-t0003", "contract-bc-t0009", "contract-bc-t0012"}
+    assert {c.doc_id for c in chunks} == {"policy-fair-use", "policy-discount-authority", "policy-compliance", "contract-bc-t0003", "contract-bc-t0009", "contract-bc-t0012",
+                                        "playbook-cost-levers", "schema-gold-tables", "metric-kpi-cards"}
     for c in chunks:
-        if c.source_type == "policy":
+        if c.source_type != "contract":
             assert c.tenant_id == "all"
         else:
             assert c.doc_id == f"contract-{c.tenant_id}"
@@ -46,7 +47,8 @@ BASE = "doc_id: contract-x\ntitle: T\nsource_type: contract\ntenant_id: bc-t0001
     (BASE.replace("tenant_id: bc-t0001", "tenant_id: all"), "contracts need a tenant_id"),
     (BASE.replace("tenant_id: bc-t0001\n", ""), "missing front-matter keys"),
     (BASE.replace("synthetic: true", "synthetic: false"), "synthetic"),
-    (BASE.replace("source_type: contract", "source_type: policy"), "policies apply to tenant_id: all"),
+    (BASE.replace("source_type: contract", "source_type: policy"), "policy documents apply to tenant_id: all"),
+    (BASE.replace("source_type: contract", "source_type: playbook"), "playbook documents apply to tenant_id: all"),
 ])
 def test_malformed_documents_fail_closed(tmp_path, front, message):
     _write(tmp_path, front)

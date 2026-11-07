@@ -13,7 +13,8 @@ from datetime import date
 from pathlib import Path
 
 REQUIRED_KEYS = ("doc_id", "title", "source_type", "tenant_id", "effective_date", "synthetic")
-SOURCE_TYPES = ("policy", "contract")
+SOURCE_TYPES = ("policy", "contract", "playbook", "schema", "metric")
+SHARED_TYPES = ("policy", "playbook", "schema", "metric")  # tenant_id must be "all"
 ALL_TENANTS = "all"
 MAX_CHUNK_CHARS = 2_000  # Titan v2 takes 8,192 tokens; small chunks keep retrieval precise
 _ID = re.compile(r"^[a-z0-9][a-z0-9-]{1,62}$")
@@ -83,8 +84,8 @@ def parse_document(path: Path, root: Path) -> Document:
     if meta["source_type"] not in SOURCE_TYPES:
         raise CorpusError(f"{path}: source_type must be one of {SOURCE_TYPES}")
     tenant = meta["tenant_id"]
-    if meta["source_type"] == "policy" and tenant != ALL_TENANTS:
-        raise CorpusError(f"{path}: policies apply to tenant_id: all")
+    if meta["source_type"] in SHARED_TYPES and tenant != ALL_TENANTS:
+        raise CorpusError(f"{path}: {meta['source_type']} documents apply to tenant_id: all")
     if meta["source_type"] == "contract" and not _TENANT.match(tenant):
         raise CorpusError(f"{path}: contracts need a tenant_id like bc-t0001, got {tenant!r}")
     date.fromisoformat(meta["effective_date"])
