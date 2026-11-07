@@ -14,11 +14,17 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
+-2. Check `deploy to dev` of the `ci` push run on `b09e506` (PR #91) first.
 -1. Dispatch ops `start-backfill` (blocked, see Waiting for owner); then item 2.
 
 0. Wire `MC_FINOPS_FOCUS_GLOB` once the S7 export has data (PR #82 is merged and deployed).
 2. M2-01 close-out: backfill state machine `mc-dev-data-backfill` is deployed (pipeline Lambda 3,008 MB / 4 GB tmp / 15 min). Next: start one execution via the ops workflow (extend it if it can't start executions), check the build fits in 3,008 MB, verify AWS gold = local gold, then tick M2-01. If the build runs out of memory, log it under Waiting for owner (quota increase).
 3. M2-04 remaining: PG-8 *Platform FinOps* tab (real AWS bill by lifecycle stage, budget burn-down; shows "awaiting first export" while the FOCUS export is empty), PG-8 freshness and run history in the health card, dogfood telemetry (S7). The health card (scorecard, lineage) is done. PG-1 and PG-2 are complete (PG-2: cost explorer, margin waterfall table, attribution coverage, margin-vs-usage scatter).
+
+## 2026-11-07 (autopilot run 28, task 2)
+
+- **Task:** M2-04 PG-8: health card shows build time and data-through date (PR #91, `b09e506`). Pipelines 73, dashboard build, ruff clean; all checks green; merged to `main`. `ci` push `deploy to dev` was still running at run end: check it first next run.
+- **Decisions (§8.2):** none needed. Cost $0.
 
 ## 2026-11-07 (autopilot run 28, task 1)
 
