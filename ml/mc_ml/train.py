@@ -17,7 +17,7 @@ import pyarrow as pa
 import pyarrow.compute as pc
 import pyarrow.parquet as pq
 
-from .cogs_forecast.evaluate import CANDIDATES, compare
+from .cogs_forecast.evaluate import CANDIDATES, compare, ev02_gate
 from .cogs_forecast.seasonal_naive import SEASON, backtest, fit
 from .registry import ModelVersion, Registry, should_promote
 
@@ -113,7 +113,8 @@ def train_cogs_forecaster(gold: Path, models_dir: Path, registry: Registry, arti
         for f in model.forecast(HORIZON_DAYS):
             rows.append({"forecast_date": model.last_date, "target_date": f["target_date"], "feature_id": feature,
                          "metric": "ai_cogs_usd", **{k + "_usd": Decimal(str(round(f[k], 6))) for k in ("p10", "p50", "p90")}})
-    metrics = {"wape": round(weighted_err / weight, 6) if weight else None, "by_feature": by_feature, "multi_step": multi_step}
+    metrics = {"wape": round(weighted_err / weight, 6) if weight else None, "by_feature": by_feature, "multi_step": multi_step,
+               "ev02": ev02_gate(multi_step)}
 
     out = models_dir / MODEL_NAME / version
     out.mkdir(parents=True, exist_ok=True)

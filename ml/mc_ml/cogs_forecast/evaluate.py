@@ -74,3 +74,21 @@ def rolling_origin(
 def compare(values: list[float], forecasters: dict[str, Forecaster] | None = None, **kwargs) -> dict[str, dict]:
     """Backtest every forecaster on the same series and origins."""
     return {name: rolling_origin(fn, values, **kwargs) for name, fn in (forecasters or BASELINES).items()}
+
+
+def ev02_gate(multi_step: dict[str, dict[str, dict] | None], candidate: str = "gbm") -> dict:
+    """EV-02: the candidate passes only if, on every scored feature, it beats both baselines on WAPE
+    and pinball loss. Features with too little history (None) are not scored; with none scored, no pass."""
+    scored, failures = 0, []
+    for feature, scores in sorted(multi_step.items()):
+        if not scores or candidate not in scores:
+            continue
+        scored += 1
+        for name, score in scores.items():
+            if name == candidate:
+                continue
+            for metric in ("wape", "pinball"):
+                mine, theirs = scores[candidate][metric], score[metric]
+                if mine is None or theirs is None or mine >= theirs:
+                    failures.append(f"{feature}: {candidate} {metric} {mine} does not beat {name} {theirs}")
+    return {"candidate": candidate, "features_scored": scored, "passed": scored > 0 and not failures, "failures": failures}
