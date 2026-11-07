@@ -38,3 +38,13 @@ def test_publish_pg3_writes_only_when_the_leak_mart_exists(tmp_path):
     _gold(tmp_path)
     assert publish_pg3(tmp_path, "r1") == ["publish/latest/pg3.json"]
     assert json.loads((tmp_path / "publish" / "latest" / "pg3.json").read_text())["open_leaks"] == 2
+
+
+def test_publish_pg8_quality_writes_the_gate_results(tmp_path):
+    from mc_pipelines.publish import publish_pg8_quality
+
+    assert publish_pg8_quality(tmp_path, "r1", {"alerts": 3}, {"skipped": "x"}) == []
+    ev03 = {"precision": 0.9, "recall": 0.8, "passed": True}
+    assert publish_pg8_quality(tmp_path, "r1", {"ev03": ev03}, {"ev11": {"auc": 0.7, "passed": True}}) == ["publish/latest/quality.json"]
+    body = json.loads((tmp_path / "publish" / "latest" / "quality.json").read_text())
+    assert body["gates"]["ev03"] == ev03 and body["gates"]["ev11"]["auc"] == 0.7

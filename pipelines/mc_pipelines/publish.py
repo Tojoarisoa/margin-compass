@@ -255,6 +255,22 @@ def publish_pg3(data_root: Path, run_id: str) -> list[str]:
     return ["publish/latest/pg3.json"]
 
 
+def publish_pg8_quality(data_root: Path, run_id: str, leaks: dict | None, churn: dict | None) -> list[str]:
+    """Write publish/latest/quality.json (PG-8 AI Quality): the EV-03 and EV-11 gate results of this build, nothing else."""
+    gates = {}
+    if isinstance(leaks, dict) and isinstance(leaks.get("ev03"), dict):
+        gates["ev03"] = leaks["ev03"]
+    if isinstance(churn, dict) and isinstance(churn.get("ev11"), dict):
+        gates["ev11"] = churn["ev11"]
+    if not gates:
+        return []
+    body = {"schema_version": "quality.v0", "run_id": run_id, "data_label": "synthetic", "gates": gates}
+    out = Path(data_root) / "publish" / "latest" / "quality.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(body, separators=(",", ":"), allow_nan=False, default=str))
+    return ["publish/latest/quality.json"]
+
+
 def publish(data_root: Path, run_id: str, ingest_date: str) -> dict:
     root = Path(data_root)
     snapshot = build_pg1(root / "gold", run_id, ingest_date)

@@ -202,6 +202,12 @@ def run_m2_dbt(landing: Path, data_root: Path, run_id: str, transform_dir: Path 
             summary["published"] += publish_pg3(root, run_id)
         except Exception as exc:  # noqa: BLE001
             summary["pg3_error"] = str(exc)[:200]
+        try:  # M3-05: PG-8 AI Quality (EV-03, EV-11 gate results); never fails the data build
+            from .publish import publish_pg8_quality
+
+            summary["published"] += publish_pg8_quality(root, run_id, summary.get("leaks"), summary.get("churn"))
+        except Exception as exc:  # noqa: BLE001
+            summary["quality_error"] = str(exc)[:200]
     return summary
 
 

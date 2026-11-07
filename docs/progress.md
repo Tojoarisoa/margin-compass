@@ -15,7 +15,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 ## Next
 
 -6. M3-03 close-out: after the backfill, read `churn.ev11.passed` in the M2 build summary on real gold, then tick M3-03. GBM challenger is optional.
--4. M3-05 (PG-3 merged; PG-4 plan designer merged; RCA narrative and release annotations wait for M4/agent): PG-4 lever lab merged (COGS fan chart already on the overview), PG-5, PG-8 AI Quality tab. Wiring the Python tools into the agent tool layer is M4-02.
+-4. M3-05 (PG-3 merged; PG-4 plan designer merged; RCA narrative and release annotations wait for M4/agent): PG-4 lever lab merged (COGS fan chart already on the overview), PG-5 Cost–Quality Lab (PG-8 AI Quality gates merged). Wiring the Python tools into the agent tool layer is M4-02.
 -3. M3-02 step 4: read EV-03 (`leaks.ev03` in the M2 build summary) on real gold once the backfill runs, then add tenant-level and cache-hit series for PT-02/04/06/07 if recall is short.
 -2. M3-01 close-out: run training via ops on real gold, read `ev02.passed` in `backtest.json`, then tick M3-01. Step 5 (promotion) is merged.
 -1. Dispatch ops `start-backfill` (blocked, see Waiting for owner); then item 2.
@@ -28,6 +28,11 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 - **Task:** M3-05 step 2: PG-4 plan designer (`dashboard/src/PlanDesigner.tsx`): up to 3 pricing scenarios, revenue, margin and 12-month churn-adjusted margin per synthetic segment, in the browser via `pricing.ts` and `churnAdjust.ts`. Typecheck, parity and build green locally. Cost $0.
 - **Decisions (§8.2):** segment profiles are synthetic and illustrative; lever scenarios and the COGS fan chart in this tab come next. M3-05 not ticked.
+
+## 2026-11-07 (autopilot run 41, task 3)
+
+- **Task:** M3-05 step 4: PG-8 AI Quality. `publish_pg8_quality` writes `publish/latest/quality.json` (EV-03 and EV-11 gate results of each build); the Health tab shows them. Pipelines tests, ruff, dashboard typecheck and build green locally. Cost $0.
+- **Decisions (§8.2):** gate results shown whether they pass or not; backtest trends need run history (later). M3-05 not ticked (PG-5 remains).
 
 ## 2026-11-07 (autopilot run 41, task 2)
 

@@ -62,6 +62,36 @@ function Dogfood() {
   );
 }
 
+interface Quality { gates: Record<string, Record<string, unknown>> }
+const GATE_NAMES: Record<string, string> = { ev03: "EV-03 margin-leak detection", ev11: "EV-11 churn model" };
+const SHOWN = ["precision", "recall", "mttd_days", "alerts", "labels", "auc", "brier", "test_n", "scored"];
+
+function AiQuality() {
+  const [q, setQ] = useState<Quality | null>(null);
+  useEffect(() => { get<Quality>("quality.json").then(setQ).catch(() => setQ(null)); }, []);
+  if (!q) return null;
+  return (
+    <div>
+      <h3>AI quality: evaluation gates</h3>
+      <p className="muted small">Results of the latest build on synthetic data. A failed gate is shown here and never hidden.</p>
+      <div className="table-wrap">
+        <table>
+          <thead><tr><th scope="col">Gate</th><th scope="col">Result</th><th scope="col">Measured</th></tr></thead>
+          <tbody>
+            {Object.entries(q.gates).map(([k, g]) => (
+              <tr key={k}>
+                <td>{GATE_NAMES[k] ?? k}</td>
+                <td>{g.passed === true ? "Passed" : g.passed === false ? "Not passed" : "n/a"}</td>
+                <td>{SHOWN.filter((f) => typeof g[f] === "number").map((f) => `${f}: ${g[f]}`).join(", ")}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 interface Runs { runs: { run_id: string; finished_at: string; status: string; models: number }[] }
 
 function RunHistory() {
@@ -125,6 +155,7 @@ export default function Health() {
           <tbody>{Object.entries(lin.models).sort().map(([m, up]) => <tr key={m}><td>{m}</td><td>{up.join(", ") || "none"}</td></tr>)}</tbody>
         </table>
       </div>
+      <AiQuality />
       <RunHistory />
       <Finops />
       <Dogfood />
