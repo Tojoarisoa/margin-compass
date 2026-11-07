@@ -24,7 +24,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## 2026-11-07 (autopilot run 34, task 2)
 
-- **Task:** M3-02 step 3: `run_m2_dbt` runs the leak detector after a successful build (writes `gold/fct_margin_leaks.parquet`, returns `leaks` incl. `ev03` in the summary; detector errors never fail the build). Pipelines 77 passed, ruff clean. Cost $0.
+- **Task:** M3-02 step 3: `run_m2_dbt` runs the leak detector after a successful build (writes `gold/fct_margin_leaks.parquet`, returns `leaks` incl. `ev03` in the summary; detector errors never fail the build). PR #104 (`c3a3a4f`), all checks green, `ci` push and `deploy to dev` green. Pipelines 77 passed, ruff clean. Cost $0. Run ended: past 35 min.
 - **Decisions (§8.2):** no infra change; gold already uploads.
 
 ## 2026-11-07 (autopilot run 34, task 1)
