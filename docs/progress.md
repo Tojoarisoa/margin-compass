@@ -14,6 +14,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
+-4. M3-04 step 2: TypeScript pricing engine in `dashboard/src` run against `calc-spec/vectors/pricing_v1.json` (EV-12 parity); then lever math vectors and churn-adjusted revenue.
 -3. M3-02 step 4: read EV-03 (`leaks.ev03` in the M2 build summary) on real gold once the backfill runs, then add tenant-level and cache-hit series for PT-02/04/06/07 if recall is short.
 -2. M3-01 close-out: run training via ops on real gold, read `ev02.passed` in `backtest.json`, then tick M3-01. Step 5 (promotion) is merged.
 -1. Dispatch ops `start-backfill` (blocked, see Waiting for owner); then item 2.
@@ -21,6 +22,12 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 0. Wire `MC_FINOPS_FOCUS_GLOB` once the S7 export has data (PR #82 is merged and deployed).
 2. M2-01 close-out: backfill state machine `mc-dev-data-backfill` is deployed (pipeline Lambda 3,008 MB / 4 GB tmp / 15 min). Next: start one execution via the ops workflow (extend it if it can't start executions), check the build fits in 3,008 MB, verify AWS gold = local gold, then tick M2-01. If the build runs out of memory, log it under Waiting for owner (quota increase).
 3. M2-04 remaining: S7 dogfood is complete in code and infra (schedule is off until `mc:nightlyEnabled=true`); PG-8 *Platform FinOps* tab (real AWS bill by lifecycle stage, budget burn-down; shows "awaiting first export" while the FOCUS export is empty), PG-8 freshness and run history are done; PG-8 and S7 are complete once the first backfill runs (M2-04 can then be ticked). The health card (scorecard, lineage) is done. PG-1 and PG-2 are complete (PG-2: cost explorer, margin waterfall table, attribution coverage, margin-vs-usage scatter).
+
+## 2026-11-07 (autopilot run 35, task 1)
+
+- **Task:** M3-04 step 1 (PR #105, `ee6359a`, all checks green, `ci` push and `deploy to dev` green): `calc-spec/` pricing engine v1 (integer cents / micro-dollars / bps, round half up), 8 vectors, Python implementation `agents/mc_agents/tools/pricing.py` with a parity test. Agents 69 passed, ruff clean. Cost $0.
+- **Decisions (§8.2):** integer-only arithmetic so the TypeScript side matches to the cent; churn-adjusted revenue and lever math come in later steps.
+- **Found:** M2-01/M2-04/M3-01/M3-02 follow-ups all wait on the backfill dispatch (Waiting for owner).
 
 ## 2026-11-07 (autopilot run 34, task 2)
 
