@@ -24,7 +24,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 - **Task:** M2-04 S7 step 3a: `dogfood.export_day` + Lambda `{"profile": "telemetry", "day": ...}` read one UTC day of the API's `gen_ai_call` logs from CloudWatch (env `MC_API_LOG_GROUP`), compact, and merge into `telemetry/dogfood.parquet` in S3 (re-run replaces that day). Fakes-based test; no infra yet. Cost $0.
 - **Decisions (§8.2):** extend the existing pipeline Lambda rather than add a function; the API's real log lines have no timestamp, so the day comes from the query window.
-- **Earlier today:** PRs #92 and #93 merged (S7 steps 1-2), `ci` green on `fd74546`.
+- **PRs / CI / deploy:** #92 (`3c7183d`), #93 (`fd74546`), #94 (`1bc8314`) all merged with every check green; `ci` push runs and `deploy to dev` green. Run 29 ended after 3 tasks.
 
 ## 2026-11-07 (autopilot run 29, task 2)
 
