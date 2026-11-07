@@ -59,7 +59,7 @@ def test_pipeline_lambda_is_container_with_bounded_resources(synth):
             "FunctionName": "mc-dev-data-pipeline",
             "PackageType": "Image",
             "Architectures": ["x86_64"],
-            "MemorySize": 4096,
+            "MemorySize": 3008,
             "Timeout": 900,
             "EphemeralStorage": {"Size": 4096},
             "Environment": {"Variables": {"LAKE_BUCKET": Match.any_value(), "MC_ENV": "dev", "REGISTRY_TABLE": Match.any_value()}},

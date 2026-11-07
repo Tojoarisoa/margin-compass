@@ -151,7 +151,7 @@ class DataStack(cdk.Stack):
                 platform=cdk.aws_ecr_assets.Platform.LINUX_AMD64,
             ),
             architecture=lambda_.Architecture.X86_64,
-            memory_size=4096,  # M2 build (dbt over ~3M rows) needs 4 GB (m2-plan D5); billed per use, inside the free tier
+            memory_size=3008,  # account Lambda memory quota is 3,008 MB (owner, 2026-11-07); m2-plan D5 asked for 4 GB
             ephemeral_storage_size=cdk.Size.mebibytes(4096),
             timeout=cdk.Duration.minutes(15),
             role=role,
