@@ -13,6 +13,7 @@ The pipeline (`mc-pipeline run`, and the AWS Lambda) runs training after a succe
 | Piece | Code | Local | AWS (dev) |
 | --- | --- | --- | --- |
 | Forecaster | `mc_ml/cogs_forecast/seasonal_naive.py` | — | — |
+| ETS baseline, multi-step backtests (M3-01 step 1) | `mc_ml/cogs_forecast/ets.py`, `evaluate.py` | not yet wired into train | — |
 | Train step | `mc_ml/train.py` | writes `data/local/models/` and `gold/fct_forecasts.parquet` | same, uploaded to `s3://mc-dev-data-lake-<account>/models/` and `gold/` |
 | Registry index | `mc_ml/registry/` | `data/local/models/registry.json` (`FileRegistry`) | DynamoDB `mc-dev-state-core` (`DynamoRegistry`), items `MODEL#<name>` / `VERSION#<v>` and `ALIAS#champion` |
 
