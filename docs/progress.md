@@ -29,6 +29,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 - **Task:** M4-02 step 1: `agents/mc_agents/tools/registry.py`, versioned read-only tool contracts for `price_plan`, `replay_lever`, `churn_adjust`; `call()` validates, runs, and records the call in the evidence ledger (failed calls leave no evidence). Agents 93 passed, ruff clean. Cost $0.
 - **Update:** PR #123 (`550930e`) merged, all checks green, `ci` push and `deploy to dev` green.
+- **Result:** PR #124 (`db03b73`) merged, all checks green, `ci` push and `deploy to dev` green. Run ended: past 35 min.
 - **Decisions (§8.2):** calculators first; guarded SQL (EV-05), retrieval and ROI tools are the next steps. M4-02 not ticked.
 
 ## 2026-11-07 (autopilot run 44, task 1)
