@@ -13,9 +13,16 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 ## Next
 
 0. Wire `MC_FINOPS_FOCUS_GLOB` once the S7 export has data (PR #82 is merged and deployed).
-1. M2-03 close-out: `kpi` tool is wired into the analyst (code-only, lazy import). Remaining: add `mc_pipelines` to the agents image (one deploy) so the Lambda gets it, and have M2 gold sit beside M1 gold for the analyst; then tick M2-03 in PLAN.md §17. The replay set runs on M1 gold, so its fixtures are unchanged.
+1. M2-03 close-out: `kpi` tool is wired into the analyst and `mc_pipelines` is in the agents image (run 25). Remaining: have M2 gold sit beside M1 gold for the analyst; then tick M2-03 in PLAN.md §17. The replay set runs on M1 gold, so its fixtures are unchanged.
 2. M2-01 close-out: Lambda steps `month`/`static`/`build` exist (`m2_lambda.py`, event `{"profile":"m2","step":...}`). Remaining: CDK Step Functions state machine (static, Map over months 0..18 with MaxConcurrency 2, then build) in `infra/`, one deploy under §8.2 if the cost gate stays <= $3.00 (check Lambda memory/timeout for build at 4 GB), verify AWS gold = local gold, then tick M2-01.
 3. M2-04 remaining: PG-8 *Platform FinOps* tab (real AWS bill by lifecycle stage, budget burn-down; shows "awaiting first export" while the FOCUS export is empty), PG-8 freshness and run history in the health card, dogfood telemetry (S7). The health card (scorecard, lineage) is done. PG-1 and PG-2 are complete (PG-2: cost explorer, margin waterfall table, attribution coverage, margin-vs-usage scatter).
+
+## 2026-11-07 (autopilot run 25, task 1)
+
+- **Task:** M2-03 close-out step: agents image now includes `mc_pipelines` (installed `--no-deps`) and the metric registry (`MC_METRICS_DIR`); `pyyaml` added to the agents lockfile. Agents 58 passed, ruff clean.
+- **Found:** `ci` on `main` and `deploy to dev` green at start; no open `auto/*` PR.
+- **Decisions (§8.2):** none needed; no infra change, cost $0.
+- **PR / CI / deploy:** see PR.
 
 ## 2026-11-06 (autopilot run 24, task 2)
 

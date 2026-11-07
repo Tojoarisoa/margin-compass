@@ -9,8 +9,13 @@ RUN cd /build/agents && uv export --frozen --no-dev --no-emit-project --no-hashe
  && uv pip install --system --no-cache -r /build/requirements.txt
 
 # 2) Code
+#    mc_pipelines is installed without its dependencies: the kpi tool imports only metrics and publish,
+#    which need duckdb and pyyaml (both in the agents lockfile), not dbt, ml, or rag.
 COPY agents /build/agents
-RUN uv pip install --system --no-cache --no-deps /build/agents && rm -rf /build /usr/local/bin/uv
+COPY pipelines /build/pipelines
+COPY metrics ${LAMBDA_TASK_ROOT}/metrics
+RUN uv pip install --system --no-cache --no-deps /build/agents /build/pipelines && rm -rf /build /usr/local/bin/uv
 
-ENV HOME=/tmp
+ENV MC_METRICS_DIR=${LAMBDA_TASK_ROOT}/metrics \
+    HOME=/tmp
 CMD ["mc_agents.api.handler"]

@@ -7,6 +7,7 @@ dependencies = [
     "langgraph==1.2.19",  # ADR-010: pinned to an exact version
     "duckdb>=1.1",
     "boto3>=1.40",
+    "pyyaml>=6",  # metric registry (mc_pipelines.metrics), used by the kpi tool
 ]
 
 [project.scripts]
