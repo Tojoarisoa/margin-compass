@@ -40,6 +40,8 @@ NON_FILTERABLE_METADATA_KEYS = ["text", "heading"]
 
 # Nightly orchestration (M1-08, PLAN.md §6): EventBridge Scheduler -> Step Functions Standard -> pipeline.
 NIGHTLY_CRON = "cron(0 5 * * ? *)"  # 05:00 UTC; gold is due by 07:00 UTC (§14)
+TELEMETRY_CRON = "cron(30 0 * * ? *)"  # 00:30 UTC: exports the previous UTC day of the API's gen_ai_call logs (S7)
+API_LOG_GROUP = "/aws/lambda/mc-{env}-web-api"  # web stack's API log group, by name (no cross-stack reference)
 ALERT_TOPIC_NAME = "mc-shared-foundation-alerts"  # foundation stack (account-wide)
 
 
@@ -162,8 +164,14 @@ class DataStack(cdk.Stack):
                 "REGISTRY_TABLE": core_table.table_name,
                 "VECTOR_BUCKET": vector_bucket.vector_bucket_name,
                 "VECTOR_INDEX": KNOWLEDGE_INDEX_NAME,
+                "MC_API_LOG_GROUP": API_LOG_GROUP.format(env=env_name),
             },
         )
+        # S7 dogfood: read the API's own log group (filter only; no other log group, no write).
+        role.add_to_policy(iam.PolicyStatement(
+            actions=["logs:FilterLogEvents"],
+            resources=[f"arn:{cdk.Aws.PARTITION}:logs:{self.region}:{self.account}:log-group:{API_LOG_GROUP.format(env=env_name)}:*"],
+        ))
 
         self._nightly(name, nightly_enabled)
         self._backfill(name)
@@ -246,6 +254,15 @@ class DataStack(cdk.Stack):
             schedule=scheduler.ScheduleExpression.expression(NIGHTLY_CRON),
             target=scheduler_targets.StepFunctionsStartExecution(self.nightly, role=scheduler_role, retry_attempts=0),
             enabled=enabled, description="Nightly pipeline run (dev schedules are off by default, PLAN.md §15).",
+        )
+        # S7: daily export of the API's gen_ai_call logs; reuses this (kill-switch target) role to invoke the Lambda.
+        scheduler.Schedule(
+            self, "TelemetrySchedule", schedule_name=name("telemetry"),
+            schedule=scheduler.ScheduleExpression.expression(TELEMETRY_CRON),
+            target=scheduler_targets.LambdaInvoke(
+                self.pipeline, role=scheduler_role, retry_attempts=0,
+                input=scheduler.ScheduleTargetInput.from_object({"profile": "telemetry"})),
+            enabled=enabled, description="Daily export of the API's gen_ai_call logs (dev schedules are off by default).",
         )
 
         # One alarm (of the ≤ 10 in §14): any failed, timed-out, or aborted run e-mails the alert topic.

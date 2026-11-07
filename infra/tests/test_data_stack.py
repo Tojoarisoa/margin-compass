@@ -88,7 +88,7 @@ def test_pipeline_role_only_touches_its_own_resources(synth):
 def test_nightly_schedule_exists_but_is_off_by_default(synth):
     """PLAN.md §15: schedules in dev are off by default (enable with -c mc:nightlyEnabled=true)."""
     _, t = synth
-    t.resource_count_is("AWS::Scheduler::Schedule", 1)
+    t.resource_count_is("AWS::Scheduler::Schedule", 2)  # nightly + telemetry export
     t.has_resource_properties("AWS::Scheduler::Schedule", {"State": "DISABLED", "ScheduleExpression": "cron(0 5 * * ? *)",
                                                            "Target": {"RetryPolicy": {"MaximumRetryAttempts": 0}}})
     t.resource_count_is("AWS::Events::Rule", 0)
@@ -123,8 +123,21 @@ def test_scheduler_role_may_only_start_the_nightly_machine(synth):
     role_id = next(iter(roles))
     policies = t.find_resources("AWS::IAM::Policy", {"Properties": {"Roles": [{"Ref": role_id}]}})
     stmts = [s for p in policies.values() for s in p["Properties"]["PolicyDocument"]["Statement"]]
-    assert {a for s in stmts for a in (s["Action"] if isinstance(s["Action"], list) else [s["Action"]])} == {"states:StartExecution"}
-    assert all(s["Resource"] == {"Ref": next(iter(t.find_resources("AWS::StepFunctions::StateMachine")))} for s in stmts)
+    assert {a for s in stmts for a in (s["Action"] if isinstance(s["Action"], list) else [s["Action"]])} == {
+        "states:StartExecution", "lambda:InvokeFunction"}  # nightly machine + pipeline Lambda (telemetry export)
+    assert not any(s["Resource"] == "*" for s in stmts)
+
+
+def test_telemetry_export_is_scheduled_daily_off_by_default_and_reads_only_the_api_log_group(synth):
+    _, t = synth
+    t.has_resource_properties("AWS::Scheduler::Schedule", {
+        "State": "DISABLED", "ScheduleExpression": "cron(30 0 * * ? *)",
+        "Target": {"Input": '{"profile":"telemetry"}', "RetryPolicy": {"MaximumRetryAttempts": 0}}})
+    fn = next(iter(t.find_resources("AWS::Lambda::Function", {"Properties": {"FunctionName": "mc-dev-data-pipeline"}}).values()))
+    assert fn["Properties"]["Environment"]["Variables"]["MC_API_LOG_GROUP"] == "/aws/lambda/mc-dev-web-api"
+    stmts = [s for p in t.find_resources("AWS::IAM::Policy").values() for s in p["Properties"]["PolicyDocument"]["Statement"]]
+    logs_stmt = [s for s in stmts if "logs:FilterLogEvents" in (s["Action"] if isinstance(s["Action"], list) else [s["Action"]])]
+    assert len(logs_stmt) == 1 and "mc-dev-web-api" in json.dumps(logs_stmt[0]["Resource"])
 
 
 def test_one_nightly_alarm_to_the_alert_topic(synth):
@@ -224,3 +237,4 @@ def test_cdk_json_puts_the_pipeline_behind_the_kill_switch():
     ctx = json.loads((Path(__file__).resolve().parents[1] / "cdk.json").read_text())["context"]
     assert {"mc-dev-data-pipeline", "mc-dev-data-nightly-scheduler"} <= set(ctx["mc:killSwitchRoleNames"])
     assert ctx["mc:nightlyEnabled"] is False  # PLAN.md §15: dev schedules off by default
+
