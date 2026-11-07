@@ -31,7 +31,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## 2026-11-07 (autopilot run 41, task 2)
 
-- **Task:** M3-05 step 3: PG-4 engineering levers (`dashboard/src/LeverLab.tsx`, `levers.ts` replay with quality and recall guardrails) in the simulator card. Typecheck and build green locally. Cost $0.
+- **Task:** M3-05 step 3: PG-4 engineering levers (`dashboard/src/LeverLab.tsx`, `levers.ts` replay with quality and recall guardrails) in the simulator card. PR #116 (`8543fe1`): all checks green, `ci` push and `deploy to dev` green. Cost $0.
 - **Decisions (§8.2):** synthetic single-feature baseline; the AI COGS fan chart stays on the overview. Task 1 (PR #115, `aede06e`): all checks green, `ci` push and `deploy to dev` green.
 
 ## 2026-11-07 (autopilot run 40, task 1)
