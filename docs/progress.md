@@ -14,7 +14,8 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
--4. M3-04 step 4: churn-adjusted revenue (needs M3-03 churn model), then tick M3-04.
+-5. M3-03 step 2: export PT-14 renewal events (many seeds for enough rows) as training data, fit `LogisticChurn` on them, check `ev11_gate` on held-out price changes, write `fct_churn_scores`; then GBM challenger and registry.
+-4. M3-04 step 4: churn-adjusted revenue using the churn model (after M3-03 step 2), then tick M3-04.
 -3. M3-02 step 4: read EV-03 (`leaks.ev03` in the M2 build summary) on real gold once the backfill runs, then add tenant-level and cache-hit series for PT-02/04/06/07 if recall is short.
 -2. M3-01 close-out: run training via ops on real gold, read `ev02.passed` in `backtest.json`, then tick M3-01. Step 5 (promotion) is merged.
 -1. Dispatch ops `start-backfill` (blocked, see Waiting for owner); then item 2.
@@ -23,7 +24,15 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 2. M2-01 close-out: backfill state machine `mc-dev-data-backfill` is deployed (pipeline Lambda 3,008 MB / 4 GB tmp / 15 min). Next: start one execution via the ops workflow (extend it if it can't start executions), check the build fits in 3,008 MB, verify AWS gold = local gold, then tick M2-01. If the build runs out of memory, log it under Waiting for owner (quota increase).
 3. M2-04 remaining: S7 dogfood is complete in code and infra (schedule is off until `mc:nightlyEnabled=true`); PG-8 *Platform FinOps* tab (real AWS bill by lifecycle stage, budget burn-down; shows "awaiting first export" while the FOCUS export is empty), PG-8 freshness and run history are done; PG-8 and S7 are complete once the first backfill runs (M2-04 can then be ticked). The health card (scorecard, lineage) is done. PG-1 and PG-2 are complete (PG-2: cost explorer, margin waterfall table, attribution coverage, margin-vs-usage scatter).
 
+## 2026-11-07 (autopilot run 36, task 2)
+
+- **Task:** M3-03 step 1: `ml/mc_ml/churn` numpy-only L2 logistic churn model (Newton fit, standardised features) and EV-11 scorer (AUC >= 0.75, Brier < 0.25, reliability gap <= 0.10). ml 39 passed, ruff clean. Cost $0. Not yet fitted on simulator renewals.
+- **Decisions (§8.2):** logistic baseline first (PLAN's named baseline); calibration gap threshold 0.10 chosen as the "well calibrated" bar (PLAN gives no number).
+
 ## 2026-11-07 (autopilot run 36, task 1)
+
+- **Update:** PR #107 merged (`92ff097`); all checks green, `ci` push and `deploy to dev` green.
+
 
 - **Task:** M3-04 step 3 (lever replay v1): `calc-spec` routing + caching lever math (integer bps, quality guardrail, safety recall floor 99%), 8 vectors, Python `agents/mc_agents/tools/levers.py`, TypeScript `dashboard/src/levers.ts`; `npm run parity` now checks both vector files. Agents 79 passed, ruff clean, dashboard build clean. Cost $0.
 - **Decisions (§8.2):** linear quality/recall loss in the routed share; a lever failing either guardrail applies zero savings; `allowImportingTsExtensions` in dashboard tsconfig so src can share modules with the Node parity script.
