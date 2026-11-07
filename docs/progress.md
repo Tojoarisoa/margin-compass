@@ -18,7 +18,12 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 0. Wire `MC_FINOPS_FOCUS_GLOB` once the S7 export has data (PR #82 is merged and deployed).
 2. M2-01 close-out: backfill state machine `mc-dev-data-backfill` is deployed (pipeline Lambda 3,008 MB / 4 GB tmp / 15 min). Next: start one execution via the ops workflow (extend it if it can't start executions), check the build fits in 3,008 MB, verify AWS gold = local gold, then tick M2-01. If the build runs out of memory, log it under Waiting for owner (quota increase).
-3. M2-04 remaining: S7 dogfood step 3b (CDK: `MC_API_LOG_GROUP` env + `logs:FilterLogEvents` on the API log group for the pipeline role + a daily Scheduler/state-machine call with profile `telemetry`; Lambda side done; `dogfood.py`, `dogfood.json` publish and PG-8 card done); PG-8 *Platform FinOps* tab (real AWS bill by lifecycle stage, budget burn-down; shows "awaiting first export" while the FOCUS export is empty), PG-8 freshness and run history in the health card, dogfood telemetry (S7). The health card (scorecard, lineage) is done. PG-1 and PG-2 are complete (PG-2: cost explorer, margin waterfall table, attribution coverage, margin-vs-usage scatter).
+3. M2-04 remaining: S7 dogfood is complete in code and infra (schedule is off until `mc:nightlyEnabled=true`); PG-8 *Platform FinOps* tab (real AWS bill by lifecycle stage, budget burn-down; shows "awaiting first export" while the FOCUS export is empty), PG-8 freshness and run history in the health card, dogfood telemetry (S7). The health card (scorecard, lineage) is done. PG-1 and PG-2 are complete (PG-2: cost explorer, margin waterfall table, attribution coverage, margin-vs-usage scatter).
+
+## 2026-11-07 (autopilot run 30, task 1)
+
+- **Task:** M2-04 S7 step 3b (PR #95, `2c4f0eb`): pipeline Lambda gets `MC_API_LOG_GROUP` and `logs:FilterLogEvents` on the API log group only; daily Scheduler schedule `mc-dev-data-telemetry` (00:30 UTC, off by default like nightly) invokes `{"profile": "telemetry"}`. All 12 checks green; `ci` push and `deploy to dev` green. Cost gate +$0 (baseline updated).
+- **Decisions (§8.2):** reuse the nightly scheduler role (already a kill-switch target) instead of a new role, so no foundation/cdk.json change.
 
 ## 2026-11-07 (autopilot run 29, task 3)
 
