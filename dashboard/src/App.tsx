@@ -6,6 +6,7 @@ import type { Snapshot } from "./types";
 
 const Explorer = lazy(() => import("./Explorer"));
 const Health = lazy(() => import("./Health"));
+const Leaks = lazy(() => import("./Leaks"));
 
 function Tile({ label, value, note }: { label: string; value: string; note?: string }) {
   return (
@@ -22,6 +23,7 @@ export function App() {
   const [error, setError] = useState("");
   const [showExplorer, setShowExplorer] = useState(false);
   const [showHealth, setShowHealth] = useState(false);
+  const [showLeaks, setShowLeaks] = useState(false);
 
   useEffect(() => {
     fetch("/publish/latest/pg1.json", { cache: "no-cache" })
@@ -141,6 +143,17 @@ export function App() {
             <Suspense fallback={<p className="muted">Loading explorer…</p>}><Explorer /></Suspense>
           ) : (
             <button onClick={() => setShowExplorer(true)}>Open explorer</button>
+          )}
+        </section>
+      )}
+
+      {snap.m2_kpis && (
+        <section className="card" aria-labelledby="leaks-title">
+          <h2 id="leaks-title">Margin leaks</h2>
+          {showLeaks ? (
+            <Suspense fallback={<p className="muted">Loading leaks…</p>}><Leaks /></Suspense>
+          ) : (
+            <button onClick={() => setShowLeaks(true)}>Open margin leaks</button>
           )}
         </section>
       )}

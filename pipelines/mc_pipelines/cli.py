@@ -196,6 +196,12 @@ def run_m2_dbt(landing: Path, data_root: Path, run_id: str, transform_dir: Path 
         except Exception as exc:  # noqa: BLE001
             summary["churn"] = {"error": str(exc)[:200]}
         summary["published"] = publish_m2_quality(root)
+        try:  # M3-05: PG-3 Margin Leaks data; a publish problem never fails the data build
+            from .publish import publish_pg3
+
+            summary["published"] += publish_pg3(root, run_id)
+        except Exception as exc:  # noqa: BLE001
+            summary["pg3_error"] = str(exc)[:200]
     return summary
 
 

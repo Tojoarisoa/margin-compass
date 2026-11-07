@@ -223,6 +223,38 @@ def margin_forecast(recent: list[tuple], fc: list[tuple]) -> dict:
             "daily_revenue_usd": _money(rev), "points": pts}
 
 
+def build_pg3(gold: Path, run_id: str) -> dict:
+    """PG-3 Margin Leaks data (M3-05): detector output plus the daily LLM cost per feature it ran on (for the timeline)."""
+    g = Path(gold)
+    con = duckdb.connect()
+    leaks = [{"feature_id": r[0], "metric": r[1], "start_date": r[2].isoformat(), "detected_date": r[3].isoformat(),
+              "end_date": r[4].isoformat() if r[4] else None, "impact_usd_per_day": _money(r[5]), "peak_ratio": float(r[6]), "status": r[7]}
+             for r in con.execute(f"""
+        SELECT l.feature_id, l.metric, l.start_date, l.detected_date, l.end_date, l.impact_usd_per_day, l.peak_ratio, l.status
+        FROM read_parquet('{g}/fct_margin_leaks.parquet') l ORDER BY l.impact_usd_per_day DESC, l.start_date, l.feature_id""").fetchall()]
+    daily = [{"date": r[0].isoformat(), "feature_id": r[1], "llm_cost_usd": _money(r[2])}
+             for r in con.execute(f"""
+        SELECT cost_date, feature_id, sum(llm_cost_usd) FROM read_parquet('{g}/fct_unit_cost.parquet')
+        GROUP BY 1, 2 ORDER BY 1, 2""").fetchall()]
+    return {"schema_version": "pg3.v0", "run_id": run_id, "data_label": "synthetic", "leaks": leaks, "daily_llm_cost": daily,
+            "open_leaks": sum(1 for x in leaks if x["status"] == "open"),
+            "open_impact_usd_per_day": _money(sum(Decimal(str(x["impact_usd_per_day"])) for x in leaks if x["status"] == "open"))}
+
+
+def publish_pg3(data_root: Path, run_id: str) -> list[str]:
+    """Write publish/latest/pg3.json when the detector has produced `fct_margin_leaks`; nothing otherwise."""
+    root = Path(data_root)
+    if not (root / "gold" / "fct_margin_leaks.parquet").exists():
+        return []
+    body = json.dumps(build_pg3(root / "gold", run_id), separators=(",", ":"), allow_nan=False).encode()
+    if len(body) > PG2_MAX_BYTES:
+        raise PublishError(f"pg3.json is {len(body)} bytes; the limit is {PG2_MAX_BYTES}")
+    out = root / "publish" / "latest" / "pg3.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_bytes(body)
+    return ["publish/latest/pg3.json"]
+
+
 def publish(data_root: Path, run_id: str, ingest_date: str) -> dict:
     root = Path(data_root)
     snapshot = build_pg1(root / "gold", run_id, ingest_date)
