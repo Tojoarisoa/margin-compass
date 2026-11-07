@@ -14,7 +14,6 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
--2. Check `deploy to dev` of the `ci` push run on `b09e506` (PR #91) first.
 -1. Dispatch ops `start-backfill` (blocked, see Waiting for owner); then item 2.
 
 0. Wire `MC_FINOPS_FOCUS_GLOB` once the S7 export has data (PR #82 is merged and deployed).
@@ -23,7 +22,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## 2026-11-07 (autopilot run 28, task 2)
 
-- **Task:** M2-04 PG-8: health card shows build time and data-through date (PR #91, `b09e506`). Pipelines 73, dashboard build, ruff clean; all checks green; merged to `main`. `ci` push `deploy to dev` was still running at run end: check it first next run.
+- **Task:** M2-04 PG-8: health card shows build time and data-through date (PR #91, `b09e506`). Pipelines 73, dashboard build, ruff clean; all checks green; merged to `main`. `ci` push `deploy to dev` and `deploy to dev` green.
 - **Decisions (§8.2):** none needed. Cost $0.
 
 ## 2026-11-07 (autopilot run 28, task 1)
