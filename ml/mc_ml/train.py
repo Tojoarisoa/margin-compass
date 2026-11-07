@@ -17,7 +17,7 @@ import pyarrow as pa
 import pyarrow.compute as pc
 import pyarrow.parquet as pq
 
-from .cogs_forecast.evaluate import compare
+from .cogs_forecast.evaluate import CANDIDATES, compare
 from .cogs_forecast.seasonal_naive import SEASON, backtest, fit
 from .registry import ModelVersion, Registry, should_promote
 
@@ -97,7 +97,7 @@ def train_cogs_forecaster(gold: Path, models_dir: Path, registry: Registry, arti
     multi_step = {}
     for feature, values in series.items():
         try:
-            multi_step[feature] = compare(values, horizon=HORIZON_DAYS, origins=4, step=7)
+            multi_step[feature] = compare(values, CANDIDATES, horizon=HORIZON_DAYS, origins=4, step=7)
         except ValueError:  # history too short for 4 origins of 30 days
             multi_step[feature] = None
     models, by_feature, rows = {}, {}, []

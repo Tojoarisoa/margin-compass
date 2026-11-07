@@ -11,7 +11,7 @@ from datetime import date, timedelta
 
 import numpy as np
 
-from . import ets, seasonal_naive
+from . import ets, gbm, seasonal_naive
 
 QUANTILES = (("p10", 0.1), ("p50", 0.5), ("p90", 0.9))
 
@@ -27,7 +27,12 @@ def ets_forecaster(dates: list[date], values: list[float], horizon: int) -> list
     return ets.fit(dates, values).forecast(horizon)
 
 
+def gbm_forecaster(dates: list[date], values: list[float], horizon: int) -> list[dict]:
+    return gbm.fit(dates, values).forecast(horizon)
+
+
 BASELINES: dict[str, Forecaster] = {"seasonal_naive": seasonal_naive_forecaster, "ets": ets_forecaster}
+CANDIDATES: dict[str, Forecaster] = {**BASELINES, "gbm": gbm_forecaster}
 
 
 def pinball(actual: float, pred: float, q: float) -> float:
