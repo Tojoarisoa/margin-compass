@@ -189,6 +189,12 @@ def run_m2_dbt(landing: Path, data_root: Path, run_id: str, transform_dir: Path 
             summary["leaks"] = run_detector(root / "gold", landing / "labels" / "patterns.parquet", run_id)
         except Exception as exc:  # noqa: BLE001
             summary["leaks"] = {"error": str(exc)[:200]}
+        try:  # M3-03: churn model (EV-11) on the landing's renewal events; never fails the data build
+            from mc_ml.churn.run import run_churn
+
+            summary["churn"] = run_churn(landing / "labels" / "renewal_events.parquet", root / "gold", run_id)
+        except Exception as exc:  # noqa: BLE001
+            summary["churn"] = {"error": str(exc)[:200]}
         summary["published"] = publish_m2_quality(root)
     return summary
 
