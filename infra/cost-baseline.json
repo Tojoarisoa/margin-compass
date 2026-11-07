@@ -3,8 +3,8 @@
     "mc-dev-data": {
       "AWS::CDK::Metadata": 1,
       "AWS::CloudWatch::Alarm": 1,
-      "AWS::IAM::Policy": 3,
-      "AWS::IAM::Role": 3,
+      "AWS::IAM::Policy": 4,
+      "AWS::IAM::Role": 4,
       "AWS::Lambda::Function": 1,
       "AWS::Logs::LogGroup": 1,
       "AWS::S3::Bucket": 1,
@@ -12,7 +12,7 @@
       "AWS::S3Vectors::Index": 1,
       "AWS::S3Vectors::VectorBucket": 1,
       "AWS::Scheduler::Schedule": 1,
-      "AWS::StepFunctions::StateMachine": 1
+      "AWS::StepFunctions::StateMachine": 2
     },
     "mc-dev-state": {
       "AWS::CDK::Metadata": 1,
