@@ -28,7 +28,7 @@ PT11_START = date(2026, 3, 1)  # b-mid price cut (spec §4)
 CHURN_STREAM = 6  # RNG namespace: tenants [seed, i]; telemetry 3; outcomes 4, 5; churn [seed, 6, i]
 SENSITIVITY = {"imaging": 0.0, "in_vitro_diagnostics": 0.5, "patient_monitoring": 0.5, "surgical": 0.5, "other_devices": 1.0}
 # (assumption) logistic coefficients: intercept, price change %, csat-3, tenure years, sensitivity, unresolved sev-1 rate
-CHURN_BETA = (-3.2, 0.12, -0.9, -0.15, 0.6, 8.0)
+CHURN_BETA = (1.0, 0.4, -10.0, -0.5, 1.2, 60.0)  # tuned so true-probability AUC is about 0.83 and churn about 8% (csat varies little between tenants)
 DOWNGRADE_BETA = (-2.6, 0.10, -0.6, -0.10, 0.5, 6.0)
 PRICE_CHANGE_PCT_RANGE = (0.0, 8.0)  # (assumption) renewal list uplift drawn per tenant
 

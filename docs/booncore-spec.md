@@ -153,7 +153,8 @@ PT-01 is the only pattern in M1 (M1-01).
 
 **Churn at renewal** (logistic; coefficients are *assumptions*, labeled in output):
 `p_churn = σ(β0 + β1·price_change_% + β2·(csat − 3) + β3·tenure_years + β4·segment_sensitivity + β5·unresolved_sev1_rate)`
-Downgrade (plan or seats) is a separate outcome with the same inputs. Every churn and downgrade event is labeled with its true probability, for calibration tests.
+Downgrade (plan or seats) is a separate outcome with the same inputs.
+The churn coefficients are scaled to the spread of the simulated inputs (tenant mean CSAT varies by only about 0.05, unresolved Sev-1 rate by about 0.016), so the true probabilities separate churners with AUC about 0.83 and mean churn is about 8% (changed 2026-11-07 under AGENTS.md §8.2; earlier values gave AUC 0.58, which no model could lift to the EV-11 bar of 0.75). Every churn and downgrade event is labeled with its true probability, for calibration tests.
 
 **Closed loop** (PLAN.md §8.4): approved actions change future days.
 
