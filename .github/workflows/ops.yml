@@ -112,6 +112,19 @@ jobs:
             echo "runs.json:"; echo '```json'; head -c 1500 runs.json; echo; echo '```'
           } | tee -a "$GITHUB_STEP_SUMMARY"
 
+      - name: verify-backfill (row counts)
+        if: inputs.task == 'verify-backfill'
+        run: |
+          set -euo pipefail
+          bucket="$(aws cloudformation describe-stacks --stack-name mc-dev-data --query "Stacks[0].Outputs[?OutputKey=='LakeBucket'].OutputValue" --output text)"
+          mkdir -p lake
+          aws s3 sync "s3://$bucket/gold" lake/gold --only-show-errors
+          aws s3 sync "s3://$bucket/silver" lake/silver --only-show-errors
+          python3 -m venv .venv-counts && .venv-counts/bin/pip install -q duckdb
+          st=0; .venv-counts/bin/python infra/scripts/ops/lake_counts.py lake > counts.txt || st=$?
+          { echo "## Lake row counts (silver and gold)"; echo '```'; cat counts.txt; echo '```'; } | tee -a "$GITHUB_STEP_SUMMARY"
+          exit "$st"
+
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         if: inputs.task == 'record-fixtures' || inputs.task == 'live-eval'
         with: { version: "${{ env.UV_VERSION }}", python-version: "${{ env.PYTHON_VERSION }}" }
