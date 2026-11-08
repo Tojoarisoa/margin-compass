@@ -5,7 +5,8 @@ export interface Evidence { id: string; tool: string; args: Record<string, unkno
 export interface TrailStep { node: string; status: string }
 export interface Job {
   job_id: string;
-  status: "pending" | "running" | "answered" | "unverified" | "budget_exceeded" | "error";
+  status: "pending" | "running" | "answered" | "needs_approval" | "blocked" | "unverified" | "budget_exceeded" | "error";
+  approver?: string;
   question?: string;
   answer?: string;
   evidence?: Evidence[];
@@ -35,7 +36,7 @@ export async function ask(question: string): Promise<string> {
   return data.job_id as string;
 }
 
-const TERMINAL = new Set(["answered", "unverified", "budget_exceeded", "error"]);
+const TERMINAL = new Set(["answered", "needs_approval", "blocked", "unverified", "budget_exceeded", "error"]);
 
 export async function waitForJob(jobId: string, onUpdate: (j: Job) => void, timeoutMs = 90_000): Promise<Job> {
   const started = Date.now();

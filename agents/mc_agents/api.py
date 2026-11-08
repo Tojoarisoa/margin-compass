@@ -158,7 +158,7 @@ def handle_job(path: str, *, table=None) -> dict[str, Any]:
     if not item:
         return _resp(404, {"error": "not found"})
     # Public response: cost, call count and model stay in the job record (ledger), not on the public API.
-    keys = ("status", "question", "answer", "evidence", "verification", "degradation", "trail")
+    keys = ("status", "question", "answer", "evidence", "verification", "degradation", "trail", "approver")
     return _resp(200, {"job_id": job_id, **{k: item[k] for k in keys if k in item}})
 
 

@@ -16,7 +16,7 @@ const PERSONAS: Record<string, string[]> = {
 };
 
 const STATUS_TEXT: Record<Job["status"], string> = {
-  pending: "Queued…", running: "Thinking…", answered: "", unverified: "Answer withheld", budget_exceeded: "Unavailable right now", error: "Error",
+  pending: "Queued…", running: "Thinking…", answered: "", needs_approval: "", blocked: "Blocked by a guardrail", unverified: "Answer withheld", budget_exceeded: "Unavailable right now", error: "Error",
 };
 
 const STEP_LABEL: Record<string, string> = {
@@ -31,6 +31,27 @@ export function AgentSteps({ trail }: { trail?: Job["trail"] }) {
         <li key={`${t.node}-${i}`}>{STEP_LABEL[t.node] ?? "Look up the figures"}<span className="muted"> · {t.status}</span></li>
       ))}
     </ol>
+  );
+}
+
+const ROLE_LABEL: Record<string, string> = { revops_lead: "RevOps lead", cfo: "CFO", finance_director: "Finance director" };
+
+/** Visitor sandbox (PLAN.md §9.3): the decision stays in this browser; nothing is sent or stored. */
+export function ApprovalBox({ approver }: { approver?: string }) {
+  const [decision, setDecision] = useState<"approved" | "rejected" | null>(null);
+  const role = ROLE_LABEL[approver ?? ""] ?? (approver || "the approver");
+  return (
+    <div className="approval" role="group" aria-label="Approval">
+      <p>This answer proposes an action. It needs approval from <strong>{role}</strong> before anything changes.</p>
+      {decision ? (
+        <p className="muted">You marked it {decision} (sandbox only: this stays in your browser and changes no data).</p>
+      ) : (
+        <>
+          <button type="button" onClick={() => setDecision("approved")}>Approve</button>{" "}
+          <button type="button" className="chip" onClick={() => setDecision("rejected")}>Reject</button>
+        </>
+      )}
+    </div>
   );
 }
 
@@ -88,6 +109,7 @@ export function AskPanel() {
         {job?.answer && (
           <div className="answer">
             <p>{job.answer}</p>
+            {job.status === "needs_approval" && <ApprovalBox key={job.job_id} approver={job.approver} />}
             {job.evidence && job.evidence.length > 0 && (
               <details>
                 <summary>Evidence ({job.evidence.length})</summary>

@@ -32,6 +32,11 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 2. M2-01 close-out: backfill state machine `mc-dev-data-backfill` is deployed (pipeline Lambda 3,008 MB / 4 GB tmp / 15 min). Next: start one execution via the ops workflow (extend it if it can't start executions), check the build fits in 3,008 MB, verify AWS gold = local gold, then tick M2-01. If the build runs out of memory, log it under Waiting for owner (quota increase).
 3. M2-04 remaining: S7 dogfood is complete in code and infra (schedule is off until `mc:nightlyEnabled=true`); PG-8 *Platform FinOps* tab (real AWS bill by lifecycle stage, budget burn-down; shows "awaiting first export" while the FOCUS export is empty), PG-8 freshness and run history are done; PG-8 and S7 are complete once the first backfill runs (M2-04 can then be ticked). The health card (scorecard, lineage) is done. PG-1 and PG-2 are complete (PG-2: cost explorer, margin waterfall table, attribution coverage, margin-vs-usage scatter).
 
+## 2026-11-08 (autopilot run 61, task 2)
+
+- **Task:** M4-06 PG-6 step 4: ask panel shows the approver role and a sandbox Approve/Reject for `needs_approval` jobs (stays in the browser, PLAN §9.3); `needs_approval`/`blocked` now end polling (before, they timed out); public job adds `approver`. Agents 213 passed, ruff clean, dashboard build clean. Cost $0.
+- **Decisions (§8.2):** no public approve API (anonymous callers would claim roles); owner-mode approvals wait for Cognito. M4-06 not ticked (live graph view remains).
+
 ## 2026-11-08 (autopilot run 61)
 
 - **Task:** finished PR #151 (PG-6 step 3, ask panel shows agent steps from `trail`): all 12 checks green on head `ef91f9f`, fast-forwarded to `main` (no denial this time); `ci` push and `deploy to dev` green. Cost $0.

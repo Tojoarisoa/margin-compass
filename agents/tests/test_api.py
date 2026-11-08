@@ -153,3 +153,10 @@ def test_graph_flag_serves_the_job_through_the_graph(table, gold, monkeypatch):
     assert not {"cost_line", "cost_usd", "llm_calls", "model"} & set(body)
     stored = table.get_item(Key={"PK": f"JOB#{job_id}", "SK": "JOB"})["Item"]
     assert stored["cost_line"].startswith("Cost of this answer") and stored["llm_calls"] == 2
+
+
+def test_public_job_shows_the_approver_role_only(table):
+    table.put_item(Item={"PK": "JOB#" + "a" * 32, "SK": "JOB", "status": "needs_approval", "question": "q", "answer": "a",
+                         "approver": "cfo", "cost_usd": "0.01", "model": "m"})
+    body = json.loads(api.handle_job("/api/jobs/" + "a" * 32, table=table)["body"])
+    assert body["approver"] == "cfo" and not {"cost_usd", "model"} & set(body)
