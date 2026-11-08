@@ -8,6 +8,7 @@ dependencies = [
     "duckdb>=1.1",
     "boto3>=1.40",
     "pyyaml>=6",  # metric registry (mc_pipelines.metrics), used by the kpi tool
+    "mc-rag",  # retrieval tool (M4-02)
 ]
 
 [project.scripts]
@@ -23,6 +24,7 @@ dev = [
 
 [tool.uv.sources]
 mc-pipelines = { path = "../pipelines", editable = true }
+mc-rag = { path = "../rag", editable = true }
 booncore-simulator = { path = "../simulator", editable = true }
 
 [build-system]

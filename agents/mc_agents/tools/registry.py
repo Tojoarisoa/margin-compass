@@ -36,15 +36,22 @@ TOOLS: dict[str, ToolSpec] = {t.name: t for t in (
 )}
 
 
+def search_knowledge_spec(**deps: Any) -> ToolSpec:
+    from mc_agents.tools.retrieval import make_search_knowledge
+    return ToolSpec("search_knowledge", "1", "Tenant-filtered hybrid retrieval over contracts, policies, playbooks and schema cards.",
+                    make_search_knowledge(**deps))
+
+
 def catalog() -> list[dict[str, Any]]:
     return [{"name": t.name, "version": t.version, "description": t.description, "read_only": t.read_only}
             for t in TOOLS.values()]
 
 
-def call(name: str, args: dict[str, Any], ledger: Ledger) -> Evidence:
-    spec = TOOLS.get(name)
+def call(name: str, args: dict[str, Any], ledger: Ledger, extra: dict[str, ToolSpec] | None = None) -> Evidence:
+    """`extra` holds tools that need runtime dependencies (for example `search_knowledge`, which needs a store)."""
+    spec = TOOLS.get(name) or (extra or {}).get(name)
     if spec is None:
-        raise ToolError(f"unknown tool {name!r}; available: {sorted(TOOLS)}")
+        raise ToolError(f"unknown tool {name!r}; available: {sorted({*TOOLS, *(extra or {})})}")
     if not isinstance(args, dict):
         raise ToolError("tool arguments must be an object")
     try:

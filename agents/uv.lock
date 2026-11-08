@@ -855,6 +855,7 @@ dependencies = [
     { name = "boto3" },
     { name = "duckdb" },
     { name = "langgraph" },
+    { name = "mc-rag" },
     { name = "pyyaml" },
 ]
 
@@ -871,6 +872,7 @@ requires-dist = [
     { name = "boto3", specifier = ">=1.40" },
     { name = "duckdb", specifier = ">=1.1" },
     { name = "langgraph", specifier = "==1.2.19" },
+    { name = "mc-rag", editable = "../rag" },
     { name = "pyyaml", specifier = ">=6" },
 ]
 
