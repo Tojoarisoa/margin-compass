@@ -14,7 +14,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
--10. M4-04 step 3: Bedrock `cachePoint` for stable prompts (re-record fixtures via ops), semantic cache (optional), then tick M4-04. Then M4-05. (Cache is wired into the API; graph `run.ask` is not yet served by the API.)
+-10. M4-04 step 3b: turn `cache_prompt` on for the stable prompts in the graph/analyst and re-record fixtures via ops; semantic cache (optional); then tick M4-04. Then M4-05. (Cache is wired into the API; graph `run.ask` is not yet served by the API.)
 -9. M4-03 is ticked (run graph + DynamoStore merged). Next: M4-04 per PLAN.md §17 (wire `run.ask` into the API/worker with `DynamoStore` on the core table; LLM supervisor for ambiguous routes).
 -8. M4-02 is ticked (guarded SQL `query_gold` merged). Next: M4-03 (agent graph) per PLAN.md §17; EV-05 golden SQL questions belong to M4-05.
 -7. M4-01 close-out: CLI and `mc-rag eval` gate are done; run `mc-rag eval --embedder titan` via ops when convenient, then tick M4-01. Next task: M4-02 step 2 (retrieval tool wrapper, ROI tool, then guarded SQL/EV-05) on top of `tools/registry.py`.
@@ -27,6 +27,12 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 0. Wire `MC_FINOPS_FOCUS_GLOB` once the S7 export has data (PR #82 is merged and deployed).
 2. M2-01 close-out: backfill state machine `mc-dev-data-backfill` is deployed (pipeline Lambda 3,008 MB / 4 GB tmp / 15 min). Next: start one execution via the ops workflow (extend it if it can't start executions), check the build fits in 3,008 MB, verify AWS gold = local gold, then tick M2-01. If the build runs out of memory, log it under Waiting for owner (quota increase).
 3. M2-04 remaining: S7 dogfood is complete in code and infra (schedule is off until `mc:nightlyEnabled=true`); PG-8 *Platform FinOps* tab (real AWS bill by lifecycle stage, budget burn-down; shows "awaiting first export" while the FOCUS export is empty), PG-8 freshness and run history are done; PG-8 and S7 are complete once the first backfill runs (M2-04 can then be ticked). The health card (scorecard, lineage) is done. PG-1 and PG-2 are complete (PG-2: cost explorer, margin waterfall table, attribution coverage, margin-vs-usage scatter).
+
+## 2026-11-08 (autopilot run 53, task 1)
+
+- **Task:** M4-04 step 3a: `LLMRequest.cache_prompt` (default off) adds Bedrock `cachePoint` after the system prompt and tool list; hashes of existing fixtures unchanged. Agents 190 passed, ruff clean. Cost $0.
+- **Result:** PR #141 (`ef54ef0`) merged, all checks green (`attribution` fixed by removing the proxy footer via MCP), `ci` push and `deploy to dev` green.
+- **Decisions (§8.2):** opt-in so no re-record yet; turning it on in the graph needs an ops `record-fixtures` re-run (Haiku 4.5 default). M4-04 not ticked.
 
 ## 2026-11-08 (autopilot run 52, task 2)
 
