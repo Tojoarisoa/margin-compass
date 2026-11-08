@@ -11,6 +11,7 @@ Modes: replay (CI, $0), record (live Bedrock, writes fixtures), live (live, no f
 from __future__ import annotations
 
 import json
+import time
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
@@ -48,7 +49,9 @@ def run_eval(gold_dir: Path, model_key: str, mode: str = "replay", eval_dir: Pat
             client = RecordingLLM(live_client or BedrockLLM(), fixture)
         else:
             client = live_client or BedrockLLM()
+        t0 = time.perf_counter()
         res = answer_question(q["question"], gold_dir=gold_dir, client=client, model_key=model_key)
+        latency_s = round(time.perf_counter() - t0, 3)
         if mode == "record":
             client.save({"question_id": q["id"], "model_id": spec.target, "prompt_version": PROMPT_VERSION})
 
@@ -63,11 +66,14 @@ def run_eval(gold_dir: Path, model_key: str, mode: str = "replay", eval_dir: Pat
             "budget": res.llm_calls <= MAX_LLM_CALLS_PER_QUESTION and res.cost_usd <= MAX_USD_PER_QUESTION,
         }
         rows.append({"id": q["id"], "status": res.status, "checks": checks, "passed": all(checks.values()),
-                     "missing_figures": missing, "llm_calls": res.llm_calls, "cost_usd": str(res.cost_usd),
+                     "missing_figures": missing, "llm_calls": res.llm_calls, "cost_usd": str(res.cost_usd), "latency_s": latency_s,
                      "input_tokens": res.input_tokens, "output_tokens": res.output_tokens,
                      "tool_calls": res.tool_calls, "answer": res.answer, "cost_line": res.cost_line})
     total = sum((Decimal(r["cost_usd"]) for r in rows), Decimal(0))
+    from . import ev10
+
     return {
+        "ev10": ev10.score([(float(r["cost_usd"]), r["latency_s"]) for r in rows]),
         "set": "m1-06", "model": spec.target, "mode": mode, "prompt_version": PROMPT_VERSION,
         "passed": sum(r["passed"] for r in rows), "total": len(rows),
         "rates": {k: sum(r["checks"][k] for r in rows) / len(rows) for k in ("tool", "grounded", "correct", "budget")},

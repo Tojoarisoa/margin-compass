@@ -20,3 +20,10 @@ def test_single_slow_outlier_in_20_is_not_p95():
 
 def test_empty_fails_closed():
     assert not ev10.score([])["passed"]
+
+
+def test_eval_report_carries_ev10(gold):
+    from mc_agents.evaluate import run_eval
+
+    r = run_eval(gold, "haiku-4-5")
+    assert r["ev10"]["n"] == r["total"] and all("latency_s" in q for q in r["questions"])
