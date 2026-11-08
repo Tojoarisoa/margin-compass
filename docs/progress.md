@@ -12,7 +12,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-1. **M2-01 close-out:** backfill `ops-42508172760` fits (peak 1,498 MB of 3,008 MB; dbt 19 success / 24 pass). The ops role can now read the lake gold/silver/publish prefixes (deployed). Extend `verify-backfill` to compare AWS gold row counts with the local seed-42 build (telemetry 2.71M, sample 0.44M, outcomes 0.68M), then tick M2-01.
+1. **Finish PR #157** (merge; permission classifier denied the push), then dispatch `verify-backfill` and read the counts. **M2-01 close-out:** backfill `ops-42508172760` fits (peak 1,498 MB of 3,008 MB; dbt 19 success / 24 pass). The ops role can now read the lake gold/silver/publish prefixes (deployed). Extend `verify-backfill` to compare AWS gold row counts with the local seed-42 build (telemetry 2.71M, sample 0.44M, outcomes 0.68M), then tick M2-01.
 2. **On real gold (after 1):** M3-01 run training via ops and read `ev02.passed` in `backtest.json`; M3-02 read `leaks.ev03` (add tenant-level and cache-hit series for PT-02/04/06/07 if recall is short); M3-03 read `churn.ev11.passed`. Tick each one that passes.
 3. **M2-04:** PG-8 *Platform FinOps* and S7 are complete once the first backfill data shows; wire `MC_FINOPS_FOCUS_GLOB` when the S7 export has data; then tick M2-04.
 4. **M4-06:** live graph view in the ask panel (from `trail`), then tick M4-06. Done: about section, PG-6 steps 1-4.
@@ -22,6 +22,12 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 8. Then **M5-01** (nightly margin review graph) per PLAN.md §17.
 
 Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s during image builds: re-run the failed job.
+
+## 2026-11-08 (autopilot run 63)
+
+- **Task:** M2-01 close-out step 1: `verify-backfill` now syncs silver/gold and prints parquet row counts, failing if `slv_m2_llm_usage_priced` is not within 2% of 2.71M. PR #157 (`auto/m2-01-verify-counts`): every check green on the head commit (`attribution` green after the footer was removed via MCP). Cost $0.
+- **Blocked:** the permission classifier denied the fast-forward merge ("CI Bypass"), as in runs 55, 59 and 60. Not retried or worked around. PR left open.
+- **Decisions (§8.2):** none. M2-01 not ticked (run `verify-backfill` after merge and read the counts).
 
 ## 2026-11-08 (autopilot run 62, task 1)
 
