@@ -15,7 +15,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 ## Next
 
 -12. Finish PR #145 (`mc-agents ev`, EV-10 step; CI green, merge denied). Then M4-05: live EV-05 once the analyst generates SQL, tick M4-05.
--11. M4-05 step 4 is merged (`mc-agents ev`). Remaining: EV-10 (cost-per-answer, needs recorded fixtures via ops) and live-model EV-05/07, then tick M4-05. Then M4-06. Flaky: github.com 504s during image builds (re-run failed job).
+-11. M4-05 steps 4-5 merged (`mc-agents ev`, EV-10 scorer). Remaining: feed EV-10 from recorded-run samples (ops), live-model EV-05/07, then tick M4-05. Then M4-06. Flaky: github.com 504s during image builds (re-run failed job).
 -10. M4-04 step 3b: turn `cache_prompt` on for the stable prompts in the graph/analyst and re-record fixtures via ops; semantic cache (optional); then tick M4-04. Then M4-05. (Cache is wired into the API; graph `run.ask` is not yet served by the API.)
 -9. M4-03 is ticked (run graph + DynamoStore merged). Next: M4-04 per PLAN.md §17 (wire `run.ask` into the API/worker with `DynamoStore` on the core table; LLM supervisor for ambiguous routes).
 -8. M4-02 is ticked (guarded SQL `query_gold` merged). Next: M4-03 (agent graph) per PLAN.md §17; EV-05 golden SQL questions belong to M4-05.
@@ -30,7 +30,13 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 2. M2-01 close-out: backfill state machine `mc-dev-data-backfill` is deployed (pipeline Lambda 3,008 MB / 4 GB tmp / 15 min). Next: start one execution via the ops workflow (extend it if it can't start executions), check the build fits in 3,008 MB, verify AWS gold = local gold, then tick M2-01. If the build runs out of memory, log it under Waiting for owner (quota increase).
 3. M2-04 remaining: S7 dogfood is complete in code and infra (schedule is off until `mc:nightlyEnabled=true`); PG-8 *Platform FinOps* tab (real AWS bill by lifecycle stage, budget burn-down; shows "awaiting first export" while the FOCUS export is empty), PG-8 freshness and run history are done; PG-8 and S7 are complete once the first backfill runs (M2-04 can then be ticked). The health card (scorecard, lineage) is done. PG-1 and PG-2 are complete (PG-2: cost explorer, margin waterfall table, attribution coverage, margin-vs-usage scatter).
 
-## 2026-11-08 (autopilot run 56)
+## 2026-11-08 (autopilot run 56, task 2)
+
+- **Task:** M4-05 step 5: `agents/mc_agents/ev10.py`, EV-10 scorer (mean $ per query <= $0.01, nearest-rank p95 latency <= 20 s, empty fails closed). Agents 210 passed, ruff clean. Cost $0.
+- **Result:** see PR from `auto/m4-05-ev10-scorer`.
+- **Decisions (§8.2):** scorer only; feeding it recorded-run cost/latency samples comes next. M4-05 not ticked.
+
+## 2026-11-08 (autopilot run 56, task 1)
 
 - **Task:** finished open PR #145 (`b48726d`): all 12 checks green on head, fast-forwarded to `main`; `ci` push and `deploy to dev` green. Push to `main` worked this time (no denial). Cost $0.
 - **Decisions (§8.2):** none. M4-05 not ticked (live-model EV-05/07 scoring and fixture re-record still open).
