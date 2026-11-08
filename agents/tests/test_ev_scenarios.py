@@ -64,3 +64,13 @@ def test_ev07_over_the_real_graph_with_scripted_clients():
     # a model that asks for a tool outside the scenario's set is flagged
     bad = ev.ev07(ev.graph_runner(lambda sc: Script(use("price_plan", PLAN), [{"text": "x"}])), scs[1:2])
     assert bad["failed"] == ["gov-01"]
+
+
+def test_cli_ev_runs_all_scorers(gold, capsys):
+    import json
+
+    from mc_agents.cli import main
+
+    assert main(["--gold", str(gold), "ev"]) == 0
+    out = json.loads(capsys.readouterr().out)
+    assert out == {"ev05": True, "ev07": True, "ev08": True, "ev13": True, "passed": True}

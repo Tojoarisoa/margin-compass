@@ -2,6 +2,7 @@
 
   uv run mc-agents ask "What was bc-t0003's AI gross margin in September 2025?"   # live Bedrock
   uv run mc-agents eval                         # replay the M1-06 set ($0, no network)
+  uv run mc-agents ev                           # EV-05 harness self-check + EV-07/08/13 ($0, no network)
   uv run mc-agents eval --mode record           # live Bedrock: re-record fixtures (costs < $0.01)
 
 Gold defaults to ../data/local/gold (run the pipeline first).
@@ -21,6 +22,23 @@ from .evaluate import run_eval
 from .llm import BedrockLLM
 
 
+def run_ev(gold: Path) -> dict:
+    """Deterministic scorers. EV-05 here replays each golden question's reference SQL (harness check;
+    scoring the live model needs the analyst to generate SQL). EV-07 uses the supervisor fast path."""
+    from . import ev05, ev_scenarios
+    from .tools.sql_guard import make_query_gold
+
+    refs = {q["question"]: q["reference_sql"] for q in ev05.load_golden()}
+    out = {
+        "ev05": ev05.score(make_query_gold(gold), lambda question: refs[question]),
+        "ev07": ev_scenarios.ev07(),
+        "ev08": ev_scenarios.ev08(),
+        "ev13": ev_scenarios.ev13(),
+    }
+    out["passed"] = all(v["passed"] for v in out.values())
+    return out
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="mc-agents")
     p.add_argument("--gold", type=Path, default=Path("../data/local/gold"))
@@ -31,6 +49,8 @@ def main(argv: list[str] | None = None) -> int:
     ev = sub.add_parser("eval")
     ev.add_argument("--mode", choices=("replay", "record", "live"), default="replay")
     ev.add_argument("--out", type=Path, default=None)
+    evp = sub.add_parser("ev")
+    evp.add_argument("--out", type=Path, default=None)
     args = p.parse_args(argv)
     logging.basicConfig(level=logging.WARNING, stream=sys.stderr)
 
@@ -39,6 +59,14 @@ def main(argv: list[str] | None = None) -> int:
         print(r.answer)
         print(r.cost_line)
         return 0 if r.status == "answered" else 1
+    if args.cmd == "ev":
+        report = run_ev(args.gold)
+        text = json.dumps(report, indent=2)
+        if args.out:
+            args.out.parent.mkdir(parents=True, exist_ok=True)
+            args.out.write_text(text + "\n")
+        print(json.dumps({k: (v if k == "passed" else v.get("passed")) for k, v in report.items()}))
+        return 0 if report["passed"] else 1
     report = run_eval(args.gold, args.model, args.mode)
     text = json.dumps(report, indent=2)
     if args.out:
