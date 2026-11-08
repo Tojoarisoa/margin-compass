@@ -23,7 +23,9 @@ import uuid
 from pathlib import Path
 from typing import Any
 
+from . import cache
 from .analyst import PROMPT_VERSION, answer_question
+from .approvals import DynamoStore
 from .budget import BudgetExceeded
 from .config import DEFAULT_ANALYST_MODEL, MAX_USD_PER_QUESTION, MODELS
 from .guard import RateLimited, RateLimiter, SpendGuard
@@ -34,6 +36,8 @@ GOLD_DIR = Path("/tmp/gold")
 GOLD_FILES = ("fct_tenant_margin.parquet",)
 MAX_QUESTION_CHARS = 300
 MAX_BODY_BYTES = 2_048
+CACHE_TTL_S = 3_600
+_CACHED_KEYS = ("status", "answer", "cost_line", "model", "evidence", "verification", "degradation")
 _JOB_ID = re.compile(r"^[0-9a-f]{32}$")
 _CONTROL = re.compile(r"[\x00-\x08\x0b-\x1f\x7f]")
 _gold_etags: dict[str, str] = {}
@@ -154,7 +158,7 @@ def handle_job(path: str, *, table=None) -> dict[str, Any]:
     if not item:
         return _resp(404, {"error": "not found"})
     # Public response: cost, call count and model stay in the job record (ledger), not on the public API.
-    keys = ("status", "question", "answer", "evidence", "verification")
+    keys = ("status", "question", "answer", "evidence", "verification", "degradation")
     return _resp(200, {"job_id": job_id, **{k: item[k] for k in keys if k in item}})
 
 
@@ -169,6 +173,11 @@ def run_job(job_id: str, *, table=None, gold_dir: Path = GOLD_DIR, client=None, 
     try:
         if sync:
             sync_gold(os.environ["LAKE_BUCKET"], gold_dir)
+        store, version = DynamoStore(table, CACHE_TTL_S), "|".join(f"{k}={v}" for k, v in sorted(_gold_etags.items()))
+        hit = cache.lookup(store, "public", item["question"], version, ttl_s=CACHE_TTL_S)
+        if hit is not None:  # an identical verified answer on the same gold data: no model call, no spend
+            update = {k: hit[k] for k in _CACHED_KEYS if k in hit} | {"llm_calls": 0, "cost_usd": "0"}
+            return _finish(table, key, job_id, update)
         res = answer_question(item["question"], gold_dir=gold_dir, client=client or BedrockLLM(),
                               model_key=os.environ.get("MC_MODEL", DEFAULT_ANALYST_MODEL), spend=SpendGuard(table))
         evidence = [{"id": e["id"], "tool": e["tool"], "args": e["args"], "result": e["result"]} for e in res.evidence]
@@ -176,11 +185,16 @@ def run_job(job_id: str, *, table=None, gold_dir: Path = GOLD_DIR, client=None, 
                   "model": MODELS[os.environ.get("MC_MODEL", DEFAULT_ANALYST_MODEL)].label,
                   "evidence": json.loads(json.dumps(evidence, default=str)), "cost_usd": str(res.cost_usd),
                   "verification": json.loads(json.dumps(res.verification, default=str))}
+        cache.store_answer(store, "public", item["question"], version, update)
     except BudgetExceeded as exc:
         update = {"status": "budget_exceeded", "answer": "The analyst is unavailable right now. Please try again later.", "error": str(exc)[:200]}
     except Exception as exc:  # noqa: BLE001 - the job must end in a terminal state
         log.error("job_failed", extra={"fields": {"job_id": job_id, "error": type(exc).__name__}})
         update = {"status": "error", "answer": "Something went wrong while answering.", "error": type(exc).__name__}
+    return _finish(table, key, job_id, update)
+
+
+def _finish(table, key: dict[str, str], job_id: str, update: dict[str, Any]) -> str:
     names = {f"#{k}": k for k in update}
     table.update_item(Key=key, UpdateExpression="SET " + ", ".join(f"#{k} = :{k}" for k in update),
                       ExpressionAttributeNames=names, ExpressionAttributeValues={f":{k}": v for k, v in update.items()})

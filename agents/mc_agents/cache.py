@@ -1,6 +1,6 @@
 """Exact answer cache (M4-04, PLAN.md §8).
 
-Only `verified` answers are cached (a withheld, blocked or approval-gated result never is). The key is
+Only verified answers (graph `verified`, analyst `answered`) are cached (a withheld, blocked or approval-gated result never is). The key is
 tenant + normalised question + data version, so a new gold build or another tenant never hits an old entry.
 A hit is labelled `cached` with its age, so the console shows the answer is not freshly computed. Entries
 expire after `ttl_s`. The store is dict-like (DynamoDB core table with ttl later); no prompt text is logged.
@@ -15,6 +15,8 @@ from collections.abc import Callable
 from typing import Any
 
 from .approvals import Store
+
+CACHEABLE = ("verified", "answered")  # graph / analyst statuses that passed verification
 
 
 def cache_key(tenant: str, question: str, data_version: str) -> str:
@@ -36,7 +38,7 @@ def lookup(store: Store, tenant: str, question: str, data_version: str, *, ttl_s
 
 def store_answer(store: Store, tenant: str, question: str, data_version: str, out: dict[str, Any], *,
                  clock: Callable[[], float] = time.time) -> bool:
-    if out.get("status") != "verified":
+    if out.get("status") not in CACHEABLE:
         return False
     store.put(cache_key(tenant, question, data_version), {"at": clock(), "out": dict(out)})
     return True

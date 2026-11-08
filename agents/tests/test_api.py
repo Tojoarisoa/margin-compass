@@ -101,6 +101,22 @@ def test_worker_answers_records_spend_and_never_runs_twice(table, gold):
     assert all(v > 0 for v in spent.values())
 
 
+def test_identical_question_is_served_from_cache_without_a_model_call(table, gold):
+    ids = []
+    for _ in range(2):
+        r = api.handle_ask(_event({"question": Q["q1"]["question"]}), None, table=table, invoke=lambda *a: None)
+        ids.append(json.loads(r["body"])["job_id"])
+    assert api.run_job(ids[0], table=table, gold_dir=gold, client=good_answer(Q, "q1"), sync=False) == "answered"
+    spent = SpendGuard(table).spent()
+    second = good_answer(Q, "q1")
+    assert api.run_job(ids[1], table=table, gold_dir=gold, client=second, sync=False) == "answered"
+    assert second.requests == [] and SpendGuard(table).spent() == spent
+    body = json.loads(api.handle_job(f"/api/jobs/{ids[1]}", table=table)["body"])
+    assert body["degradation"] == "cached" and "[E1]" in body["answer"] and body["evidence"]
+    stored = table.get_item(Key={"PK": f"JOB#{ids[1]}", "SK": "JOB"})["Item"]
+    assert stored["llm_calls"] == 0 and "no LLM call" in stored["cost_line"]
+
+
 def test_worker_stops_when_the_shared_budget_runs_out(table, gold):
     SpendGuard(table).record(Decimal("0.0999"))
     table.put_item(Item={"PK": "JOB#" + "a" * 32, "SK": "JOB", "status": "pending", "question": Q["q1"]["question"]})
