@@ -19,6 +19,21 @@ const STATUS_TEXT: Record<Job["status"], string> = {
   pending: "Queued…", running: "Thinking…", answered: "", unverified: "Answer withheld", budget_exceeded: "Unavailable right now", error: "Error",
 };
 
+const STEP_LABEL: Record<string, string> = {
+  route: "Understand the question", specialist: "Look up the figures", verify: "Check against the evidence", respond: "Write the answer",
+};
+
+export function AgentSteps({ trail }: { trail?: Job["trail"] }) {
+  if (!trail || trail.length === 0) return null;
+  return (
+    <ol className="steps" aria-label="Steps taken">
+      {trail.map((t, i) => (
+        <li key={`${t.node}-${i}`}>{STEP_LABEL[t.node] ?? "Look up the figures"}<span className="muted"> · {t.status}</span></li>
+      ))}
+    </ol>
+  );
+}
+
 export function AskPanel() {
   const [question, setQuestion] = useState("");
   const [job, setJob] = useState<Job | null>(null);
@@ -69,6 +84,7 @@ export function AskPanel() {
       <div aria-live="polite">
         {error && <p className="error">{error}</p>}
         {job && STATUS_TEXT[job.status] && <p className="muted">{STATUS_TEXT[job.status]}</p>}
+        <AgentSteps trail={job?.trail} />
         {job?.answer && (
           <div className="answer">
             <p>{job.answer}</p>

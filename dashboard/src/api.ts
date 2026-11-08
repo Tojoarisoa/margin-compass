@@ -2,12 +2,14 @@
 // and for POST it needs the SHA-256 of the body in x-amz-content-sha256 (VER-08).
 
 export interface Evidence { id: string; tool: string; args: Record<string, unknown>; result: Record<string, unknown> }
+export interface TrailStep { node: string; status: string }
 export interface Job {
   job_id: string;
   status: "pending" | "running" | "answered" | "unverified" | "budget_exceeded" | "error";
   question?: string;
   answer?: string;
   evidence?: Evidence[];
+  trail?: TrailStep[];
 }
 
 async function sha256Hex(text: string): Promise<string> {
