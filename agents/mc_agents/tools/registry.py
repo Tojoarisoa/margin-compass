@@ -42,6 +42,12 @@ def search_knowledge_spec(**deps: Any) -> ToolSpec:
                     make_search_knowledge(**deps))
 
 
+def query_gold_spec(gold_dir: Any) -> ToolSpec:
+    from mc_agents.tools.sql_guard import make_query_gold
+    return ToolSpec("query_gold", "1", "Guarded read-only SELECT over the gold marts (allow-listed tables, row cap).",
+                    make_query_gold(gold_dir))
+
+
 def catalog() -> list[dict[str, Any]]:
     return [{"name": t.name, "version": t.version, "description": t.description, "read_only": t.read_only}
             for t in TOOLS.values()]

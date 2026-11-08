@@ -1007,7 +1007,7 @@ Each milestone ends with a demoable increment and exit criteria. Effort assumes 
 ### M4: Knowledge & Agents (~3 weeks), **portfolio-ready cut line**
 
 - [ ] M4-01 Corpus: policies (including the compliance-constraint policy), discount-authority matrix, contract library, playbooks, schema and metric cards; hybrid retrieval (EV-04)
-- [ ] M4-02 Tool layer (metrics, guarded SQL, pricing engine, replay simulator, churn scoring, ROI, retrieval)
+- [x] M4-02 Tool layer (metrics, guarded SQL, pricing engine, replay simulator, churn scoring, ROI, retrieval)
 - [ ] M4-03 AG-01…AG-10 online graph with fast path, verifier (including guardrail and authority checks), checkpoints, HITL
 - [ ] M4-04 Provider abstraction, tiering, caching, in-code budget, rate limits
 - [ ] M4-05 Evaluation harness: 30 golden scenarios covering all jobs-to-be-done; EV-05…EV-08, EV-10, EV-13
@@ -1195,3 +1195,4 @@ Status: all ADRs are written up in `docs/adr/` and **accepted** (ADR-017 on 2026
 | 2026-11-07 | 0.4 | M3-04 done (**auto-decided under AGENTS.md §8.2**): `calc-spec/` holds three shared specs with 24 vectors (pricing engine, lever replay for routing and caching with quality and safety-recall guardrails, churn-adjusted revenue); each is implemented in Python (`agents/mc_agents/tools`) and TypeScript (`dashboard/src`) and checked exactly by `npm run parity` and the agents tests in CI (EV-12 passes). Options for the traffic replay scope: routing and caching levers only (chosen, matches the lever catalogue) vs full request-level replay (needs M2 telemetry in the browser, deferred). Wiring the Python tools into the agent tool layer is M4-02; the PG-4 UI is M3-05. Cost $0. |
 | 2026-11-07 | 0.4 | M3-05 PG-5 Cost–Quality Lab (**auto-decided under AGENTS.md §8.2**): `CostQualityLab.tsx` sweeps routing share 0–100% with the shared lever engine and plots the cost-vs-quality frontier, marking points blocked by the quality guardrail or the 99% safety-recall floor, with the best allowed point. Options: a synthetic one-feature sweep in the browser (chosen) vs real per-feature model data (needs backfill). Model-by-model points and RCA narrative/release annotations wait for M4. Cost $0. |
 | 2026-11-08 | 0.4 | M4-02 step 2 (**auto-decided under AGENTS.md §8.2**): `roi_multiple` tool (KPI-13 ROI in bps and payback months, integer arithmetic) added to the registry. Retrieval wrapper and guarded SQL (EV-05) remain. Cost $0. |
+| 2026-11-08 | 0.4 | M4-02 step 4 (**auto-decided under AGENTS.md §8.2**): guarded SQL tool `query_gold` (single SELECT per DuckDB's parser, allow-listed gold marts, no table functions, external access disabled, 200-row cap). M4-02 ticked. The EV-05 golden-question score is part of M4-05. Cost $0. |
