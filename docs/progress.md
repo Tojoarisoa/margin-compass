@@ -33,7 +33,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 ## 2026-11-08 (autopilot run 56, task 2)
 
 - **Task:** M4-05 step 5: `agents/mc_agents/ev10.py`, EV-10 scorer (mean $ per query <= $0.01, nearest-rank p95 latency <= 20 s, empty fails closed). Agents 210 passed, ruff clean. Cost $0.
-- **Result:** see PR from `auto/m4-05-ev10-scorer`.
+- **Result:** PR #146 (`3d6dfe8`) merged, all checks green (`attribution` footer removed via MCP), `ci` push and `deploy to dev` green. Run ended: near 35 min.
 - **Decisions (§8.2):** scorer only; feeding it recorded-run cost/latency samples comes next. M4-05 not ticked.
 
 ## 2026-11-08 (autopilot run 56, task 1)
