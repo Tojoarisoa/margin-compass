@@ -14,7 +14,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
--13. M4-06 PG-6 step 1 merged (persona questions, history). Next steps: wire the graph `run.ask` into the API/worker (job record carries the checkpoint trail, tokens and $), then the live graph view in the console. Then tick M4-06.
+-13. M4-06 PG-6 step 1 merged (persona questions, history). Next: PG-6 step 2, wire graph `run.ask` into the API worker behind a flag (default off). Needs first: specialist tools bound to the gold dir through `extra` (`analyst_tools(gold_dir)`/`query_gold_spec`), the `respond` evidence table has no results (the analyst's does), and `verified` maps to job status `answered`. Job record keeps the checkpoint trail (`run#<job_id>`); public API adds `trail` (node, status only). Then the live graph view in the console, then tick M4-06.
 -12. M4-05 steps 1-6 merged (EV-10 now in the eval report). Remaining: live-model EV-05/07 (needs analyst SQL generation) and ops record run for real EV-10 latency, then tick M4-05. Then M4-06: PG-9 text section is done; next is PG-6 Agent Console (chat on `/api/ask` + `/api/jobs/<id>`, then the live graph view from checkpoints).
 -11. M4-05 steps 4-5 merged (`mc-agents ev`, EV-10 scorer). Remaining: feed EV-10 from recorded-run samples (ops), live-model EV-05/07, then tick M4-05. Then M4-06. Flaky: github.com 504s during image builds (re-run failed job).
 -10. M4-04 step 3b: turn `cache_prompt` on for the stable prompts in the graph/analyst and re-record fixtures via ops; semantic cache (optional); then tick M4-04. Then M4-05. (Cache is wired into the API; graph `run.ask` is not yet served by the API.)
