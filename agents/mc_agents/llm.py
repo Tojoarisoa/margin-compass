@@ -32,16 +32,18 @@ class LLMRequest:
     messages: list[dict[str, Any]]
     tools: list[dict[str, Any]]
     max_tokens: int = MAX_OUTPUT_TOKENS_PER_CALL
+    cache_prompt: bool = False  # opt-in Bedrock prompt caching; off keeps request hashes (fixtures) unchanged
 
     def to_converse(self) -> dict[str, Any]:
         req: dict[str, Any] = {
             "modelId": self.model_id,
-            "system": [{"text": self.system}],
+            "system": [{"text": self.system}] + ([{"cachePoint": {"type": "default"}}] if self.cache_prompt else []),
             "messages": self.messages,
             "inferenceConfig": {"maxTokens": self.max_tokens, "temperature": 0},
         }
         if self.tools:
-            req["toolConfig"] = {"tools": self.tools}
+            tools = self.tools + ([{"cachePoint": {"type": "default"}}] if self.cache_prompt else [])
+            req["toolConfig"] = {"tools": tools}
         return req
 
     def canonical(self) -> str:
