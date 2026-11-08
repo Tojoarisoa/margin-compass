@@ -158,8 +158,41 @@ def handle_job(path: str, *, table=None) -> dict[str, Any]:
     if not item:
         return _resp(404, {"error": "not found"})
     # Public response: cost, call count and model stay in the job record (ledger), not on the public API.
-    keys = ("status", "question", "answer", "evidence", "verification", "degradation")
+    keys = ("status", "question", "answer", "evidence", "verification", "degradation", "trail")
     return _resp(200, {"job_id": job_id, **{k: item[k] for k in keys if k in item}})
+
+
+_GRAPH_STATUS = {"verified": "answered", "needs_approval": "needs_approval", "unverified": "unverified", "blocked": "blocked"}
+
+
+def _graph_enabled() -> bool:
+    return os.environ.get("MC_GRAPH", "") == "1"  # default off: the one-node analyst serves the API
+
+
+def _answer_graph(job_id: str, question: str, table, gold_dir: Path, client) -> dict[str, Any]:
+    """Serves one question through the M4-03 graph (`run.ask`); fail-closed statuses map to job statuses."""
+    from . import run as graph_run
+    from .budget import QuestionBudget
+    from .llm import BudgetedLLM
+    from .responder import cost_line
+    from .tools import registry
+
+    model_key = os.environ.get("MC_MODEL", DEFAULT_ANALYST_MODEL)
+    spec, budget = MODELS[model_key], QuestionBudget(MODELS[model_key])
+    llm = BudgetedLLM(client, budget, SpendGuard(table))
+    store = DynamoStore(table, 86_400)
+    extra = {"query_gold": registry.query_gold_spec(gold_dir)}
+    out = graph_run.ask(question, llm, spec.target, run_id=job_id, approval_store=store, checkpoints=store, extra=extra)
+    trail = (store.get(f"run#{job_id}") or {}).get("trail", [])
+    evidence = [{"id": e["id"], "tool": e["tool"], "version": e["version"], "args": e["args"]} for e in out["evidence"]]
+    update = {"status": _GRAPH_STATUS.get(out["status"], "error"), "answer": out["answer"],
+              "cost_line": cost_line(budget.usd, budget.calls, spec.label), "llm_calls": budget.calls,
+              "model": spec.label, "cost_usd": str(budget.usd),
+              "evidence": json.loads(json.dumps(evidence, default=str)),
+              "trail": [{"node": t["node"], "status": t["status"]} for t in trail]}  # node and status only
+    if out["status"] == "needs_approval" or "approval_id" in out:
+        update["approver"] = out.get("approver") or ""
+    return update
 
 
 def run_job(job_id: str, *, table=None, gold_dir: Path = GOLD_DIR, client=None, sync=True) -> str:
@@ -174,6 +207,8 @@ def run_job(job_id: str, *, table=None, gold_dir: Path = GOLD_DIR, client=None, 
         if sync:
             sync_gold(os.environ["LAKE_BUCKET"], gold_dir)
         store, version = DynamoStore(table, CACHE_TTL_S), "|".join(f"{k}={v}" for k, v in sorted(_gold_etags.items()))
+        if _graph_enabled():
+            return _finish(table, key, job_id, _answer_graph(job_id, item["question"], table, gold_dir, client or BedrockLLM()))
         hit = cache.lookup(store, "public", item["question"], version, ttl_s=CACHE_TTL_S)
         if hit is not None:  # an identical verified answer on the same gold data: no model call, no spend
             update = {k: hit[k] for k in _CACHED_KEYS if k in hit} | {"llm_calls": 0, "cost_usd": "0"}

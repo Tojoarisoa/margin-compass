@@ -136,3 +136,20 @@ def test_router(monkeypatch, table):
     assert health["statusCode"] == 200 and json.loads(health["body"]) == {"ok": True}
     assert Caps().monthly_usd == Decimal("1.50")  # the cap itself is unchanged
     assert api.handler({"requestContext": {"http": {"method": "DELETE"}}, "rawPath": "/api/ask"}, None)["statusCode"] == 404
+
+
+def test_graph_flag_serves_the_job_through_the_graph(table, gold, monkeypatch):
+    from test_run import good
+    from test_specialists import PLAN, Script, use
+
+    monkeypatch.setenv("MC_GRAPH", "1")
+    r = api.handle_ask(_event({"question": "Forecast pricing for the pro plan"}), None, table=table, invoke=lambda *a: None)
+    job_id = json.loads(r["body"])["job_id"]
+    status = api.run_job(job_id, table=table, gold_dir=gold, client=Script(use("price_plan", PLAN), good), sync=False)
+    body = json.loads(api.handle_job(f"/api/jobs/{job_id}", table=table)["body"])
+    assert status == body["status"] == "answered" and "Margin is" in body["answer"]
+    assert [t["node"] for t in body["trail"]] == ["route", "pricing", "verify"]
+    assert all(set(t) == {"node", "status"} for t in body["trail"])
+    assert not {"cost_line", "cost_usd", "llm_calls", "model"} & set(body)
+    stored = table.get_item(Key={"PK": f"JOB#{job_id}", "SK": "JOB"})["Item"]
+    assert stored["cost_line"].startswith("Cost of this answer") and stored["llm_calls"] == 2
