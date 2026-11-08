@@ -16,6 +16,7 @@ from mc_agents.tools.churn_adjust import churn_adjust
 from mc_agents.tools.levers import replay_lever
 from mc_agents.tools.metrics import ToolError
 from mc_agents.tools.pricing import price_plan
+from mc_agents.tools.roi import roi_multiple
 
 
 @dataclass(frozen=True)
@@ -31,6 +32,7 @@ TOOLS: dict[str, ToolSpec] = {t.name: t for t in (
     ToolSpec("price_plan", "1", "Revenue and margin of one tenant-month under a plan (integer cents).", price_plan),
     ToolSpec("replay_lever", "1", "Routing and caching lever replay with quality and safety-recall guardrails.", replay_lever),
     ToolSpec("churn_adjust", "1", "Churn-adjusted expected revenue, cost and margin over N months.", churn_adjust),
+    ToolSpec("roi_multiple", "1", "KPI-13 platform ROI multiple (bps) and payback months, integer arithmetic.", roi_multiple),
 )}
 
 
