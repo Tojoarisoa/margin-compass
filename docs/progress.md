@@ -29,6 +29,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 ## 2026-11-08 (autopilot run 45, task 1)
 
 - **Task:** M4-02 step 2: `roi_multiple` tool (KPI-13 ROI bps, payback months) in the registry. Agents 96 passed, ruff clean. Cost $0.
+- **Update:** PR #125 (`a0c3a24`) merged at the owner's request after the autopilot push was denied by the classifier; all checks green, `ci` push and `deploy to dev` green.
 - **Decisions (§8.2):** integer bps like other calculators. M4-02 not ticked.
 
 ## 2026-11-07 (autopilot run 44, task 2)
