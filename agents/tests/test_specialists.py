@@ -1,0 +1,91 @@
+
+from mc_agents.budget import QuestionBudget
+from mc_agents.config import MODELS
+from mc_agents.graph import GraphState, route, verify
+from mc_agents.llm import BudgetedLLM, LLMRequest, LLMResponse
+from mc_agents.specialists import SPECIALISTS, run_specialist, tool_specs
+
+PLAN = {"seats": 10, "seat_price_cents": 5000, "included_units": 1000, "usage_units": 1500,
+        "overage_rate_micro": 20000, "discount_bps": 0, "cost_cents": 20000,
+        "addon_cents": 0, "outcome_price_micro": 0, "outcomes": 0}
+
+
+class Script:
+    def __init__(self, *steps):
+        self.steps, self.requests = list(steps), []
+
+    def complete(self, req: LLMRequest) -> LLMResponse:
+        self.requests.append(req)
+        step = self.steps.pop(0)
+        content = step(req) if callable(step) else step
+        return LLMResponse(content, "end_turn", 500, 50)
+
+
+def use(name, args, i="t1"):
+    return [{"toolUse": {"toolUseId": i, "name": name, "input": args}}]
+
+
+def llm(client):
+    return BudgetedLLM(client, QuestionBudget(MODELS["haiku-4-5"]))
+
+
+def test_pricing_specialist_calls_tool_and_answer_verifies():
+    s = GraphState("Forecast pricing for the pro plan")
+    assert route(s) == "pricing"
+
+    def answer(req):
+        res = req.messages[-1]["content"][0]["toolResult"]["content"][0]["json"]
+        return [{"text": f"Margin is {res['margin_cents']} cents [{res['evidence_id']}]."}]
+
+    client = Script(use("price_plan", PLAN), answer)
+    run_specialist(s, llm(client), "m")
+    assert s.ledger.entries[0].tool == "price_plan@1" and s.answer
+    assert verify(s) == "responder"
+
+
+def test_tool_outside_allow_list_fails_closed():
+    s = GraphState("Why did the leak start?")
+    route(s)
+    client = Script(use("price_plan", PLAN), [{"text": "No data."}])
+    run_specialist(s, llm(client), "m")
+    assert not s.ledger.entries
+    res = client.requests[-1].messages[-2]["content"][0]["toolResult"]
+    assert res["status"] == "error"
+
+
+def test_bad_tool_input_is_a_tool_error_not_a_crash():
+    s = GraphState("Forecast pricing")
+    route(s)
+    client = Script(use("price_plan", {"seats": -1}), [{"text": "Cannot price."}])
+    run_specialist(s, llm(client), "m")
+    assert not s.ledger.entries and s.answer == "Cannot price."
+
+
+def test_tool_round_limit_stops_the_loop():
+    s = GraphState("Forecast pricing")
+    route(s)
+    client = Script(*[use("price_plan", PLAN, f"t{i}") for i in range(10)])
+    run_specialist(s, llm(client), "m")
+    assert s.status == "failed" and s.issues == ["tool round limit reached"]
+
+
+def test_unknown_route_fails_closed():
+    s = GraphState("x")
+    run_specialist(s, llm(Script()), "m")
+    assert s.status == "failed"
+
+
+def test_replay_lever_evidence_counts_for_lever_actions():
+    s = GraphState("x")
+    s.ledger.add("replay_lever@1", {}, {"allowed": True})
+    s.answer = "Done [E1]."
+    s.actions = [{"type": "apply_lever", "evidence": "E1"}]
+    assert verify(s) == "hitl"
+
+
+def test_every_specialist_tool_is_known_or_runtime_supplied():
+    from mc_agents.tools import registry
+    runtime = {"query_gold", "search_knowledge"}
+    for sp in SPECIALISTS.values():
+        assert all(t in registry.TOOLS or t in runtime for t in sp.tools)
+        assert tool_specs(sp) is not None

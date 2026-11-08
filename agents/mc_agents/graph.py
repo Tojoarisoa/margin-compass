@@ -88,7 +88,7 @@ def verify(state: GraphState) -> str:
                 approver = role if approver is None or _rank(role) > _rank(approver) else approver
         elif kind == "apply_lever":
             ev = next((e for e in state.ledger.entries if e.id == a.get("evidence")), None)
-            if ev is None or ev.tool != "replay_lever":
+            if ev is None or ev.tool.split("@")[0] != "replay_lever":
                 issues.append("lever action has no replay evidence")
             elif ev.result.get("allowed") is not True:
                 issues.append("lever violates the quality or safety-recall guardrail")
