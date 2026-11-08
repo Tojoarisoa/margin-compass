@@ -6,31 +6,22 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 - **Claude Haiku 5.5 access:** access requested, waiting for AWS. Converse via `us.anthropic.claude-haiku-5-5` still returns `AccessDeniedException`. Autopilot: re-probe with the ops workflow (`record-fixtures`, `haiku-5-5`) at most once a day; when it succeeds, record the M1-06 fixtures and apply the ADR-003 selection rule. Until then Haiku 4.5 stays the default.
 
-- **`start-backfill` dispatch denied:** the harness's permission classifier denied dispatching `ops.yml` (`task=start-backfill`) in run 27. Owner: dispatch it once (Actions > ops > Run workflow > start-backfill), or allow autopilot to dispatch ops.
-
 ## Owner decision 2026-11-06
 
 - **Window:** BoonCore's fiscal year starts April 1. The simulation window is now **2025-04-01 → 2026-10-31** (19 months, 579 days), set in `simulator/booncore_sim/m2_tenants.py` (`WINDOW_START`, `MONTHS`, `fiscal_year()`). Build the remaining M2 steps (backfill: 19 monthly chunks) on this window. Measured at seed 42: telemetry 2.71M rows, sample 0.44M, outcomes 0.68M, shared infrastructure 16.5% of AI COGS.
 
 ## Next
 
--14. M4-06: PR for the step list in the ask panel (from `trail`) is run 59 task 2. Remaining: public `/api/jobs` approval flow for `needs_approval`, then tick M4-06.
--13. M4-06 PG-6 step 1 merged (persona questions, history). Next: PG-6 step 2, wire graph `run.ask` into the API worker behind a flag (default off). Needs first: specialist tools bound to the gold dir through `extra` (`analyst_tools(gold_dir)`/`query_gold_spec`), the `respond` evidence table has no results (the analyst's does), and `verified` maps to job status `answered`. Job record keeps the checkpoint trail (`run#<job_id>`); public API adds `trail` (node, status only). Then the live graph view in the console, then tick M4-06.
--12. M4-05 steps 1-6 merged (EV-10 now in the eval report). Remaining: live-model EV-05/07 (needs analyst SQL generation) and ops record run for real EV-10 latency, then tick M4-05. Then M4-06: PG-9 text section is done; next is PG-6 Agent Console (chat on `/api/ask` + `/api/jobs/<id>`, then the live graph view from checkpoints).
--11. M4-05 steps 4-5 merged (`mc-agents ev`, EV-10 scorer). Remaining: feed EV-10 from recorded-run samples (ops), live-model EV-05/07, then tick M4-05. Then M4-06. Flaky: github.com 504s during image builds (re-run failed job).
--10. M4-04 step 3b: turn `cache_prompt` on for the stable prompts in the graph/analyst and re-record fixtures via ops; semantic cache (optional); then tick M4-04. Then M4-05. (Cache is wired into the API; graph `run.ask` is not yet served by the API.)
--9. M4-03 is ticked (run graph + DynamoStore merged). Next: M4-04 per PLAN.md §17 (wire `run.ask` into the API/worker with `DynamoStore` on the core table; LLM supervisor for ambiguous routes).
--8. M4-02 is ticked (guarded SQL `query_gold` merged). Next: M4-03 (agent graph) per PLAN.md §17; EV-05 golden SQL questions belong to M4-05.
--7. M4-01 close-out: CLI and `mc-rag eval` gate are done; run `mc-rag eval --embedder titan` via ops when convenient, then tick M4-01. Next task: M4-02 step 2 (retrieval tool wrapper, ROI tool, then guarded SQL/EV-05) on top of `tools/registry.py`.
--6. M3-03 close-out: after the backfill, read `churn.ev11.passed` in the M2 build summary on real gold, then tick M3-03. GBM challenger is optional.
--4. M3-05 is ticked (PG-3, PG-4, PG-5, PG-8 merged). RCA narrative and release annotations wait for M4. Wiring the Python tools into the agent tool layer is M4-02.
--3. M3-02 step 4: read EV-03 (`leaks.ev03` in the M2 build summary) on real gold once the backfill runs, then add tenant-level and cache-hit series for PT-02/04/06/07 if recall is short.
--2. M3-01 close-out: run training via ops on real gold, read `ev02.passed` in `backtest.json`, then tick M3-01. Step 5 (promotion) is merged.
--1. Dispatch ops `start-backfill` (blocked, see Waiting for owner); then item 2.
+1. **M2-01 close-out:** the first backfill ran: execution `ops-42508172760` (ops `start-backfill`, 2026-11-08 18:05 UTC) **SUCCEEDED** in about 6 min. Check the build fit in the pipeline Lambda's 3,008 MB, verify AWS gold = local gold, then tick M2-01.
+2. **On real gold (after 1):** M3-01 run training via ops and read `ev02.passed` in `backtest.json`; M3-02 read `leaks.ev03` (add tenant-level and cache-hit series for PT-02/04/06/07 if recall is short); M3-03 read `churn.ev11.passed`. Tick each one that passes.
+3. **M2-04:** PG-8 *Platform FinOps* and S7 are complete once the first backfill data shows; wire `MC_FINOPS_FOCUS_GLOB` when the S7 export has data; then tick M2-04.
+4. **M4-06:** live graph view in the ask panel (from `trail`), then tick M4-06. Done: about section, PG-6 steps 1-4.
+5. **M4-05:** live-model EV-05/07 (needs analyst SQL generation) and an ops record run for real EV-10 latency, then tick M4-05.
+6. **M4-04:** turn `cache_prompt` on for the stable prompts, re-record fixtures via ops (semantic cache optional), then tick M4-04.
+7. **M4-01:** run `mc-rag eval --embedder titan` via ops, then tick M4-01.
+8. Then **M5-01** (nightly margin review graph) per PLAN.md §17.
 
-0. Wire `MC_FINOPS_FOCUS_GLOB` once the S7 export has data (PR #82 is merged and deployed).
-2. M2-01 close-out: backfill state machine `mc-dev-data-backfill` is deployed (pipeline Lambda 3,008 MB / 4 GB tmp / 15 min). Next: start one execution via the ops workflow (extend it if it can't start executions), check the build fits in 3,008 MB, verify AWS gold = local gold, then tick M2-01. If the build runs out of memory, log it under Waiting for owner (quota increase).
-3. M2-04 remaining: S7 dogfood is complete in code and infra (schedule is off until `mc:nightlyEnabled=true`); PG-8 *Platform FinOps* tab (real AWS bill by lifecycle stage, budget burn-down; shows "awaiting first export" while the FOCUS export is empty), PG-8 freshness and run history are done; PG-8 and S7 are complete once the first backfill runs (M2-04 can then be ticked). The health card (scorecard, lineage) is done. PG-1 and PG-2 are complete (PG-2: cost explorer, margin waterfall table, attribution coverage, margin-vs-usage scatter).
+Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s during image builds: re-run the failed job.
 
 ## 2026-11-08 (autopilot run 61, task 2)
 
