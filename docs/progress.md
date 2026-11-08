@@ -29,6 +29,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 ## 2026-11-08 (autopilot run 47, task 1)
 
 - **Task:** M4-02 step 4: `query_gold` guarded SQL tool (`agents/mc_agents/tools/sql_guard.py`): one SELECT (DuckDB parser), table allow-list, no table functions, external access off, 200-row cap; `registry.query_gold_spec`. Agents 125 passed, ruff clean. M4-02 ticked. Cost $0.
+- **Result:** PR #128 (`a160799`) merged, all checks green (`attribution` fixed by removing the proxy footer via MCP), `ci` push and `deploy to dev` green.
 - **Decisions (§8.2):** parser-based checks, not regex; EV-05 scoring deferred to M4-05.
 
 ## 2026-11-08 (autopilot run 46, task 1)
