@@ -1,11 +1,19 @@
 import { useState } from "react";
 import { ApiError, ask, waitForJob, type Job } from "./api";
 
-const SUGGESTED = [
-  "What was the AI gross margin for tenant bc-t0003 in September 2025?",
-  "Which three tenants had the lowest AI gross margin percentage from August 1 to October 29, 2025?",
-  "What was the portfolio AI gross margin in August 2025?",
-];
+const PERSONAS: Record<string, string[]> = {
+  CFO: [
+    "What was the portfolio AI gross margin in August 2025?",
+    "What was the portfolio AI gross margin in September 2025?",
+  ],
+  "RevOps / Customer Success": [
+    "What was the AI gross margin for tenant bc-t0003 in September 2025?",
+    "Which three tenants had the lowest AI gross margin percentage from August 1 to October 29, 2025?",
+  ],
+  "FinOps Practitioner": [
+    "How much did it cost to serve bc-t0012 in October 2025?",
+  ],
+};
 
 const STATUS_TEXT: Record<Job["status"], string> = {
   pending: "Queued…", running: "Thinking…", answered: "", unverified: "Answer withheld", budget_exceeded: "Unavailable right now", error: "Error",
@@ -14,6 +22,8 @@ const STATUS_TEXT: Record<Job["status"], string> = {
 export function AskPanel() {
   const [question, setQuestion] = useState("");
   const [job, setJob] = useState<Job | null>(null);
+  const [persona, setPersona] = useState(Object.keys(PERSONAS)[0]);
+  const [history, setHistory] = useState<{ q: string; job: Job }[]>([]);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -25,7 +35,8 @@ export function AskPanel() {
     try {
       const id = await ask(q.trim());
       setJob({ job_id: id, status: "pending" });
-      await waitForJob(id, setJob);
+      const done = await waitForJob(id, setJob);
+      setHistory((h) => [{ q: q.trim(), job: done }, ...h].slice(0, 5));
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "The agent is unavailable right now.");
     } finally {
@@ -46,8 +57,12 @@ export function AskPanel() {
           onChange={(e) => setQuestion(e.target.value)} disabled={busy} />
         <button type="submit" disabled={busy || !question.trim()}>{busy ? "Working…" : "Ask"}</button>
       </form>
+      <label htmlFor="persona" className="muted">Suggested questions for </label>
+      <select id="persona" value={persona} onChange={(e) => setPersona(e.target.value)} disabled={busy}>
+        {Object.keys(PERSONAS).map((p) => <option key={p}>{p}</option>)}
+      </select>
       <div className="suggested">
-        {SUGGESTED.map((s) => (
+        {PERSONAS[persona].map((s) => (
           <button key={s} type="button" className="chip" disabled={busy} onClick={() => { setQuestion(s); void submit(s); }}>{s}</button>
         ))}
       </div>
@@ -68,6 +83,14 @@ export function AskPanel() {
           </div>
         )}
       </div>
+      {history.length > 1 && (
+        <details className="history">
+          <summary>Earlier questions ({history.length - 1})</summary>
+          {history.slice(1).map((h) => (
+            <p key={h.job.job_id}><strong>{h.q}</strong><br />{h.job.answer || STATUS_TEXT[h.job.status]}</p>
+          ))}
+        </details>
+      )}
     </section>
   );
 }
