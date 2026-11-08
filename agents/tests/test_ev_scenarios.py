@@ -47,3 +47,20 @@ def test_ev13_detects_a_wrong_expectation():
     scs = [dict(s) for s in ev.load_scenarios() if s["id"] == "act-02"]
     scs[0]["expect"] = {"verdict": "hitl", "approver": "account_manager"}
     assert ev.ev13(scs)["failed"] == ["act-02"]
+
+
+def test_ev07_over_the_real_graph_with_scripted_clients():
+    from test_specialists import PLAN, Script, use
+    scs = [s for s in ev.load_scenarios() if s["id"] in ("prc-01", "sec-01", "amb-01", "gov-01")]
+
+    def client(sc):
+        if sc["id"] == "prc-01":
+            return Script(use("price_plan", PLAN), [{"text": "Done."}], [{"text": "Done."}], [{"text": "Done."}])
+        if sc["id"] == "gov-01":
+            return Script([{"text": "No policy found."}])
+        return Script()
+
+    assert ev.ev07(ev.graph_runner(client), scs)["failed"] == []
+    # a model that asks for a tool outside the scenario's set is flagged
+    bad = ev.ev07(ev.graph_runner(lambda sc: Script(use("price_plan", PLAN), [{"text": "x"}])), scs[1:2])
+    assert bad["failed"] == ["gov-01"]

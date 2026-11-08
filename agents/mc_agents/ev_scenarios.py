@@ -99,3 +99,37 @@ def ev13(scenarios: list[dict[str, Any]] | None = None) -> dict[str, Any]:
 
 def known_tools() -> set[str]:
     return set(registry.TOOLS) | {"query_gold", "search_knowledge"}
+
+
+class RecordingClient:
+    """Wraps an LLM client; counts calls and records the tools the model asked for (EV-07 trajectory)."""
+
+    def __init__(self, inner: Any) -> None:
+        self.inner, self.calls, self.tools = inner, 0, []
+
+    def complete(self, request: Any) -> Any:
+        resp = self.inner.complete(request)
+        self.calls += 1
+        self.tools += [b["toolUse"]["name"] for b in resp.content if "toolUse" in b]
+        return resp
+
+
+def graph_runner(make_client: Callable[[dict[str, Any]], Any], model_id: str = "m") -> Callable[[dict[str, Any]], dict[str, Any]]:
+    """EV-07 runner over the real graph (`run.ask`). `make_client(scenario)` returns a scripted or recorded
+    client; the route is read from the checkpoint trail, the tools and call count from the client."""
+    from .approvals import MemoryStore
+    from .budget import QuestionBudget
+    from .config import MODELS
+    from .llm import BudgetedLLM
+    from .run import ask
+
+    def run(sc: dict[str, Any]) -> dict[str, Any]:
+        rec = RecordingClient(make_client(sc))
+        cp = MemoryStore()
+        llm = BudgetedLLM(rec, QuestionBudget(MODELS["haiku-4-5"]))
+        out = ask(sc["question"], llm, model_id, run_id=sc["id"], approval_store=MemoryStore(), checkpoints=cp)
+        trail = cp.get(f"run#{sc['id']}")["trail"]
+        got = "blocked" if out["status"] == "blocked" else (trail[1]["node"] if len(trail) > 1 else "unverified")
+        return {"route": got, "tools": rec.tools, "llm_calls": rec.calls}
+
+    return run
