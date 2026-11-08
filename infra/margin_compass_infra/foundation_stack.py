@@ -376,6 +376,9 @@ class FoundationStack(cdk.Stack):
             ("ReadCosts", ["ce:GetCostAndUsage", "bcm-data-exports:ListExports", "bcm-data-exports:ListExecutions"], ["*"]),
             ("ReadBudget", ["budgets:ViewBudget"], [f"arn:aws:budgets::{acct}:budget/{name('monthly-total')}"]),
             ("ListBillingExport", ["s3:ListBucket"], [self.billing_bucket.bucket_arn]),
+            ("ListLake", ["s3:ListBucket"], [f"arn:aws:s3:::mc-*-data-lake-{acct}"]),
+            ("ReadLakeGold", ["s3:GetObject"],
+             [f"arn:aws:s3:::mc-*-data-lake-{acct}/{p}/*" for p in ("gold", "silver", "publish")]),
             ("ReadStacks", ["cloudformation:DescribeStacks"], [f"arn:aws:cloudformation:{region}:{acct}:stack/mc-*/*"]),
             ("ReadLogs", ["logs:FilterLogEvents"], [f"arn:aws:logs:{region}:{acct}:log-group:/aws/lambda/mc-*:*"]),
         ]

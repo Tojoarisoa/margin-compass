@@ -323,7 +323,7 @@ def test_ops_role_trusts_only_main_and_cannot_deploy(default):
     assert actions == {
         "lambda:InvokeFunction", "states:StartExecution", "states:DescribeExecution", "states:ListExecutions",
         "bedrock:InvokeModel", "ce:GetCostAndUsage", "bcm-data-exports:ListExports", "bcm-data-exports:ListExecutions",
-        "budgets:ViewBudget", "s3:ListBucket", "cloudformation:DescribeStacks", "logs:FilterLogEvents",
+        "budgets:ViewBudget", "s3:ListBucket", "s3:GetObject", "cloudformation:DescribeStacks", "logs:FilterLogEvents",
     }
     assert not any(a.startswith(("iam:", "sts:", "cloudformation:Create", "cloudformation:Update", "s3:Put", "s3:Delete")) for a in actions)
 
