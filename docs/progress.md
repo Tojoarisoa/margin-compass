@@ -14,6 +14,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
+-13. M4-06 PG-6 step 1 merged (persona questions, history). Next steps: wire the graph `run.ask` into the API/worker (job record carries the checkpoint trail, tokens and $), then the live graph view in the console. Then tick M4-06.
 -12. M4-05 steps 1-6 merged (EV-10 now in the eval report). Remaining: live-model EV-05/07 (needs analyst SQL generation) and ops record run for real EV-10 latency, then tick M4-05. Then M4-06: PG-9 text section is done; next is PG-6 Agent Console (chat on `/api/ask` + `/api/jobs/<id>`, then the live graph view from checkpoints).
 -11. M4-05 steps 4-5 merged (`mc-agents ev`, EV-10 scorer). Remaining: feed EV-10 from recorded-run samples (ops), live-model EV-05/07, then tick M4-05. Then M4-06. Flaky: github.com 504s during image builds (re-run failed job).
 -10. M4-04 step 3b: turn `cache_prompt` on for the stable prompts in the graph/analyst and re-record fixtures via ops; semantic cache (optional); then tick M4-04. Then M4-05. (Cache is wired into the API; graph `run.ask` is not yet served by the API.)
@@ -29,6 +30,12 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 0. Wire `MC_FINOPS_FOCUS_GLOB` once the S7 export has data (PR #82 is merged and deployed).
 2. M2-01 close-out: backfill state machine `mc-dev-data-backfill` is deployed (pipeline Lambda 3,008 MB / 4 GB tmp / 15 min). Next: start one execution via the ops workflow (extend it if it can't start executions), check the build fits in 3,008 MB, verify AWS gold = local gold, then tick M2-01. If the build runs out of memory, log it under Waiting for owner (quota increase).
 3. M2-04 remaining: S7 dogfood is complete in code and infra (schedule is off until `mc:nightlyEnabled=true`); PG-8 *Platform FinOps* tab (real AWS bill by lifecycle stage, budget burn-down; shows "awaiting first export" while the FOCUS export is empty), PG-8 freshness and run history are done; PG-8 and S7 are complete once the first backfill runs (M2-04 can then be ticked). The health card (scorecard, lineage) is done. PG-1 and PG-2 are complete (PG-2: cost explorer, margin waterfall table, attribution coverage, margin-vs-usage scatter).
+
+## 2026-11-08 (autopilot run 58, task 1)
+
+- **Task:** M4-06 PG-6 step 1: persona-grouped suggested questions and a short history in the ask panel. Dashboard build clean. Cost $0.
+- **Result:** PR #149 (`a3e2878`) merged, all checks green (`attribution` footer removed via MCP, re-run green), `ci` push and `deploy to dev` green.
+- **Decisions (§8.2):** suggested questions limited to what the analyst can answer today; graph view waits for API wiring. M4-06 not ticked.
 
 ## 2026-11-08 (autopilot run 57, task 2)
 
