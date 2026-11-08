@@ -40,3 +40,13 @@ def test_alert_on_wrong_feature_is_a_false_positive(tmp_path):
     pq.write_table(pa.Table.from_pylist(lab), tmp_path / "patterns.parquet")
     ev = run_detector(tmp_path, tmp_path / "patterns.parquet", "r1")["ev03"]
     assert ev["precision"] == 0.0 and ev["recall"] == 0.0 and ev["missed"] == ["PT-01"] and not ev["passed"]
+
+
+def test_reads_m2_label_columns(tmp_path):
+    """The m2 simulator writes `feature` (not `feature_id`) plus `type` and `tenant_ids`."""
+    _write(tmp_path)
+    lab = [{"pattern_id": "PT-01", "type": "model_swap", "tenant_ids": [], "feature": "F1", "model": None,
+            "start_date": START + timedelta(days=60), "end_date": START + timedelta(days=119)}]
+    pq.write_table(pa.Table.from_pylist(lab), tmp_path / "patterns.parquet")
+    out = run_detector(tmp_path, tmp_path / "patterns.parquet", "r1")
+    assert out["ev03"]["found"] == ["PT-01"] and out["ev03"]["passed"]

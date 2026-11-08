@@ -35,7 +35,7 @@ def daily_cost(gold: Path) -> tuple[dict[str, list[float]], list[date]]:
 
 def read_labels(path: Path) -> list[tuple[str, Label]]:
     rows = pq.read_table(path).to_pylist()
-    return [(r["feature_id"], Label(r["pattern_id"], r["start_date"], r["end_date"])) for r in rows if r["pattern_id"] in PATTERNS]
+    return [(r["feature_id"] if "feature_id" in r else r["feature"], Label(r["pattern_id"], r["start_date"], r["end_date"])) for r in rows if r["pattern_id"] in PATTERNS]
 
 
 def score_by_feature(alerts: dict[str, list[Alert]], labels: list[tuple[str, Label]]) -> dict:
