@@ -35,6 +35,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 ## 2026-11-08 (autopilot run 61, task 2)
 
 - **Task:** M4-06 PG-6 step 4: ask panel shows the approver role and a sandbox Approve/Reject for `needs_approval` jobs (stays in the browser, PLAN §9.3); `needs_approval`/`blocked` now end polling (before, they timed out); public job adds `approver`. Agents 213 passed, ruff clean, dashboard build clean. Cost $0.
+- **Result:** PR #153 (`b9776ca`) merged, all checks green (`attribution` footer removed via MCP), `ci` push and `deploy to dev` green. Run ended: past 35 min.
 - **Decisions (§8.2):** no public approve API (anonymous callers would claim roles); owner-mode approvals wait for Cognito. M4-06 not ticked (live graph view remains).
 
 ## 2026-11-08 (autopilot run 61)
