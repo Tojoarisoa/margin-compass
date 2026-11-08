@@ -12,7 +12,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-0. **M3-02 fix:** make `read_labels` accept the m2 label columns (`feature` as well as `feature_id`; check `type` vs `pattern_type`), add a test that lands real m2 labels, merge, rerun `start-backfill`, read `leaks.ev03`, add series for PT-02/04/06/07 if recall is short, tick M3-02.
+0. **M3-02 tune:** on real gold EV-03 fails: precision 0.43, recall 0.43, mttd 0.67 (3 of 7 labels found, 7 alerts). Find which of PT-01..07 are missed or false (run `build` locally on the simulator output and diff alerts vs `labels/patterns.parquet`; also check whether label `feature` names match gold `feature_id`), tune the detector or add series, rerun `start-backfill`, tick M3-02 when `ev03.passed`.
 1. **On real gold (rest):** M3-02: run `start-backfill` via ops and read `leaks` in the execution output (PR #159 deployed); `ev03` is absent from the published `quality.json` on AWS, find out why (leak detector output or publish wiring) and add series for PT-02/04/06/07 if recall is short. M3-01: read `ev02.passed` from `models/*/backtest.json` (ops role needs a read-only `models/` grant, mc-* only). M3-03 done.
 2. **M2-04:** PG-8 *Platform FinOps* and S7 are complete once the first backfill data shows; wire `MC_FINOPS_FOCUS_GLOB` when the S7 export has data; then tick M2-04.
 3. **M4-06:** live graph view in the ask panel (from `trail`), then tick M4-06. Done: about section, PG-6 steps 1-4.
@@ -22,6 +22,11 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 7. Then **M5-01** (nightly margin review graph) per PLAN.md §17.
 
 Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s during image builds: re-run the failed job.
+
+## 2026-11-08 (autopilot run 65)
+
+- **Task:** M3-02 fix: `read_labels` accepts the m2 `feature` column (PR #162, test lands m2-style labels). All checks green (`attribution` green after footer removal via MCP), merged, `ci` push and `deploy to dev` green. Ran `start-backfill`: succeeded, `leaks.ev03` now present: precision 0.43, recall 0.43, mttd 0.67, 7 alerts vs 7 labels, **not passed**. EV-11 passed. Cost $0.
+- **Decisions (§8.2):** none. M3-02 not ticked; tuning is next (see Next 0).
 
 ## 2026-11-08 (autopilot run 64)
 
