@@ -987,7 +987,7 @@ Each milestone ends with a demoable increment and exit criteria. Effort assumes 
 
 ### M2: Cost-to-Serve Platform (~2 weeks)
 
-- [ ] M2-01 Full simulator: ~400 tenants, F0–F4, 3 tiers, price-catalog changes, full pattern library, 19-month chunked backfill (fiscal-year aligned: 2025-04-01 → 2026-10-31)
+- [x] M2-01 Full simulator: ~400 tenants, F0–F4, 3 tiers, price-catalog changes, full pattern library, 19-month chunked backfill (fiscal-year aligned: 2025-04-01 → 2026-10-31)
 - [x] M2-02 FOCUS infrastructure ingestion + allocation rules → `fct_cost_to_serve`; `fct_unit_cost`, `fct_quality`
 - [x] M2-03 Semantic metrics, contracts for all marts, data-quality scorecard, lineage
 - [ ] M2-04 PG-1 complete; PG-2 Cost-to-Serve Explorer; PG-8 *Pipeline & Data Health* and *Platform FinOps* tabs; dogfood telemetry (S7)
@@ -1204,3 +1204,4 @@ Status: all ADRs are written up in `docs/adr/` and **accepted** (ADR-017 on 2026
 | 2026-11-08 | 0.4 | M4-05 step 5 (**auto-decided under AGENTS.md §8.2**): `mc_agents/ev10.py` EV-10 scorer (mean $ per query ≤ $0.01, p95 latency ≤ 20 s, empty sample set fails closed). Wiring to recorded-run samples remains. Cost $0. |
 | 2026-11-09 | 0.4 | Owner decision: autopilot never force-pushes. A PR that is behind `main` is replaced by a new `-r2` branch (cherry-picked onto `main`) and a new PR; while an `auto/*` PR is open, its progress entry goes on that PR's branch, not `main` (AGENTS.md §8.1 steps 7 and 8) |
 | 2026-11-08 | 0.4 | M4-06 PG-6 step 4 (**auto-decided under AGENTS.md §8.2**): jobs that need approval show the approver role and a visitor-sandbox Approve/Reject in the ask panel (decision stays in the browser, PLAN §9.3, no public write API; the owner-mode flow waits for Cognito). `needs_approval` and `blocked` now end polling. Public job adds `approver` (role only). Options: public approve endpoint (rejected: anonymous callers would claim roles). |
+| 2026-11-08 | 0.4 | M2-01 closed (**auto-decided under AGENTS.md §8.2**): ops `verify-backfill` (run 42524281674) read the AWS lake: `slv_m2_llm_usage_priced` 2,708,496 rows vs local seed-42 telemetry ~2.71M (OK); gold marts present (`fct_m2_tenant_margin` 195,194, `fct_cost_to_serve` 871,358, `dim_tenant` 424). Sample and outcome counts (0.44M, 0.68M) are raw-level simulator rows, not lake gold tables, so they are not compared one-to-one. Cost $0. |

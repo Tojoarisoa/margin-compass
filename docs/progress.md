@@ -12,14 +12,13 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-1. **Finish PR #157** (merge; permission classifier denied the push), then dispatch `verify-backfill` and read the counts. **M2-01 close-out:** backfill `ops-42508172760` fits (peak 1,498 MB of 3,008 MB; dbt 19 success / 24 pass). The ops role can now read the lake gold/silver/publish prefixes (deployed). Extend `verify-backfill` to compare AWS gold row counts with the local seed-42 build (telemetry 2.71M, sample 0.44M, outcomes 0.68M), then tick M2-01.
-2. **On real gold (after 1):** M3-01 run training via ops and read `ev02.passed` in `backtest.json`; M3-02 read `leaks.ev03` (add tenant-level and cache-hit series for PT-02/04/06/07 if recall is short); M3-03 read `churn.ev11.passed`. Tick each one that passes.
-3. **M2-04:** PG-8 *Platform FinOps* and S7 are complete once the first backfill data shows; wire `MC_FINOPS_FOCUS_GLOB` when the S7 export has data; then tick M2-04.
-4. **M4-06:** live graph view in the ask panel (from `trail`), then tick M4-06. Done: about section, PG-6 steps 1-4.
-5. **M4-05:** live-model EV-05/07 (needs analyst SQL generation) and an ops record run for real EV-10 latency, then tick M4-05.
-6. **M4-04:** turn `cache_prompt` on for the stable prompts, re-record fixtures via ops (semantic cache optional), then tick M4-04.
-7. **M4-01:** run `mc-rag eval --embedder titan` via ops, then tick M4-01.
-8. Then **M5-01** (nightly margin review graph) per PLAN.md §17.
+1. **On real gold (M2-01 done):** M3-01 run training via ops and read `ev02.passed` in `backtest.json`; M3-02 read `leaks.ev03` (add tenant-level and cache-hit series for PT-02/04/06/07 if recall is short); M3-03 read `churn.ev11.passed`. Tick each one that passes.
+2. **M2-04:** PG-8 *Platform FinOps* and S7 are complete once the first backfill data shows; wire `MC_FINOPS_FOCUS_GLOB` when the S7 export has data; then tick M2-04.
+3. **M4-06:** live graph view in the ask panel (from `trail`), then tick M4-06. Done: about section, PG-6 steps 1-4.
+4. **M4-05:** live-model EV-05/07 (needs analyst SQL generation) and an ops record run for real EV-10 latency, then tick M4-05.
+5. **M4-04:** turn `cache_prompt` on for the stable prompts, re-record fixtures via ops (semantic cache optional), then tick M4-04.
+6. **M4-01:** run `mc-rag eval --embedder titan` via ops, then tick M4-01.
+7. Then **M5-01** (nightly margin review graph) per PLAN.md §17.
 
 Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s during image builds: re-run the failed job.
 
@@ -28,6 +27,12 @@ Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s duri
 - **Task:** M2-01 close-out step 1: `verify-backfill` now syncs silver/gold and prints parquet row counts, failing if `slv_m2_llm_usage_priced` is not within 2% of 2.71M. PR #157 (`auto/m2-01-verify-counts`): every check green on the head commit (`attribution` green after the footer was removed via MCP). Cost $0.
 - **Blocked:** the permission classifier denied the fast-forward merge ("CI Bypass"), as in runs 55, 59 and 60. Not retried or worked around. PR left open.
 - **Decisions (§8.2):** none. M2-01 not ticked (run `verify-backfill` after merge and read the counts).
+
+## 2026-11-08 (autopilot run 63)
+
+- **Task:** finished PR #157 (`verify-backfill` compares lake row counts): all 12 checks green, fast-forwarded to `main`; `ci` push and `deploy to dev` green. Then ran `verify-backfill` via ops: telemetry 2,708,496 rows vs ~2.71M local (OK); gold marts present. M2-01 ticked. Cost $0.
+- **Decisions (§8.2):** sample/outcome counts are raw simulator rows, not lake tables, so only telemetry is compared one-to-one.
+- **Next:** M3-01 on real gold via ops.
 
 ## 2026-11-08 (autopilot run 62, task 1)
 
