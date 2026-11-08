@@ -146,8 +146,11 @@ class BudgetedLLM:
     inner: LLMClient
     budget: QuestionBudget
     spend: SpendGuard | None = None
+    limiter: Any | None = None  # RateLimiter: .acquire() raises RateLimited before any call
 
     def complete(self, request: LLMRequest) -> LLMResponse:
+        if self.limiter is not None:
+            self.limiter.acquire()
         worst = self.budget.reserve(request.canonical())  # raises BudgetExceeded before any call
         if self.spend is not None:
             self.spend.reserve(worst)  # shared caps, also before the call

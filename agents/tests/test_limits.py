@@ -33,3 +33,25 @@ def test_spend_caps_fail_closed():
         s.reserve(Decimal("0.006"))
     s.record(Decimal("0.002"))
     s.reserve(Decimal("0.006"))
+
+
+def test_budgeted_llm_uses_limiter_and_spend_caps():
+    from mc_agents.budget import QuestionBudget
+    from mc_agents.config import MODELS
+    from mc_agents.llm import BudgetedLLM, LLMRequest, LLMResponse
+
+    class Fake:
+        calls = 0
+
+        def complete(self, request):
+            Fake.calls += 1
+            return LLMResponse([{"text": "ok"}], "end_turn", 10, 5)
+
+    caps = SpendCaps(Decimal("1"))
+    llm = BudgetedLLM(Fake(), QuestionBudget(MODELS["haiku-4-5"]), spend=caps, limiter=RateLimiter(1))
+    req = LLMRequest("m", "s", [{"role": "user", "content": [{"text": "hi"}]}], [])
+    llm.complete(req)
+    assert caps.spent > 0 and caps.reserved == 0
+    with pytest.raises(RateLimited):
+        llm.complete(req)
+    assert Fake.calls == 1
