@@ -1008,7 +1008,7 @@ Each milestone ends with a demoable increment and exit criteria. Effort assumes 
 
 - [ ] M4-01 Corpus: policies (including the compliance-constraint policy), discount-authority matrix, contract library, playbooks, schema and metric cards; hybrid retrieval (EV-04)
 - [x] M4-02 Tool layer (metrics, guarded SQL, pricing engine, replay simulator, churn scoring, ROI, retrieval)
-- [ ] M4-03 AG-01…AG-10 online graph with fast path, verifier (including guardrail and authority checks), checkpoints, HITL
+- [x] M4-03 AG-01…AG-10 online graph with fast path, verifier (including guardrail and authority checks), checkpoints, HITL
 - [ ] M4-04 Provider abstraction, tiering, caching, in-code budget, rate limits
 - [ ] M4-05 Evaluation harness: 30 golden scenarios covering all jobs-to-be-done; EV-05…EV-08, EV-10, EV-13
 - [ ] M4-06 PG-6 Agent Console with the live graph view; PG-9 Architecture & About
