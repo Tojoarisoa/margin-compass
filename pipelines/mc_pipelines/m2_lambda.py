@@ -66,6 +66,17 @@ def append_run_history(s3: Any, bucket: str, data: Path, run_id: str, summary: d
     return len(runs)
 
 
+def _brief(part: Any) -> Any:
+    """Short view of a detector or churn result for the execution output (errors and gate verdicts, no lists)."""
+    if not isinstance(part, dict):
+        return None
+    out = {k: v for k, v in part.items() if isinstance(v, (str, int, float, bool))}
+    for gate in ("ev03", "ev11"):
+        if isinstance(part.get(gate), dict):
+            out[gate] = {k: v for k, v in part[gate].items() if isinstance(v, (int, float, bool)) or v is None}
+    return out
+
+
 def handle(event: dict, run_id: str, s3: Any = None) -> dict:
     from .lambda_handler import _extra_args
 
@@ -114,7 +125,7 @@ def handle(event: dict, run_id: str, s3: Any = None) -> dict:
                 if (data / prefix).exists():
                     uploaded += _upload(s3, bucket, data / prefix, prefix, _extra_args)
         return {"status": "success", "run_id": run_id, "step": "build", "objects_uploaded": uploaded,
-                "dbt": summary.get("statuses")}
+                "dbt": summary.get("statuses"), "leaks": _brief(summary.get("leaks")), "churn": _brief(summary.get("churn"))}
 
     return {"status": "bad_event", "run_id": run_id, "reason": "step must be month, static or build"}
 
