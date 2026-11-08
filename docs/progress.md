@@ -12,7 +12,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-1. **M2-01 close-out:** backfill `ops-42508172760` SUCCEEDED (6 min); memory fits (peak 1,498 MB of 3,008 MB), dbt 19 success / 24 pass, 21 objects uploaded. Still open: AWS gold = local gold. The ops role cannot read the lake bucket: add `s3:GetObject`/`ListBucket` on the `mc-*` lake bucket to the ops role (foundation stack, allowed by §8.3 as mc-* only), extend `verify-backfill` to compare gold row counts with the local build (seed 42), then tick M2-01.
+1. **M2-01 close-out:** backfill `ops-42508172760` fits (peak 1,498 MB of 3,008 MB; dbt 19 success / 24 pass). The ops role can now read the lake gold/silver/publish prefixes (deployed). Extend `verify-backfill` to compare AWS gold row counts with the local seed-42 build (telemetry 2.71M, sample 0.44M, outcomes 0.68M), then tick M2-01.
 2. **On real gold (after 1):** M3-01 run training via ops and read `ev02.passed` in `backtest.json`; M3-02 read `leaks.ev03` (add tenant-level and cache-hit series for PT-02/04/06/07 if recall is short); M3-03 read `churn.ev11.passed`. Tick each one that passes.
 3. **M2-04:** PG-8 *Platform FinOps* and S7 are complete once the first backfill data shows; wire `MC_FINOPS_FOCUS_GLOB` when the S7 export has data; then tick M2-04.
 4. **M4-06:** live graph view in the ask panel (from `trail`), then tick M4-06. Done: about section, PG-6 steps 1-4.
@@ -27,7 +27,8 @@ Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s duri
 
 - **Task:** M2-01 close-out, step 1: ops task `verify-backfill` (PRs #154, #155; prints execution output, Lambda memory, run history). Merged, all checks green, `ci` push green.
 - **Result:** backfill fits in 3,008 MB (peak 1,498 MB); dbt 19 success / 24 pass. AWS gold vs local gold not compared yet (ops role has no lake read). Cost $0.
-- **Decisions (§8.2):** read-only ops role grant on `mc-*` lake bucket is next; M2-01 not ticked.
+- **Then:** PR #156 (ops role: read-only `s3:GetObject` on lake gold/silver/publish, `ListBucket`; mc-* only) merged, `ci` push and deploy green. Run ended: past 35 min.
+- **Decisions (§8.2):** read-only grant on the mc-* lake bucket; M2-01 not ticked (gold comparison remains).
 
 ## 2026-11-08 (autopilot run 61, task 2)
 
