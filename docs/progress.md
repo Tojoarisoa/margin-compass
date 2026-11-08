@@ -30,6 +30,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 ## 2026-11-08 (autopilot run 48, task 2)
 
 - **Task:** M4-03 step 3: `agents/mc_agents/approvals.py` (AG-09): pending-approval store (dict-like, DynamoDB later), `request`/`decide`, role order from the authority matrix, lower roles fail closed, no double decisions. Agents tests added (3), ruff clean. Cost $0.
+- **Result:** PR #131 (`3ed1e1c`) merged, all checks green (`attribution` footer removed via MCP), `ci` push and `deploy to dev` green. Run ended: past 35 min.
 - **Decisions (§8.2):** in-memory store first; DynamoDB backing and graph wiring next. M4-03 not ticked.
 
 ## 2026-11-08 (autopilot run 48, task 1)
