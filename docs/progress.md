@@ -12,7 +12,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-1. **On real gold (M2-01 done):** M3-01 run training via ops and read `ev02.passed` in `backtest.json`; M3-02 read `leaks.ev03` (add tenant-level and cache-hit series for PT-02/04/06/07 if recall is short); M3-03 read `churn.ev11.passed`. Tick each one that passes.
+1. **On real gold:** M3-02: `ev03` is absent from the published `quality.json` on AWS, find out why (leak detector output or publish wiring) and add series for PT-02/04/06/07 if recall is short. M3-01: read `ev02.passed` from `models/*/backtest.json` (ops role needs a read-only `models/` grant, mc-* only). M3-03 done.
 2. **M2-04:** PG-8 *Platform FinOps* and S7 are complete once the first backfill data shows; wire `MC_FINOPS_FOCUS_GLOB` when the S7 export has data; then tick M2-04.
 3. **M4-06:** live graph view in the ask panel (from `trail`), then tick M4-06. Done: about section, PG-6 steps 1-4.
 4. **M4-05:** live-model EV-05/07 (needs analyst SQL generation) and an ops record run for real EV-10 latency, then tick M4-05.
@@ -21,6 +21,12 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 7. Then **M5-01** (nightly margin review graph) per PLAN.md §17.
 
 Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s during image builds: re-run the failed job.
+
+## 2026-11-08 (autopilot run 63, task 2)
+
+- **Task:** PR #158 (`verify-backfill` prints published EV-03/EV-11 gates) merged, all checks green (latest `attribution` green after footer removal via MCP), `ci` push green. Ops read on real gold: **EV-11 passed** (AUC 0.78, gap 0.010) so M3-03 ticked. **EV-03 is missing** from `quality.json` (no `leaks.ev03` on AWS), M3-02 open. Cost $0.
+- **Decisions (§8.2):** EV-02 (`backtest.json`) is not readable by the ops role (models/ prefix); not granted yet.
+- **Next:** M3-02 find why `ev03` is not published on AWS; M3-01 needs a read of `models/` (read-only grant).
 
 ## 2026-11-08 (autopilot run 63)
 

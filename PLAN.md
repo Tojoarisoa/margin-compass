@@ -998,7 +998,7 @@ Each milestone ends with a demoable increment and exit criteria. Effort assumes 
 
 - [ ] M3-01 AI COGS forecaster + baselines + backtests (EV-02)
 - [ ] M3-02 Margin-leak detector (EV-03)
-- [ ] M3-03 Churn / price-sensitivity model (EV-11)
+- [x] M3-03 Churn / price-sensitivity model (EV-11)
 - [x] M3-04 Calculation spec: pricing engine + traffic replay simulator with parity vectors (EV-12)
 - [x] M3-05 PG-3 Margin Leaks, PG-4 Forecast & Pricing Simulator, PG-5 Cost–Quality Lab, PG-8 *AI Quality* tab
 
@@ -1205,3 +1205,4 @@ Status: all ADRs are written up in `docs/adr/` and **accepted** (ADR-017 on 2026
 | 2026-11-09 | 0.4 | Owner decision: autopilot never force-pushes. A PR that is behind `main` is replaced by a new `-r2` branch (cherry-picked onto `main`) and a new PR; while an `auto/*` PR is open, its progress entry goes on that PR's branch, not `main` (AGENTS.md §8.1 steps 7 and 8) |
 | 2026-11-08 | 0.4 | M4-06 PG-6 step 4 (**auto-decided under AGENTS.md §8.2**): jobs that need approval show the approver role and a visitor-sandbox Approve/Reject in the ask panel (decision stays in the browser, PLAN §9.3, no public write API; the owner-mode flow waits for Cognito). `needs_approval` and `blocked` now end polling. Public job adds `approver` (role only). Options: public approve endpoint (rejected: anonymous callers would claim roles). |
 | 2026-11-08 | 0.4 | M2-01 closed (**auto-decided under AGENTS.md §8.2**): ops `verify-backfill` (run 42524281674) read the AWS lake: `slv_m2_llm_usage_priced` 2,708,496 rows vs local seed-42 telemetry ~2.71M (OK); gold marts present (`fct_m2_tenant_margin` 195,194, `fct_cost_to_serve` 871,358, `dim_tenant` 424). Sample and outcome counts (0.44M, 0.68M) are raw-level simulator rows, not lake gold tables, so they are not compared one-to-one. Cost $0. |
+| 2026-11-08 | 0.4 | M3-03 closed (**auto-decided under AGENTS.md §8.2**): on real AWS gold (run ops-42508172760) published `quality.json` shows `ev11.passed=true` (AUC 0.78, calibration gap 0.010, n=120). `verify-backfill` now prints the published gates. `ev03` is absent from `quality.json`, so M3-02 stays open. Cost $0. |
