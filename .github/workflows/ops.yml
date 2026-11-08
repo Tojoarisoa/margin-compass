@@ -90,7 +90,7 @@ jobs:
           sm="$(aws cloudformation describe-stacks --stack-name mc-dev-data --query "Stacks[0].Outputs[?OutputKey=='BackfillStateMachine'].OutputValue" --output text)"
           ex="$(aws stepfunctions start-execution --state-machine-arn "$sm" --name "ops-${GITHUB_RUN_ID}" --query executionArn --output text)"
           for _ in $(seq 1 100); do st="$(aws stepfunctions describe-execution --execution-arn "$ex" --query status --output text)"; [[ "$st" != RUNNING ]] && break; sleep 15; done
-          { echo "## Backfill execution: $st"; echo "$ex"; echo '```json'; aws stepfunctions describe-execution --execution-arn "$ex" --query output --output text | head -c 6000; echo; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          { echo "## Backfill execution: $st"; echo "$ex"; echo '```json'; aws stepfunctions describe-execution --execution-arn "$ex" --query output --output text | head -c 6000; echo; echo '```'; } | tee -a "$GITHUB_STEP_SUMMARY"
           [[ "$st" == SUCCEEDED ]]
 
       - name: verify-backfill
