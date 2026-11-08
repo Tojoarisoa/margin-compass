@@ -10,6 +10,7 @@ const Leaks = lazy(() => import("./Leaks"));
 const PlanDesigner = lazy(() => import("./PlanDesigner"));
 const LeverLab = lazy(() => import("./LeverLab"));
 const CostQualityLab = lazy(() => import("./CostQualityLab"));
+const About = lazy(() => import("./About"));
 
 function Tile({ label, value, note }: { label: string; value: string; note?: string }) {
   return (
@@ -28,6 +29,7 @@ export function App() {
   const [showHealth, setShowHealth] = useState(false);
   const [showLeaks, setShowLeaks] = useState(false);
   const [showPlans, setShowPlans] = useState(false);
+  const [showAbout, setShowAbout] = useState(false);
 
   useEffect(() => {
     fetch("/publish/latest/pg1.json", { cache: "no-cache" })
@@ -206,6 +208,15 @@ export function App() {
             </tbody>
           </table>
         </div>
+      </section>
+
+      <section className="card" aria-labelledby="about-title">
+        <h2 id="about-title">Architecture &amp; about</h2>
+        {showAbout ? (
+          <Suspense fallback={<p className="muted">Loading…</p>}><About /></Suspense>
+        ) : (
+          <button onClick={() => setShowAbout(true)}>How this works</button>
+        )}
       </section>
 
       <footer className="muted small">
