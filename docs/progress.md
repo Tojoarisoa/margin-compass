@@ -4,6 +4,8 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Waiting for owner
 
+- **Merge to `main` denied (run 55):** the harness classifier denied `git push origin <sha>:main` for PR #145 (all checks green on `c7f3ab9`). Owner: merge #145 (or allow autopilot to push to `main`).
+
 - **Claude Haiku 5.5 access:** access requested, waiting for AWS. Converse via `us.anthropic.claude-haiku-5-5` still returns `AccessDeniedException`. Autopilot: re-probe with the ops workflow (`record-fixtures`, `haiku-5-5`) at most once a day; when it succeeds, record the M1-06 fixtures and apply the ADR-003 selection rule. Until then Haiku 4.5 stays the default.
 
 - **`start-backfill` dispatch denied:** the harness's permission classifier denied dispatching `ops.yml` (`task=start-backfill`) in run 27. Owner: dispatch it once (Actions > ops > Run workflow > start-backfill), or allow autopilot to dispatch ops.
@@ -14,6 +16,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
+-12. Finish PR #145 (`mc-agents ev`, EV-10 step; CI green, merge denied). Then M4-05: live EV-05 once the analyst generates SQL, tick M4-05.
 -11. M4-05 step 4: EV-10, a CLI/ops entry (`mc-agents eval`) running EV-05/07/08/13 with a recorded-fixture client for EV-07 to run all EV scorers, then tick M4-05. EV-05 can score the live model once the analyst generates SQL. Flaky: github.com 504s during image builds (re-run failed job).
 -10. M4-04 step 3b: turn `cache_prompt` on for the stable prompts in the graph/analyst and re-record fixtures via ops; semantic cache (optional); then tick M4-04. Then M4-05. (Cache is wired into the API; graph `run.ask` is not yet served by the API.)
 -9. M4-03 is ticked (run graph + DynamoStore merged). Next: M4-04 per PLAN.md §17 (wire `run.ask` into the API/worker with `DynamoStore` on the core table; LLM supervisor for ambiguous routes).
@@ -28,6 +31,11 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 0. Wire `MC_FINOPS_FOCUS_GLOB` once the S7 export has data (PR #82 is merged and deployed).
 2. M2-01 close-out: backfill state machine `mc-dev-data-backfill` is deployed (pipeline Lambda 3,008 MB / 4 GB tmp / 15 min). Next: start one execution via the ops workflow (extend it if it can't start executions), check the build fits in 3,008 MB, verify AWS gold = local gold, then tick M2-01. If the build runs out of memory, log it under Waiting for owner (quota increase).
 3. M2-04 remaining: S7 dogfood is complete in code and infra (schedule is off until `mc:nightlyEnabled=true`); PG-8 *Platform FinOps* tab (real AWS bill by lifecycle stage, budget burn-down; shows "awaiting first export" while the FOCUS export is empty), PG-8 freshness and run history are done; PG-8 and S7 are complete once the first backfill runs (M2-04 can then be ticked). The health card (scorecard, lineage) is done. PG-1 and PG-2 are complete (PG-2: cost explorer, margin waterfall table, attribution coverage, margin-vs-usage scatter).
+
+## 2026-11-08 (autopilot run 55)
+
+- **Task:** M4-05 step 4: `mc-agents ev` runs EV-05 harness check (reference SQL) and EV-07/08/13. Agents 205 passed, ruff clean. Cost $0.
+- **Result:** PR #145 (`c7f3ab9`) all checks green (`attribution` footer removed via MCP); merge to `main` denied by the classifier, PR left open.
 
 ## 2026-11-08 (autopilot run 54, task 2)
 
