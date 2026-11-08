@@ -29,6 +29,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 ## 2026-11-08 (autopilot run 46, task 1)
 
 - **Task:** M4-02 step 3: `search_knowledge` tool (tenant-filtered hybrid retrieval via `mc_rag`), built with `search_knowledge_spec(embedder, store, bm25)` and passed to `registry.call(..., extra=)`; added `mc-rag` as an agents dependency. Agents 99 passed, ruff clean. Cost $0.
+- **Result:** PR #126 (`924e071`) merged, all checks green, but `deploy to dev` failed: the agent image did not contain `rag/`. Fix PR #127 (`33174aa`, Dockerfile copies and installs `mc-rag`) merged, all checks green, `ci` push and `deploy to dev` green. Run ended: past 35 min.
 - **Decisions (§8.2):** kept out of the static `TOOLS` map because it needs a live store. M4-02 not ticked (guarded SQL remains).
 
 ## 2026-11-08 (autopilot run 45, task 1)
