@@ -30,6 +30,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 ## 2026-11-08 (autopilot run 47, task 2)
 
 - **Task:** M4-03 step 1: AG-01 deterministic intake `agents/mc_agents/intake.py` (injection, authority-bypass, SQL-attack, secrets, length screens; entity extraction; out-of-scope returns `inconclusive`). Agents tests added (17), ruff clean. Cost $0.
+- **Result:** PR #129 (`b02b5ca`) merged, all checks green (`attribution` footer removed via MCP), `ci` push and `deploy to dev` green. Run ended: past 35 min.
 - **Decisions (§8.2):** rules only ever tighten; M4-03 not ticked.
 
 ## 2026-11-08 (autopilot run 47, task 1)
