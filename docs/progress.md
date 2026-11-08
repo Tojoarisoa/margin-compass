@@ -12,7 +12,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-1. **On real gold:** M3-02: `ev03` is absent from the published `quality.json` on AWS, find out why (leak detector output or publish wiring) and add series for PT-02/04/06/07 if recall is short. M3-01: read `ev02.passed` from `models/*/backtest.json` (ops role needs a read-only `models/` grant, mc-* only). M3-03 done.
+1. **On real gold:** M3-02: run `start-backfill` via ops and read `leaks` in the execution output (PR #159 deployed); `ev03` is absent from the published `quality.json` on AWS, find out why (leak detector output or publish wiring) and add series for PT-02/04/06/07 if recall is short. M3-01: read `ev02.passed` from `models/*/backtest.json` (ops role needs a read-only `models/` grant, mc-* only). M3-03 done.
 2. **M2-04:** PG-8 *Platform FinOps* and S7 are complete once the first backfill data shows; wire `MC_FINOPS_FOCUS_GLOB` when the S7 export has data; then tick M2-04.
 3. **M4-06:** live graph view in the ask panel (from `trail`), then tick M4-06. Done: about section, PG-6 steps 1-4.
 4. **M4-05:** live-model EV-05/07 (needs analyst SQL generation) and an ops record run for real EV-10 latency, then tick M4-05.
@@ -21,6 +21,12 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 7. Then **M5-01** (nightly margin review graph) per PLAN.md §17.
 
 Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s during image builds: re-run the failed job.
+
+## 2026-11-08 (autopilot run 63, task 3)
+
+- **Task:** M3-02 diagnosis, PR #159 (`c2f31dd`): the m2 build output now shows leaks/churn verdicts or errors. All checks green (latest `attribution` green after footer removal via MCP), `ci` push and `deploy to dev` green. Cost $0.
+- **Decisions (§8.2):** none. Not re-run yet: a new `start-backfill` (or build) is needed to see why `ev03` is missing; started too late for this run.
+- **Next:** dispatch `start-backfill`, read the execution output `leaks` field, fix, tick M3-02.
 
 ## 2026-11-08 (autopilot run 63, task 2)
 
