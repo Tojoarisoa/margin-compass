@@ -14,7 +14,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
--9. M4-03 step 4b: responder (AG-10), wire route -> specialist -> verify -> responder/HITL into one runnable graph with checkpoints, DynamoDB-backed approvals. Steps 1-4a done (intake, graph/verifier, approvals, specialists). Tick M4-03 last.
+-9. M4-03 step 5: wire route -> specialist -> verify -> responder/HITL into one runnable graph with checkpoints, DynamoDB-backed approvals. Steps 1-4 done (intake, graph/verifier, approvals, specialists, responder). Tick M4-03 last.
 -8. M4-02 is ticked (guarded SQL `query_gold` merged). Next: M4-03 (agent graph) per PLAN.md §17; EV-05 golden SQL questions belong to M4-05.
 -7. M4-01 close-out: CLI and `mc-rag eval` gate are done; run `mc-rag eval --embedder titan` via ops when convenient, then tick M4-01. Next task: M4-02 step 2 (retrieval tool wrapper, ROI tool, then guarded SQL/EV-05) on top of `tools/registry.py`.
 -6. M3-03 close-out: after the backfill, read `churn.ev11.passed` in the M2 build summary on real gold, then tick M3-03. GBM challenger is optional.
@@ -26,6 +26,12 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 0. Wire `MC_FINOPS_FOCUS_GLOB` once the S7 export has data (PR #82 is merged and deployed).
 2. M2-01 close-out: backfill state machine `mc-dev-data-backfill` is deployed (pipeline Lambda 3,008 MB / 4 GB tmp / 15 min). Next: start one execution via the ops workflow (extend it if it can't start executions), check the build fits in 3,008 MB, verify AWS gold = local gold, then tick M2-01. If the build runs out of memory, log it under Waiting for owner (quota increase).
 3. M2-04 remaining: S7 dogfood is complete in code and infra (schedule is off until `mc:nightlyEnabled=true`); PG-8 *Platform FinOps* tab (real AWS bill by lifecycle stage, budget burn-down; shows "awaiting first export" while the FOCUS export is empty), PG-8 freshness and run history are done; PG-8 and S7 are complete once the first backfill runs (M2-04 can then be ticked). The health card (scorecard, lineage) is done. PG-1 and PG-2 are complete (PG-2: cost explorer, margin waterfall table, attribution coverage, margin-vs-usage scatter).
+
+## 2026-11-08 (autopilot run 49, task 2)
+
+- **Task:** M4-03 step 4b: `agents/mc_agents/responder.py` (AG-10): deterministic final package; verified answer unchanged, evidence table and cost-of-answer line built in code, approver and actions shown only for `needs_approval`; unverified/failed states withheld, blocked refused. 4 tests, ruff clean. Cost $0.
+- **Result:** PR #133 (`348b2f5`) merged, all checks green (`attribution` footer removed via MCP), `ci` push and `deploy to dev` green. Run ended: past 35 min.
+- **Decisions (§8.2):** no LLM rewrite of the verified text (would need a second verifier pass). M4-03 not ticked.
 
 ## 2026-11-08 (autopilot run 49, task 1)
 
