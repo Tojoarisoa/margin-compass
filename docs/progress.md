@@ -12,7 +12,8 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-1. **On real gold:** M3-02: run `start-backfill` via ops and read `leaks` in the execution output (PR #159 deployed); `ev03` is absent from the published `quality.json` on AWS, find out why (leak detector output or publish wiring) and add series for PT-02/04/06/07 if recall is short. M3-01: read `ev02.passed` from `models/*/backtest.json` (ops role needs a read-only `models/` grant, mc-* only). M3-03 done.
+0. **M3-02 fix:** make `read_labels` accept the m2 label columns (`feature` as well as `feature_id`; check `type` vs `pattern_type`), add a test that lands real m2 labels, merge, rerun `start-backfill`, read `leaks.ev03`, add series for PT-02/04/06/07 if recall is short, tick M3-02.
+1. **On real gold (rest):** M3-02: run `start-backfill` via ops and read `leaks` in the execution output (PR #159 deployed); `ev03` is absent from the published `quality.json` on AWS, find out why (leak detector output or publish wiring) and add series for PT-02/04/06/07 if recall is short. M3-01: read `ev02.passed` from `models/*/backtest.json` (ops role needs a read-only `models/` grant, mc-* only). M3-03 done.
 2. **M2-04:** PG-8 *Platform FinOps* and S7 are complete once the first backfill data shows; wire `MC_FINOPS_FOCUS_GLOB` when the S7 export has data; then tick M2-04.
 3. **M4-06:** live graph view in the ask panel (from `trail`), then tick M4-06. Done: about section, PG-6 steps 1-4.
 4. **M4-05:** live-model EV-05/07 (needs analyst SQL generation) and an ops record run for real EV-10 latency, then tick M4-05.
@@ -21,6 +22,12 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 7. Then **M5-01** (nightly margin review graph) per PLAN.md §17.
 
 Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s during image builds: re-run the failed job.
+
+## 2026-11-08 (autopilot run 64)
+
+- **Task:** M3-02 diagnosis. PRs #160 and #161 (ops `start-backfill` prints the execution output to the summary and job log): all checks green, merged, `ci` push green. Ran `start-backfill` on AWS: succeeded, dbt 19 success / 24 pass, EV-11 passed again. Cost $0.
+- **Finding:** `leaks` = `{"error": "'feature_id'"}`. The m2 simulator writes `labels/patterns.parquet` from the `PatternLabel` dataclass (columns `feature`, `type`, `tenant_ids`, `model`, ...), but `ml/mc_ml/leak_detector/run.py:read_labels` reads `feature_id`. The local test never lands labels, so it missed this.
+- **Decisions (§8.2):** none. Not fixed yet: past 35 min.
 
 ## 2026-11-08 (autopilot run 63, task 3)
 
