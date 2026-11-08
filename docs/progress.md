@@ -30,6 +30,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 ## 2026-11-08 (autopilot run 48, task 1)
 
 - **Task:** M4-03 step 2: `agents/mc_agents/graph.py`: typed `GraphState`, AG-01/02 fast-path `route`, AG-08 `verify` (ledger numbers, citation, lever guardrail via replay evidence, discount authority matrix, non-waivable contract limits, max 2 retry rounds, fail closed). Agents 160 passed, ruff clean. Cost $0.
+- **Result:** PR #130 (`719f4e1`) merged, all checks green (`attribution` footer removed via MCP), `ci` push and `deploy to dev` green.
 - **Decisions (§8.2):** authority thresholds follow the policy matrix; LLM supervisor/citation-support check come with the specialists. M4-03 not ticked.
 
 ## 2026-11-08 (autopilot run 47, task 2)
