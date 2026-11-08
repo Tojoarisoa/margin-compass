@@ -7,6 +7,8 @@ object with `get(key)` / `put(key, item)` (dict-like), so DynamoDB can back it l
 
 from __future__ import annotations
 
+import json
+import time
 from dataclasses import asdict, dataclass, field
 from typing import Any, Protocol
 
@@ -67,3 +69,22 @@ def decide(store: Store, approval_id: str, role: str, approve: bool) -> Approval
     done = Approval(ap.id, ap.question, ap.actions, ap.required_role, "approved" if approve else "rejected", role)
     store.put(approval_id, asdict(done))
     return done
+
+
+class DynamoStore:
+    """Store backed by the core state table (PK = key, SK = `item`); the item is kept as one JSON string.
+
+    Items expire through the table's `ttl` attribute (default 30 days), so no cleanup job is needed.
+    """
+
+    def __init__(self, table: Any, ttl_seconds: int = 30 * 86400, now: Any = None) -> None:
+        self.table, self.ttl_seconds = table, ttl_seconds
+        self._now = now or time.time
+
+    def get(self, key: str) -> dict[str, Any] | None:
+        got = self.table.get_item(Key={"PK": key, "SK": "item"}, ConsistentRead=True).get("Item")
+        return None if got is None else json.loads(got["data"])
+
+    def put(self, key: str, item: dict[str, Any]) -> None:
+        self.table.put_item(Item={"PK": key, "SK": "item", "data": json.dumps(item),
+                                  "ttl": int(self._now()) + self.ttl_seconds})
