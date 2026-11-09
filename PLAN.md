@@ -1011,7 +1011,7 @@ Each milestone ends with a demoable increment and exit criteria. Effort assumes 
 - [x] M4-03 AG-01…AG-10 online graph with fast path, verifier (including guardrail and authority checks), checkpoints, HITL
 - [ ] M4-04 Provider abstraction, tiering, caching, in-code budget, rate limits
 - [ ] M4-05 Evaluation harness: 30 golden scenarios covering all jobs-to-be-done; EV-05…EV-08, EV-10, EV-13
-- [ ] M4-06 PG-6 Agent Console with the live graph view; PG-9 Architecture & About
+- [x] M4-06 PG-6 Agent Console with the live graph view; PG-9 Architecture & About
 
 **Exit:** all MVP gates pass; MVP tier complete; README case study v1.
 
@@ -1206,3 +1206,4 @@ Status: all ADRs are written up in `docs/adr/` and **accepted** (ADR-017 on 2026
 | 2026-11-08 | 0.4 | M4-06 PG-6 step 4 (**auto-decided under AGENTS.md §8.2**): jobs that need approval show the approver role and a visitor-sandbox Approve/Reject in the ask panel (decision stays in the browser, PLAN §9.3, no public write API; the owner-mode flow waits for Cognito). `needs_approval` and `blocked` now end polling. Public job adds `approver` (role only). Options: public approve endpoint (rejected: anonymous callers would claim roles). |
 | 2026-11-08 | 0.4 | M2-01 closed (**auto-decided under AGENTS.md §8.2**): ops `verify-backfill` (run 42524281674) read the AWS lake: `slv_m2_llm_usage_priced` 2,708,496 rows vs local seed-42 telemetry ~2.71M (OK); gold marts present (`fct_m2_tenant_margin` 195,194, `fct_cost_to_serve` 871,358, `dim_tenant` 424). Sample and outcome counts (0.44M, 0.68M) are raw-level simulator rows, not lake gold tables, so they are not compared one-to-one. Cost $0. |
 | 2026-11-08 | 0.4 | M3-03 closed (**auto-decided under AGENTS.md §8.2**): on real AWS gold (run ops-42508172760) published `quality.json` shows `ev11.passed=true` (AUC 0.78, calibration gap 0.010, n=120). `verify-backfill` now prints the published gates. `ev03` is absent from `quality.json`, so M3-02 stays open. Cost $0. |
+| 2026-11-09 | 0.4 | M4-06 closed (**auto-decided under AGENTS.md §8.2**): the ask panel draws the fixed agent graph (route, specialist, verify, respond) as inline SVG and lights the nodes the run visited from `trail` (node and status only), with the active node outlined and verifier retries counted. Options: a graph library (rejected: bundle size, no new dependency). Cost $0. |

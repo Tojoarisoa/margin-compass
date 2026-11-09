@@ -23,6 +23,39 @@ const STEP_LABEL: Record<string, string> = {
   route: "Understand the question", specialist: "Look up the figures", verify: "Check against the evidence", respond: "Write the answer",
 };
 
+const GRAPH_NODES = ["route", "specialist", "verify", "respond"] as const;
+
+/** Live graph view: the fixed agent graph with the nodes the run visited lit up (from `trail`, node and status only). */
+export function AgentGraph({ trail, done }: { trail?: Job["trail"]; done?: boolean }) {
+  if (!trail || trail.length === 0) return null;
+  const visits: Record<string, number> = {};
+  for (const t of trail) {
+    const n = t.node === "route" || t.node === "verify" || t.node === "respond" ? t.node : "specialist";
+    visits[n] = (visits[n] ?? 0) + 1;
+  }
+  if (done) visits.respond = visits.respond ?? 1;
+  const last = trail[trail.length - 1];
+  const lastNode = last.node === "route" || last.node === "verify" ? last.node : "specialist";
+  const w = 110, gap = 30;
+  return (
+    <svg className="agent-graph" role="img" viewBox={`0 0 ${GRAPH_NODES.length * (w + gap) - gap} 70`}
+         aria-label={`Agent graph: ${GRAPH_NODES.filter((n) => visits[n]).map((n) => STEP_LABEL[n]).join(", then ")}`}>
+      {GRAPH_NODES.map((n, i) => {
+        const x = i * (w + gap), seen = visits[n] ?? 0;
+        return (
+          <g key={n}>
+            {i > 0 && <line x1={x - gap} y1={25} x2={x} y2={25} stroke="currentColor" strokeOpacity={seen ? 0.8 : 0.25} />}
+            <rect x={x} y={5} width={w} height={40} rx={6} fill="none" stroke="currentColor"
+                  strokeWidth={!done && n === lastNode ? 3 : 1.5} strokeOpacity={seen ? 1 : 0.3} />
+            <text x={x + w / 2} y={29} textAnchor="middle" fontSize={11} fill="currentColor" opacity={seen ? 1 : 0.45}>{STEP_LABEL[n]}</text>
+            {seen > 1 && <text x={x + w / 2} y={62} textAnchor="middle" fontSize={10} fill="currentColor">retried ×{seen - 1}</text>}
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
 export function AgentSteps({ trail }: { trail?: Job["trail"] }) {
   if (!trail || trail.length === 0) return null;
   return (
@@ -105,6 +138,7 @@ export function AskPanel() {
       <div aria-live="polite">
         {error && <p className="error">{error}</p>}
         {job && STATUS_TEXT[job.status] && <p className="muted">{STATUS_TEXT[job.status]}</p>}
+        <AgentGraph trail={job?.trail} done={job?.status === "answered"} />
         <AgentSteps trail={job?.trail} />
         {job?.answer && (
           <div className="answer">

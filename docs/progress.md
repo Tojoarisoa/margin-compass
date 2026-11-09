@@ -12,16 +12,21 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
+0. **M4-06 done** (live graph view, run 68).
 0. **M3-02 done** (EV-03 passed on AWS, run 67). Optional later: PT-06 (one small F2 tenant, x6 requests) is still missed.
 1. **On real gold (rest):** M3-01: read `ev02.passed` from `models/*/backtest.json` (ops role needs a read-only `models/` grant, mc-* only). M3-03 done.
 2. **M2-04:** PG-8 *Platform FinOps* and S7 are complete once the first backfill data shows; wire `MC_FINOPS_FOCUS_GLOB` when the S7 export has data; then tick M2-04.
-3. **M4-06:** live graph view in the ask panel (from `trail`), then tick M4-06. Done: about section, PG-6 steps 1-4.
 4. **M4-05:** live-model EV-05/07 (needs analyst SQL generation) and an ops record run for real EV-10 latency, then tick M4-05.
 5. **M4-04:** turn `cache_prompt` on for the stable prompts, re-record fixtures via ops (semantic cache optional), then tick M4-04.
 6. **M4-01:** run `mc-rag eval --embedder titan` via ops, then tick M4-01.
 7. Then **M5-01** (nightly margin review graph) per PLAN.md §17.
 
 Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s during image builds: re-run the failed job.
+
+## 2026-11-09 (autopilot run 68)
+
+- **Task:** M4-06 live graph view. Ask panel draws the agent graph as inline SVG from `trail` (visited nodes lit, active node outlined, retries counted). Dashboard build clean. M4-06 ticked. Cost $0.
+- **Decisions (§8.2):** inline SVG, no graph library.
 
 ## 2026-11-09 (autopilot run 67)
 

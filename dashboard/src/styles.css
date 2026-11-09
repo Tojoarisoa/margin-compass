@@ -30,3 +30,5 @@ footer { padding-bottom: 16px; }
 .about-flow { padding-left: 1.2rem; display: grid; gap: 0.5rem; }
 
 .steps { margin: 0.5rem 0; padding-left: 1.25rem; font-size: 0.9rem; }
+
+.agent-graph { width: 100%; max-width: 32rem; margin: 0.5rem 0; }
