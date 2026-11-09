@@ -12,7 +12,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-0. **M3-01 tune:** EV-02 now runs on AWS and fails. Reproduce locally on the M2 window (seed 42, `ml/mc_ml/cogs_forecast/evaluate.py` `ev02_gate`), AWS result: GBM loses on all 5 features (WAPE ~0.034-0.044 vs naive/ETS ~0.024-0.034; pinball ~1.6x worse; F3 WAPE 6.68, a near-zero series blowing up under log1p/recursion, naive 0.030). Likely fixes: lag-364/28 or trend/seasonal features, damping recursion, clip to history range, F3 floor. Tune `gbm.py` (never weaken the gate), re-run `start-backfill`, tick M3-01 when `ev02.passed`.
+0. **M3-01:** after the tune PR merges, run `start-backfill` via ops and read `ev02.passed` in `models/*/backtest.json`; tick M3-01 if passed, else tune further (F1/F4 WAPE margins are thin; coverage 0.6-0.74).
 0. **M4-06 done** (live graph view, run 68).
 0. **M3-02 done** (EV-03 passed on AWS, run 67). Optional later: PT-06 (one small F2 tenant, x6 requests) is still missed.
 1. **On real gold (rest):** M3-01: read `ev02.passed` from `models/*/backtest.json` (ops role needs a read-only `models/` grant, mc-* only). M3-03 done.
@@ -23,6 +23,12 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 7. Then **M5-01** (nightly margin review graph) per PLAN.md §17.
 
 Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s during image builds: re-run the failed job.
+
+## 2026-11-09 (autopilot run 71)
+
+- **Task:** M3-01 tune. Reproduced EV-02 locally (simulator seed 42 on the M2 window, daily cost per feature from landing telemetry; dbt cannot install in this sandbox): GBM lost on all 5, as on AWS. Rewrote `gbm.py`: scaled log cost, base = same-weekday mean of last 3 weeks, winsorized training, history-range clip, 150 rounds, widening h^0.1. Locally it now beats seasonal naive and ETS on WAPE and pinball for all 5 features (F4 and F1 WAPE margins are thin: 0.0300 vs 0.0309, 0.0228 vs 0.0239). ml 48 passed, ruff clean. Cost $0.
+- **Decisions (§8.2):** gate untouched; drift term rejected (worse on F4). P10-P90 coverage is 0.60-0.74 (nominal 0.8), kept for pinball.
+- **Open:** M3-01 not ticked until `start-backfill` on AWS shows `ev02.passed` (local series is approximated from telemetry, not dbt gold).
 
 ## 2026-11-09 (autopilot run 70)
 

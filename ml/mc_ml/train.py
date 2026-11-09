@@ -56,8 +56,8 @@ def _daily_cost_by_feature(gold: Path) -> tuple[dict[str, list[float]], list[dat
 
 def _card(version: str, days: list[date], metrics: dict, data_sha: str) -> str:
     if metrics["ev02"]["passed"]:
-        served_desc = ("gradient-boosted regression trees on log1p daily cost (lags 1/7/14, 7-day mean, weekday), recursive; "
-                       "P10/P90 from in-sample residual quantiles widened by sqrt(horizon). Served because it passed EV-02 "
+        served_desc = ("gradient-boosted regression trees on scaled log daily cost, predicting the change from the same-weekday mean of the last three weeks (lags 1-28, weekly trends, weekday), recursive; "
+                       "P10/P90 from in-sample residual quantiles widened by horizon^0.1. Served because it passed EV-02 "
                        "(beats seasonal naive and ETS on WAPE and pinball for every scored feature).")
     else:
         served_desc = (f"seasonal naive (season = {SEASON} days): each day repeats the same weekday of the last observed week. "

@@ -1,9 +1,13 @@
 """Gradient-boosted AI COGS forecaster (M3-01, EV-02): numpy only, deterministic.
 
-Squared-loss boosting of depth-2 regression trees on the log1p of daily cost. Features: lags 1, 7, 14,
-the mean of the last 7 days, and weekday one-hot. Forecasts recurse one day at a time. P10/P90 come
-from the empirical 10th/90th percentiles of in-sample one-step log residuals, widened with the horizon
-by sqrt(h). No look-ahead: the model only sees the history it is fitted on.
+Works on z = log(cost / scale + FLOOR), where `scale` is the mean of the history, so every series (a
+$0.15/day feature or a $7k/day one) is on the same footing and near-zero days cannot blow up. Squared-loss
+boosting of depth-2 trees predicts the change from the base (the mean of the same weekday over the last
+three weeks) from the lag deviations (lags 1, 7, 14, 21, 28 minus the base), the week-over-week and
+three-week trends of the 7-day mean, and the weekday. The training series is winsorized at the 1st and 99th
+percentile so a one-off spike cannot drive the recursion. Forecasts recurse one day at a time and are clipped
+to the range of the history. P10/P90 come from the empirical 10th/90th
+percentiles of in-sample one-step residuals, widened with the horizon by h**WIDEN. No look-ahead.
 """
 
 from __future__ import annotations
@@ -14,18 +18,30 @@ from datetime import date, timedelta
 import numpy as np
 
 SEASON = 7
-LAGS = (1, 7, 14)
-MIN_HISTORY = 14 + 14  # longest lag plus enough rows to fit
-ROUNDS = 80
+LAGS = (1, 7, 14, 21, 28)
+WINDOW = 28  # longest lag
+MIN_HISTORY = WINDOW + 14  # the window plus enough rows to fit
+ROUNDS = 150
 RATE = 0.1
 DEPTH = 2
 MIN_LEAF = 5
+FLOOR = 0.05  # z = log(cost / scale + FLOOR)
+TRIM = 0.01  # winsorize z at this quantile on both sides before fitting
+WIDEN = 0.1  # interval half-width grows as h**WIDEN
+
+
+def _level(window: list[float]) -> float:
+    """Base prediction: the mean of the same weekday over the last three weeks."""
+    return float(np.mean([window[-7], window[-14], window[-21]]))
 
 
 def _features(window: list[float], weekday: int) -> list[float]:
-    """`window` is the history in log space, oldest first; `weekday` is that of the day to predict."""
-    row = [window[-lag] for lag in LAGS]
-    row.append(float(np.mean(window[-7:])))
+    """`window` is the history in z space, oldest first; `weekday` is that of the day to predict."""
+    base = _level(window)
+    row = [window[-lag] - base for lag in LAGS]
+    m7 = float(np.mean(window[-7:]))
+    row.append(m7 - float(np.mean(window[-14:-7])))  # this week vs last
+    row.append(m7 - float(np.mean(window[-28:-21])))  # this week vs three weeks ago
     row.extend(1.0 if weekday == d else 0.0 for d in range(7))
     return row
 
@@ -66,23 +82,30 @@ def _predict_tree(tree, row: list[float]) -> float:
 
 @dataclass(frozen=True)
 class GbmModel:
-    base: float
     trees: tuple
-    window: tuple[float, ...]  # last 14 observations in log space, oldest first
+    window: tuple[float, ...]  # last 28 observations in z space, oldest first
+    scale: float
+    zmin: float
+    zmax: float
     last_date: date
     resid_p10: float
     resid_p90: float
 
     def _step(self, window: list[float], weekday: int) -> float:
         row = _features(window, weekday)
-        return self.base + RATE * sum(_predict_tree(t, row) for t in self.trees)
+        z = _level(window) + RATE * sum(_predict_tree(t, row) for t in self.trees)
+        return min(max(z, self.zmin), self.zmax)
 
     def to_dict(self) -> dict:
         def tree(t):
             return t if isinstance(t, float) else [t[0], t[1], tree(t[2]), tree(t[3])]
-        return {"model": "gbm", "base": self.base, "rate": RATE, "lags": list(LAGS), "last_date": self.last_date.isoformat(),
+        return {"model": "gbm", "rate": RATE, "lags": list(LAGS), "floor": FLOOR, "widen": WIDEN, "scale": self.scale,
+                "zmin": self.zmin, "zmax": self.zmax, "last_date": self.last_date.isoformat(),
                 "window": list(self.window), "resid_p10": self.resid_p10, "resid_p90": self.resid_p90,
                 "trees": [tree(t) for t in self.trees]}
+
+    def _cost(self, z: float) -> float:
+        return max(0.0, float(np.exp(z) - FLOOR) * self.scale)
 
     def forecast(self, horizon: int) -> list[dict]:
         window, rows = list(self.window), []
@@ -90,13 +113,13 @@ class GbmModel:
             day = self.last_date + timedelta(days=h)
             pred = self._step(window, day.weekday())
             window.append(pred)
-            scale = float(np.sqrt(h))
-            p50 = max(0.0, float(np.expm1(pred)))
+            wide = float(h**WIDEN)
+            p50 = self._cost(pred)
             rows.append({
                 "target_date": day,
-                "p10": max(0.0, min(p50, float(np.expm1(pred + self.resid_p10 * scale)))),
+                "p10": max(0.0, min(p50, self._cost(pred + self.resid_p10 * wide))),
                 "p50": p50,
-                "p90": max(p50, float(np.expm1(pred + self.resid_p90 * scale))),
+                "p90": max(p50, self._cost(pred + self.resid_p90 * wide)),
             })
         return rows
 
@@ -106,13 +129,15 @@ def fit(dates: list[date], values: list[float]) -> GbmModel:
         raise ValueError(f"need at least {MIN_HISTORY + 14} days of history, got {len(values)}")
     if list(dates) != [dates[0] + timedelta(days=i) for i in range(len(dates))]:
         raise ValueError("history must be daily and gap-free")
-    y = np.log1p(np.maximum(np.asarray(values, dtype=float), 0.0))
+    raw = np.maximum(np.asarray(values, dtype=float), 0.0)
+    scale = float(raw.mean()) or 1.0
+    y = np.log(raw / scale + FLOOR)
+    y = np.clip(y, np.quantile(y, TRIM), np.quantile(y, 1 - TRIM))  # one-off spikes must not drive the recursion
     ylist = y.tolist()
-    start = max(LAGS)
-    x = np.asarray([_features(ylist[:t], dates[t].weekday()) for t in range(start, len(y))])
-    target = y[start:]
-    base = float(target.mean())
-    pred = np.full(len(target), base)
+    x = np.asarray([_features(ylist[:t], dates[t].weekday()) for t in range(WINDOW, len(y))])
+    level = np.asarray([_level(ylist[:t]) for t in range(WINDOW, len(y))])
+    target = y[WINDOW:] - level
+    pred = np.zeros(len(target))
     trees = []
     for _ in range(ROUNDS):
         tree = _grow(x, target - pred, DEPTH)
@@ -121,6 +146,6 @@ def fit(dates: list[date], values: list[float]) -> GbmModel:
     resid = target - pred
     lo, hi = np.quantile(resid, 0.10), np.quantile(resid, 0.90)
     return GbmModel(
-        base=base, trees=tuple(trees), window=tuple(ylist[-14:]), last_date=dates[-1],
-        resid_p10=float(min(lo, 0.0)), resid_p90=float(max(hi, 0.0)),
+        trees=tuple(trees), window=tuple(ylist[-WINDOW:]), scale=scale, zmin=float(y.min()), zmax=float(y.max()),
+        last_date=dates[-1], resid_p10=float(min(lo, 0.0)), resid_p90=float(max(hi, 0.0)),
     )
