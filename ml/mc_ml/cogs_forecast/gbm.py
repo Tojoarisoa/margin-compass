@@ -2,7 +2,7 @@
 
 Works on z = log(cost / scale + FLOOR), where `scale` is the mean of the history, so every series (a
 $0.15/day feature or a $7k/day one) is on the same footing and near-zero days cannot blow up. Squared-loss
-boosting of depth-2 trees predicts the change from the base (the same weekday last week) from the lag deviations (lags 1, 7, 14, 21, 28 minus the base), the week-over-week and
+boosting of 50 stumps (depth 1; deeper or longer fits overfit the level steps in the real F4 series) predicts the change from the base (the same weekday last week) from the lag deviations (lags 1, 7, 14, 21, 28 minus the base), the week-over-week and
 three-week trends of the 7-day mean, and the weekday. The training series is winsorized at the 1st and 99th
 percentile so a one-off spike cannot drive the recursion. Forecasts recurse one day at a time and are clipped
 to the range of the history. P10/P90 come from the empirical 10th/90th
@@ -20,9 +20,9 @@ SEASON = 7
 LAGS = (1, 7, 14, 21, 28)
 WINDOW = 28  # longest lag
 MIN_HISTORY = WINDOW + 14  # the window plus enough rows to fit
-ROUNDS = 150
+ROUNDS = 50
 RATE = 0.1
-DEPTH = 2
+DEPTH = 1
 MIN_LEAF = 5
 FLOOR = 0.05  # z = log(cost / scale + FLOOR)
 TRIM = 0.01  # winsorize z at this quantile on both sides before fitting
