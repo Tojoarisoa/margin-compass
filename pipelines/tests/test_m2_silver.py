@@ -556,5 +556,6 @@ def test_finops_awaits_the_first_export_then_sums_by_stage(tmp_path):
     out = build_finops(pattern, "r1")
     assert out["status"] == "ok"
     assert {r["key"]: r["cost_usd"] for r in out["by_stage"]} == {"untagged": 0.3, "dev": 0.15}
-    assert out["latest_month_usd"] == 0.45 and out["budget_used"] == 0.15
+    assert out["latest_month_usd"] == 0.45
+    assert not {"budget_usd", "budget_used"} & set(out) and not {"budget_usd", "budget_used"} & set(empty)  # public: no budget
     assert "account" not in str(out).lower()

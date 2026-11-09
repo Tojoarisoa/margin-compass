@@ -184,13 +184,14 @@ def build_pg2(gold: Path, run_id: str) -> dict:
             "by_tenant_feature": view(["c.tenant_id", "c.feature_id"], ["tenant_id", "feature_id"])}
 
 
-def build_finops(focus_glob: str | None, run_id: str, budget_usd: float = 3.0) -> dict:
+def build_finops(focus_glob: str | None, run_id: str) -> dict:
     """PG-8 Platform FinOps: the platform's own AWS bill (S7 FOCUS export) by lifecycle stage, service and month.
 
-    Only services, stage tags and amounts leave this function (D7: no account IDs, ARNs or resource IDs).
+    Only services, stage tags and amounts leave this function (D7: no account IDs, ARNs or resource IDs). The output is
+    public (dashboard), so it carries no budget or cap (AGENTS.md §6 public surfaces).
     With no files yet (the export is still empty) the status is `awaiting_first_export`.
     """
-    base = {"schema_version": "finops.v0", "run_id": run_id, "data_label": "real", "budget_usd": budget_usd}
+    base = {"schema_version": "finops.v0", "run_id": run_id, "data_label": "real"}
     if not focus_glob or not glob.glob(focus_glob):
         return {**base, "status": "awaiting_first_export", "by_stage": [], "by_service": [], "by_month": []}
     con = duckdb.connect()
@@ -205,8 +206,7 @@ def build_finops(focus_glob: str | None, run_id: str, budget_usd: float = 3.0) -
     by_month = sorted(view("date_trunc('month', d)::DATE"), key=lambda r: r["key"])
     latest = by_month[-1] if by_month else {"key": None, "cost_usd": 0.0}
     return {**base, "status": "ok", "by_stage": view("stage"), "by_service": view("service"), "by_month": by_month,
-            "latest_month": latest["key"], "latest_month_usd": latest["cost_usd"],
-            "budget_used": _ratio(Decimal(str(latest["cost_usd"])), Decimal(str(budget_usd)))}
+            "latest_month": latest["key"], "latest_month_usd": latest["cost_usd"]}
 
 
 def margin_forecast(recent: list[tuple], fc: list[tuple]) -> dict:
