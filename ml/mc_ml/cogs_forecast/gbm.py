@@ -2,8 +2,7 @@
 
 Works on z = log(cost / scale + FLOOR), where `scale` is the mean of the history, so every series (a
 $0.15/day feature or a $7k/day one) is on the same footing and near-zero days cannot blow up. Squared-loss
-boosting of depth-2 trees predicts the change from the base (the mean of the same weekday over the last
-three weeks) from the lag deviations (lags 1, 7, 14, 21, 28 minus the base), the week-over-week and
+boosting of depth-2 trees predicts the change from the base (the same weekday last week) from the lag deviations (lags 1, 7, 14, 21, 28 minus the base), the week-over-week and
 three-week trends of the 7-day mean, and the weekday. The training series is winsorized at the 1st and 99th
 percentile so a one-off spike cannot drive the recursion. Forecasts recurse one day at a time and are clipped
 to the range of the history. P10/P90 come from the empirical 10th/90th
@@ -31,8 +30,8 @@ WIDEN = 0.1  # interval half-width grows as h**WIDEN
 
 
 def _level(window: list[float]) -> float:
-    """Base prediction: the mean of the same weekday over the last three weeks."""
-    return float(np.mean([window[-7], window[-14], window[-21]]))
+    """Base prediction: the same weekday last week (follows level shifts at once; the trees correct the rest)."""
+    return float(window[-7])
 
 
 def _features(window: list[float], weekday: int) -> list[float]:
