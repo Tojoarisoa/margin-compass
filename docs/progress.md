@@ -12,6 +12,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
+0. **M4-04:** re-record done but cache-on changes `request_sha` (see run 78). Make replay tests use `MC_CACHE_PROMPT=1`, re-run ops `record-fixtures` (cache=true), extract fixtures from the job log (base64 between FIXTURE-BEGIN/END), commit, tick M4-04.
 0. **Finish PR #181** (merge when allowed; then run ops `record-fixtures` with `cache=true`, tick M4-04 if cache hits show).
 0. **Finish PR #179** (merge when allowed; after deploy run ops `rag-eval`; if EV-04 passes, tick M4-01).
 0. **Finish PR #177** (merge when allowed, run ops `verify-backfill`, read `finops.json`; if `status` is `ok`, tick M2-04).
@@ -27,6 +28,12 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 7. Then **M5-01** (nightly margin review graph) per PLAN.md §17.
 
 Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s during image builds: re-run the failed job.
+
+## 2026-11-09 (autopilot run 78)
+
+- **Task:** M4-04 fixture re-record. Finished PR #181 (ops `cache` input): merged, `ci` and `deploy to dev` green. The sandbox cannot download artifacts, so PR #182 prints recorded fixtures in the job log; merged, `ci` and deploy green. Ops `record-fixtures` with `cache=true` (run 42656739045) succeeded and the fixtures were extracted from the log.
+- **Finding:** with caching on, `request_sha` changes for all 5 fixtures, so the replay tests (cache off) fail (2 failed, 212 passed). Fixtures not committed. Cost under $0.01.
+- **Decision (§8.2, next run):** either make replay tests set `MC_CACHE_PROMPT=1` and commit the cache-on fixtures, or keep cache off in fixtures and tick M4-04 on the unit tests. Recommended: set the flag in the replay tests, then commit the fixtures.
 
 ## 2026-11-09 (autopilot run 78)
 
