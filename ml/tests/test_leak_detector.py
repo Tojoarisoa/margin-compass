@@ -35,7 +35,7 @@ def test_step_change_is_found_within_a_day_with_impact():
     alerts = detect(d, v)
     assert len(alerts) == 1
     a = alerts[0]
-    assert a.start == d[60] and (a.detected - d[60]).days <= 1 and a.end is None
+    assert a.start == d[60] and (a.detected - d[60]).days <= 1 and a.end is not None  # re-baselined after max_open days
     expected = float(np.mean([PATTERN[i % 7] * 0.4 for i in range(60, 120)]))
     assert abs(a.impact_per_day - expected) / expected < 0.15
 
@@ -63,3 +63,25 @@ def test_score_flags_false_positive_and_miss():
     d, v = series(120, shifts=[(60, 119, 1.4)])
     r = score(detect(d, v), [Label("PT-X", d[20], d[25])])
     assert r["recall"] == 0.0 and r["precision"] == 0.0 and not r["passed"]
+
+
+def test_vectorised_baseline_matches_scalar():
+    import numpy as np
+
+    from mc_ml.leak_detector.detect import _baseline, _sigma, baseline_sigma
+    rng = np.random.default_rng(3)
+    x = np.maximum(rng.normal(100, 8, 120), 0)
+    x[:10] = 0
+    base, sig = baseline_sigma(x, 4)
+    for t in range(28, 120):
+        assert abs(_baseline(x, t, 4) - base[t]) < 1e-9 and abs(_sigma(x, t, 4) - sig[t]) < 1e-9
+
+
+def test_long_shift_is_rebaselined_so_a_second_shift_alerts():
+    from datetime import date, timedelta
+
+    from mc_ml.leak_detector.detect import Params, detect
+    days = [date(2025, 1, 1) + timedelta(i) for i in range(160)]
+    x = [10.0] * 40 + [14.0] * 60 + [20.0] * 60
+    alerts = detect(days, x, Params(min_rel=0.1, k=4))
+    assert [a.start for a in alerts] == [days[40], days[100]] and alerts[0].end is not None

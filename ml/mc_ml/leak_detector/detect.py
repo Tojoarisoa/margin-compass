@@ -3,7 +3,7 @@
 For each day the baseline is the median of the same weekday over the previous `weeks` weeks. A day is
 *high* when its log-ratio to the baseline exceeds max(k * robust sigma, min_rel). `min_run` consecutive
 high days raise an alert dated at the first high day; the baseline is frozen at that day so a persistent
-shift does not absorb itself. The alert closes after `close_days` normal days. Impact is the mean excess
+shift does not absorb itself. The alert closes after `close_days` normal days, or after `max_open` days (the shift is then the new baseline). Impact is the mean excess
 over the baseline, in the units of the series (USD per day when fed daily cost).
 """
 
@@ -25,6 +25,7 @@ class Params:
     min_rel: float = 0.15  # log-ratio floor, about +16%
     min_run: int = 2
     close_days: int = 3
+    max_open: int = 28  # a shift that persists this long becomes the new baseline, so later shifts can alert
 
 
 @dataclass(frozen=True)
@@ -54,9 +55,29 @@ def _sigma(values: np.ndarray, t: int, weeks: int) -> float:
     return max(1.4826 * float(np.median(np.abs(a - np.median(a)))), 0.02)
 
 
+def baseline_sigma(x: np.ndarray, weeks: int) -> tuple[np.ndarray, np.ndarray]:
+    """Vectorised `_baseline` and `_sigma` for every day t >= weeks * SEASON of one series (same values)."""
+    n = len(x)
+    base = np.full(n, np.nan)
+    sig = np.full(n, 0.1)
+    if n <= weeks * SEASON:
+        return base, sig
+    lags = np.stack([np.concatenate([np.full(SEASON * w, np.nan), x[: n - SEASON * w]]) for w in range(1, weeks + 1)])
+    base[weeks * SEASON :] = np.median(lags[:, weeks * SEASON :], axis=0)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        lr = np.where((base > 0) & (x > 0), np.log(x / base), np.nan)
+    for t in range(weeks * SEASON, n):
+        w = lr[max(weeks * SEASON, t - 28) : t]
+        w = w[~np.isnan(w)]
+        if len(w) >= 7:
+            sig[t] = max(1.4826 * float(np.median(np.abs(w - np.median(w)))), 0.02)
+    return base, sig
+
+
 def detect(dates: list[date], values: list[float], params: Params | None = None) -> list[Alert]:
     x = np.asarray(values, dtype=float)
     p = params or Params()
+    pre_base, pre_sigma = baseline_sigma(x, p.weeks)
     alerts: list[Alert] = []
     run: list[int] = []
     open_start: int | None = None
@@ -68,7 +89,7 @@ def detect(dates: list[date], values: list[float], params: Params | None = None)
         if open_start is not None:
             base, sigma = frozen[t % SEASON], frozen_sigma
         else:
-            base, sigma = _baseline(x, t, p.weeks), _sigma(x, t, p.weeks)
+            base, sigma = float(pre_base[t]), float(pre_sigma[t])
         if not base > 0:
             continue
         high = math.log(max(x[t], 1e-12) / base) > max(p.k * sigma, p.min_rel)
@@ -81,7 +102,10 @@ def detect(dates: list[date], values: list[float], params: Params | None = None)
                 alerts.append(_make(dates, x, frozen, open_start, detected, None, t))
         else:
             calm = 0 if high else calm + 1
-            if calm >= p.close_days:
+            if t - open_start >= p.max_open:
+                alerts[-1] = _make(dates, x, frozen, open_start, detected, t - 1, t)
+                open_start, run = None, []
+            elif calm >= p.close_days:
                 alerts[-1] = _make(dates, x, frozen, open_start, detected, t - p.close_days, t)
                 open_start = None
             else:

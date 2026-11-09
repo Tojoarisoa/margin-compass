@@ -30,7 +30,7 @@ def test_finds_labelled_shift_and_writes_mart(tmp_path):
     _write(tmp_path)
     out = run_detector(tmp_path, tmp_path / "patterns.parquet", "r1")
     mart = pq.read_table(tmp_path / "fct_margin_leaks.parquet").to_pylist()
-    assert [r["feature_id"] for r in mart] == ["F1"] and mart[0]["status"] == "open"
+    assert [r["feature_id"] for r in mart] == ["F1"] and mart[0]["status"] == "closed"  # a shift that persists is re-baselined
     assert out["ev03"]["found"] == ["PT-01"] and out["ev03"]["passed"] and out["ev03"]["precision"] == 1.0
 
 
@@ -50,3 +50,37 @@ def test_reads_m2_label_columns(tmp_path):
     pq.write_table(pa.Table.from_pylist(lab), tmp_path / "patterns.parquet")
     out = run_detector(tmp_path, tmp_path / "patterns.parquet", "r1")
     assert out["ev03"]["found"] == ["PT-01"] and out["ev03"]["passed"]
+
+
+def _usage(tmp_path, retry_surge=True, n=120):
+    """Silver usage for one feature with 3 tenants; tenant t2 retries x6 on days 80-83."""
+    gold, silver = tmp_path / "gold", tmp_path / "silver"
+    gold.mkdir(), silver.mkdir()
+    rows, cost = [], []
+    for i in range(n):
+        d = START + timedelta(days=i)
+        for t in ("t1", "t2", "t3"):
+            retries = 5 + (i + len(t)) % 2
+            if retry_surge and t == "t2" and 80 <= i <= 83:
+                retries *= 6
+            rows.append({"usage_date": d, "tenant_id": t, "feature_id": "F2", "request_count": 100, "input_tokens": 1000,
+                         "uncached_input_tokens": 300, "retry_count": retries, "llm_cost_usd": Decimal("1.5")})
+        cost.append({"cost_date": d, "feature_id": "F2", "llm_cost_usd": Decimal("4.5")})
+    pq.write_table(pa.Table.from_pylist(rows), silver / "slv_m2_llm_usage_priced.parquet")
+    pq.write_table(pa.Table.from_pylist(cost), gold / "fct_unit_cost.parquet")
+    lab = [{"pattern_id": "PT-02", "feature": "F2", "start_date": START + timedelta(days=80), "end_date": START + timedelta(days=83)}]
+    pq.write_table(pa.Table.from_pylist(lab), tmp_path / "patterns.parquet")
+    return gold
+
+
+def test_tenant_retry_surge_is_found_from_usage_detail(tmp_path):
+    gold = _usage(tmp_path)
+    out = run_detector(gold, tmp_path / "patterns.parquet", "r1")
+    mart = pq.read_table(gold / "fct_margin_leaks.parquet").to_pylist()
+    assert [(r["feature_id"], r["tenant_id"], r["metric"]) for r in mart] == [("F2", "t2", "tenant_retry_count")]
+    assert out["ev03"]["found"] == ["PT-02"] and out["ev03"]["precision"] == 1.0
+
+
+def test_quiet_usage_raises_no_alert(tmp_path):
+    gold = _usage(tmp_path, retry_surge=False)
+    assert run_detector(gold, None, "r1")["alerts"] == 0

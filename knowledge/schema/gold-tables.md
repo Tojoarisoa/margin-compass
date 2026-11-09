@@ -34,5 +34,5 @@ rank unprofitable tenants. Margin is negative when cost to serve exceeds AI reve
 ## 4. fct_margin_leaks
 <!-- clause: schema_margin_leaks -->
 
-Detected margin leaks: the feature, the start of the anomaly and its estimated dollar impact. Scored
+Detected margin leaks: the feature, the tenant (set only for tenant-level surges), the start of the anomaly and its estimated dollar impact. Scored
 against injected leak labels (EV-03).
