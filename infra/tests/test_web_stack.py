@@ -73,6 +73,13 @@ def test_api_lambda_is_bounded_and_never_retries_async_jobs(synth):
     t.has_resource_properties("AWS::Lambda::EventInvokeConfig", {"MaximumRetryAttempts": 0, "MaximumEventAgeInSeconds": 300})
 
 
+def test_api_worker_enables_prompt_caching(synth):
+    _, t, _ = synth
+    fn = next(f for f in t.find_resources("AWS::Lambda::Function").values()
+              if f["Properties"].get("FunctionName") == "mc-dev-web-api")
+    assert fn["Properties"]["Environment"]["Variables"]["MC_CACHE_PROMPT"] == "1"
+
+
 def test_api_role_least_privilege(synth):
     web, t, _ = synth
     role_id = web.get_logical_id(web.api.role.node.default_child)

@@ -71,7 +71,8 @@ class WebStack(cdk.Stack):
             reserved_concurrent_executions=API_RESERVED_CONCURRENCY,
             retry_attempts=0, max_event_age=cdk.Duration.minutes(5),  # a failed job is never re-run (no double spend)
             role=role, log_group=log_group,
-            environment={"LAKE_BUCKET": lake_bucket_name, "STATE_TABLE": core_table.table_name, "MC_ENV": env_name},
+            environment={"LAKE_BUCKET": lake_bucket_name, "STATE_TABLE": core_table.table_name, "MC_ENV": env_name,
+                         "MC_CACHE_PROMPT": "1"},  # M4-04: Bedrock prompt caching on the agent worker
         )
         url = self.api.add_function_url(auth_type=lambda_.FunctionUrlAuthType.AWS_IAM,
                                         invoke_mode=lambda_.InvokeMode.BUFFERED)

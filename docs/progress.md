@@ -21,7 +21,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 1. **On real gold:** M3-01, M3-02, M3-03 all done.
 2. **M2-04:** PG-8 *Platform FinOps* and S7 are complete once the first backfill data shows; wire `MC_FINOPS_FOCUS_GLOB` when the S7 export has data; then tick M2-04.
 4. **M4-05:** live-model EV-05/07 (needs analyst SQL generation) and an ops record run for real EV-10 latency, then tick M4-05.
-5. **M4-04:** set `MC_CACHE_PROMPT=1` on the worker (new, default off), re-record fixtures via ops with it on (semantic cache optional), then tick M4-04.
+5. **M4-04:** PR for `MC_CACHE_PROMPT=1` on the worker (run 77); after deploy, re-record fixtures via ops with it on, then tick M4-04.
 6. **M4-01:** run `mc-rag eval --embedder titan` via ops, then tick M4-01.
 7. Then **M5-01** (nightly margin review graph) per PLAN.md §17.
 
