@@ -12,6 +12,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
+0. **Finish PR #181** (merge when allowed; then run ops `record-fixtures` with `cache=true`, tick M4-04 if cache hits show).
 0. **Finish PR #179** (merge when allowed; after deploy run ops `rag-eval`; if EV-04 passes, tick M4-01).
 0. **Finish PR #177** (merge when allowed, run ops `verify-backfill`, read `finops.json`; if `status` is `ok`, tick M2-04).
 0. **M2-04:** `finops.json` is now published by the M2 build (run 76) but `status` is `awaiting_first_export` (AWS FOCUS export still empty). Re-check with ops `verify-backfill` once a day; when `status` is `ok`, tick M2-04.
@@ -29,7 +30,7 @@ Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s duri
 
 ## 2026-11-09 (autopilot run 78)
 
-- **Task:** M4-04: ops workflow gets a `cache` boolean input that sets `MC_CACHE_PROMPT` for record-fixtures / live-eval. Cost $0. Merge state below if updated.
+- **Task:** M4-04: ops workflow gets a `cache` boolean input that sets `MC_CACHE_PROMPT` for record-fixtures / live-eval. Cost $0. All checks green on head (`attribution` green after footer removal via MCP). **Blocked:** permission classifier denied the fast-forward merge (as in runs 55-77). Not retried or worked around. PR #181 left open.
 
 ## 2026-11-09 (autopilot run 77)
 
