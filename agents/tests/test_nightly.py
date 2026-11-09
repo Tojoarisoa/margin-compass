@@ -76,3 +76,16 @@ def test_deteriorating_margin_and_renewals(tmp_path):
     # 10 points of 2,800 revenue over 28 days, scaled to 30 days
     assert acts["t1/margin-trend"].impact_usd_month == Decimal("300.00")
     assert acts["t1/renewal"].approver == "revops_lead" and "30 days" in acts["t1/renewal"].title
+
+
+def test_plan_below_target_drafts_a_pricing_action(tmp_path):
+    root = _gold(tmp_path, leaks=False)
+    duckdb.sql("select * from (values ('bc-t0001','pro',true,DATE '2020-01-01'),"
+               "('bc-t0002','pro',true,DATE '2020-01-01'),('bc-t0003','ent',true,DATE '2020-01-01'))"
+               " v(tenant_id, plan, is_current, renewal_date)").write_parquet(str(root / "gold" / "dim_tenant.parquet"))
+    acts = nightly.review(root / "gold", "r1")
+    plan = next(a for a in acts if a.action_type == "ACT-2")
+    # pro: 28 days x (100+50) revenue = 4200, margin 28 x 30 = 840 -> 20%; gap 10 points -> 420 per 28 days -> 450/month
+    assert plan.target == "plan/pro" and plan.impact_usd_month == Decimal("450.00")
+    assert plan.approver == "pricing_committee" and plan.status == "proposed"
+    assert not any(a.target == "plan/ent" for a in acts)  # one tenant only

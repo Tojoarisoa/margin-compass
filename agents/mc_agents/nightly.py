@@ -1,6 +1,6 @@
 """Nightly margin review, step 1 (M5-01, PLAN.md §8.5): deterministic fan-out, rank and write.
 
-Reads the gold marts, drafts ACT-1 (open margin leaks) and ACT-3 (loss-making tenants) actions, ranks them by
+Reads the gold marts, drafts ACT-1 (open margin leaks), ACT-2 (plans under the margin target) and ACT-3 (loss-making tenants) actions, ranks them by
 margin $ x confidence / effort, and writes `fct_actions.parquet` and `publish/latest/margin_brief.json`.
 No LLM call is made here (specialist investigation and the batched low-severity summary come in later steps),
 so the nightly LLM spend of this step is $0. Every figure is computed in Decimal from the marts; the brief
@@ -28,11 +28,12 @@ DETERIORATION_PP = Decimal("5")  # margin % fall (points) versus the previous 28
 RENEWAL_DAYS = 90
 RENEWAL_TARGET_PCT = Decimal("30")  # renewals below this 28-day margin % are drafted for an account action
 RECENT_LEAK_CONF = Decimal("0.40")  # a leak detected in the last 28 days but already closed
+PLAN_MIN_TENANTS = 2  # a pricing draft needs a plan with at least this many tenants, so one account cannot drive it
 BRIEF_TOP = 5
 ASSUMPTIONS = "Impact is the trailing run-rate x 30 days; confidence and effort are v1 heuristics, not measured."
 
 # Approver roles named in PLAN.md §8.4 (ACT-1 Head of AI Platform, ACT-3 RevOps / CS lead).
-APPROVER = {"ACT-1": "head_of_ai_platform", "ACT-3": "revops_lead"}
+APPROVER = {"ACT-1": "head_of_ai_platform", "ACT-2": "pricing_committee", "ACT-3": "revops_lead"}
 
 SCHEMA = pa.schema([
     ("action_id", pa.string()), ("run_id", pa.string()), ("action_type", pa.string()), ("target", pa.string()),
@@ -157,6 +158,36 @@ def _next_renewal(base: date, today: date) -> date:
     return due
 
 
+def _plan_actions(con, gold: Path, run_id: str) -> list[Action]:
+    """ACT-2 for plans (current plan of each tenant) whose pooled 28-day margin % is below RENEWAL_TARGET_PCT."""
+    path, dim = gold / "fct_m2_tenant_margin.parquet", gold / "dim_tenant.parquet"
+    if not path.exists() or not dim.exists():
+        return []
+    if "plan" not in {r[0] for r in con.execute(f"SELECT name FROM parquet_schema('{dim}')").fetchall()}:
+        return []
+    rows = con.execute(f"""
+        WITH last AS (SELECT max(margin_date) AS d FROM read_parquet('{path}')),
+        cur AS (SELECT tenant_id, max(plan) AS plan_name FROM read_parquet('{dim}') WHERE is_current GROUP BY tenant_id)
+        SELECT cur.plan_name, count(DISTINCT m.tenant_id), sum(m.revenue_usd), sum(m.margin_usd)
+        FROM read_parquet('{path}') m, last JOIN cur ON cur.tenant_id = m.tenant_id
+        WHERE m.margin_date > last.d - INTERVAL {TRAILING_DAYS} DAY
+        GROUP BY cur.plan_name ORDER BY cur.plan_name""").fetchall()
+    out = []
+    for plan, n, rev, mar in rows:
+        if n < PLAN_MIN_TENANTS or not rev:
+            continue
+        now = _pct(mar, rev)
+        if now >= RENEWAL_TARGET_PCT:
+            continue
+        gap = (RENEWAL_TARGET_PCT - now) / 100 * Decimal(rev) * MONTH_DAYS / TRAILING_DAYS
+        out.append(_action(run_id, "ACT-2", f"plan/{plan}",
+                           f"Plan {plan} runs at {now:.1f}% margin across {n} tenants; draft a pricing or packaging change "
+                           f"(included usage, overage) to reach {RENEWAL_TARGET_PCT}%",
+                           gap, Decimal("0.30"), 4, "Model the churn and downgrade response before the committee decides",
+                           "high"))
+    return out
+
+
 def _trend_actions(con, gold: Path, run_id: str) -> list[Action]:
     """ACT-3 for tenants still profitable whose 28-day margin % fell by DETERIORATION_PP or more."""
     _d, rows = _windows(con, gold)
@@ -206,7 +237,8 @@ def review(gold: Path, run_id: str) -> list[Action]:
     con.execute("SET threads = 1")
     g = Path(gold)
     found = {a.action_id: a for a in (_leak_actions(con, g, run_id) + _tenant_actions(con, g, run_id)
-                                      + _trend_actions(con, g, run_id) + _renewal_actions(con, g, run_id))}
+                                      + _trend_actions(con, g, run_id) + _renewal_actions(con, g, run_id)
+                                      + _plan_actions(con, g, run_id))}
     ranked = sorted(found.values(), key=lambda a: (-a.score, a.action_id))
     return ranked[:MAX_ACTIONS]
 
