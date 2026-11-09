@@ -227,6 +227,12 @@ def run_m2_dbt(landing: Path, data_root: Path, run_id: str, transform_dir: Path 
             summary["published"] += publish_finops(root, run_id)
         except Exception as exc:  # noqa: BLE001
             summary["finops_error"] = str(exc)[:200]
+        try:  # M5-01: nightly margin review (deterministic, no LLM) -> fct_actions + margin brief; never fails the build
+            from mc_agents.nightly import write as write_margin_brief
+
+            summary["published"] += write_margin_brief(root, run_id)
+        except Exception as exc:  # noqa: BLE001
+            summary["nightly_error"] = str(exc)[:200]
     return summary
 
 

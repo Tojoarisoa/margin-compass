@@ -13,13 +13,18 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 ## Next
 
 1. **M4-05:** live-model EV-05/07 (needs analyst SQL generation) and an ops record run for real EV-10 latency, then tick M4-05.
-2. **M5-01 (steps 2+):** step 1 done (deterministic `agents/mc_agents/nightly.py`: leaks + losing tenants → ranked ACT-1/ACT-3 drafts → `fct_actions` + `margin_brief.json`). Next: wire it into the nightly workflow/publish and the dashboard brief card, add ACT-2 pricing drafts, then LLM specialist investigation with the $0.50 nightly cap and episodic memory. Tick M5-01 when done. Then M5-02.
+2. **M5-01 (steps 3+):** step 1 done (`agents/mc_agents/nightly.py`), step 2 wired it into the M2 build (PR in progress: finish it first, then verify `margin_brief.json` with ops `verify-backfill`). Next: the dashboard brief card, add ACT-2 pricing drafts, then LLM specialist investigation with the $0.50 nightly cap and episodic memory. Tick M5-01 when done. Then M5-02.
 3. **M2-04 (daily check, not a task):** run ops `verify-backfill` once a day and read `finops.json`. Last check 2026-11-09 17:29 UTC: `awaiting_first_export` (AWS FOCUS export still empty). When `status` is `ok`, wire `MC_FINOPS_FOCUS_GLOB` if still needed and tick M2-04. Everything else in M2-04 is done.
 
 Resolved 2026-11-09: CI on main after #184 failed because of a GitHub Actions outage (githubstatus: Actions major outage, ~18:10-18:45 UTC); every job passed at least once on 17a6bb8, and the owner's PR with the merge guard re-ran the full CI and deployed. New merge guard: AGENTS.md §8.1 step 4.
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed; prompt caching shows 0 cache-read tokens (prompts ~1.5k tokens, likely under the cache minimum).
 Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s during image builds: re-run the failed job.
+
+## 2026-11-09 (autopilot run 81)
+
+- **Task:** M5-01 step 2. The M2 build (`run_m2_dbt`) now calls `mc_agents.nightly.write` after the other publishes (never fails the build, error under `nightly_error`); the pipelines image installs `mc-agents` with `--no-deps` (nightly needs only duckdb and pyarrow). Ruff clean; the local pipelines suite is too slow in this sandbox, so CI is the check. Cost $0 (no LLM, no new resource).
+- **Decisions (§8.2):** reuse the existing build rather than add a schedule; M5-01 not ticked.
 
 ## 2026-11-09 (autopilot run 80)
 

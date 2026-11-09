@@ -15,15 +15,17 @@ COPY rag/pyproject.toml /build/rag/
 RUN cd /build/pipelines && uv export --frozen --no-dev --no-emit-project --no-emit-package mc-ml --no-emit-package mc-rag --no-hashes -o /build/requirements.txt \
  && uv pip install --system --no-cache -r /build/requirements.txt
 
+# mc-agents is installed without dependencies: the nightly review (mc_agents.nightly) needs only duckdb and pyarrow.
 # 2) Code
 COPY simulator /build/simulator
 COPY ml /build/ml
 COPY rag /build/rag
+COPY agents /build/agents
 COPY pipelines /build/pipelines
 COPY knowledge ${LAMBDA_TASK_ROOT}/knowledge
 COPY reference ${LAMBDA_TASK_ROOT}/reference
 COPY metrics ${LAMBDA_TASK_ROOT}/metrics
-RUN uv pip install --system --no-cache --no-deps /build/simulator /build/ml /build/rag /build/pipelines \
+RUN uv pip install --system --no-cache --no-deps /build/simulator /build/ml /build/rag /build/agents /build/pipelines \
  && cp -r /build/pipelines/transform ${LAMBDA_TASK_ROOT}/transform \
  && rm -rf /build /usr/local/bin/uv
 
