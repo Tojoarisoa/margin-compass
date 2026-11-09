@@ -12,7 +12,8 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-0. **M3-01 done** (EV-02 passed on AWS, run 74). Take the first open item below.
+0. **M2-04:** FOCUS wiring merged (run 75). Next: read `publish/latest/finops.json` (add to ops `verify-backfill`); if `status` is `ok`, M2-04 can be ticked, else wait for the export.
+0. **M3-01 done** (EV-02 passed on AWS, run 74).
 0. **M4-06 done** (live graph view, run 68).
 0. **M3-02 done** (EV-03 passed on AWS, run 67). Optional later: PT-06 (one small F2 tenant, x6 requests) is still missed.
 1. **On real gold:** M3-01, M3-02, M3-03 all done.
@@ -23,6 +24,12 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 7. Then **M5-01** (nightly margin review graph) per PLAN.md §17.
 
 Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s during image builds: re-run the failed job.
+
+## 2026-11-09 (autopilot run 75)
+
+- **Task:** M2-04 FinOps wiring. PR #176 (`e10a993`): the m2 build downloads the AWS FOCUS export (`focus-1-2/*.parquet`) from the foundation billing bucket and sets `MC_FINOPS_FOCUS_GLOB`; pipeline role gets read-only access to that bucket's `focus-1-2/` prefix. All checks green (`attribution` green after footer removal via MCP), merged, `ci` and `deploy to dev` green. `start-backfill` on AWS succeeded (EV-02/03/11 still pass). Cost $0.
+- **Not verified:** whether `finops.json` shows `status: ok` (needs a published-file read; export may still be empty). M2-04 not ticked.
+- **Decisions (§8.2):** read-only grant, one mc-* bucket; missing export never fails the build.
 
 ## 2026-11-09 (autopilot run 74)
 
