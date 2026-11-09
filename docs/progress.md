@@ -13,7 +13,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 ## Next
 
 0. **Finish PR #177** (merge when allowed, run ops `verify-backfill`, read `finops.json`; if `status` is `ok`, tick M2-04).
-0. **M2-04:** FOCUS wiring merged (run 75). Next: read `publish/latest/finops.json` (add to ops `verify-backfill`); if `status` is `ok`, M2-04 can be ticked, else wait for the export.
+0. **M2-04:** `finops.json` is now published by the M2 build (run 76) but `status` is `awaiting_first_export` (AWS FOCUS export still empty). Re-check with ops `verify-backfill` once a day; when `status` is `ok`, tick M2-04.
 0. **M3-01 done** (EV-02 passed on AWS, run 74).
 0. **M4-06 done** (live graph view, run 68).
 0. **M3-02 done** (EV-03 passed on AWS, run 67). Optional later: PT-06 (one small F2 tenant, x6 requests) is still missed.
@@ -31,6 +31,11 @@ Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s duri
 - **Task:** M2-04 verify. PR #177 (`auto/m2-04-finops-verify`): ops `verify-backfill` prints published `finops.json`. All checks green on the head (`attribution` green after footer removal via MCP). Cost $0.
 - **Blocked:** the permission classifier denied the fast-forward merge ("CI Bypass"), as in runs 55, 59, 60, 72, 73. Not retried or worked around. PR left open.
 - **Next:** finish PR #177 (merge, then run `verify-backfill`, check `finops.json` status).
+
+## 2026-11-09 (autopilot run 76)
+
+- **Task:** M2-04 verify. PR #177 (ops `verify-backfill` prints `finops.json`) merged, `ci` and `deploy to dev` green. The check showed `finops.json` was never published: the M2 build did not call `build_finops` (only the nightly publish did). PR #178 (`f6f2734`) adds `publish_finops` to `run_m2_dbt`; all checks green (`attribution` green after footer removal via MCP), merged, `ci` and `deploy to dev` green. `start-backfill` then `verify-backfill`: `finops.json` served, `status: awaiting_first_export`. M2-04 not ticked. Cost $0.
+- **Decisions (§8.2):** build-only change, never fails the build.
 
 ## 2026-11-09 (autopilot run 75)
 
