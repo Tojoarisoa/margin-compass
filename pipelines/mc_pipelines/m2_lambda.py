@@ -19,7 +19,7 @@ from typing import Any
 log = logging.getLogger("mc_pipelines")
 WORK = Path("/tmp/mc_m2")
 LANDING_PREFIX = "landing/booncore_m2"
-UPLOAD_PREFIXES = ("silver", "gold", "publish")
+UPLOAD_PREFIXES = ("silver", "gold", "publish", "models")
 
 
 def _upload(s3: Any, bucket: str, root: Path, prefix: str, extra) -> int:
@@ -125,7 +125,8 @@ def handle(event: dict, run_id: str, s3: Any = None) -> dict:
                 if (data / prefix).exists():
                     uploaded += _upload(s3, bucket, data / prefix, prefix, _extra_args)
         return {"status": "success", "run_id": run_id, "step": "build", "objects_uploaded": uploaded,
-                "dbt": summary.get("statuses"), "leaks": _brief(summary.get("leaks")), "churn": _brief(summary.get("churn"))}
+                "dbt": summary.get("statuses"), "leaks": _brief(summary.get("leaks")), "churn": _brief(summary.get("churn")),
+                "forecast": _brief(summary.get("forecast"))}
 
     return {"status": "bad_event", "run_id": run_id, "reason": "step must be month, static or build"}
 

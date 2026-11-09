@@ -64,6 +64,7 @@ def test_static_month_and_build_round_trip_through_s3(tmp_path, monkeypatch):
     assert out["status"] == "success", out
     assert (tmp_path / "s3" / "lake" / "gold" / "fct_cost_to_serve.parquet").exists()
     assert (tmp_path / "s3" / "lake" / "gold" / "_quality" / "m2_scorecard.json").exists()
+    assert "forecast" in out  # M3-01: the build tries to train the forecaster (one month is too short, so it reports an error)
     runs = tmp_path / "s3" / "lake" / "publish" / "latest" / "runs.json"
     assert json.loads(runs.read_text())["runs"][0]["run_id"] == "r"
     m2_lambda.handle({"profile": "m2", "step": "build"}, "r2", s3)  # a second build is added, newest first

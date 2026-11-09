@@ -39,9 +39,14 @@ FORECAST_SCHEMA = pa.schema([
 
 
 def _daily_cost_by_feature(gold: Path) -> tuple[dict[str, list[float]], list[date]]:
-    usage = pq.read_table(gold / "fct_llm_usage_daily.parquet", columns=["usage_date", "feature_id", "llm_cost_usd"])
-    kpis = pq.read_table(gold / "agg_exec_kpis.parquet", columns=["kpi_date"])
-    start, end = pc.min(kpis["kpi_date"]).as_py(), pc.max(kpis["kpi_date"]).as_py()  # the simulated window
+    if (gold / "fct_llm_usage_daily.parquet").exists():  # M1 gold
+        usage = pq.read_table(gold / "fct_llm_usage_daily.parquet", columns=["usage_date", "feature_id", "llm_cost_usd"])
+        kpis = pq.read_table(gold / "agg_exec_kpis.parquet", columns=["kpi_date"])
+        start, end = pc.min(kpis["kpi_date"]).as_py(), pc.max(kpis["kpi_date"]).as_py()  # the simulated window
+    else:  # M2 gold: fct_unit_cost (cost_date, feature_id, llm_cost_usd)
+        usage = pq.read_table(gold / "fct_unit_cost.parquet", columns=["cost_date", "feature_id", "llm_cost_usd"])
+        usage = usage.rename_columns(["usage_date", "feature_id", "llm_cost_usd"])
+        start, end = pc.min(usage["usage_date"]).as_py(), pc.max(usage["usage_date"]).as_py()
     days = [start + timedelta(days=i) for i in range((end - start).days + 1)]
     grouped = usage.group_by(["usage_date", "feature_id"]).aggregate([("llm_cost_usd", "sum")]).to_pylist()
     features = sorted({r["feature_id"] for r in grouped})

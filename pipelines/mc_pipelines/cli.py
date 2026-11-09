@@ -195,6 +195,19 @@ def run_m2_dbt(landing: Path, data_root: Path, run_id: str, transform_dir: Path 
             summary["churn"] = run_churn(landing / "labels" / "renewal_events.parquet", root / "gold", run_id)
         except Exception as exc:  # noqa: BLE001
             summary["churn"] = {"error": str(exc)[:200]}
+        try:  # M3-01: AI COGS forecaster (EV-02) on the new gold; artifacts under models/, registry in DynamoDB on AWS
+            from mc_ml.registry import DynamoRegistry, FileRegistry
+            from mc_ml.train import train_cogs_forecaster
+
+            table, bucket = os.environ.get("REGISTRY_TABLE", ""), os.environ.get("LAKE_BUCKET", "")
+            registry = DynamoRegistry(table) if table else FileRegistry(root / "models" / "registry.json")
+            base = f"s3://{bucket}/models" if bucket else str(root / "models")
+            t = train_cogs_forecaster(root / "gold", root / "models", registry, base, run_id)
+            summary["forecast"] = {k: t[k] for k in ("version", "alias", "registered", "promoted", "wape")}
+            summary["forecast"]["ev02"] = json.loads(
+                (root / "models" / "ai_cogs_forecaster" / t["version"] / "backtest.json").read_text())["ev02"].get("passed")
+        except Exception as exc:  # noqa: BLE001
+            summary["forecast"] = {"error": str(exc)[:200]}
         summary["published"] = publish_m2_quality(root)
         try:  # M3-05: PG-3 Margin Leaks data; a publish problem never fails the data build
             from .publish import publish_pg3
