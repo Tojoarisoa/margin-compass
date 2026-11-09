@@ -12,7 +12,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-0. **M5-01 (dashboard brief card, do first):** `margin_brief.json` is live and non-empty (17 actions, $13,181.27/month at stake; read back by ops `verify-backfill`). Build the dashboard brief card from it, then ACT-2 pricing drafts, then LLM specialist investigation with the $0.50 nightly cap and episodic memory. Tick M5-01 when done. Then M5-02.
+0. **M5-01 (next step):** the dashboard brief card is built (`Brief.tsx`). Now ACT-2 pricing drafts, then LLM specialist investigation with the $0.50 nightly cap and episodic memory. Tick M5-01 when done. Then M5-02.
 1. **M4-05:** live-model EV-05/07 (needs analyst SQL generation) and an ops record run for real EV-10 latency, then tick M4-05.
 2. **M5-01 (old note, superseded by 0).**
 3. **M2-04 (daily check, not a task):** run ops `verify-backfill` once a day and read `finops.json`. Last check 2026-11-09 17:29 UTC: `awaiting_first_export` (AWS FOCUS export still empty). When `status` is `ok`, wire `MC_FINOPS_FOCUS_GLOB` if still needed and tick M2-04. Everything else in M2-04 is done.
@@ -21,6 +21,11 @@ Resolved 2026-11-09: CI on main after #184 failed because of a GitHub Actions ou
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed; prompt caching shows 0 cache-read tokens (prompts ~1.5k tokens, likely under the cache minimum).
 Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s during image builds: re-run the failed job.
+
+## 2026-11-09 (autopilot run 83)
+
+- **Task:** M5-01 step 4. PR (`auto/m5-01-brief-card`): `dashboard/src/Brief.tsx` shows the daily margin brief (headline, top actions, approver, $/month at stake) from `publish/latest/margin_brief.json`; hidden if the file is missing. Dashboard build and typecheck clean. Cost $0. M5-01 not ticked (ACT-2 and LLM investigation remain).
+- **Decisions (§8.2):** card placed after the KPI sections, no new library.
 
 ## 2026-11-09 (autopilot run 82)
 

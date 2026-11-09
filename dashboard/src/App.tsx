@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { AskPanel } from "./AskPanel";
+import { BriefCard } from "./Brief";
 import { CogsForecast, MarginForecast, MarginTrend } from "./charts";
 import { count, money, percent } from "./format";
 import type { Snapshot } from "./types";
@@ -141,6 +142,8 @@ export function App() {
           </div>
         </section>
       )}
+
+      {snap.m2_kpis && <BriefCard />}
 
       {snap.m2_kpis && (
         <section className="card" aria-labelledby="explore-title">
