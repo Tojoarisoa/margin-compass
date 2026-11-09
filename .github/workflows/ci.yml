@@ -104,6 +104,8 @@ jobs:
           raise SystemExit(main(["run", "--landing", str(root / "landing" / "booncore"), "--data-root", str(root), "--ingest-date", "2026-11-04"]))
           PY
       - name: Replay every recorded model ($0, no network)
+        env:
+          MC_CACHE_PROMPT: "1"  # fixtures were recorded with prompt caching on (M4-04)
         run: |
           set -euo pipefail
           mkdir -p ../data/ci/evals
