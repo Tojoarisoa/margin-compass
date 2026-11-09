@@ -24,7 +24,7 @@ Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s duri
 
 ## 2026-11-09 (autopilot run 83)
 
-- **Task:** M5-01 step 4. PR (`auto/m5-01-brief-card`): `dashboard/src/Brief.tsx` shows the daily margin brief (headline, top actions, approver, $/month at stake) from `publish/latest/margin_brief.json`; hidden if the file is missing. Dashboard build and typecheck clean. Cost $0. M5-01 not ticked (ACT-2 and LLM investigation remain).
+- **Task:** M5-01 step 4. PR (`auto/m5-01-brief-card`): `dashboard/src/Brief.tsx` shows the daily margin brief (headline, top actions, approver, $/month at stake) from `publish/latest/margin_brief.json`; hidden if the file is missing. Dashboard build and typecheck clean. PR #190 merged, `ci` and `deploy to dev` green (`attribution` green after footer removal via MCP). Cost $0. M5-01 not ticked (ACT-2 and LLM investigation remain).
 - **Decisions (§8.2):** card placed after the KPI sections, no new library.
 
 ## 2026-11-09 (autopilot run 82)
