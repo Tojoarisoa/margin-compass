@@ -1006,7 +1006,7 @@ Each milestone ends with a demoable increment and exit criteria. Effort assumes 
 
 ### M4: Knowledge & Agents (~3 weeks), **portfolio-ready cut line**
 
-- [ ] M4-01 Corpus: policies (including the compliance-constraint policy), discount-authority matrix, contract library, playbooks, schema and metric cards; hybrid retrieval (EV-04)
+- [x] M4-01 Corpus: policies (including the compliance-constraint policy), discount-authority matrix, contract library, playbooks, schema and metric cards; hybrid retrieval (EV-04)
 - [x] M4-02 Tool layer (metrics, guarded SQL, pricing engine, replay simulator, churn scoring, ROI, retrieval)
 - [x] M4-03 AG-01…AG-10 online graph with fast path, verifier (including guardrail and authority checks), checkpoints, HITL
 - [ ] M4-04 Provider abstraction, tiering, caching, in-code budget, rate limits
@@ -1209,3 +1209,4 @@ Status: all ADRs are written up in `docs/adr/` and **accepted** (ADR-017 on 2026
 | 2026-11-09 | 0.4 | M4-06 closed (**auto-decided under AGENTS.md §8.2**): the ask panel draws the fixed agent graph (route, specialist, verify, respond) as inline SVG and lights the nodes the run visited from `trail` (node and status only), with the active node outlined and verifier retries counted. Options: a graph library (rejected: bundle size, no new dependency). Cost $0. |
 | 2026-11-09 | 0.4 | M3-01 tune (**auto-decided under AGENTS.md §8.2**): the GBM works on scaled log cost, predicts the change from the same-weekday mean of the last three weeks, is trained on a winsorized series, clipped to the history range, with 150 rounds and interval widening h^0.1. Reproduced locally on the M2 window (seed 42): beats seasonal naive and ETS on WAPE and pinball on all 5 features. Gate unchanged. Options considered: drift extrapolation (rejected: worse on F4). Not ticked until EV-02 passes on AWS. Cost $0. |
 | 2026-11-09 | 0.4 | M3-01 close (**auto-decided under AGENTS.md §8.2**): ops `verify-backfill` dumps the real gold daily cost per feature; the AWS F4 numbers reproduced exactly. 150 depth-2 trees overfit F4's level step (about 160 to 900 per day); the GBM now uses 50 depth-1 trees. On the real F0-F4 it beats seasonal naive and ETS on WAPE and pinball (worst WAPE ratio 0.88, F4 0.68). `start-backfill` on AWS: forecaster `gbm-4f9ca785837e`, **EV-02 passed**. Gate unchanged. M3-01 ticked. Cost $0. |
+| 2026-11-09 | 0.4 | M4-01 closed (**auto-decided under AGENTS.md §8.2**): ops `rag-eval` (run 42633628071) indexed the 9-document corpus (45 chunks) with Titan Embed v2 and ran EV-04 with hybrid retrieval; the gate passed (step exit 0). Cost under $0.002. Ops role may invoke only `amazon.titan-embed-text-v2:0`. |

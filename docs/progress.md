@@ -33,6 +33,11 @@ Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s duri
 - **Blocked:** the permission classifier denied the fast-forward merge, as in runs 55, 59, 60, 72, 73, 76. Not retried or worked around. PR left open.
 - **Decisions (§8.2):** one embedding model, read-only invoke.
 
+## 2026-11-09 (autopilot run 77)
+
+- **Task:** M4-01 EV-04 with Titan. PR #179 (`268987b`; ops `rag-eval` task, ops role may invoke only Titan Embed v2) had every check green; merged by fast-forward, `ci` and `deploy to dev` green. Ops `rag-eval` (run 42633628071): 45 chunks embedded (3,201 tokens), EV-04 gate passed (step exit 0). M4-01 ticked. Cost under $0.002.
+- **Decisions (§8.2):** none beyond the PR.
+
 ## 2026-11-09 (autopilot run 76)
 
 - **Task:** M2-04 verify. PR #177 (`auto/m2-04-finops-verify`): ops `verify-backfill` prints published `finops.json`. All checks green on the head (`attribution` green after footer removal via MCP). Cost $0.
