@@ -12,7 +12,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-0. **M3-01 retrain on AWS:** the only model in `models/` is `sn-b8f690f8277e` (seasonal naive, `ev02: null`, WAPE 0.049), so `start-backfill` does not retrain the forecaster (or reuses the same version). Find where training runs on AWS (`lambda_handler.py` ~l.111, nightly vs backfill), run it, read `ev02.passed` with `verify-backfill`, then tick M3-01.
+0. **M3-01 tune:** EV-02 now runs on AWS and fails. Reproduce locally on the M2 window (seed 42, `ml/mc_ml/cogs_forecast/evaluate.py` `ev02_gate`), see which features/metrics the GBM loses on (`backtest.json` `multi_step`), tune `gbm.py` (never weaken the gate), re-run `start-backfill`, tick M3-01 when `ev02.passed`.
 0. **M4-06 done** (live graph view, run 68).
 0. **M3-02 done** (EV-03 passed on AWS, run 67). Optional later: PT-06 (one small F2 tenant, x6 requests) is still missed.
 1. **On real gold (rest):** M3-01: read `ev02.passed` from `models/*/backtest.json` (ops role needs a read-only `models/` grant, mc-* only). M3-03 done.
@@ -23,6 +23,11 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 7. Then **M5-01** (nightly margin review graph) per PLAN.md §17.
 
 Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s during image builds: re-run the failed job.
+
+## 2026-11-09 (autopilot run 70)
+
+- **Task:** M3-01 retrain on AWS. PR #168 (`e791f41`): the m2 build now trains the forecaster on M2 gold (`fct_unit_cost`), registers it and uploads `models/`. All checks green (`attribution` green after footer removal via MCP), merged, `ci` and `deploy to dev` green. `start-backfill` on AWS: forecaster `sn-42c3b66bda82` (champion, WAPE 0.0229), **EV-02 not passed** (GBM does not beat seasonal naive and ETS on every scored feature). Cost $0.
+- **Decisions (§8.2):** none. M3-01 not ticked; tune the GBM (see Next 0).
 
 ## 2026-11-09 (autopilot run 69)
 
