@@ -12,6 +12,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
+0. **Finish PR #179** (merge when allowed; after deploy run ops `rag-eval`; if EV-04 passes, tick M4-01).
 0. **Finish PR #177** (merge when allowed, run ops `verify-backfill`, read `finops.json`; if `status` is `ok`, tick M2-04).
 0. **M2-04:** `finops.json` is now published by the M2 build (run 76) but `status` is `awaiting_first_export` (AWS FOCUS export still empty). Re-check with ops `verify-backfill` once a day; when `status` is `ok`, tick M2-04.
 0. **M3-01 done** (EV-02 passed on AWS, run 74).
@@ -25,6 +26,12 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 7. Then **M5-01** (nightly margin review graph) per PLAN.md §17.
 
 Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s during image builds: re-run the failed job.
+
+## 2026-11-09 (autopilot run 77)
+
+- **Task:** M4-01 EV-04 on Titan. PR #179 (`auto/m4-01-rag-eval-ops`): ops task `rag-eval` (index + `mc-rag eval --embedder titan`) and ops role may invoke only Titan v2. All checks green on the head (`attribution` green after footer removal via MCP). Cost $0.
+- **Blocked:** the permission classifier denied the fast-forward merge, as in runs 55, 59, 60, 72, 73, 76. Not retried or worked around. PR left open.
+- **Decisions (§8.2):** one embedding model, read-only invoke.
 
 ## 2026-11-09 (autopilot run 76)
 
