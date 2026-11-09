@@ -12,7 +12,6 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-0. **Finish the M4-04 PR** (`auto/m4-04-cache-fixtures`, if still open): merge when every check is green.
 0. **Next task:** M4-05 (live-model EV-05/07, ops record run for real EV-10 latency), or M2-04 once `finops.json` status is `ok`, or M5-01.
 
 0. **Finish PR #177** (merge when allowed, run ops `verify-backfill`, read `finops.json`; if `status` is `ok`, tick M2-04).
@@ -29,7 +28,7 @@ Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s duri
 
 ## 2026-11-09 (autopilot run 79)
 
-- **Task:** M4-04 close-out. Committed the cache-on `haiku-4-5` fixtures (taken from ops run 42656739045's log) and made the agents tests run with `MC_CACHE_PROMPT=1` (conftest autouse; the cache-flag unit tests clear it). Agents 214 passed, ruff clean. M4-04 ticked. Cost $0.
+- **Task:** M4-04 close-out. Committed the cache-on `haiku-4-5` fixtures (taken from ops run 42656739045's log) and made the agents tests run with `MC_CACHE_PROMPT=1` (conftest autouse; the cache-flag unit tests clear it). Agents 214 passed, ruff clean. M4-04 ticked. PR #183 merged (CI replay job also sets the flag), `ci` and `deploy to dev` green. Cost $0.
 - **Decisions (§8.2):** option recommended in run 78. Note: fixtures show 0 cache-read tokens (prompts ~1.5k tokens, likely under the model's cache minimum), so real savings are unconfirmed.
 
 ## 2026-11-09 (autopilot run 78)
