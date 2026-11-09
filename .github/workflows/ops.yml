@@ -128,7 +128,7 @@ jobs:
           mkdir -p lake/models
           aws s3 sync "s3://$bucket/models" lake/models --only-show-errors || true
           { echo "## Forecaster EV-02 (models/*/backtest.json)"; echo '```'
-            for f in $(find lake/models -name backtest.json | sort | tail -3); do echo "$f"; python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(json.dumps({'wape': d.get('wape'), 'ev02': d.get('ev02')}, indent=1)[:2500])" "$f"; done
+            for f in $(find lake/models -name backtest.json | sort | tail -3); do echo "$f"; python3 -c "import json,sys; d=json.load(open(sys.argv[1])); e=d.get('ev02') or {}; print(json.dumps({'wape': d.get('wape'), 'passed': e.get('passed'), 'features_scored': e.get('features_scored')})); print('\n'.join(e.get('failures', [])[:40])); [print(k, {m: {x: (y or {}).get('wape') for x, y in v.items()} for m in ['wape']} if v else None) for k, v in sorted((d.get('multi_step') or {}).items())]" "$f"; done
             echo '```'; } | tee -a "$GITHUB_STEP_SUMMARY"
           exit "$st"
 
