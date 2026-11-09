@@ -378,7 +378,7 @@ class FoundationStack(cdk.Stack):
             ("ListBillingExport", ["s3:ListBucket"], [self.billing_bucket.bucket_arn]),
             ("ListLake", ["s3:ListBucket"], [f"arn:aws:s3:::mc-*-data-lake-{acct}"]),
             ("ReadLakeGold", ["s3:GetObject"],
-             [f"arn:aws:s3:::mc-*-data-lake-{acct}/{p}/*" for p in ("gold", "silver", "publish")]),
+             [f"arn:aws:s3:::mc-*-data-lake-{acct}/{p}/*" for p in ("gold", "silver", "publish", "models")]),
             ("ReadStacks", ["cloudformation:DescribeStacks"], [f"arn:aws:cloudformation:{region}:{acct}:stack/mc-*/*"]),
             ("ReadLogs", ["logs:FilterLogEvents"], [f"arn:aws:logs:{region}:{acct}:log-group:/aws/lambda/mc-*:*"]),
         ]

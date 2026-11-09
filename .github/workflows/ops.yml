@@ -125,6 +125,11 @@ jobs:
           { echo "## Lake row counts (silver and gold)"; echo '```'; cat counts.txt; echo '```'; } | tee -a "$GITHUB_STEP_SUMMARY"
           url="$(aws cloudformation describe-stacks --stack-name mc-dev-web --query "Stacks[0].Outputs[?OutputKey=='Url'].OutputValue" --output text)"
           { echo "## Published quality gates (EV-03, EV-11)"; echo '```json'; curl -s "$url/publish/latest/quality.json" | head -c 3000; echo; echo '```'; } | tee -a "$GITHUB_STEP_SUMMARY"
+          mkdir -p lake/models
+          aws s3 sync "s3://$bucket/models" lake/models --only-show-errors || true
+          { echo "## Forecaster EV-02 (models/*/backtest.json)"; echo '```'
+            for f in $(find lake/models -name backtest.json | sort | tail -3); do echo "$f"; python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(json.dumps({'wape': d.get('wape'), 'ev02': d.get('ev02')}, indent=1)[:2500])" "$f"; done
+            echo '```'; } | tee -a "$GITHUB_STEP_SUMMARY"
           exit "$st"
 
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
