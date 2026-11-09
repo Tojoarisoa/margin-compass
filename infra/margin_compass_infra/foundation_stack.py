@@ -373,6 +373,8 @@ class FoundationStack(cdk.Stack):
             ("InvokeAgentModels", ["bedrock:InvokeModel"],
              [f"arn:aws:bedrock:{region}:{acct}:inference-profile/us.anthropic.claude-haiku-{m}" for m in OPS_MODEL_SUFFIXES]
              + [f"arn:aws:bedrock:{r}::foundation-model/anthropic.claude-haiku-{m}" for r in US_PROFILE_REGIONS for m in OPS_MODEL_SUFFIXES]),
+            ("InvokeTitanEmbed", ["bedrock:InvokeModel"],  # EV-04 index gate (mc-rag eval); one model, embeddings only
+             [f"arn:aws:bedrock:{region}::foundation-model/amazon.titan-embed-text-v2:0"]),
             ("ReadCosts", ["ce:GetCostAndUsage", "bcm-data-exports:ListExports", "bcm-data-exports:ListExecutions"], ["*"]),
             ("ReadBudget", ["budgets:ViewBudget"], [f"arn:aws:budgets::{acct}:budget/{name('monthly-total')}"]),
             ("ListBillingExport", ["s3:ListBucket"], [self.billing_bucket.bucket_arn]),
