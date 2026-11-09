@@ -12,6 +12,7 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import asdict, dataclass
+from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 
@@ -23,6 +24,10 @@ CENT = Decimal("0.01")
 MONTH_DAYS = 30
 TRAILING_DAYS = 28
 MAX_ACTIONS = 50
+DETERIORATION_PP = Decimal("5")  # margin % fall (points) versus the previous 28 days that counts as deteriorating
+RENEWAL_DAYS = 90
+RENEWAL_TARGET_PCT = Decimal("30")  # renewals below this 28-day margin % are drafted for an account action
+RECENT_LEAK_CONF = Decimal("0.40")  # a leak detected in the last 28 days but already closed
 BRIEF_TOP = 5
 ASSUMPTIONS = "Impact is the trailing run-rate x 30 days; confidence and effort are v1 heuristics, not measured."
 
@@ -79,9 +84,19 @@ def _leak_actions(con: duckdb.DuckDBPyConnection, gold: Path, run_id: str) -> li
         SELECT feature_id, metric, sum(impact_usd_per_day), max(peak_ratio)
         FROM read_parquet('{path}') WHERE status = 'open' AND impact_usd_per_day > 0
         GROUP BY feature_id, metric ORDER BY feature_id, metric""").fetchall()
+    recent = con.execute(f"""
+        WITH last AS (SELECT max(start_date) AS d FROM read_parquet('{path}'))
+        SELECT feature_id, metric, sum(impact_usd_per_day), max(peak_ratio)
+        FROM read_parquet('{path}'), last
+        WHERE status <> 'open' AND impact_usd_per_day > 0 AND start_date > last.d - INTERVAL {TRAILING_DAYS} DAY
+        GROUP BY feature_id, metric ORDER BY feature_id, metric""").fetchall()
     out = []
+    open_keys = {(f, m) for f, m, _d, _p in rows}
+    rows = rows + [r for r in recent if (r[0], r[1]) not in open_keys]
+    closed_keys = {(f, m) for f, m, _d, _p in recent} - open_keys
     for feature, metric, per_day, peak in rows:
-        conf = Decimal("0.80") if peak >= 3 else Decimal("0.60")
+        conf = RECENT_LEAK_CONF if (feature, metric) in closed_keys else (
+            Decimal("0.80") if peak >= 3 else Decimal("0.60"))
         out.append(_action(run_id, "ACT-1", f"{feature}/{metric}",
                            f"Investigate the open {metric} leak on {feature} and apply the cheapest routing or caching lever",
                            Decimal(per_day) * MONTH_DAYS, conf, 2, "Replay the lever against the quality guardrail first",
@@ -107,11 +122,91 @@ def _tenant_actions(con: duckdb.DuckDBPyConnection, gold: Path, run_id: str) -> 
     return out
 
 
+def _windows(con: duckdb.DuckDBPyConnection, gold: Path):
+    """Per tenant: revenue and margin of the last 28 days and of the 28 days before, plus the latest date."""
+    path = gold / "fct_m2_tenant_margin.parquet"
+    if not path.exists():
+        return None, []
+    rows = con.execute(f"""
+        WITH last AS (SELECT max(margin_date) AS d FROM read_parquet('{path}'))
+        SELECT last.d, tenant_id,
+          sum(revenue_usd) FILTER (margin_date > last.d - INTERVAL {TRAILING_DAYS} DAY),
+          sum(margin_usd) FILTER (margin_date > last.d - INTERVAL {TRAILING_DAYS} DAY),
+          sum(revenue_usd) FILTER (margin_date <= last.d - INTERVAL {TRAILING_DAYS} DAY
+                                   AND margin_date > last.d - INTERVAL {2 * TRAILING_DAYS} DAY),
+          sum(margin_usd) FILTER (margin_date <= last.d - INTERVAL {TRAILING_DAYS} DAY
+                                  AND margin_date > last.d - INTERVAL {2 * TRAILING_DAYS} DAY)
+        FROM read_parquet('{path}'), last GROUP BY last.d, tenant_id ORDER BY tenant_id""").fetchall()
+    return (rows[0][0] if rows else None), rows
+
+
+def _pct(margin, revenue) -> Decimal | None:
+    return Decimal(margin) * 100 / Decimal(revenue) if revenue else None
+
+
+def _next_renewal(base: date, today: date) -> date:
+    """Contracts renew every year: the first anniversary of `base` on or after `today`."""
+    year = max(base.year, today.year)
+    for y in (year, year + 1):
+        try:
+            due = base.replace(year=y)
+        except ValueError:  # 29 February
+            due = base.replace(year=y, day=28)
+        if due >= today:
+            return due
+    return due
+
+
+def _trend_actions(con, gold: Path, run_id: str) -> list[Action]:
+    """ACT-3 for tenants still profitable whose 28-day margin % fell by DETERIORATION_PP or more."""
+    _d, rows = _windows(con, gold)
+    out = []
+    for _d2, tenant, rev, mar, prev_rev, prev_mar in rows:
+        now, before = _pct(mar or 0, rev), _pct(prev_mar or 0, prev_rev)
+        if now is None or before is None or Decimal(mar) < 0 or before - now < DETERIORATION_PP:
+            continue
+        monthly = (before - now) / 100 * Decimal(rev) * MONTH_DAYS / TRAILING_DAYS
+        out.append(_action(run_id, "ACT-3", f"{tenant}/margin-trend",
+                           f"Margin of {tenant} fell from {before:.1f}% to {now:.1f}% over the last {TRAILING_DAYS} days; "
+                           "find the usage or cost driver and agree a fix",
+                           monthly, Decimal("0.40"), 3, "No change to the product", "medium"))
+    return out
+
+
+def _renewal_actions(con, gold: Path, run_id: str) -> list[Action]:
+    """ACT-3 for tenants renewing within RENEWAL_DAYS whose 28-day margin % is below target or falling."""
+    last, rows = _windows(con, gold)
+    dim = gold / "dim_tenant.parquet"
+    if last is None or not dim.exists():
+        return []
+    renew = dict(con.execute(
+        f"SELECT tenant_id, max(renewal_date) FROM read_parquet('{dim}') WHERE is_current GROUP BY tenant_id").fetchall())
+    out = []
+    for _d, tenant, rev, mar, prev_rev, prev_mar in rows:
+        base = renew.get(tenant)
+        if base is None or not rev:
+            continue
+        due = _next_renewal(base, last)
+        days = (due - last).days
+        now, before = _pct(mar or 0, rev), _pct(prev_mar or 0, prev_rev)
+        falling = before is not None and now is not None and before - now >= DETERIORATION_PP
+        if days > RENEWAL_DAYS or Decimal(mar) < 0 or not (now < RENEWAL_TARGET_PCT or falling):
+            continue
+        gap = max(Decimal(0), RENEWAL_TARGET_PCT - now) / 100 * Decimal(rev) * MONTH_DAYS / TRAILING_DAYS
+        out.append(_action(run_id, "ACT-3", f"{tenant}/renewal",
+                           f"{tenant} renews in {days} days with a {now:.1f}% margin; prepare the renewal terms "
+                           "(fair-use cap or price) within the discount-authority matrix",
+                           gap, Decimal("0.50"), 2, "No change to the product", "medium"))
+    return out
+
+
 def review(gold: Path, run_id: str) -> list[Action]:
     """Fan out, deduplicate and rank (highest score first, ties by action id)."""
     con = duckdb.connect()
     con.execute("SET threads = 1")
-    found = {a.action_id: a for a in _leak_actions(con, Path(gold), run_id) + _tenant_actions(con, Path(gold), run_id)}
+    g = Path(gold)
+    found = {a.action_id: a for a in (_leak_actions(con, g, run_id) + _tenant_actions(con, g, run_id)
+                                      + _trend_actions(con, g, run_id) + _renewal_actions(con, g, run_id))}
     ranked = sorted(found.values(), key=lambda a: (-a.score, a.action_id))
     return ranked[:MAX_ACTIONS]
 
