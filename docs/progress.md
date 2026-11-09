@@ -12,7 +12,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-0. **M3-01 tune:** EV-02 now runs on AWS and fails. Reproduce locally on the M2 window (seed 42, `ml/mc_ml/cogs_forecast/evaluate.py` `ev02_gate`), see which features/metrics the GBM loses on (`backtest.json` `multi_step`), tune `gbm.py` (never weaken the gate), re-run `start-backfill`, tick M3-01 when `ev02.passed`.
+0. **M3-01 tune:** EV-02 now runs on AWS and fails. Reproduce locally on the M2 window (seed 42, `ml/mc_ml/cogs_forecast/evaluate.py` `ev02_gate`), AWS result: GBM loses on all 5 features (WAPE ~0.034-0.044 vs naive/ETS ~0.024-0.034; pinball ~1.6x worse; F3 WAPE 6.68, a near-zero series blowing up under log1p/recursion, naive 0.030). Likely fixes: lag-364/28 or trend/seasonal features, damping recursion, clip to history range, F3 floor. Tune `gbm.py` (never weaken the gate), re-run `start-backfill`, tick M3-01 when `ev02.passed`.
 0. **M4-06 done** (live graph view, run 68).
 0. **M3-02 done** (EV-03 passed on AWS, run 67). Optional later: PT-06 (one small F2 tenant, x6 requests) is still missed.
 1. **On real gold (rest):** M3-01: read `ev02.passed` from `models/*/backtest.json` (ops role needs a read-only `models/` grant, mc-* only). M3-03 done.
