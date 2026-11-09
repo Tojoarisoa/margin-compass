@@ -12,6 +12,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
+-1. **Finish PR #172** (merge, deploy), then re-run `start-backfill`, read `verify-backfill` ev02, tick M3-01 (the item below).
 0. **M3-01:** PR #171 (GBM base = last week's same weekday) merged and deployed; locally EV-02 passes on all 5 (local repro reproduces AWS numbers: `scratchpad` harness = simulator seed 42, telemetry priced with `price_on`, `evaluate.compare` 30d x 4 origins). But `start-backfill` still reports forecaster `sn-42c3b66bda82`, `registered: false`, `ev02: false`: the build reuses the existing version (same data SHA) and does not retrain. Next: make train re-register/retrain when the model code changes (e.g. include the gbm/train code version in the version hash), re-run `start-backfill`, read `verify-backfill`, tick M3-01.
 0. **M4-06 done** (live graph view, run 68).
 0. **M3-02 done** (EV-03 passed on AWS, run 67). Optional later: PT-06 (one small F2 tenant, x6 requests) is still missed.
@@ -23,6 +24,12 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 7. Then **M5-01** (nightly margin review graph) per PLAN.md §17.
 
 Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s during image builds: re-run the failed job.
+
+## 2026-11-09 (autopilot run 73)
+
+- **Task:** M3-01 retrain fix. PR #172 (`auto/m3-01-code-version`): the forecaster version hash includes a hash of `cogs_forecast/*.py`, so a model code change registers a new version. ml 48 passed, ruff clean; every check green on the head commit (`attribution` green after footer removal via MCP). Cost $0.
+- **Blocked:** the permission classifier denied the fast-forward merge ("CI Bypass"), as in runs 55, 59, 60, 72. Not retried or worked around. PR left open.
+- **Decisions (§8.2):** none.
 
 ## 2026-11-09 (autopilot run 72)
 
