@@ -13,12 +13,17 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 ## Next
 
 1. **M4-05:** live-model EV-05/07 (needs analyst SQL generation) and an ops record run for real EV-10 latency, then tick M4-05.
-2. **M5-01:** nightly margin review graph → `fct_actions` + daily margin brief (PLAN.md §17), split into PR-sized steps. Then M5-02.
+2. **M5-01 (steps 2+):** step 1 done (deterministic `agents/mc_agents/nightly.py`: leaks + losing tenants → ranked ACT-1/ACT-3 drafts → `fct_actions` + `margin_brief.json`). Next: wire it into the nightly workflow/publish and the dashboard brief card, add ACT-2 pricing drafts, then LLM specialist investigation with the $0.50 nightly cap and episodic memory. Tick M5-01 when done. Then M5-02.
 3. **M2-04 (daily check, not a task):** run ops `verify-backfill` once a day and read `finops.json`. Last check 2026-11-09 17:29 UTC: `awaiting_first_export` (AWS FOCUS export still empty). When `status` is `ok`, wire `MC_FINOPS_FOCUS_GLOB` if still needed and tick M2-04. Everything else in M2-04 is done.
 
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed; prompt caching shows 0 cache-read tokens (prompts ~1.5k tokens, likely under the cache minimum).
 Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s during image builds: re-run the failed job.
+
+## 2026-11-09 (autopilot run 80)
+
+- **Task:** M5-01 step 1. Added `agents/mc_agents/nightly.py`: fans out over open margin leaks (ACT-1) and tenants with negative 28-day margin (ACT-3), ranks by impact x confidence / effort, writes `gold/fct_actions.parquet` and `publish/latest/margin_brief.json`. No LLM calls (nightly LLM cost $0). Agents 217 passed, ruff clean. M5-01 not ticked (steps remain, see Next).
+- **Decisions (§8.2):** deterministic first, LLM investigation later; confidence/effort are labelled v1 heuristics in `assumptions`; ACT-2 deferred.
 
 ## 2026-11-09 (autopilot run 79)
 
