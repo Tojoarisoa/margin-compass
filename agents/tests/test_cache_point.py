@@ -24,3 +24,10 @@ def test_cache_prompt_adds_cache_points_after_system_and_tools():
 def test_no_tools_no_tool_config():
     r = LLMRequest("m", "s", [], [], cache_prompt=True).to_converse()
     assert "toolConfig" not in r
+
+
+def test_env_flag_turns_cache_prompt_on(monkeypatch):
+    monkeypatch.delenv("MC_CACHE_PROMPT", raising=False)
+    assert LLMRequest("m", "s", [], []).cache_prompt is False
+    monkeypatch.setenv("MC_CACHE_PROMPT", "1")
+    assert LLMRequest("m", "s", [], []).cache_prompt is True

@@ -13,6 +13,7 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
+import os
 import time
 from dataclasses import dataclass, field
 from decimal import Decimal
@@ -32,7 +33,8 @@ class LLMRequest:
     messages: list[dict[str, Any]]
     tools: list[dict[str, Any]]
     max_tokens: int = MAX_OUTPUT_TOKENS_PER_CALL
-    cache_prompt: bool = False  # opt-in Bedrock prompt caching; off keeps request hashes (fixtures) unchanged
+    # opt-in Bedrock prompt caching (env MC_CACHE_PROMPT=1); off keeps request hashes (fixtures) unchanged
+    cache_prompt: bool = field(default_factory=lambda: os.environ.get("MC_CACHE_PROMPT", "") == "1")
 
     def to_converse(self) -> dict[str, Any]:
         req: dict[str, Any] = {
