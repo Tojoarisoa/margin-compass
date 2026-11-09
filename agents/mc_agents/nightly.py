@@ -121,7 +121,7 @@ def build_brief(actions: list[Action], run_id: str) -> dict:
     top = actions[:BRIEF_TOP]
     headline = (f"{len(actions)} proposed actions with {_money(total)} of monthly margin at stake."
                 if actions else "No margin actions proposed tonight.")
-    return {"schema_version": "brief.v0", "run_id": run_id, "data_label": "synthetic", "llm_calls": 0, "headline": headline,
+    return {"schema_version": "brief.v0", "run_id": run_id, "data_label": "synthetic", "headline": headline,
             "action_count": len(actions), "total_impact_usd_month": _money(total),
             "top_actions": [{"action_id": a.action_id, "action_type": a.action_type, "title": a.title,
                              "impact_usd_month": _money(a.impact_usd_month), "approver": a.approver} for a in top]}

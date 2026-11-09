@@ -4,7 +4,6 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Waiting for owner
 
-- **CI unreliable after PR #184 (2026-11-09 18:30 UTC):** `ci` on main 17a6bb8 (PR #184, M5-01 step 1) ends `failure` in 3 runs (push, re-run, dispatch 42674281661) although every job that starts passes; a different set of jobs (e.g. dashboard, replay, cost-gate, lint, pipelines) is never created each time, and `deploy to dev` is skipped. The PR's own `ci` run showed the same. Likely GitHub-side (billing/minutes/runner), cause unconfirmed; I can't read the run's error. Local agents tests and ruff passed. Please open the Actions run and check; then re-run `ci` on main so deploy runs. Autopilot: do not start new tasks until a `ci` run on main succeeds.
 - **Claude Haiku 5.5 access:** access requested, waiting for AWS. Converse via `us.anthropic.claude-haiku-5-5` still returns `AccessDeniedException`. Autopilot: re-probe with the ops workflow (`record-fixtures`, `haiku-5-5`) at most once a day; when it succeeds, record the M1-06 fixtures and apply the ADR-003 selection rule. Until then Haiku 4.5 stays the default.
 
 ## Owner decision 2026-11-06
@@ -13,11 +12,11 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-0. **Verify main 17a6bb8:** re-run `ci` via workflow_dispatch; when green, check `deploy to dev`. Then continue below.
 1. **M4-05:** live-model EV-05/07 (needs analyst SQL generation) and an ops record run for real EV-10 latency, then tick M4-05.
 2. **M5-01 (steps 2+):** step 1 done (deterministic `agents/mc_agents/nightly.py`: leaks + losing tenants → ranked ACT-1/ACT-3 drafts → `fct_actions` + `margin_brief.json`). Next: wire it into the nightly workflow/publish and the dashboard brief card, add ACT-2 pricing drafts, then LLM specialist investigation with the $0.50 nightly cap and episodic memory. Tick M5-01 when done. Then M5-02.
 3. **M2-04 (daily check, not a task):** run ops `verify-backfill` once a day and read `finops.json`. Last check 2026-11-09 17:29 UTC: `awaiting_first_export` (AWS FOCUS export still empty). When `status` is `ok`, wire `MC_FINOPS_FOCUS_GLOB` if still needed and tick M2-04. Everything else in M2-04 is done.
 
+Resolved 2026-11-09: CI on main after #184 failed because of a GitHub Actions outage (githubstatus: Actions major outage, ~18:10-18:45 UTC); every job passed at least once on 17a6bb8, and the owner's PR with the merge guard re-ran the full CI and deployed. New merge guard: AGENTS.md §8.1 step 4.
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed; prompt caching shows 0 cache-read tokens (prompts ~1.5k tokens, likely under the cache minimum).
 Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s during image builds: re-run the failed job.

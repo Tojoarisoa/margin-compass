@@ -41,7 +41,7 @@ def test_write_is_deterministic_and_brief_copies_figures(tmp_path):
     nightly.write(root, "r1")
     assert pq.read_table(root / "gold" / "fct_actions.parquet").to_pylist() == first
     brief = json.loads((root / "publish" / "latest" / "margin_brief.json").read_text())
-    assert brief["action_count"] == 4 and brief["llm_calls"] == 0
+    assert brief["action_count"] == 4 and "llm_calls" not in brief  # public surface: no call counts (AGENTS.md §6)
     assert brief["total_impact_usd_month"] == "$960.00" and brief["top_actions"][0]["impact_usd_month"] == "$600.00"
 
 
