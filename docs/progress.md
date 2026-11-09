@@ -12,9 +12,9 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-0. **M4-04:** re-record done but cache-on changes `request_sha` (see run 78). Make replay tests use `MC_CACHE_PROMPT=1`, re-run ops `record-fixtures` (cache=true), extract fixtures from the job log (base64 between FIXTURE-BEGIN/END), commit, tick M4-04.
-0. **Finish PR #181** (merge when allowed; then run ops `record-fixtures` with `cache=true`, tick M4-04 if cache hits show).
-0. **Finish PR #179** (merge when allowed; after deploy run ops `rag-eval`; if EV-04 passes, tick M4-01).
+0. **Finish the M4-04 PR** (`auto/m4-04-cache-fixtures`, if still open): merge when every check is green.
+0. **Next task:** M4-05 (live-model EV-05/07, ops record run for real EV-10 latency), or M2-04 once `finops.json` status is `ok`, or M5-01.
+
 0. **Finish PR #177** (merge when allowed, run ops `verify-backfill`, read `finops.json`; if `status` is `ok`, tick M2-04).
 0. **M2-04:** `finops.json` is now published by the M2 build (run 76) but `status` is `awaiting_first_export` (AWS FOCUS export still empty). Re-check with ops `verify-backfill` once a day; when `status` is `ok`, tick M2-04.
 0. **M3-01 done** (EV-02 passed on AWS, run 74).
@@ -23,11 +23,14 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 1. **On real gold:** M3-01, M3-02, M3-03 all done.
 2. **M2-04:** PG-8 *Platform FinOps* and S7 are complete once the first backfill data shows; wire `MC_FINOPS_FOCUS_GLOB` when the S7 export has data; then tick M2-04.
 4. **M4-05:** live-model EV-05/07 (needs analyst SQL generation) and an ops record run for real EV-10 latency, then tick M4-05.
-5. **M4-04:** ops now has a `cache` input (PR in run 78). Remaining: after merge, run ops `record-fixtures` with `cache=true`, read cache hit and cost, then tick M4-04.
-6. **M4-01:** run `mc-rag eval --embedder titan` via ops, then tick M4-01.
 7. Then **M5-01** (nightly margin review graph) per PLAN.md §17.
 
 Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s during image builds: re-run the failed job.
+
+## 2026-11-09 (autopilot run 79)
+
+- **Task:** M4-04 close-out. Committed the cache-on `haiku-4-5` fixtures (taken from ops run 42656739045's log) and made the agents tests run with `MC_CACHE_PROMPT=1` (conftest autouse; the cache-flag unit tests clear it). Agents 214 passed, ruff clean. M4-04 ticked. Cost $0.
+- **Decisions (§8.2):** option recommended in run 78. Note: fixtures show 0 cache-read tokens (prompts ~1.5k tokens, likely under the model's cache minimum), so real savings are unconfirmed.
 
 ## 2026-11-09 (autopilot run 78)
 

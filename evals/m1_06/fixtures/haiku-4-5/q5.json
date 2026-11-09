@@ -1,7 +1,7 @@
 {
   "calls": [
     {
-      "request_sha": "7c75a914621cdd5a4f2533a2a42b25f3dc815bc758cbdd55ef25442508beb66f",
+      "request_sha": "44e3603dbad4391211fb7701cac0aa227f1035a2fef0b6252acba5fa7c85559e",
       "response": {
         "content": [
           {
@@ -14,7 +14,7 @@
                 "start_date": "2025-09-01"
               },
               "name": "tenant_ranking",
-              "toolUseId": "tooluse_l0zjsPBocA0XRB73RocC2K",
+              "toolUseId": "tooluse_6aC1LPZVHdWoI57puhaG3e",
               "type": "tool_use"
             }
           }
@@ -28,7 +28,7 @@
       }
     },
     {
-      "request_sha": "2b7b2ca019c7d1530d3065906401ce025c4b8fadf9f0b69d566f305d391eb037",
+      "request_sha": "f336bbdc42eac381fb173d76c4a6cdbfe537a94bf2a987a1ae61d3eb68c6b71b",
       "response": {
         "content": [
           {

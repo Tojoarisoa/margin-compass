@@ -1,7 +1,7 @@
 {
   "calls": [
     {
-      "request_sha": "04f1c77a5f72eefd54520116c94622b7297e977150dcccd04c06ab58b698c7a5",
+      "request_sha": "bfbb60fd6ddb6f34e4cc3eecd2f6156ab1413e025b6187d226a0e48189885525",
       "response": {
         "content": [
           {
@@ -12,7 +12,7 @@
                 "tenant_id": "bc-t0012"
               },
               "name": "tenant_margin",
-              "toolUseId": "tooluse_jTidY8N9hzc9p9rVTr560e",
+              "toolUseId": "tooluse_QdqVRB7F9VYZb4cqe8cPKG",
               "type": "tool_use"
             }
           }
@@ -26,7 +26,7 @@
       }
     },
     {
-      "request_sha": "6c83a0f9944e6ba1c8f560224996ce8a3123329c555333b8cd347274c5b31591",
+      "request_sha": "684e67dc3aabf23320998933862e16d9d8513c2f3454bb0501d440514c88b4d5",
       "response": {
         "content": [
           {

@@ -17,3 +17,9 @@ def gold(tmp_path_factory) -> Path:
     simulate("m1", 42, landing, run_id="agents-test")
     assert pipeline_main(["run", "--landing", str(landing), "--data-root", str(root / "data"), "--ingest-date", INGEST_DATE]) == 0
     return root / "data" / "gold"
+
+
+@pytest.fixture(autouse=True)
+def _prompt_caching_on(monkeypatch):
+    """Recorded fixtures carry cache points (M4-04), so request hashes match only with caching on."""
+    monkeypatch.setenv("MC_CACHE_PROMPT", "1")

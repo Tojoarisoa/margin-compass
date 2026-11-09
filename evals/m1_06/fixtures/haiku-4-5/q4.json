@@ -1,7 +1,7 @@
 {
   "calls": [
     {
-      "request_sha": "eeb436cd969697652286a2695926848ce81dd6148dd12b4da1e530a315a2fbad",
+      "request_sha": "72e75fd6a39a3e6eb4f2b2db76e15ffde32bf0773ca970dec4b2d7d0e6783e06",
       "response": {
         "content": [
           {
@@ -11,7 +11,7 @@
                 "start_date": "2025-08-01"
               },
               "name": "portfolio_margin",
-              "toolUseId": "tooluse_8A8LvFJBXcMdS1v7PIMaiz",
+              "toolUseId": "tooluse_IlTy4eKjekDEQNE8TF5OAv",
               "type": "tool_use"
             }
           }
@@ -25,7 +25,7 @@
       }
     },
     {
-      "request_sha": "de7643d1d8aea556c94453a0c86369833a4862069917f754998c69e689a4f9be",
+      "request_sha": "4645189f9e2fb5d49fb886680aad3a039cbb1935bee958e6e3d5a19877618895",
       "response": {
         "content": [
           {
