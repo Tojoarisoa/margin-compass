@@ -41,6 +41,30 @@ def _download(s3: Any, bucket: str, prefix: str, dest: Path) -> int:
     return n
 
 
+FOCUS_PREFIX = "focus-1-2"
+
+
+def fetch_focus_export(s3: Any, bucket: str, dest: Path) -> str | None:
+    """S7: copy the AWS FOCUS export Parquet files (read-only bucket) under `dest`; return the glob for PG-8, or None.
+
+    A missing or empty export is not an error: PG-8 then shows `awaiting_first_export`.
+    """
+    n = 0
+    try:
+        for page in s3.get_paginator("list_objects_v2").paginate(Bucket=bucket, Prefix=FOCUS_PREFIX + "/"):
+            for obj in page.get("Contents", []):
+                if not obj["Key"].endswith(".parquet"):
+                    continue
+                target = dest / obj["Key"]
+                target.parent.mkdir(parents=True, exist_ok=True)
+                s3.download_file(bucket, obj["Key"], str(target))
+                n += 1
+    except Exception as e:  # noqa: BLE001 - the export is optional; never fail the build for it
+        log.warning("focus_export_unavailable", extra={"fields": {"reason": str(e)[:200]}})
+        return None
+    return f"{dest}/{FOCUS_PREFIX}/**/*.parquet" if n else None
+
+
 RUN_HISTORY_KEY = "publish/latest/runs.json"
 RUN_HISTORY_KEEP = 30
 
@@ -110,6 +134,11 @@ def handle(event: dict, run_id: str, s3: Any = None) -> dict:
             fetched = _download(s3, bucket, LANDING_PREFIX, landing)
             if not fetched:
                 return {"status": "no_landing", "run_id": run_id}
+        billing = os.environ.get("MC_BILLING_BUCKET")
+        if billing and s3 is not None:
+            focus = fetch_focus_export(s3, billing, WORK / "billing")
+            if focus:
+                os.environ["MC_FINOPS_FOCUS_GLOB"] = focus
         summary = run_m2_dbt(landing, data, run_id, transform_dir=_copy_transform() if os.environ.get("AWS_LAMBDA_FUNCTION_NAME") else None)
         if not summary["success"]:
             log.error("m2_dbt_build_finished", extra={"fields": summary})

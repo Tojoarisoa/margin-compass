@@ -165,8 +165,14 @@ class DataStack(cdk.Stack):
                 "VECTOR_BUCKET": vector_bucket.vector_bucket_name,
                 "VECTOR_INDEX": KNOWLEDGE_INDEX_NAME,
                 "MC_API_LOG_GROUP": API_LOG_GROUP.format(env=env_name),
+                "MC_BILLING_BUCKET": f"mc-shared-foundation-billing-{self.account}",  # foundation stack's FOCUS export (read-only)
             },
         )
+        # S7 FOCUS export (PG-8 Platform FinOps): read-only on the billing bucket, nothing else.
+        role.add_to_policy(iam.PolicyStatement(
+            actions=["s3:ListBucket"], resources=[f"arn:{cdk.Aws.PARTITION}:s3:::mc-shared-foundation-billing-{self.account}"]))
+        role.add_to_policy(iam.PolicyStatement(
+            actions=["s3:GetObject"], resources=[f"arn:{cdk.Aws.PARTITION}:s3:::mc-shared-foundation-billing-{self.account}/focus-1-2/*"]))
         # S7 dogfood: read the API's own log group (filter only; no other log group, no write).
         role.add_to_policy(iam.PolicyStatement(
             actions=["logs:FilterLogEvents"],

@@ -76,3 +76,16 @@ def test_build_without_landing_reports_it(tmp_path, monkeypatch):
     monkeypatch.setattr(m2_lambda, "WORK", tmp_path / "work")
     (tmp_path / "s3" / "lake").mkdir(parents=True)
     assert m2_lambda.handle({"profile": "m2", "step": "build"}, "r", FakeS3(tmp_path / "s3"))["status"] == "no_landing"
+
+
+def test_focus_export_is_fetched_and_missing_export_is_not_an_error(tmp_path):
+    s3 = FakeS3(tmp_path / "s3")
+    assert m2_lambda.fetch_focus_export(s3, "billing", tmp_path / "w") is None  # empty bucket
+    f = tmp_path / "s3" / "billing" / "focus-1-2" / "data" / "a.parquet"
+    f.parent.mkdir(parents=True)
+    f.write_bytes(b"x")
+    (f.parent / "manifest.json").write_text("{}")
+    glob = m2_lambda.fetch_focus_export(s3, "billing", tmp_path / "w")
+    assert glob == f"{tmp_path / 'w'}/focus-1-2/**/*.parquet"
+    assert (tmp_path / "w" / "focus-1-2" / "data" / "a.parquet").exists()
+    assert not (tmp_path / "w" / "focus-1-2" / "data" / "manifest.json").exists()
