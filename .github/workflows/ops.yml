@@ -131,6 +131,7 @@ jobs:
           { echo "## Forecaster EV-02 (models/*/backtest.json)"; echo '```'
             for f in $(find lake/models -name backtest.json | sort | tail -3); do echo "$f"; python3 -c "import json,sys; d=json.load(open(sys.argv[1])); e=d.get('ev02') or {}; print(json.dumps({'wape': d.get('wape'), 'passed': e.get('passed'), 'features_scored': e.get('features_scored')})); print('\n'.join(e.get('failures', [])[:40])); [print(k, {m: {x: (y or {}).get('wape') for x, y in v.items()} for m in ['wape']} if v else None) for k, v in sorted((d.get('multi_step') or {}).items())]" "$f"; done
             echo '```'; } | tee -a "$GITHUB_STEP_SUMMARY"
+          { echo "## Published FinOps (PG-8, finops.json)"; echo '```json'; curl -s "$url/publish/latest/finops.json" | head -c 2000; echo; echo '```'; } | tee -a "$GITHUB_STEP_SUMMARY"
           exit "$st"
 
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
