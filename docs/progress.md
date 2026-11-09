@@ -12,6 +12,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
+-1. **Finish PR #170** (green; merge was denied by the classifier), then dispatch `verify-backfill` and read the EV-02 failures.
 0. **M3-01:** EV-02 still fails on AWS after PR #169. First make `start-backfill`/`verify-backfill` print `ev02.failures` and per-feature `multi_step` scores from `backtest.json` (ops can read it), compare with local, then tune `gbm.py` (never weaken the gate).
 0. **M4-06 done** (live graph view, run 68).
 0. **M3-02 done** (EV-03 passed on AWS, run 67). Optional later: PT-06 (one small F2 tenant, x6 requests) is still missed.
@@ -23,6 +24,12 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 7. Then **M5-01** (nightly margin review graph) per PLAN.md §17.
 
 Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s during image builds: re-run the failed job.
+
+## 2026-11-09 (autopilot run 72)
+
+- **Task:** M3-01 diagnosis. PR #170 (`auto/m3-01-ev02-diag`): `verify-backfill` prints EV-02 `failures` and per-feature WAPE from `backtest.json`. Every check green on head `0588fa5` (`attribution` green after footer removal via MCP). Cost $0.
+- **Blocked:** the permission classifier denied the fast-forward merge ("CI Bypass"), as in runs 55, 59, 60. Not retried or worked around. PR left open.
+- **Decisions (§8.2):** none.
 
 ## 2026-11-09 (autopilot run 71)
 
