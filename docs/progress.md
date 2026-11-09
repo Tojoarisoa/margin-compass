@@ -12,7 +12,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-0. **M5-01 (next step):** `investigate.py` (budgeted LLM calls, $0.50 cap, number guard, episodic memory) is built and tested but not wired. Wire it: an ops task that runs `nightly.review`, `investigate.investigate` with Bedrock, `remember` to `memory/episodic.jsonl`, and adds `insight` to the top actions in `margin_brief.json` (replay fixture for CI). Tick M5-01 when done. Then M5-02.
+0. **M5-01 (next step):** `nightly.write(..., client=)` investigates with an LLM and adds `insight` to the brief, but nothing passes a client yet. Add an ops task (or flag) that runs the nightly with Bedrock Haiku 4.5 (read-only invoke already granted to ops), a replay fixture for CI, and show `insight` on the dashboard brief card. Then tick M5-01 and start M5-02.
 1. **M4-05:** live-model EV-05/07 (needs analyst SQL generation) and an ops record run for real EV-10 latency, then tick M4-05.
 2. **M5-01 (old note, superseded by 0).**
 3. **M2-04 (daily check, not a task):** run ops `verify-backfill` once a day and read `finops.json`. Last check 2026-11-09 17:29 UTC: `awaiting_first_export` (AWS FOCUS export still empty). When `status` is `ok`, wire `MC_FINOPS_FOCUS_GLOB` if still needed and tick M2-04. Everything else in M2-04 is done.
@@ -23,6 +23,8 @@ Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed; 
 Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s during image builds: re-run the failed job.
 
 ## 2026-11-09 (autopilot run 84)
+
+- **Task 2:** M5-01 step 7. PR #193 (`auto/m5-01-wire`): `nightly.write` takes an optional LLM client; top actions get an `insight` in the brief and episodic memory is appended; a failing LLM never blocks the brief; default calls no LLM. Agents 228 passed, ruff clean; every `ci` job green, `attribution` green after footer removal via MCP, merged, `ci` and `deploy to dev` green. Cost $0.
 
 - **Task:** M5-01 step 6. PR #192 (`auto/m5-01-investigate`): `agents/mc_agents/investigate.py` asks the model for a likely cause and next step on the top 5 actions plus one batched call for the rest; `BudgetedLLM` caps it at $0.50 and 8 calls per night; answers with a number not in the action's facts are dropped; findings go to episodic memory and feed the next night's prompt. Agents 226 passed, ruff clean; every `ci` job green, `attribution` green after footer removal via MCP, merged, `ci` and `deploy to dev` green. Cost $0 (not wired, no live call). M5-01 not ticked.
 - **Decisions (§8.2):** Haiku 4.5 (current default); wiring and live run left to the next step so CI keeps replaying fixtures.
