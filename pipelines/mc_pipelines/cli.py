@@ -221,6 +221,12 @@ def run_m2_dbt(landing: Path, data_root: Path, run_id: str, transform_dir: Path 
             summary["published"] += publish_pg8_quality(root, run_id, summary.get("leaks"), summary.get("churn"))
         except Exception as exc:  # noqa: BLE001
             summary["quality_error"] = str(exc)[:200]
+        try:  # M2-04: PG-8 Platform FinOps (S7 FOCUS export); never fails the data build
+            from .publish import publish_finops
+
+            summary["published"] += publish_finops(root, run_id)
+        except Exception as exc:  # noqa: BLE001
+            summary["finops_error"] = str(exc)[:200]
     return summary
 
 

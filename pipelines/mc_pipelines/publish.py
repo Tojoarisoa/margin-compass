@@ -271,6 +271,15 @@ def publish_pg8_quality(data_root: Path, run_id: str, leaks: dict | None, churn:
     return ["publish/latest/quality.json"]
 
 
+def publish_finops(data_root: Path, run_id: str) -> list[str]:
+    """Write publish/latest/finops.json (PG-8 Platform FinOps) from MC_FINOPS_FOCUS_GLOB; the M2 build calls this."""
+    out = Path(data_root) / "publish" / "latest" / "finops.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    body = build_finops(os.environ.get("MC_FINOPS_FOCUS_GLOB"), run_id)
+    out.write_text(json.dumps(body, separators=(",", ":"), allow_nan=False))
+    return ["publish/latest/finops.json"]
+
+
 def publish(data_root: Path, run_id: str, ingest_date: str) -> dict:
     root = Path(data_root)
     snapshot = build_pg1(root / "gold", run_id, ingest_date)
