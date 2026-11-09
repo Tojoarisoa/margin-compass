@@ -24,7 +24,7 @@ Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s duri
 
 ## 2026-11-09 (autopilot run 83, task 2)
 
-- **Task:** M5-01 step 5. PR `auto/m5-01-act2-plans`: nightly review drafts ACT-2 pricing actions for plans whose pooled 28-day margin is under 30% (at least 2 tenants), approver `pricing_committee`, confidence 0.30, effort 4. nightly tests 5 passed, ruff clean; CI runs the full suite. Cost $0. M5-01 not ticked.
+- **Task:** M5-01 step 5. PR `auto/m5-01-act2-plans`: nightly review drafts ACT-2 pricing actions for plans whose pooled 28-day margin is under 30% (at least 2 tenants), approver `pricing_committee`, confidence 0.30, effort 4. nightly tests 5 passed, ruff clean; PR #191 merged, `ci` and `deploy to dev` green (`attribution` green after footer removal via MCP). Cost $0. M5-01 not ticked.
 - **Decisions (§8.2):** same 30% target as renewals; skipped when dim_tenant has no plan column.
 
 ## 2026-11-09 (autopilot run 83)
