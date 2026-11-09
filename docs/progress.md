@@ -12,7 +12,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-0. **M3-02 tune:** on real gold EV-03 fails: precision 0.43, recall 0.43, mttd 0.67 (3 of 7 labels found, 7 alerts). Find which of PT-01..07 are missed or false (run `build` locally on the simulator output and diff alerts vs `labels/patterns.parquet`; also check whether label `feature` names match gold `feature_id`), tune the detector or add series, rerun `start-backfill`, tick M3-02 when `ev03.passed`.
+0. **M3-02 tune (diagnosed run 66, no code change yet):** reproduced locally (`simulator --profile m2 --seed 42`, ~8 min; then in `pipelines`: `uv run mc-pipeline run-m2`, 40 s). Found PT-01/03/05; missed PT-02/04/06/07; 4 false alerts. Causes: (a) PT-02 (one F2 tenant, retries x4) and PT-06 (one F2 tenant, volume x6) are invisible in feature-level daily cost (F2 ~9.4k/day, effect <1%): need per-(tenant,feature) series from `slv_m2_llm_usage_priced` (pure-python `detect` is too slow on ~1600 series x 580 days: vectorise `_sigma`/`_baseline` with numpy first) or score on `retry_count`/`request_count`; (b) PT-04 (F1 cache collapse, +15% cost) and PT-07 (F2, +11%) sit under `min_rel=0.15`; `min_rel=0.10, k=4` finds PT-07 but adds false alerts; (c) false alerts are real data steps, not noise: all features on 2025-06-13/14 (tenant ramp-up), 2025-11-02/03 (F0, F2, F3), 2026-06-10..30 (F0, F2, F3). Suggested first step: run the detector on `cost_per_request_usd` (and `cache_hit_share`) from `fct_unit_cost`, which should cancel volume steps and make PT-04 stand out; then check the date steps in the simulator. Rerun `start-backfill`, tick M3-02 when `ev03.passed`.
 1. **On real gold (rest):** M3-02: run `start-backfill` via ops and read `leaks` in the execution output (PR #159 deployed); `ev03` is absent from the published `quality.json` on AWS, find out why (leak detector output or publish wiring) and add series for PT-02/04/06/07 if recall is short. M3-01: read `ev02.passed` from `models/*/backtest.json` (ops role needs a read-only `models/` grant, mc-* only). M3-03 done.
 2. **M2-04:** PG-8 *Platform FinOps* and S7 are complete once the first backfill data shows; wire `MC_FINOPS_FOCUS_GLOB` when the S7 export has data; then tick M2-04.
 3. **M4-06:** live graph view in the ask panel (from `trail`), then tick M4-06. Done: about section, PG-6 steps 1-4.
@@ -22,6 +22,11 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 7. Then **M5-01** (nightly margin review graph) per PLAN.md §17.
 
 Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s during image builds: re-run the failed job.
+
+## 2026-11-09 (autopilot run 66)
+
+- **Task:** M3-02 tune, diagnosis only. Main `ci` green, no open `auto/*` PR. Reproduced EV-03 locally (precision/recall 0.43, mttd 0.67). Tried `min_rel` 0.08-0.12 and `k` 4-5 on feature-level cost: none reaches P and R >= 0.8 (PT-02/06 invisible at feature level; false alerts are real data steps). Details and a first step under Next 0. No code changed. Cost $0.
+- **Decisions (§8.2):** none. Ended at the time limit: the next step is larger than the time left.
 
 ## 2026-11-08 (autopilot run 65)
 
