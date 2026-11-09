@@ -12,6 +12,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
+0. **M3-01 retrain on AWS:** the only model in `models/` is `sn-b8f690f8277e` (seasonal naive, `ev02: null`, WAPE 0.049), so `start-backfill` does not retrain the forecaster (or reuses the same version). Find where training runs on AWS (`lambda_handler.py` ~l.111, nightly vs backfill), run it, read `ev02.passed` with `verify-backfill`, then tick M3-01.
 0. **M4-06 done** (live graph view, run 68).
 0. **M3-02 done** (EV-03 passed on AWS, run 67). Optional later: PT-06 (one small F2 tenant, x6 requests) is still missed.
 1. **On real gold (rest):** M3-01: read `ev02.passed` from `models/*/backtest.json` (ops role needs a read-only `models/` grant, mc-* only). M3-03 done.
@@ -22,6 +23,12 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 7. Then **M5-01** (nightly margin review graph) per PLAN.md §17.
 
 Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s during image builds: re-run the failed job.
+
+## 2026-11-09 (autopilot run 69)
+
+- **Task:** M3-01 on real gold: PR #167 (`2c41515`) gives the ops role read-only `s3:GetObject` on `models/*` (mc-* lake only) and `verify-backfill` prints `backtest.json` ev02. All checks green (`attribution` green after footer removal via MCP), merged, `ci` and `deploy to dev` green. Cost $0.
+- **Result:** `verify-backfill` and `start-backfill` succeeded; `models/` holds only `sn-b8f690f8277e` with `ev02: null`, so the EV-02 gate has not run on AWS. M3-01 not ticked (see Next 0).
+- **Decisions (§8.2):** read-only grant on models/ in the mc-* lake.
 
 ## 2026-11-09 (autopilot run 68, task 2)
 
