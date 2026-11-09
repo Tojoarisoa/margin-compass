@@ -996,7 +996,7 @@ Each milestone ends with a demoable increment and exit criteria. Effort assumes 
 
 ### M3: Models & Simulators (~2 weeks)
 
-- [ ] M3-01 AI COGS forecaster + baselines + backtests (EV-02)
+- [x] M3-01 AI COGS forecaster + baselines + backtests (EV-02)
 - [x] M3-02 Margin-leak detector (EV-03)
 - [x] M3-03 Churn / price-sensitivity model (EV-11)
 - [x] M3-04 Calculation spec: pricing engine + traffic replay simulator with parity vectors (EV-12)
@@ -1208,3 +1208,4 @@ Status: all ADRs are written up in `docs/adr/` and **accepted** (ADR-017 on 2026
 | 2026-11-08 | 0.4 | M3-03 closed (**auto-decided under AGENTS.md §8.2**): on real AWS gold (run ops-42508172760) published `quality.json` shows `ev11.passed=true` (AUC 0.78, calibration gap 0.010, n=120). `verify-backfill` now prints the published gates. `ev03` is absent from `quality.json`, so M3-02 stays open. Cost $0. |
 | 2026-11-09 | 0.4 | M4-06 closed (**auto-decided under AGENTS.md §8.2**): the ask panel draws the fixed agent graph (route, specialist, verify, respond) as inline SVG and lights the nodes the run visited from `trail` (node and status only), with the active node outlined and verifier retries counted. Options: a graph library (rejected: bundle size, no new dependency). Cost $0. |
 | 2026-11-09 | 0.4 | M3-01 tune (**auto-decided under AGENTS.md §8.2**): the GBM works on scaled log cost, predicts the change from the same-weekday mean of the last three weeks, is trained on a winsorized series, clipped to the history range, with 150 rounds and interval widening h^0.1. Reproduced locally on the M2 window (seed 42): beats seasonal naive and ETS on WAPE and pinball on all 5 features. Gate unchanged. Options considered: drift extrapolation (rejected: worse on F4). Not ticked until EV-02 passes on AWS. Cost $0. |
+| 2026-11-09 | 0.4 | M3-01 close (**auto-decided under AGENTS.md §8.2**): ops `verify-backfill` dumps the real gold daily cost per feature; the AWS F4 numbers reproduced exactly. 150 depth-2 trees overfit F4's level step (about 160 to 900 per day); the GBM now uses 50 depth-1 trees. On the real F0-F4 it beats seasonal naive and ETS on WAPE and pinball (worst WAPE ratio 0.88, F4 0.68). `start-backfill` on AWS: forecaster `gbm-4f9ca785837e`, **EV-02 passed**. Gate unchanged. M3-01 ticked. Cost $0. |

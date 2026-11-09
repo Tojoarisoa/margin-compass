@@ -12,10 +12,10 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-0. **M3-01:** retraining works now (PR #172). On AWS gold only **F4** fails EV-02 (gbm WAPE 0.0390 vs ets 0.0309, naive 0.0343). Locally F4 passed by a thin margin, so the local repro differs from AWS gold for F4: compare F4 series, tune the GBM for F4 without weakening the gate, re-run `start-backfill` + `verify-backfill`, tick M3-01.
+0. **M3-01 done** (EV-02 passed on AWS, run 74). Take the first open item below.
 0. **M4-06 done** (live graph view, run 68).
 0. **M3-02 done** (EV-03 passed on AWS, run 67). Optional later: PT-06 (one small F2 tenant, x6 requests) is still missed.
-1. **On real gold (rest):** M3-01: read `ev02.passed` from `models/*/backtest.json` (ops role needs a read-only `models/` grant, mc-* only). M3-03 done.
+1. **On real gold:** M3-01, M3-02, M3-03 all done.
 2. **M2-04:** PG-8 *Platform FinOps* and S7 are complete once the first backfill data shows; wire `MC_FINOPS_FOCUS_GLOB` when the S7 export has data; then tick M2-04.
 4. **M4-05:** live-model EV-05/07 (needs analyst SQL generation) and an ops record run for real EV-10 latency, then tick M4-05.
 5. **M4-04:** set `MC_CACHE_PROMPT=1` on the worker (new, default off), re-record fixtures via ops with it on (semantic cache optional), then tick M4-04.
@@ -23,6 +23,11 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 7. Then **M5-01** (nightly margin review graph) per PLAN.md §17.
 
 Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s during image builds: re-run the failed job.
+
+## 2026-11-09 (autopilot run 74)
+
+- **Task:** M3-01 close-out. PRs #173/#174 (ops `verify-backfill` dumps real gold daily cost per feature) and #175 (`gbm.py`: 50 depth-1 trees instead of 150 depth-2). The AWS F4 numbers reproduced exactly locally; deep trees overfit F4's level step. On the real F0-F4 the GBM beats both baselines (worst WAPE ratio 0.88, F4 0.68). All checks green on each head (`attribution` green after footer removal via MCP), merged, `ci` and `deploy to dev` green. `start-backfill` on AWS: forecaster `gbm-4f9ca785837e`, **EV-02 passed**. M3-01 ticked. Cost $0.
+- **Decisions (§8.2):** gate untouched; stumps chosen over 30 rounds (similar) for the better worst case.
 
 ## 2026-11-09 (autopilot run 73, cont.)
 
