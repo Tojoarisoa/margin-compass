@@ -997,7 +997,7 @@ Each milestone ends with a demoable increment and exit criteria. Effort assumes 
 ### M3: Models & Simulators (~2 weeks)
 
 - [ ] M3-01 AI COGS forecaster + baselines + backtests (EV-02)
-- [ ] M3-02 Margin-leak detector (EV-03)
+- [x] M3-02 Margin-leak detector (EV-03)
 - [x] M3-03 Churn / price-sensitivity model (EV-11)
 - [x] M3-04 Calculation spec: pricing engine + traffic replay simulator with parity vectors (EV-12)
 - [x] M3-05 PG-3 Margin Leaks, PG-4 Forecast & Pricing Simulator, PG-5 Cost–Quality Lab, PG-8 *AI Quality* tab
