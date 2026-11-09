@@ -17,6 +17,11 @@ on:
         default: haiku-4-5
         type: choice
         options: [haiku-4-5, haiku-5-5]
+      cache:
+        description: Turn on Bedrock prompt caching (MC_CACHE_PROMPT=1) for record-fixtures / live-eval (M4-04)
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -142,6 +147,7 @@ jobs:
         working-directory: agents
         env:
           MODEL: ${{ inputs.model }}
+          MC_CACHE_PROMPT: ${{ inputs.cache && '1' || '0' }}
           MODE: ${{ inputs.task == 'record-fixtures' && 'record' || 'live' }}
         run: |
           set -euo pipefail
