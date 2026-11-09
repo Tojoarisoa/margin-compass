@@ -173,6 +173,12 @@ jobs:
           st=0; line="$(uv run mc-rag eval --embedder titan --store ../data/ops/rag-index.json)" || st=$?
           { echo "## EV-04 (Titan v2, hybrid)"; echo '```json'; echo "$line"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
           exit "$st"
+      - name: print recorded fixtures (the sandbox cannot download artifacts)
+        if: always() && inputs.task == 'record-fixtures'
+        run: |
+          for f in evals/m1_06/fixtures/${{ inputs.model }}/*.json; do
+            echo "FIXTURE-BEGIN $(basename "$f")"; base64 -w0 "$f"; echo; echo "FIXTURE-END"
+          done
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always() && (inputs.task == 'record-fixtures' || inputs.task == 'live-eval')
         with:
