@@ -12,8 +12,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
--1. **Finish PR #172** (merge, deploy), then re-run `start-backfill`, read `verify-backfill` ev02, tick M3-01 (the item below).
-0. **M3-01:** PR #171 (GBM base = last week's same weekday) merged and deployed; locally EV-02 passes on all 5 (local repro reproduces AWS numbers: `scratchpad` harness = simulator seed 42, telemetry priced with `price_on`, `evaluate.compare` 30d x 4 origins). But `start-backfill` still reports forecaster `sn-42c3b66bda82`, `registered: false`, `ev02: false`: the build reuses the existing version (same data SHA) and does not retrain. Next: make train re-register/retrain when the model code changes (e.g. include the gbm/train code version in the version hash), re-run `start-backfill`, read `verify-backfill`, tick M3-01.
+0. **M3-01:** retraining works now (PR #172). On AWS gold only **F4** fails EV-02 (gbm WAPE 0.0390 vs ets 0.0309, naive 0.0343). Locally F4 passed by a thin margin, so the local repro differs from AWS gold for F4: compare F4 series, tune the GBM for F4 without weakening the gate, re-run `start-backfill` + `verify-backfill`, tick M3-01.
 0. **M4-06 done** (live graph view, run 68).
 0. **M3-02 done** (EV-03 passed on AWS, run 67). Optional later: PT-06 (one small F2 tenant, x6 requests) is still missed.
 1. **On real gold (rest):** M3-01: read `ev02.passed` from `models/*/backtest.json` (ops role needs a read-only `models/` grant, mc-* only). M3-03 done.
@@ -24,6 +23,11 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 7. Then **M5-01** (nightly margin review graph) per PLAN.md §17.
 
 Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s during image builds: re-run the failed job.
+
+## 2026-11-09 (autopilot run 73, cont.)
+
+- **Merged PR #172** on owner's go-ahead (fast-forward to `46545ec`); `ci` push and `deploy to dev` green.
+- **start-backfill** (ops 42587377715): forecaster retrained, new version `sn-f9d845a01080` registered, **EV-02 still false**. verify-backfill (ops 42588129489): GBM now beats both baselines on F0-F3; **only F4 fails** (gbm WAPE 0.0390 vs naive 0.0343, ets 0.0309; pinball 10.03 vs 7.51). M3-01 not ticked. Cost $0.
 
 ## 2026-11-09 (autopilot run 73)
 
