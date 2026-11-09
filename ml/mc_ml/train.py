@@ -111,10 +111,20 @@ def _promote(challenger: ModelVersion, champion: ModelVersion | None, challenger
     return should_promote(challenger, champion)
 
 
+def _code_version() -> str:
+    """Hash of the forecaster sources, so changing the model code registers a new version."""
+    h = hashlib.sha256()
+    for f in sorted((Path(__file__).parent / "cogs_forecast").glob("*.py")):
+        h.update(f.name.encode())
+        h.update(f.read_bytes())
+    return h.hexdigest()[:12]
+
+
 def train_cogs_forecaster(gold: Path, models_dir: Path, registry: Registry, artifact_base_uri: str, run_id: str) -> dict:
     series, days = _daily_cost_by_feature(gold)
     params = {"model": "seasonal_naive", "season": SEASON, "horizon_days": HORIZON_DAYS, "holdout_days": HOLDOUT_DAYS,
-              "multi_step": {"horizon": HORIZON_DAYS, "origins": 4, "step": 7, "baselines": ["seasonal_naive", "ets"]}}
+              "multi_step": {"horizon": HORIZON_DAYS, "origins": 4, "step": 7, "baselines": ["seasonal_naive", "ets"]},
+              "code": _code_version()}
     data_sha = hashlib.sha256(json.dumps({"days": [d.isoformat() for d in days], "series": series}, sort_keys=True).encode()).hexdigest()
 
     multi_step = {}
