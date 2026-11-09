@@ -243,7 +243,7 @@ def review(gold: Path, run_id: str) -> list[Action]:
     return ranked[:MAX_ACTIONS]
 
 
-def build_brief(actions: list[Action], run_id: str) -> dict:
+def build_brief(actions: list[Action], run_id: str, insights: dict[str, str] | None = None) -> dict:
     total = sum((a.impact_usd_month for a in actions), Decimal(0))
     top = actions[:BRIEF_TOP]
     headline = (f"{len(actions)} proposed actions with {_money(total)} of monthly margin at stake."
@@ -251,16 +251,33 @@ def build_brief(actions: list[Action], run_id: str) -> dict:
     return {"schema_version": "brief.v0", "run_id": run_id, "data_label": "synthetic", "headline": headline,
             "action_count": len(actions), "total_impact_usd_month": _money(total),
             "top_actions": [{"action_id": a.action_id, "action_type": a.action_type, "title": a.title,
-                             "impact_usd_month": _money(a.impact_usd_month), "approver": a.approver} for a in top]}
+                             "impact_usd_month": _money(a.impact_usd_month), "approver": a.approver,
+                             **({"insight": insights[a.action_id]} if insights and a.action_id in insights else {})}
+                            for a in top]}
 
 
-def write(data_root: Path, run_id: str) -> list[str]:
-    """Write gold/fct_actions.parquet and publish/latest/margin_brief.json; returns the published keys."""
+def write(data_root: Path, run_id: str, client=None) -> list[str]:
+    """Write gold/fct_actions.parquet and publish/latest/margin_brief.json; returns the published keys.
+
+    With an LLM `client` the top actions are also investigated (investigate.py, capped at $0.50 a night) and the
+    findings are added to the brief and to episodic memory. Without one (the default, CI and the build) no LLM is called.
+    A failed investigation never blocks the brief.
+    """
     root = Path(data_root)
     actions = review(root / "gold", run_id)
+    insights: dict[str, str] = {}
+    if client is not None:
+        from . import investigate  # local import: investigate imports Action from this module
+        try:
+            mem = root / "memory" / "episodic.jsonl"
+            res = investigate.investigate(actions, client, memory=investigate.load_memory(mem))
+            investigate.remember(mem, run_id, res.insights)
+            insights = {i.action_id: i.text for i in res.insights}
+        except Exception:  # noqa: BLE001 - the deterministic brief must still be written
+            insights = {}
     table = pa.Table.from_pylist([asdict(a) for a in actions], schema=SCHEMA.with_metadata({b"synthetic": b"true"}))
     pq.write_table(table, root / "gold" / "fct_actions.parquet", compression="zstd")
     out = root / "publish" / "latest" / "margin_brief.json"
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(build_brief(actions, run_id), separators=(",", ":"), allow_nan=False))
+    out.write_text(json.dumps(build_brief(actions, run_id, insights), separators=(",", ":"), allow_nan=False))
     return ["publish/latest/margin_brief.json"]

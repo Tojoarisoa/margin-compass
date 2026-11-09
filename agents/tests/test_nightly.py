@@ -89,3 +89,28 @@ def test_plan_below_target_drafts_a_pricing_action(tmp_path):
     assert plan.target == "plan/pro" and plan.impact_usd_month == Decimal("450.00")
     assert plan.approver == "pricing_committee" and plan.status == "proposed"
     assert not any(a.target == "plan/ent" for a in acts)  # one tenant only
+
+
+def test_write_with_llm_adds_insights_and_memory(tmp_path):
+    from mc_agents.llm import LLMResponse
+
+    class Fake:
+        def complete(self, req):
+            return LLMResponse([{"text": "Check the latest release first."}], "end_turn", 300, 40)
+
+    root = _gold(tmp_path)
+    nightly.write(root, "r1", client=Fake())
+    brief = json.loads((root / "publish" / "latest" / "margin_brief.json").read_text())
+    assert all(a["insight"] == "Check the latest release first." for a in brief["top_actions"])
+    assert (root / "memory" / "episodic.jsonl").read_text().count("\n") >= 5
+
+
+def test_failing_llm_still_writes_plain_brief(tmp_path):
+    class Boom:
+        def complete(self, req):
+            raise RuntimeError("down")
+
+    root = _gold(tmp_path)
+    nightly.write(root, "r1", client=Boom())
+    brief = json.loads((root / "publish" / "latest" / "margin_brief.json").read_text())
+    assert brief["action_count"] > 0 and all("insight" not in a for a in brief["top_actions"])
