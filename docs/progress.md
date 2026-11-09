@@ -12,18 +12,12 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-0. **Next task:** M4-05 (live-model EV-05/07, ops record run for real EV-10 latency), or M2-04 once `finops.json` status is `ok`, or M5-01.
+1. **M4-05:** live-model EV-05/07 (needs analyst SQL generation) and an ops record run for real EV-10 latency, then tick M4-05.
+2. **M5-01:** nightly margin review graph → `fct_actions` + daily margin brief (PLAN.md §17), split into PR-sized steps. Then M5-02.
+3. **M2-04 (daily check, not a task):** run ops `verify-backfill` once a day and read `finops.json`. Last check 2026-11-09 17:29 UTC: `awaiting_first_export` (AWS FOCUS export still empty). When `status` is `ok`, wire `MC_FINOPS_FOCUS_GLOB` if still needed and tick M2-04. Everything else in M2-04 is done.
 
-0. **Finish PR #177** (merge when allowed, run ops `verify-backfill`, read `finops.json`; if `status` is `ok`, tick M2-04).
-0. **M2-04:** `finops.json` is now published by the M2 build (run 76) but `status` is `awaiting_first_export` (AWS FOCUS export still empty). Re-check with ops `verify-backfill` once a day; when `status` is `ok`, tick M2-04.
-0. **M3-01 done** (EV-02 passed on AWS, run 74).
-0. **M4-06 done** (live graph view, run 68).
-0. **M3-02 done** (EV-03 passed on AWS, run 67). Optional later: PT-06 (one small F2 tenant, x6 requests) is still missed.
-1. **On real gold:** M3-01, M3-02, M3-03 all done.
-2. **M2-04:** PG-8 *Platform FinOps* and S7 are complete once the first backfill data shows; wire `MC_FINOPS_FOCUS_GLOB` when the S7 export has data; then tick M2-04.
-4. **M4-05:** live-model EV-05/07 (needs analyst SQL generation) and an ops record run for real EV-10 latency, then tick M4-05.
-7. Then **M5-01** (nightly margin review graph) per PLAN.md §17.
-
+Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-06 (see entries below).
+Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed; prompt caching shows 0 cache-read tokens (prompts ~1.5k tokens, likely under the cache minimum).
 Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s during image builds: re-run the failed job.
 
 ## 2026-11-09 (autopilot run 79)
