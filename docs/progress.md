@@ -8,7 +8,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 - **M5-03 steps 4-6 (approvals store, Cognito, owner mode):** the plan's step 4 asks for a new on-demand table `mc-dev-state-approvals`, which contradicts ADR-011 (single provisioned core table, on-demand forbidden). Auto-decision under §8.2: store approvals as an item type in `mc-dev-state-core` (no new table). The write path restricted to the owner needs the Cognito pool (step 5) and creating the owner user is owner-only. Question: OK to build the Cognito pool + API write path (IaC, no users created), then you create the owner user in the console? Until answered, autopilot skips M5-03 steps 4-6.
 
-- **M4-05 EV-06 calibration labels:** PLAN §9 wants the EV-06 LLM judge "calibrated on human labels". Autopilot can build the judge and record its verdicts, but can't produce human labels. Question: will you label about 40 judge verdicts (pass/fail per golden scenario), or accept the deterministic rubric (now in CI, 40/40) as the EV-06 gate until you do? Until answered, M4-05 stays unticked.
+- **M4-05 EV-06 calibration labels:** the rubric-based LLM judge now runs (Haiku 4.5, 12/13 = 92.3% on the scenarios with a recorded outcome, replayed in CI). PLAN §9 wants it "calibrated on human labels", which autopilot can't produce. Question: will you label the 13 judge verdicts (pass/fail each; fixtures in `agents/golden/ev06_judge_fixtures/haiku-4-5/`), or accept rubric + judge (agreement 92.3%) as the EV-06 gate until you do? Until answered, M4-05 stays unticked.
 
 ## Owner decision 2026-11-06
 
@@ -16,14 +16,23 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-0. **Check** main `ci` + `deploy to dev` for 873256e (#223), still running at the end of run 103.
-1. **M4-05 EV-06 step 2:** rubric-based LLM judge (Haiku 4.5, capped, replayed fixtures in CI) over the 40 golden scenarios, scored against the step 1 rubric. Calibration on human labels: see Waiting for owner. EV-05 (8/8 live) and EV-10 (live, pass) are done; EV-06 is the last M4-05 gap, then tick M4-05.
+0. **Check** main `ci` + `deploy to dev` for 9039d78 (#226) and the run 104 progress commit, still running at the end of run 104.
+1. **M4-05 EV-06 step 3:** judge covers 13/40 scenarios (only those with a recorded answer or blocked). Record real AG-03 graph runs for the other 27 (ops, capped) so the judge and rubric score actual answers, then re-record the judge. prc-03 is the judge's one miss: the golden answer should model the increase with `price_plan` (needs a second evidence entry). Calibration: see Waiting for owner.
 2. **M5-04:** KPI-09 needs a closed-loop plan change (none yet) and KPI-13 needs the real AWS bill (M2-04 FOCUS export); tick M5-04 when both are real. M5-03 steps 4-6: see Waiting for owner.
 3. **M2-04 (daily check, not a task):** run ops `verify-backfill` once a day and read `finops.json`. Last check 2026-11-10 15:13 UTC: `awaiting_first_export`. When `status` is `ok`, wire `MC_FINOPS_FOCUS_GLOB` if still needed and tick M2-04.
 
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed.
-Notes: owner-mode approvals wait for Cognito (M5-03). Ops eval results are now in the job log (step summaries aren't readable by API). Flaky github.com 504s during image builds: re-run the failed job.
+Notes: owner-mode approvals wait for Cognito (M5-03). Ops eval results are now in the job log (step summaries aren't readable by API). Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1). Flaky github.com 504s during image builds: re-run the failed job.
+
+## 2026-11-10 (autopilot run 104)
+
+- **Start:** main `ci` + `deploy to dev` for 873256e (#223) green; 86c5136 `ci` green; no open PRs.
+- **Task 1:** M4-05 EV-06 step 2a. PR #224 merged (every `ci` job and `attribution` green after footer removal via MCP), main `ci` + `deploy to dev` green: `ev06_judge` (prompt `ev06-judge-v1`, 1 capped Haiku call per scenario, `record_verdict` tool, fails closed), `mc-agents ev --ev06 {rubric,replay,record,live}`, ops record/live run it. Agents 253 passed.
+- **Task 2:** M4-05 step 2b. First live judge (ops 42904236054) 9/13 (69%): 4 golden answers didn't address their job. PR #225 merged (all green) rewrote cts-03, leak-01, prc-03, eff-02 with only their own evidence figures (EV-08 still passes, rubric 40/40). Re-record (ops 42907026520, cache on): **judge 12/13 (92.3%)**, agreement with rubric 92.3%; miss prc-03 (answer asks for the new price instead of modelling it).
+- **Task 3:** M4-05 step 2c. PR #226: judge fixtures + CI replay (`ev --ev06 replay`). Merged (every `ci` job incl. the new judge replay, and `attribution`, green after footer removal); its main `ci`/deploy was still running at the end of the run.
+- **Decisions (§8.2):** fixed the golden answers the judge flagged (data, not the judge or gate); judge covers the 13 scenarios with a complete recorded outcome (others listed `not_judged`). Stale branch `auto/m4-05-ev06-judge-replay` (no PR) couldn't be deleted (proxy 403); delete it when convenient.
+- **Cost:** 2 ops record runs (+1 cancelled), about 40 Haiku 4.5 calls each incl. M1-06/EV-05, under $0.10 total (capped in code).
 
 ## 2026-11-10 (autopilot run 103)
 
