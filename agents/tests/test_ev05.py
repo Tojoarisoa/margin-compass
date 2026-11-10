@@ -79,3 +79,22 @@ def test_specialist_generator_offers_only_ag03_tools(gold):
     client = _Script(QS[0]["reference_sql"])
     ev05.specialist_generator(lambda _: client, gold)(QS[0]["question"])
     assert [t["toolSpec"]["name"] for t in client.requests[0].tools] == ["query_gold"]
+
+
+def test_run_model_records_then_replays_the_same_score(gold, tmp_path):
+    by_q = {x["question"]: x["reference_sql"] for x in QS[:3]}
+
+    class Live:
+        def complete(self, req):
+            return _Script(by_q[req.messages[0]["content"][0]["text"]]).complete(req)
+
+    rec = ev05.run_model(gold, "haiku-4-5", "record", tmp_path, Live(), QS[:3])
+    assert rec["ev05"] == 1.0 and len(list((tmp_path / "haiku-4-5").glob("*.json"))) == 3
+    rep = ev05.run_model(gold, "haiku-4-5", "replay", tmp_path, questions=QS[:3])
+    assert rep["results"] == rec["results"] and rep["mode"] == "replay"
+
+
+def test_replay_without_fixtures_fails_loudly(gold, tmp_path):
+    from mc_agents.llm import FixtureDrift
+    with pytest.raises(FixtureDrift):
+        ev05.run_model(gold, "haiku-4-5", "replay", tmp_path, questions=QS[:1])

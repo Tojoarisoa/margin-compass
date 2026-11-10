@@ -81,7 +81,8 @@ class _SqlCapture:
         return resp
 
 
-def specialist_generator(make_client: Callable[[str], Any], gold_dir: Path, model_id: str = "m") -> Callable[[str], str]:
+def specialist_generator(make_client: Callable[[str], Any], gold_dir: Path,
+                         model_key: str = "haiku-4-5") -> Callable[[str], str]:
     """Live-model EV-05 generator: runs the AG-03 Cost-to-Serve specialist on the question with a recorded,
     replayed or scripted client and returns the SQL of its last `query_gold` call ("" when it made none,
     which scores as a miss). Budget and tool-round caps apply as in production."""
@@ -98,9 +99,43 @@ def specialist_generator(make_client: Callable[[str], Any], gold_dir: Path, mode
         cap = _SqlCapture(make_client(question))
         state = GraphState(question, route="cost_to_serve")
         try:
-            run_specialist(state, BudgetedLLM(cap, QuestionBudget(MODELS["haiku-4-5"])), model_id, extra)
+            spec = MODELS[model_key]
+            run_specialist(state, BudgetedLLM(cap, QuestionBudget(spec)), spec.target, extra)
         except BudgetExceeded:  # a capped run scores what it generated so far; fixture drift still raises
             pass
         return cap.sql[-1] if cap.sql else ""
 
     return generate
+
+
+FIXTURES = GOLDEN.parent / "ev05_fixtures"
+
+
+def run_model(gold_dir: Path, model_key: str, mode: str = "replay", fixtures_dir: Path = FIXTURES,
+              live_client: Any = None, questions: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+    """EV-05 over the model's own SQL. replay: recorded fixtures ($0, CI); record: live Bedrock, writes
+    one fixture per question; live: live Bedrock, nothing written."""
+    from .config import MODELS
+    from .llm import BedrockLLM, RecordingLLM, ReplayLLM
+    from .specialists import PROMPT_VERSION
+    from .tools.sql_guard import make_query_gold
+
+    spec = MODELS[model_key]
+    qs = questions if questions is not None else load_golden()
+    ids = {q["question"]: q["id"] for q in qs}
+    recorders: list[tuple[str, Any]] = []
+
+    def make_client(question: str) -> Any:
+        path = fixtures_dir / model_key / f"{ids[question]}.json"
+        if mode == "replay":
+            return ReplayLLM(path)
+        if mode == "record":
+            rec = RecordingLLM(live_client or BedrockLLM(), path)
+            recorders.append((ids[question], rec))
+            return rec
+        return live_client or BedrockLLM()
+
+    out = score(make_query_gold(gold_dir), specialist_generator(make_client, gold_dir, model_key), qs)
+    for qid, rec in recorders:
+        rec.save({"question_id": qid, "model_id": spec.target, "prompt_version": PROMPT_VERSION})
+    return {**out, "model": spec.target, "mode": mode}

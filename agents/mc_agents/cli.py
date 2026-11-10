@@ -3,6 +3,7 @@
   uv run mc-agents ask "What was bc-t0003's AI gross margin in September 2025?"   # live Bedrock
   uv run mc-agents eval                         # replay the M1-06 set ($0, no network)
   uv run mc-agents ev                           # EV-05 harness self-check + EV-07/08/13 ($0, no network)
+  uv run mc-agents ev --ev05 record             # live Bedrock: EV-05 on the model's SQL, writes fixtures
   uv run mc-agents eval --mode record           # live Bedrock: re-record fixtures (costs < $0.01)
 
 Gold defaults to ../data/local/gold (run the pipeline first).
@@ -22,15 +23,16 @@ from .evaluate import run_eval
 from .llm import BedrockLLM
 
 
-def run_ev(gold: Path) -> dict:
-    """Deterministic scorers. EV-05 here replays each golden question's reference SQL (harness check;
-    scoring the live model needs the analyst to generate SQL). EV-07 uses the supervisor fast path."""
+def run_ev(gold: Path, ev05_mode: str = "reference", model_key: str = DEFAULT_ANALYST_MODEL) -> dict:
+    """Deterministic scorers. EV-05 `reference` replays each golden question's reference SQL (harness
+    check); `replay`/`record`/`live` score the AG-03 specialist's own SQL. EV-07 uses the supervisor fast path."""
     from . import ev05, ev_scenarios
     from .tools.sql_guard import make_query_gold
 
     refs = {q["question"]: q["reference_sql"] for q in ev05.load_golden()}
     out = {
-        "ev05": ev05.score(make_query_gold(gold), lambda question: refs[question]),
+        "ev05": (ev05.score(make_query_gold(gold), lambda question: refs[question]) if ev05_mode == "reference"
+                 else ev05.run_model(gold, model_key, ev05_mode)),
         "ev07": ev_scenarios.ev07(),
         "ev08": ev_scenarios.ev08(),
         "ev13": ev_scenarios.ev13(),
@@ -55,6 +57,8 @@ def main(argv: list[str] | None = None) -> int:
     nt.add_argument("--live", action="store_true")
     evp = sub.add_parser("ev")
     evp.add_argument("--out", type=Path, default=None)
+    evp.add_argument("--ev05", choices=("reference", "replay", "record", "live"), default="reference",
+                     help="EV-05 SQL source: reference SQL ($0) or the model (replay $0; record/live call Bedrock)")
     args = p.parse_args(argv)
     logging.basicConfig(level=logging.WARNING, stream=sys.stderr)
 
@@ -71,7 +75,7 @@ def main(argv: list[str] | None = None) -> int:
                           "insights": sum("insight" in a for a in brief["top_actions"])}))
         return 0
     if args.cmd == "ev":
-        report = run_ev(args.gold)
+        report = run_ev(args.gold, args.ev05, args.model)
         text = json.dumps(report, indent=2)
         if args.out:
             args.out.parent.mkdir(parents=True, exist_ok=True)
