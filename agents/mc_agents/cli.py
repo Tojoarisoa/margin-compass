@@ -25,14 +25,16 @@ from .llm import BedrockLLM
 
 def run_ev(gold: Path, ev05_mode: str = "reference", model_key: str = DEFAULT_ANALYST_MODEL) -> dict:
     """Deterministic scorers. EV-05 `reference` replays each golden question's reference SQL (harness
-    check); `replay`/`record`/`live` score the AG-03 specialist's own SQL. EV-07 uses the supervisor fast path."""
-    from . import ev05, ev_scenarios
+    check); `replay`/`record`/`live` score the AG-03 specialist's own SQL. EV-06 replays the golden scenarios
+    through the task-success rubric; EV-07 uses the supervisor fast path."""
+    from . import ev05, ev06, ev_scenarios
     from .tools.sql_guard import make_query_gold
 
     refs = {q["question"]: q["reference_sql"] for q in ev05.load_golden()}
     out = {
         "ev05": (ev05.score(make_query_gold(gold), lambda question: refs[question]) if ev05_mode == "reference"
                  else ev05.run_model(gold, model_key, ev05_mode)),
+        "ev06": ev06.ev06(),  # deterministic rubric (step 1); LLM judge later
         "ev07": ev_scenarios.ev07(),
         "ev08": ev_scenarios.ev08(),
         "ev13": ev_scenarios.ev13(),

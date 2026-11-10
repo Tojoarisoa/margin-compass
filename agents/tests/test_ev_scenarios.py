@@ -73,4 +73,4 @@ def test_cli_ev_runs_all_scorers(gold, capsys):
 
     assert main(["--gold", str(gold), "ev"]) == 0
     out = json.loads(capsys.readouterr().out)
-    assert out == {"ev05": True, "ev07": True, "ev08": True, "ev13": True, "passed": True}
+    assert out == {"ev05": True, "ev06": True, "ev07": True, "ev08": True, "ev13": True, "passed": True}
