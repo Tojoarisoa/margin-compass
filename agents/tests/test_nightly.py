@@ -37,13 +37,22 @@ def test_ranks_open_leaks_and_losing_tenants(tmp_path):
 
 def test_write_is_deterministic_and_brief_copies_figures(tmp_path):
     root = _gold(tmp_path)
-    assert nightly.write(root, "r1") == ["publish/latest/margin_brief.json"]
+    assert nightly.write(root, "r1") == ["publish/latest/margin_brief.json", "publish/latest/actions.json"]
     first = pq.read_table(root / "gold" / "fct_actions.parquet").to_pylist()
     nightly.write(root, "r1")
     assert pq.read_table(root / "gold" / "fct_actions.parquet").to_pylist() == first
     brief = json.loads((root / "publish" / "latest" / "margin_brief.json").read_text())
     assert brief["action_count"] == 5 and "llm_calls" not in brief  # public surface: no call counts (AGENTS.md §6)
     assert brief["total_impact_usd_month"] == "$1,230.00" and brief["top_actions"][0]["impact_usd_month"] == "$600.00"
+
+
+def test_queue_lists_every_action_with_role_and_risk(tmp_path):
+    root = _gold(tmp_path)
+    nightly.write(root, "r1")
+    q = json.loads((root / "publish" / "latest" / "actions.json").read_text())
+    assert q["schema_version"] == "actions.v0" and len(q["actions"]) == 5
+    assert all(a["status"] == "proposed" and a["approver"] and a["risk"] and a["assumptions"] for a in q["actions"])
+    assert q["actions"][0]["impact_usd_month"] == "$600.00"
 
 
 def test_missing_marts_give_an_empty_brief(tmp_path):

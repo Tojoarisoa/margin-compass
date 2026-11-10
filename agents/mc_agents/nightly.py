@@ -256,6 +256,17 @@ def build_brief(actions: list[Action], run_id: str, insights: dict[str, str] | N
                             for a in top]}
 
 
+def build_queue(actions: list[Action], run_id: str, insights: dict[str, str] | None = None) -> dict:
+    """PG-7 Action Center queue: every proposed action, grouped by the dashboard into approver-role queues."""
+    return {"schema_version": "actions.v0", "run_id": run_id, "data_label": "synthetic",
+            "actions": [{"action_id": a.action_id, "action_type": a.action_type, "target": a.target, "title": a.title,
+                         "impact_usd_month": _money(a.impact_usd_month), "confidence": str(a.confidence), "effort": a.effort,
+                         "quality_impact": a.quality_impact, "risk": a.risk, "status": a.status, "approver": a.approver,
+                         "assumptions": a.assumptions,
+                         **({"insight": insights[a.action_id]} if insights and a.action_id in insights else {})}
+                        for a in actions]}
+
+
 def write(data_root: Path, run_id: str, client=None) -> list[str]:
     """Write gold/fct_actions.parquet and publish/latest/margin_brief.json; returns the published keys.
 
@@ -280,4 +291,6 @@ def write(data_root: Path, run_id: str, client=None) -> list[str]:
     out = root / "publish" / "latest" / "margin_brief.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(build_brief(actions, run_id, insights), separators=(",", ":"), allow_nan=False))
-    return ["publish/latest/margin_brief.json"]
+    queue = root / "publish" / "latest" / "actions.json"
+    queue.write_text(json.dumps(build_queue(actions, run_id, insights), separators=(",", ":"), allow_nan=False))
+    return ["publish/latest/margin_brief.json", "publish/latest/actions.json"]
