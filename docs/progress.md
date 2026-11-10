@@ -14,14 +14,21 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-0. **M5-04:** KPI-09 needs a closed-loop plan change (none yet) and KPI-13 needs the real AWS bill (M2-04 FOCUS export); tick M5-04 when both are real. Meanwhile M5-03 step 4 (approvals table). Step 5 (Cognito owner user) is owner-only: write it under Waiting for owner when reached.
-1. **M4-05:** live-model EV-05/07 (needs analyst SQL generation) and an ops record run for real EV-10 latency, then tick M4-05.
+0. **M4-05 EV-05 fixtures:** wait for main `ci` + `deploy to dev` on the run 100 commits, then dispatch ops `record-fixtures` (model `haiku-4-5`); copy the EV-05 fixtures from the log (`FIXTURE-BEGIN agents/golden/ev05_fixtures/...`) into the repo and make CI replay them (`mc-agents ev --ev05 replay`). Gate 90%; if below, fix the AG-03 prompt, never the gate. Then an ops record run for real EV-10 latency, then tick M4-05.
+1. **M5-04:** KPI-09 needs a closed-loop plan change (none yet) and KPI-13 needs the real AWS bill (M2-04 FOCUS export); tick M5-04 when both are real. M5-03 steps 4-6: see Waiting for owner.
 3. **M2-04 (daily check, not a task):** run ops `verify-backfill` once a day and read `finops.json`. Last check 2026-11-10 15:13 UTC: `awaiting_first_export` (AWS FOCUS export still empty). When `status` is `ok`, wire `MC_FINOPS_FOCUS_GLOB` if still needed and tick M2-04. Everything else in M2-04 is done.
 
 Resolved 2026-11-09: CI on main after #184 failed because of a GitHub Actions outage (githubstatus: Actions major outage, ~18:10-18:45 UTC); every job passed at least once on 17a6bb8, and the owner's PR with the merge guard re-ran the full CI and deployed. New merge guard: AGENTS.md §8.1 step 4.
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed; prompt caching shows 0 cache-read tokens (prompts ~1.5k tokens, likely under the cache minimum).
 Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s during image builds: re-run the failed job.
+
+## 2026-11-10 (autopilot run 100)
+
+- **Task 1:** M4-05 step 7. PR #215 merged (every `ci` job green, `attribution` green after footer removal via MCP), main `ci` and `deploy to dev` green: `ev05.specialist_generator` scores the SQL the AG-03 specialist sends to `query_gold`. Agents 234 passed, ruff clean. Cost $0.
+- **Task 2:** M4-05 step 8. PR #216 merged (every `ci` job green, `attribution` green): `mc-agents ev --ev05 {reference,replay,record,live}`, fixtures in `agents/golden/ev05_fixtures/<model>/`; default `reference`, CI unchanged. Agents 236 passed. Cost $0.
+- **Task 3:** M4-05 step 9. PR #217 (ops `record-fixtures`/`live-eval` also run EV-05 on the model's SQL and print its fixtures): every `ci` job green; merged at the end of the run, its main `ci`/deploy may still be running (next run checks). Cost $0 (no ops run yet).
+- **Decisions (§8.2):** runs 98-99 called M4-05 blocked; it was not (live EV-05 only needed SQL capture from AG-03). Measure AG-03 as deployed (its `query_gold` SQL) rather than adding a separate SQL-writer prompt (no new agent, rule 4).
 
 ## 2026-11-10 (autopilot run 99)
 
