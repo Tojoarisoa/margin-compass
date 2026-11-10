@@ -79,14 +79,20 @@ class LLMClient(Protocol):
     def complete(self, request: LLMRequest) -> LLMResponse: ...
 
 
+def bedrock_config(config_cls: Any) -> Any:
+    """Adaptive retries (client-side rate limiting) so back-to-back eval questions survive Bedrock
+    ThrottlingException (ops record run 42872499185). Throttled requests are not billed, and the
+    per-question call cap counts completed calls, so the budget is unchanged."""
+    return config_cls(retries={"mode": "adaptive", "max_attempts": 8}, read_timeout=60)
+
+
 class BedrockLLM:
     def __init__(self, client: Any | None = None) -> None:
         if client is None:
             import boto3
             from botocore.config import Config
 
-            client = boto3.client("bedrock-runtime", config=Config(retries={"mode": "standard", "max_attempts": 3},
-                                                                   read_timeout=60))
+            client = boto3.client("bedrock-runtime", config=bedrock_config(Config))
         self.client = client
 
     def complete(self, request: LLMRequest) -> LLMResponse:

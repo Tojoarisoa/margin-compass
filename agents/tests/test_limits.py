@@ -55,3 +55,13 @@ def test_budgeted_llm_uses_limiter_and_spend_caps():
     with pytest.raises(RateLimited):
         llm.complete(req)
     assert Fake.calls == 1
+
+
+def test_bedrock_config_retries_throttling_adaptively():
+    from botocore.config import Config
+
+    from mc_agents.llm import bedrock_config
+
+    cfg = bedrock_config(Config)
+    assert cfg.retries == {"mode": "adaptive", "max_attempts": 8}
+    assert cfg.read_timeout == 60
