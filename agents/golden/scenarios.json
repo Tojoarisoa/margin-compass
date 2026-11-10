@@ -236,11 +236,11 @@
      "outcomes": 0
     },
     "result": {
-     "margin_cents": 30000,
-     "revenue_cents": 50000
+     "margin_cents": 31000,
+     "revenue_cents": 51000
     }
    },
-   "answer": "Margin is 30000 cents on 50000 cents revenue [E1]."
+   "answer": "At 1500 usage units against 1000 included, 10 seats at 5000 cents a seat: the enterprise plan earns 31000 cents margin on 51000 cents revenue [E1]."
   },
   {
    "id": "prc-03",
