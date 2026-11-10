@@ -1017,7 +1017,7 @@ Each milestone ends with a demoable increment and exit criteria. Effort assumes 
 
 ### M5: Close the Loop (~2 weeks)
 
-- [ ] M5-01 Nightly margin review graph → `fct_actions` + daily margin brief
+- [x] M5-01 Nightly margin review graph → `fct_actions` + daily margin brief
 - [ ] M5-02 PG-7 Action Center with visitor-sandbox approvals and role-based queues
 - [ ] M5-03 Owner mode (Cognito) → the simulator applies ACT-1/2/3 effects
 - [ ] M5-04 `fct_realized_margin` (counterfactual method); KPI-01, -02, -09, -13 go live
@@ -1212,3 +1212,4 @@ Status: all ADRs are written up in `docs/adr/` and **accepted** (ADR-017 on 2026
 | 2026-11-09 | 0.4 | M4-01 closed (**auto-decided under AGENTS.md §8.2**): ops `rag-eval` (run 42633628071) indexed the 9-document corpus (45 chunks) with Titan Embed v2 and ran EV-04 with hybrid retrieval; the gate passed (step exit 0). Cost under $0.002. Ops role may invoke only `amazon.titan-embed-text-v2:0`. |
 | 2026-11-09 | 0.4 | Owner decision: autopilot merge guard. Besides the head commit's check-runs, the PR's `ci` workflow run must have conclusion `success` with every CI job present and green (jobs that never start leave no check-run). Also: the published `margin_brief.json` no longer carries an LLM call count (public-surface rule) |
 | 2026-11-09 | 0.4 | Owner decision: the public PG-8 *Platform FinOps* card and `finops.json` show the real monthly AWS cost by stage and service only, without the budget or budget share (public-surface rule overrides the planned budget burn-down; the budget stays in AWS Budgets and internal docs) |
+| 2026-11-10 | 0.4 | M5-01 closed (**auto-decided under AGENTS.md §8.2**): ops `nightly-insight` now builds a local M2 simulation; live run 42742664250 wrote 17 actions with 5 Haiku 4.5 insights, capped in code at $0.50 (spend under $0.01 expected). No IAM change; the data-bucket read grant was not needed. |
