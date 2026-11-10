@@ -6,6 +6,8 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 - **Claude Haiku 5.5 access:** access requested, waiting for AWS. Converse via `us.anthropic.claude-haiku-5-5` still returns `AccessDeniedException`. Autopilot: re-probe with the ops workflow (`record-fixtures`, `haiku-5-5`) at most once a day; when it succeeds, record the M1-06 fixtures and apply the ADR-003 selection rule. Until then Haiku 4.5 stays the default.
 
+- **M5-03 steps 4-6 (approvals store, Cognito, owner mode):** the plan's step 4 asks for a new on-demand table `mc-dev-state-approvals`, which contradicts ADR-011 (single provisioned core table, on-demand forbidden). Auto-decision under §8.2: store approvals as an item type in `mc-dev-state-core` (no new table). The write path restricted to the owner needs the Cognito pool (step 5) and creating the owner user is owner-only. Question: OK to build the Cognito pool + API write path (IaC, no users created), then you create the owner user in the console? Until answered, autopilot skips M5-03 steps 4-6.
+
 ## Owner decision 2026-11-06
 
 - **Window:** BoonCore's fiscal year starts April 1. The simulation window is now **2025-04-01 → 2026-10-31** (19 months, 579 days), set in `simulator/booncore_sim/m2_tenants.py` (`WINDOW_START`, `MONTHS`, `fiscal_year()`). Build the remaining M2 steps (backfill: 19 monthly chunks) on this window. Measured at seed 42: telemetry 2.71M rows, sample 0.44M, outcomes 0.68M, shared infrastructure 16.5% of AI COGS.
@@ -20,6 +22,11 @@ Resolved 2026-11-09: CI on main after #184 failed because of a GitHub Actions ou
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed; prompt caching shows 0 cache-read tokens (prompts ~1.5k tokens, likely under the cache minimum).
 Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s during image builds: re-run the failed job.
+
+## 2026-11-10 (autopilot run 98)
+
+- **Task:** none merged. Main `ci` green, no open PRs. Remaining M5 work is blocked: M5-03 steps 4-6 (see Waiting for owner), M5-04 KPI-09/13 (need real bill and plan change), M2-04 awaiting AWS export. Cost $0.
+- **Decisions (§8.2):** approvals as core-table items, not a new table (ADR-011).
 
 ## 2026-11-10 (autopilot run 97)
 
