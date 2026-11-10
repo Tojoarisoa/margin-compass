@@ -33,6 +33,7 @@ def test_deterministic():
 
 def test_write_realized(tmp_path):
     import pyarrow.parquet as pq
+
     from booncore_sim.m2_writer import write_realized
 
     assert write_realized(tmp_path, 42, _rows(), []) == []
