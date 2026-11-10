@@ -51,7 +51,7 @@ def test_runtime_errors_are_tool_errors(q):
 def test_registry_records_evidence(gold):
     ledger = Ledger()
     ev = registry.call("query_gold", {"sql": "SELECT 1 AS one"}, ledger, extra={"query_gold": registry.query_gold_spec(gold)})
-    assert ev.tool == "query_gold@2" and len(ledger.entries) == 1
+    assert ev.tool == "query_gold@3" and len(ledger.entries) == 1
     with pytest.raises(ToolError):
         registry.call("query_gold", {"sql": "DROP TABLE dim_tenant"}, ledger, extra={"query_gold": registry.query_gold_spec(gold)})
     assert len(ledger.entries) == 1
@@ -71,3 +71,10 @@ def test_query_gold_spec_tells_the_model_sql_and_tables(gold):
     schema = spec["inputSchema"]["json"]
     assert schema["required"] == ["sql"] and schema["properties"]["sql"]["type"] == "string"
     assert "fct_tenant_margin(" in spec["description"] and "tenant_feature_days" not in spec["description"]
+
+
+def test_query_gold_spec_states_types_and_units(gold):
+    # EV-05 record run 42879147169: the model compared a fraction to 20 and returned months as TIMESTAMP
+    desc = registry.query_gold_spec(gold).description
+    assert "margin_date DATE" in desc and "gross_margin_pct DOUBLE" in desc
+    assert "fractions from 0 to 1" in desc and "AS DATE" in desc

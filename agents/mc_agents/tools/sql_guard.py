@@ -79,6 +79,18 @@ def mart_columns(gold_dir: Path) -> dict[str, list[str]]:
     return out
 
 
+def mart_schema(gold_dir: Path) -> dict[str, list[tuple[str, str]]]:
+    """(column, DuckDB type) of each allow-listed mart present in `gold_dir`, so the model knows that
+    dates are DATE and percentages are DOUBLE fractions (EV-05 record run 42879147169)."""
+    gold = Path(gold_dir)
+    out = {}
+    for m in MARTS:
+        path = gold / f"{m}.parquet"
+        if path.exists():
+            out[m] = [(r[0], r[1]) for r in duckdb.sql(f"DESCRIBE SELECT * FROM read_parquet('{path}')").fetchall()]
+    return out
+
+
 def make_query_gold(gold_dir: Path, *, max_rows: int = MAX_ROWS) -> Callable[[dict[str, Any]], dict[str, Any]]:
     gold = Path(gold_dir)
     present = {m for m in MARTS if (gold / f"{m}.parquet").exists()}

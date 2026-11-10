@@ -44,10 +44,12 @@ def search_knowledge_spec(**deps: Any) -> ToolSpec:
 
 
 def query_gold_spec(gold_dir: Any) -> ToolSpec:
-    from mc_agents.tools.sql_guard import make_query_gold, mart_columns
-    marts = "; ".join(f"{m}({', '.join(cols)})" for m, cols in mart_columns(gold_dir).items())
-    return ToolSpec("query_gold", "2", "Guarded read-only DuckDB SELECT over the gold marts (allow-listed tables, "
-                    f"200-row cap). Pass one SELECT in `sql`. Tables and columns: {marts}.",
+    from mc_agents.tools.sql_guard import make_query_gold, mart_schema
+    marts = "; ".join(f"{m}({', '.join(f'{c} {t}' for c, t in cols)})" for m, cols in mart_schema(gold_dir).items())
+    return ToolSpec("query_gold", "3", "Guarded read-only DuckDB SELECT over the gold marts (allow-listed tables, "
+                    "200-row cap). Pass one SELECT in `sql`. Columns ending in `_pct` are fractions from 0 to 1 "
+                    "(20% is 0.2). Return dates and months as DATE, not TIMESTAMP (for example "
+                    f"CAST(date_trunc('month', d) AS DATE)). Tables and columns: {marts}.",
                     make_query_gold(gold_dir),
                     input_schema={"type": "object", "properties": {"sql": {
                         "type": "string", "description": "One DuckDB SELECT over the listed tables only."}},
