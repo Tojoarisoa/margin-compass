@@ -40,3 +40,25 @@ def test_write_realized(tmp_path):
     files = write_realized(tmp_path, 42, _rows(), [A])
     t = pq.read_table(tmp_path / files[0]["path"])
     assert t.num_rows == files[0]["rows"] > 0 and {"action_id", "saved_usd", "status"} <= set(t.column_names)
+
+
+def test_run_m2_all_writes_realized_only_with_approvals(tmp_path, monkeypatch):
+    """`run_m2` mode `all` passes the baseline telemetry to `write_realized`, and only when approvals exist."""
+    from types import SimpleNamespace
+
+    from booncore_sim import cli, m2_run, m2_writer
+
+    calls = []
+    run = SimpleNamespace(tenants=[], telemetry=_rows())
+    monkeypatch.setattr(m2_run, "generate_patterned", lambda seed, approvals=None: run)
+    for name in ("write_static", "write_focus", "write_revenue", "write_dimensions", "write_month"):
+        monkeypatch.setattr(m2_writer, name, lambda *a, **k: [])
+    monkeypatch.setattr(m2_writer, "write_manifest", lambda out, seed, files: {"files": []})
+    monkeypatch.setattr(m2_writer, "write_realized", lambda out, seed, tel, appr: calls.append((tel, appr)) or [])
+    cli.run_m2(42, tmp_path, "all", None)
+    assert calls == []
+    path = tmp_path / "approvals.jsonl"
+    path.write_text('{"action_id": "A", "action_type": "ACT-1", "target": "F4/cost", "decision": "approved", "approver": "o", "rationale": "r", '
+                    '"decided_at": "2026-01-01T00:00:00+00:00"}\n')
+    cli.run_m2(42, tmp_path, "all", None, path)
+    assert len(calls) == 1 and calls[0][0] is run.telemetry

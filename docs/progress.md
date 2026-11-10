@@ -12,7 +12,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-0. **M5-04 step 2b:** call `write_realized` from a with-approvals M2 run (baseline telemetry + approvals) and build `fct_realized_margin` in dbt with the revenue side from volume change; then M5-03 step 4 is the approvals table. Step 5 (Cognito owner user) is owner-only: write it under Waiting for owner when reached.
+0. **M5-04 step 2c:** build `fct_realized_margin` in dbt from `s5_realized/realized_cost.parquet` (revenue side from volume change); then M5-03 step 4 is the approvals table. Step 5 (Cognito owner user) is owner-only: write it under Waiting for owner when reached.
 1. **M4-05:** live-model EV-05/07 (needs analyst SQL generation) and an ops record run for real EV-10 latency, then tick M4-05.
 3. **M2-04 (daily check, not a task):** run ops `verify-backfill` once a day and read `finops.json`. Last check 2026-11-09 17:29 UTC: `awaiting_first_export` (AWS FOCUS export still empty). When `status` is `ok`, wire `MC_FINOPS_FOCUS_GLOB` if still needed and tick M2-04. Everything else in M2-04 is done.
 
@@ -20,6 +20,10 @@ Resolved 2026-11-09: CI on main after #184 failed because of a GitHub Actions ou
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed; prompt caching shows 0 cache-read tokens (prompts ~1.5k tokens, likely under the cache minimum).
 Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s during image builds: re-run the failed job.
+
+## 2026-11-10 (autopilot run 93)
+
+- **Task:** M5-04 step 2b. PR `auto/m5-04-wire-realized`: `run_m2` mode `all` with `--approvals` also writes `s5_realized/realized_cost.parquet` (baseline telemetry vs approvals). Without approvals nothing changes. Simulator `test_m5_realized` 5 passed, ruff clean. Main `ci` and deploy from run 92 were green at start. Cost $0.
 
 ## 2026-11-10 (autopilot run 92)
 
