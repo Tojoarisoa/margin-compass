@@ -1,8 +1,8 @@
 """M5-03 step 1: closed-loop effects of approved actions (PLAN.md §8.4, docs/plans/m5-plan.md).
 
 Pure and deterministic: the same (seed, approvals, rows) always gives the same rows. Nothing happens before an
-action's approval date, and an effect ramps in with an adoption lag and only partly realizes. This step covers
-ACT-1 (route a feature's requests to the batch API); ACT-2 and ACT-3 effects come in later steps.
+action's approval date, and an effect ramps in with an adoption lag and only partly realizes. ACT-1 routes a feature's
+requests to the batch API; ACT-2 (price/included usage) and ACT-3 (account fair-use cap, churn response) scale demand.
 No approvals means unchanged rows, so existing runs are not affected. All output is synthetic.
 """
 
@@ -63,3 +63,56 @@ def apply_act1(rows: list[TelemetryRow], approvals: list[Approval], seed: int) -
                     r = replace(r, is_batch=True)
         out.append(r)
     return out
+
+
+# ACT-2 / ACT-3 demand responses (assumptions, synthetic). Revenue is not in telemetry, so these change usage volume;
+# the revenue side is computed from the volume change in M5-04.
+ACT2_MAX_REDUCTION = 0.12  # share of a feature's requests that go away at full effect after a price/allowance change
+ACT3_MAX_REDUCTION = 0.30  # share of a tenant's requests that go away under a fair-use cap
+ACT3_CHURN_PROB = 0.06  # chance the account churns after the action (seeded per action)
+ACT3_CHURN_DELAY_DAYS = 45
+
+
+def churn_day(seed: int, a: Approval) -> date | None:
+    """Day from which an ACT-3 account no longer produces telemetry, or None if it stays."""
+    if _unit(seed, a.action_id, "churn") >= ACT3_CHURN_PROB:
+        return None
+    return a.approved_on + timedelta(days=ACT3_CHURN_DELAY_DAYS + int(_unit(seed, a.action_id, "cd") * 30))
+
+
+def _scale(r: TelemetryRow, keep: float) -> TelemetryRow:
+    return replace(
+        r,
+        request_count=round(r.request_count * keep),
+        gen_ai_usage_input_tokens=round(r.gen_ai_usage_input_tokens * keep),
+        gen_ai_usage_output_tokens=round(r.gen_ai_usage_output_tokens * keep),
+        gen_ai_usage_cache_read_input_tokens=round(r.gen_ai_usage_cache_read_input_tokens * keep),
+    )
+
+
+def apply_act2_act3(rows: list[TelemetryRow], approvals: list[Approval], seed: int) -> list[TelemetryRow]:
+    """ACT-2 target "<feature_id>/price" cuts that feature's volume for all tenants; ACT-3 target "<tenant_id>/cap"
+    cuts one tenant's volume and may churn it (rows dropped from the churn day)."""
+    a2 = [(a, a.target.split("/")[0]) for a in approvals if a.action_type == "ACT-2"]
+    a3 = [(a, a.target.split("/")[0], churn_day(seed, a)) for a in approvals if a.action_type == "ACT-3"]
+    if not a2 and not a3:
+        return rows
+    out = []
+    for r in rows:
+        day, keep, gone = r.usage_ts.date(), 1.0, False
+        for a, feature in a2:
+            if r.feature_id == feature:
+                keep *= 1 - ACT2_MAX_REDUCTION * share(seed, a, day)
+        for a, tenant, cd in a3:
+            if r.tenant_id == tenant:
+                keep *= 1 - ACT3_MAX_REDUCTION * share(seed, a, day)
+                gone = gone or (cd is not None and day >= cd)
+        if gone:
+            continue
+        out.append(_scale(r, keep) if keep < 1.0 else r)
+    return out
+
+
+def apply_effects(rows: list[TelemetryRow], approvals: list[Approval], seed: int) -> list[TelemetryRow]:
+    """All effects in a fixed order. No approvals returns the same list."""
+    return apply_act2_act3(apply_act1(rows, approvals, seed), approvals, seed)

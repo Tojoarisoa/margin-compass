@@ -12,7 +12,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-0. **M5-03 step 1b:** ACT-2/ACT-3 effects in `m5_effects.py` (price/included usage; churn response), then steps 2-3 (see `docs/plans/m5-plan.md`). Step 5 (Cognito owner user) is owner-only: write it under Waiting for owner when reached.
+0. **M5-03 steps 2-3:** read `approvals.jsonl` and wire `apply_effects` into `m2_run` behind an opt-in flag, then the counterfactual run (see `docs/plans/m5-plan.md`). Step 5 (Cognito owner user) is owner-only: write it under Waiting for owner when reached.
 1. **M4-05:** live-model EV-05/07 (needs analyst SQL generation) and an ops record run for real EV-10 latency, then tick M4-05.
 3. **M2-04 (daily check, not a task):** run ops `verify-backfill` once a day and read `finops.json`. Last check 2026-11-09 17:29 UTC: `awaiting_first_export` (AWS FOCUS export still empty). When `status` is `ok`, wire `MC_FINOPS_FOCUS_GLOB` if still needed and tick M2-04. Everything else in M2-04 is done.
 
@@ -20,6 +20,11 @@ Resolved 2026-11-09: CI on main after #184 failed because of a GitHub Actions ou
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed; prompt caching shows 0 cache-read tokens (prompts ~1.5k tokens, likely under the cache minimum).
 Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s during image builds: re-run the failed job.
+
+## 2026-11-10 (autopilot run 90)
+
+- **Task 1:** M5-03 step 1b. PR (see merge below): `m5_effects.py` gains ACT-2 (feature volume cut after a price/allowance change, max 12%) and ACT-3 (tenant fair-use cap, max 30%, 6% seeded churn) plus `apply_effects`. Simulator tests 6 passed, ruff clean. Not wired into any run. M5-03 not ticked. Cost $0.
+- **Decisions (§8.2):** effect sizes are labelled synthetic assumptions; revenue side comes from volume change in M5-04.
 
 ## 2026-11-10 (autopilot run 89)
 
