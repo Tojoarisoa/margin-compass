@@ -122,6 +122,12 @@ jobs:
             line="$(uv run mc-agents --gold ../data/ci/gold --model "$model" ev --ev05 replay --out "../data/ci/evals/ev05-$model.json")" || status=1
             echo "- EV-05 \`$model\`: $line" >> "$GITHUB_STEP_SUMMARY"
           done
+          # EV-06 rubric-based LLM judge on recorded verdicts (M4-05 step 2), gate >= 90%
+          for dir in golden/ev06_judge_fixtures/*/; do
+            model="$(basename "$dir")"
+            line="$(uv run mc-agents --gold ../data/ci/gold --model "$model" ev --ev06 replay --out "../data/ci/evals/ev06-judge-$model.json")" || status=1
+            echo "- EV-06 judge \`$model\`: $line" >> "$GITHUB_STEP_SUMMARY"
+          done
           exit $status
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
