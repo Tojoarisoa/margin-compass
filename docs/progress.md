@@ -12,6 +12,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
+-1. **Finish PR #210** (M5-04 step 2d, revenue side): every `ci` job and `attribution` green on af7e57c, but the push of the head to `main` was denied by the permission classifier (run 94), so it is not merged. Merge it, then check `deploy to dev`. Then continue with item 0 (run an approved M2 build with ops, KPI-01/-02/-09/-13, tick M5-04).
 0. **M5-04 step 2d:** add the revenue side (volume change) to `fct_realized_margin`, run an approved M2 build with ops to check it end to end, then KPI-01/-02/-09/-13 from it and tick M5-04. After that M5-03 step 4 (approvals table). Step 5 (Cognito owner user) is owner-only: write it under Waiting for owner when reached.
 1. **M4-05:** live-model EV-05/07 (needs analyst SQL generation) and an ops record run for real EV-10 latency, then tick M4-05.
 3. **M2-04 (daily check, not a task):** run ops `verify-backfill` once a day and read `finops.json`. Last check 2026-11-09 17:29 UTC: `awaiting_first_export` (AWS FOCUS export still empty). When `status` is `ok`, wire `MC_FINOPS_FOCUS_GLOB` if still needed and tick M2-04. Everything else in M2-04 is done.
@@ -20,6 +21,11 @@ Resolved 2026-11-09: CI on main after #184 failed because of a GitHub Actions ou
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed; prompt caching shows 0 cache-read tokens (prompts ~1.5k tokens, likely under the cache minimum).
 Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s during image builds: re-run the failed job.
+
+## 2026-11-10 (autopilot run 94)
+
+- **Task:** M5-04 step 2d. PR #210 (`auto/m5-04-revenue`): `revenue_delta_usd` in realized rows (ACT-3 churn loses net daily ARR from the churn day; flat add-on means volume cuts change no revenue); `realized_margin_usd` = saved + revenue delta. Simulator `test_m5_realized` 6 passed, pipelines silver 26 passed, ruff clean; every `ci` job and `attribution` green (after footer removal via MCP). **Not merged:** `git push origin <sha>:main` was denied by the permission classifier. PR left open.
+- **Decisions (§8.2):** churn-only revenue effect, current-price ARR; assumption labelled. Cost $0.
 
 ## 2026-11-10 (autopilot run 93)
 
