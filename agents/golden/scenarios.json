@@ -69,7 +69,7 @@
      ]
     }
    },
-   "answer": "F1 costs 50210.4 USD and F2 31877.9 USD [E1]."
+   "answer": "AI COGS (cost to serve) by feature: F1 50210.4 USD, F2 31877.9 USD [E1]. F1 is the larger cost."
   },
   {
    "id": "cts-04",
@@ -131,7 +131,7 @@
      ]
     }
    },
-   "answer": "F2 margin changed -8.4% [E1]."
+   "answer": "F2 margin changed -8.4% last week [E1]. The evidence retrieved shows the drop but not its cause; the next step is a week-over-week comparison of F2's cost drivers (token volume, model mix, cache hit rate) before calling it a leak."
   },
   {
    "id": "leak-02",
@@ -271,7 +271,7 @@
      "revenue_cents": 50000
     }
    },
-   "answer": "Margin is 30000 cents on 50000 cents revenue [E1]."
+   "answer": "Baseline for the pro plan (10 seats at 5000 cents): margin is 30000 cents on 50000 cents revenue [E1]. This is the starting point for the increase; give the new seat price and I will rerun the pricing tool with the churn adjustment to show the new margin."
   },
   {
    "id": "prc-04",
@@ -359,7 +359,7 @@
      "quality_delta_bps": -900
     }
    },
-   "answer": "Saving is 400000 cents [E1].",
+   "answer": "No. The downgrade is not allowed on safety-critical triage: it would save 400000 cents but change quality by -900 bps, which breaks the quality guardrail [E1].",
    "actions": [
     {
      "type": "apply_lever",
