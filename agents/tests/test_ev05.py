@@ -45,3 +45,37 @@ def test_order_matters_only_when_ordered():
     a, b = [[1, "x"], [2, "y"]], [[2, "y"], [1, "x"]]
     assert ev05.rows_match(a, b, ordered=False) and not ev05.rows_match(a, b, ordered=True)
     assert ev05.rows_match([[1.0000000001]], [[1.0]], ordered=True)
+
+
+class _Script:
+    """Asks `query_gold` with the given SQL (if any), then answers from the tool result."""
+
+    def __init__(self, sql):
+        self.sql, self.requests = sql, []
+
+    def complete(self, req):
+        from mc_agents.llm import LLMResponse
+        self.requests.append(req)
+        if self.sql is None or any("toolResult" in b for m in req.messages for b in m["content"]):
+            return LLMResponse([{"text": "Done [E1]."}], "end_turn", 500, 50)
+        return LLMResponse([{"toolUse": {"toolUseId": "t1", "name": "query_gold", "input": {"sql": self.sql}}}],
+                           "tool_use", 500, 50)
+
+
+def test_specialist_generator_scores_the_sql_the_model_sent(gold, q):
+    for kind, want in (("reference_sql", 1.0), ("wrong_sql", 0.0)):
+        by_q = {x["question"]: x[kind] for x in QS}
+        gen = ev05.specialist_generator(lambda question, m=by_q: _Script(m[question]), gold)
+        assert ev05.score(q, gen)["ev05"] == want
+
+
+def test_specialist_generator_without_a_query_is_a_miss(gold, q):
+    gen = ev05.specialist_generator(lambda _: _Script(None), gold)
+    assert gen(QS[0]["question"]) == ""
+    assert ev05.score(q, gen, QS[:2])["ev05"] == 0.0
+
+
+def test_specialist_generator_offers_only_ag03_tools(gold):
+    client = _Script(QS[0]["reference_sql"])
+    ev05.specialist_generator(lambda _: client, gold)(QS[0]["question"])
+    assert [t["toolSpec"]["name"] for t in client.requests[0].tools] == ["query_gold"]

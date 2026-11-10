@@ -66,3 +66,41 @@ def score(query: Callable[[dict[str, Any]], dict[str, Any]], generate: Callable[
     results = {q["id"]: score_one(query, q, generate(q["question"])) for q in qs}
     rate = sum(results.values()) / len(results) if results else 0.0
     return {"ev05": rate, "passed": rate >= GATE, "results": results}
+
+
+class _SqlCapture:
+    """Wraps an LLM client and keeps the SQL of every `query_gold` call the model asks for."""
+
+    def __init__(self, inner: Any) -> None:
+        self.inner, self.sql = inner, []
+
+    def complete(self, request: Any) -> Any:
+        resp = self.inner.complete(request)
+        self.sql += [b["toolUse"].get("input", {}).get("sql", "") for b in resp.content
+                     if "toolUse" in b and b["toolUse"]["name"] == "query_gold"]
+        return resp
+
+
+def specialist_generator(make_client: Callable[[str], Any], gold_dir: Path, model_id: str = "m") -> Callable[[str], str]:
+    """Live-model EV-05 generator: runs the AG-03 Cost-to-Serve specialist on the question with a recorded,
+    replayed or scripted client and returns the SQL of its last `query_gold` call ("" when it made none,
+    which scores as a miss). Budget and tool-round caps apply as in production."""
+    from .budget import BudgetExceeded, QuestionBudget
+    from .config import MODELS
+    from .graph import GraphState
+    from .llm import BudgetedLLM
+    from .specialists import run_specialist
+    from .tools import registry
+
+    extra = {"query_gold": registry.query_gold_spec(gold_dir)}
+
+    def generate(question: str) -> str:
+        cap = _SqlCapture(make_client(question))
+        state = GraphState(question, route="cost_to_serve")
+        try:
+            run_specialist(state, BudgetedLLM(cap, QuestionBudget(MODELS["haiku-4-5"])), model_id, extra)
+        except BudgetExceeded:  # a capped run scores what it generated so far; fixture drift still raises
+            pass
+        return cap.sql[-1] if cap.sql else ""
+
+    return generate
