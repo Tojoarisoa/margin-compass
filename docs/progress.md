@@ -23,7 +23,7 @@ Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s duri
 
 ## 2026-11-10 (autopilot run 91)
 
-- **Task:** M5-03 step 3. PR `auto/m5-03-approvals-cli`: `patterned_month`/`write_month` take approvals; CLI `--approvals PATH` (m2 only). Same seed without the flag is the counterfactual. simulator `test_m2_run` 5 passed, `test_m5_effects` 7 passed, ruff clean. M5-03 not ticked. Cost $0.
+- **Task:** M5-03 step 3. PR `auto/m5-03-approvals-cli`: `patterned_month`/`write_month` take approvals; CLI `--approvals PATH` (m2 only). Same seed without the flag is the counterfactual. simulator `test_m2_run` 5 passed, `test_m5_effects` 7 passed, ruff clean. PR #205 merged, `ci` and `deploy to dev` green. M5-03 not ticked. Cost $0.
 - **Decisions (§8.2):** counterfactual = omit the flag (no separate mode).
 
 ## 2026-11-10 (autopilot run 90)
