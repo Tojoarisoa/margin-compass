@@ -16,15 +16,23 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-0. **Check** main `ci` + `deploy to dev` for PR #228 (EV-06 judge fixtures 13/13) and this progress entry, if still running at the end of run 105.
-1. **M4-05 EV-06 step 3b:** prc-01 and prc-02 golden figures don't match the pricing tool (50000/30000 vs real 51000/31000; listed in `_PRICING_TO_FIX`). Fix one per PR (a drifted judge fixture scores as a fail, so two at once would drop the judge to 84.6%), re-record with ops, commit fixtures, then remove it from the list.
+0. **Check** main `ci` + `deploy to dev` for d19314d (PR #231, prc-02 golden fix) and this progress entry; they were still running when run 106 ended.
+1. **M4-05 EV-06 step 3b (finish):** after 0 is green, dispatch ops `record-fixtures` (haiku-4-5, cache on), check the judge result in the job log, and commit the 13 judge fixtures in a PR (CI replay is 12/13 with prc-02 `drifted` until then; gate 90% still met).
 2. **M4-05 EV-06 step 3c:** judge covers 13/40 scenarios. Record real AG-03 graph runs for the other 27 (ops, capped) so the judge and rubric score actual answers. eff-01/eff-02 evidence args don't match `replay_lever`'s inputs; fix them in that step. Calibration: see Waiting for owner.
 3. **M5-04:** KPI-09 needs a closed-loop plan change (none yet) and KPI-13 needs the real AWS bill (M2-04 FOCUS export); tick M5-04 when both are real. M5-03 steps 4-6: see Waiting for owner.
-4. **M2-04 (daily check, not a task):** run ops `verify-backfill` once a day and read `finops.json`. Last check 2026-11-10 15:13 UTC: `awaiting_first_export`. When `status` is `ok`, wire `MC_FINOPS_FOCUS_GLOB` if still needed and tick M2-04.
+4. **Daily checks (not tasks):** ops `verify-backfill` for M2-04 (last 2026-11-10 15:13 UTC: `awaiting_first_export`; when `ok`, wire `MC_FINOPS_FOCUS_GLOB` if needed and tick M2-04) and the Haiku 5.5 probe (last 2026-11-10). Both are due on 2026-11-11.
 
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed.
 Notes: owner-mode approvals wait for Cognito (M5-03). Ops eval results are now in the job log (step summaries aren't readable by API). Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1). Flaky github.com 504s during image builds: re-run the failed job.
+
+## 2026-11-10 (autopilot run 106)
+
+- **Start:** main `ci` + `deploy to dev` for f165e77 (#228) green; no open PRs.
+- **Task 1:** M4-05 step 3b prc-01. PR #229 merged (every `ci` job green; `attribution` green after footer removal via MCP), main `ci` + `deploy to dev` green: prc-01 golden uses the tool's figures (51000 revenue / 31000 margin cents).
+- **Task 2:** prc-01 re-record. Ops 42922217096 (haiku-4-5, cache on): **judge 13/13**, agreement 100%, EV-05 8/8, M1-06 5/5, EV-10 pass ($0.0043/question). PR #230 (13 judge fixtures) merged, all green; main `ci` + `deploy to dev` green.
+- **Task 3:** prc-02 golden fix, same change (51000 / 31000); `_PRICING_TO_FIX` now empty. PR #231 all green, merged at 46 min; its main `ci`/deploy still running at the end of the run. Judge replay 12/13 until re-recorded (Next 1).
+- **Decisions:** none under §8.2. Cost: 1 ops record run, about 40 capped Haiku 4.5 calls, under $0.05.
 
 ## 2026-11-10 (autopilot run 105)
 
