@@ -252,26 +252,47 @@
     "churn_adjust",
     "query_gold"
    ],
-   "evidence": {
-    "tool": "price_plan@1",
-    "args": {
-     "seats": 10,
-     "seat_price_cents": 5000,
-     "included_units": 1000,
-     "usage_units": 1500,
-     "overage_rate_micro": 20000,
-     "discount_bps": 0,
-     "cost_cents": 20000,
-     "addon_cents": 0,
-     "outcome_price_micro": 0,
-     "outcomes": 0
+   "evidence": [
+    {
+     "tool": "price_plan@1",
+     "args": {
+      "seats": 10,
+      "seat_price_cents": 5000,
+      "included_units": 1000,
+      "usage_units": 1500,
+      "overage_rate_micro": 20000,
+      "discount_bps": 0,
+      "cost_cents": 20000,
+      "addon_cents": 0,
+      "outcome_price_micro": 0,
+      "outcomes": 0
+     },
+     "result": {
+      "revenue_cents": 51000,
+      "margin_cents": 31000
+     }
     },
-    "result": {
-     "margin_cents": 30000,
-     "revenue_cents": 50000
+    {
+     "tool": "price_plan@1",
+     "args": {
+      "seats": 10,
+      "seat_price_cents": 5500,
+      "included_units": 1000,
+      "usage_units": 1500,
+      "overage_rate_micro": 20000,
+      "discount_bps": 0,
+      "cost_cents": 20000,
+      "addon_cents": 0,
+      "outcome_price_micro": 0,
+      "outcomes": 0
+     },
+     "result": {
+      "revenue_cents": 56000,
+      "margin_cents": 36000
+     }
     }
-   },
-   "answer": "Baseline for the pro plan (10 seats at 5000 cents): margin is 30000 cents on 50000 cents revenue [E1]. This is the starting point for the increase; give the new seat price and I will rerun the pricing tool with the churn adjustment to show the new margin."
+   ],
+   "answer": "Pro plan, 10 seats: at today's 5000 cents a seat, revenue is 51000 cents and margin 31000 cents [E1]. Raising the seat price to 5500 cents lifts revenue to 56000 cents and margin to 36000 cents [E2], before any churn; run the churn adjustment before committing to the increase."
   },
   {
    "id": "prc-04",

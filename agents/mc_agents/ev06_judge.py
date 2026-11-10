@@ -14,6 +14,9 @@ is reported next to the deterministic rubric and their agreement.
 Coverage: the default replays each scenario's recorded outcome, so only scenarios with a complete one are
 judged (a recorded answer, or blocked at intake); the rest are listed under `not_judged` until real graph
 runs are recorded for them. Pass `scenarios` (or a graph `run`) to judge others.
+
+Replay: a scenario whose request changed since recording (its golden answer or evidence was edited) gets no
+verdict, fails, and is listed under `drifted` until re-recorded; a missing fixture file still raises.
 """
 
 from __future__ import annotations
@@ -26,6 +29,7 @@ from typing import Any
 
 from .ev06 import EV06_GATE, reference_run, task_success
 from .ev_scenarios import load_scenarios
+from .llm import FixtureDrift
 
 JUDGE_PROMPT_VERSION = "ev06-judge-v1"
 FIXTURES = Path(__file__).resolve().parent.parent / "golden" / "ev06_judge_fixtures"
@@ -100,10 +104,16 @@ def judge(make_client: Callable[[str], Any], model_key: str = "haiku-4-5",
     judged = {s["id"] for s in scs}
     verdicts: dict[str, dict[str, Any] | None] = {}
     rubric: dict[str, bool] = {}
+    drifted: list[str] = []
     for sc in scs:
         out = run(sc)
         rubric[sc["id"]] = task_success(sc, out)
-        verdicts[sc["id"]] = judge_one(make_client(sc["id"]), model_key, sc, out)
+        client = make_client(sc["id"])  # a missing replay fixture raises here
+        try:
+            verdicts[sc["id"]] = judge_one(client, model_key, sc, out)
+        except FixtureDrift:  # request changed since recording: no verdict, scores as a fail until re-recorded
+            verdicts[sc["id"]] = None
+            drifted.append(sc["id"])
     ok = {k: v is not None and all(v[c] for c in CRITERIA) for k, v in verdicts.items()}
     by_job: dict[str, list[bool]] = defaultdict(list)
     for sc in scs:
@@ -113,7 +123,7 @@ def judge(make_client: Callable[[str], Any], model_key: str = "haiku-4-5",
     return {"judge": rate, "passed": bool(ok) and rate >= EV06_GATE, "agreement_with_rubric": agree,
             "by_jtbd": {k: sum(v) / len(v) for k, v in sorted(by_job.items())},
             "failed": sorted(k for k, v in ok.items() if not v),
-            "no_verdict": sorted(k for k, v in verdicts.items() if v is None),
+            "no_verdict": sorted(k for k, v in verdicts.items() if v is None), "drifted": sorted(drifted),
             "judged": len(scs), "not_judged": sorted(s["id"] for s in every if s["id"] not in judged),
             "reasons": {k: v["reason"] for k, v in verdicts.items() if v is not None and not ok[k]}}
 

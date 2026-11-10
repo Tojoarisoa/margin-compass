@@ -50,9 +50,10 @@ def ev07(run: Callable[[dict[str, Any]], dict[str, Any]] = fast_path,
 
 
 def _ledger(sc: dict[str, Any]) -> Ledger:
+    """One ledger entry per recorded evidence item (a dict, or a list for multi-step answers: E1, E2, ...)."""
     led = Ledger()
-    if sc.get("evidence"):
-        e = sc["evidence"]
+    ev = sc.get("evidence") or []
+    for e in ev if isinstance(ev, list) else [ev]:
         led.add(e["tool"], e["args"], e["result"])
     return led
 

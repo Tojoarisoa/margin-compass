@@ -74,3 +74,27 @@ def test_cli_ev_runs_all_scorers(gold, capsys):
     assert main(["--gold", str(gold), "ev"]) == 0
     out = json.loads(capsys.readouterr().out)
     assert out == {"ev05": True, "ev06": True, "ev07": True, "ev08": True, "ev13": True, "passed": True}
+
+
+def test_evidence_list_gives_one_ledger_entry_each():
+    sc = next(s for s in ev.load_scenarios() if s["id"] == "prc-03")
+    led = ev._ledger(sc)
+    assert [e.id for e in led.entries] == ["E1", "E2"] and "[E2]" in sc["answer"]
+
+
+# prc-01 and prc-02 still carry illustrative pricing figures; fix each with its judge re-record (docs/progress.md)
+_PRICING_TO_FIX = {"prc-01", "prc-02"}
+
+
+def test_golden_pricing_evidence_matches_the_pricing_tool():
+    from mc_agents.tools.pricing import price_plan
+
+    off = set()
+    for sc in ev.load_scenarios():
+        items = sc.get("evidence") or []
+        for e in items if isinstance(items, list) else [items]:
+            if e["tool"].startswith("price_plan@"):
+                real = price_plan(e["args"])
+                if any(real[k] != v for k, v in e["result"].items()):
+                    off.add(sc["id"])
+    assert off == _PRICING_TO_FIX

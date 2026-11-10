@@ -84,3 +84,12 @@ def test_record_then_replay(tmp_path):
     assert rep["judge"] == rec["judge"] == 1.0
     with pytest.raises(FixtureDrift):
         run_judge("haiku-4-5", "replay", tmp_path, scenarios=load_scenarios()[3:4])
+
+
+def test_changed_request_scores_as_drifted_fail(tmp_path):
+    scs = [s for s in load_scenarios() if judgeable(s) and s.get("answer")][:2]
+    run_judge("haiku-4-5", "record", tmp_path, live_client=Judge(), scenarios=scs)
+    edited = [{**scs[0], "answer": scs[0]["answer"] + " Edited."}, scs[1]]
+    rep = run_judge("haiku-4-5", "replay", tmp_path, scenarios=edited)
+    assert rep["drifted"] == rep["failed"] == rep["no_verdict"] == [scs[0]["id"]]
+    assert rep["judge"] == 0.5 and not rep["passed"]
