@@ -12,7 +12,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-0. **M5-04 step 3c:** wire KPI-01 (margin points vs baseline), KPI-09 and KPI-13 (needs platform cost) on the dashboard, then tick M5-04. Then M5-03 step 4 (approvals table). Step 5 (Cognito owner user) is owner-only: write it under Waiting for owner when reached.
+0. **M5-04:** KPI-09 needs a closed-loop plan change (none yet) and KPI-13 needs the real AWS bill (M2-04 FOCUS export); tick M5-04 when both are real. Meanwhile M5-03 step 4 (approvals table). Step 5 (Cognito owner user) is owner-only: write it under Waiting for owner when reached.
 1. **M4-05:** live-model EV-05/07 (needs analyst SQL generation) and an ops record run for real EV-10 latency, then tick M4-05.
 3. **M2-04 (daily check, not a task):** run ops `verify-backfill` once a day and read `finops.json`. Last check 2026-11-09 17:29 UTC: `awaiting_first_export` (AWS FOCUS export still empty). When `status` is `ok`, wire `MC_FINOPS_FOCUS_GLOB` if still needed and tick M2-04. Everything else in M2-04 is done.
 
@@ -20,6 +20,11 @@ Resolved 2026-11-09: CI on main after #184 failed because of a GitHub Actions ou
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed; prompt caching shows 0 cache-read tokens (prompts ~1.5k tokens, likely under the cache minimum).
 Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s during image builds: re-run the failed job.
+
+## 2026-11-10 (autopilot run 97)
+
+- **Task:** M5-04 step 3c. PR #214 merged (every `ci` job green, `attribution` green after footer removal via MCP and re-run), main `ci` and `deploy to dev` green: Realized card shows KPI-01 margin points (realized margin / revenue), KPI-13 ROI at the $3/month cap (lower bound), KPI-09 n/a. Dashboard typecheck and build clean. M5-04 not ticked. Cost $0.
+- **Decisions (§8.2):** platform cost = budget cap until the real bill is wired; KPI-09 shown n/a rather than invented.
 
 ## 2026-11-10 (autopilot run 96)
 
