@@ -12,7 +12,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-0. **M5-03 step 1:** effect model `simulator/booncore_sim/m5_effects.py`, then steps 2-3 (see `docs/plans/m5-plan.md`). Step 5 (Cognito owner user) is owner-only: write it under Waiting for owner when reached.
+0. **M5-03 step 1b:** ACT-2/ACT-3 effects in `m5_effects.py` (price/included usage; churn response), then steps 2-3 (see `docs/plans/m5-plan.md`). Step 5 (Cognito owner user) is owner-only: write it under Waiting for owner when reached.
 1. **M4-05:** live-model EV-05/07 (needs analyst SQL generation) and an ops record run for real EV-10 latency, then tick M4-05.
 3. **M2-04 (daily check, not a task):** run ops `verify-backfill` once a day and read `finops.json`. Last check 2026-11-09 17:29 UTC: `awaiting_first_export` (AWS FOCUS export still empty). When `status` is `ok`, wire `MC_FINOPS_FOCUS_GLOB` if still needed and tick M2-04. Everything else in M2-04 is done.
 
@@ -22,6 +22,8 @@ Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed; 
 Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s during image builds: re-run the failed job.
 
 ## 2026-11-10 (autopilot run 89)
+
+- **Task 2:** M5-03 step 1. PR `auto/m5-03-effects`: `simulator/booncore_sim/m5_effects.py` (ACT-1 batch-shift with adoption lag, ramp, partial realization; deterministic, no effect without approvals). Simulator tests 3 new passed, ruff clean. Not wired into any run yet. M5-03 not ticked. Cost $0.
 
 - **Task:** M5-02 step 3. PR #201 merged (`ci` and `deploy to dev` green, `attribution` green after footer removal via MCP): `actions.json` carries `renewal_date` for renewal actions (not in `fct_actions`); the Action Center shows a renewal calendar with a playbook per account. Agents nightly tests 10 passed, ruff clean, dashboard build clean. M5-02 ticked.
 - **Also:** wrote `docs/plans/m5-plan.md` (M5-03/M5-04 split into PR-sized steps).
