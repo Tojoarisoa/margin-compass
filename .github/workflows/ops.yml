@@ -164,7 +164,7 @@ jobs:
           line="$(uv run mc-agents --gold ../data/ops/gold --model "$MODEL" eval --mode "$MODE" --out ../data/ops/report.json)" || status=$?
           { echo "## Agent eval ($MODE, $MODEL)"; echo "$line"; } >> "$GITHUB_STEP_SUMMARY"
           exit "${status:-0}"
-      - name: nightly-insight (M5-01: nightly brief with Haiku 4.5 insights; capped at $0.50 and 8 calls in code)
+      - name: "nightly-insight (M5-01 brief with Haiku 4.5 insights, capped at $0.50 and 8 calls in code)"
         if: inputs.task == 'nightly-insight'
         working-directory: agents
         run: |
