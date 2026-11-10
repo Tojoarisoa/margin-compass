@@ -4,6 +4,7 @@
   uv run mc-agents eval                         # replay the M1-06 set ($0, no network)
   uv run mc-agents ev                           # EV-05 harness self-check + EV-07/08/13 ($0, no network)
   uv run mc-agents ev --ev05 record             # live Bedrock: EV-05 on the model's SQL, writes fixtures
+  uv run mc-agents ev --ev06 record             # live Bedrock: EV-06 LLM judge, writes fixtures
   uv run mc-agents eval --mode record           # live Bedrock: re-record fixtures (costs < $0.01)
 
 Gold defaults to ../data/local/gold (run the pipeline first).
@@ -23,10 +24,12 @@ from .evaluate import run_eval
 from .llm import BedrockLLM
 
 
-def run_ev(gold: Path, ev05_mode: str = "reference", model_key: str = DEFAULT_ANALYST_MODEL) -> dict:
+def run_ev(gold: Path, ev05_mode: str = "reference", model_key: str = DEFAULT_ANALYST_MODEL,
+           ev06_mode: str = "rubric") -> dict:
     """Deterministic scorers. EV-05 `reference` replays each golden question's reference SQL (harness
     check); `replay`/`record`/`live` score the AG-03 specialist's own SQL. EV-06 replays the golden scenarios
-    through the task-success rubric; EV-07 uses the supervisor fast path."""
+    through the task-success rubric; `--ev06 replay|record|live` adds the LLM judge (`ev06_judge`), which
+    must pass too. EV-07 uses the supervisor fast path."""
     from . import ev05, ev06, ev_scenarios
     from .tools.sql_guard import make_query_gold
 
@@ -34,11 +37,14 @@ def run_ev(gold: Path, ev05_mode: str = "reference", model_key: str = DEFAULT_AN
     out = {
         "ev05": (ev05.score(make_query_gold(gold), lambda question: refs[question]) if ev05_mode == "reference"
                  else ev05.run_model(gold, model_key, ev05_mode)),
-        "ev06": ev06.ev06(),  # deterministic rubric (step 1); LLM judge later
+        "ev06": ev06.ev06(),  # deterministic rubric (step 1)
         "ev07": ev_scenarios.ev07(),
         "ev08": ev_scenarios.ev08(),
         "ev13": ev_scenarios.ev13(),
     }
+    if ev06_mode != "rubric":
+        from .ev06_judge import run_judge
+        out["ev06_judge"] = run_judge(model_key, ev06_mode)  # step 2: rubric-based LLM judge
     out["passed"] = all(v["passed"] for v in out.values())
     return out
 
@@ -61,6 +67,8 @@ def main(argv: list[str] | None = None) -> int:
     evp.add_argument("--out", type=Path, default=None)
     evp.add_argument("--ev05", choices=("reference", "replay", "record", "live"), default="reference",
                      help="EV-05 SQL source: reference SQL ($0) or the model (replay $0; record/live call Bedrock)")
+    evp.add_argument("--ev06", choices=("rubric", "replay", "record", "live"), default="rubric",
+                     help="EV-06: deterministic rubric only ($0), or also the LLM judge (replay $0; record/live call Bedrock)")
     args = p.parse_args(argv)
     logging.basicConfig(level=logging.WARNING, stream=sys.stderr)
 
@@ -77,7 +85,7 @@ def main(argv: list[str] | None = None) -> int:
                           "insights": sum("insight" in a for a in brief["top_actions"])}))
         return 0
     if args.cmd == "ev":
-        report = run_ev(args.gold, args.ev05, args.model)
+        report = run_ev(args.gold, args.ev05, args.model, args.ev06)
         text = json.dumps(report, indent=2)
         if args.out:
             args.out.parent.mkdir(parents=True, exist_ok=True)

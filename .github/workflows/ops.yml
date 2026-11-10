@@ -165,8 +165,9 @@ jobs:
           # Also to the log (tee): autopilot reads results through the jobs API, not the step summary.
           { echo "## Agent eval ($MODE, $MODEL)"; echo "$line"; echo '```json'; python3 -c "import json; r=json.load(open('../data/ops/report.json')); print(json.dumps({k: r.get(k) for k in ('ev10', 'passed', 'total', 'rates', 'cost_usd_per_question', 'max_llm_calls')}))" || true; echo '```'; } | tee -a "$GITHUB_STEP_SUMMARY"
           # EV-05 on the AG-03 specialist's own SQL (M4-05); record writes agents/golden/ev05_fixtures/$MODEL/
-          ev="$(uv run mc-agents --gold ../data/ops/gold --model "$MODEL" ev --ev05 "$MODE" --out ../data/ops/ev.json)" || ev_status=$?
-          { echo "## EV (ev05 $MODE, $MODEL)"; echo "$ev"; echo '```json'; python3 -c "import json; r=json.load(open('../data/ops/ev.json'))['ev05']; print(json.dumps({k: r[k] for k in ('ev05', 'passed', 'results')}))" || true; echo '```'; } | tee -a "$GITHUB_STEP_SUMMARY"
+          # and the EV-06 LLM judge (M4-05 step 2); record also writes agents/golden/ev06_judge_fixtures/$MODEL/
+          ev="$(uv run mc-agents --gold ../data/ops/gold --model "$MODEL" ev --ev05 "$MODE" --ev06 "$MODE" --out ../data/ops/ev.json)" || ev_status=$?
+          { echo "## EV (ev05 + ev06 judge $MODE, $MODEL)"; echo "$ev"; echo '```json'; python3 -c "import json; r=json.load(open('../data/ops/ev.json')); print(json.dumps({k: r['ev05'][k] for k in ('ev05', 'passed', 'results')})); j=r.get('ev06_judge') or {}; print(json.dumps({k: j.get(k) for k in ('judge', 'passed', 'agreement_with_rubric', 'judged', 'failed', 'no_verdict', 'reasons')}))" || true; echo '```'; } | tee -a "$GITHUB_STEP_SUMMARY"
           exit "${status:-${ev_status:-0}}"
       - name: "nightly-insight (M5-01 brief with Haiku 4.5 insights on a local M2 simulation, capped at $0.50 and 8 calls in code)"
         if: inputs.task == 'nightly-insight'
@@ -230,7 +231,7 @@ jobs:
       - name: print recorded fixtures (the sandbox cannot download artifacts)
         if: always() && inputs.task == 'record-fixtures'
         run: |
-          for f in evals/m1_06/fixtures/${{ inputs.model }}/*.json agents/golden/ev05_fixtures/${{ inputs.model }}/*.json; do
+          for f in evals/m1_06/fixtures/${{ inputs.model }}/*.json agents/golden/ev05_fixtures/${{ inputs.model }}/*.json agents/golden/ev06_judge_fixtures/${{ inputs.model }}/*.json; do
             echo "FIXTURE-BEGIN $f"; base64 -w0 "$f"; echo; echo "FIXTURE-END"
           done
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -240,6 +241,7 @@ jobs:
           path: |
             evals/m1_06/fixtures/${{ inputs.model }}/
             agents/golden/ev05_fixtures/${{ inputs.model }}/
+            agents/golden/ev06_judge_fixtures/${{ inputs.model }}/
             data/ops/report.json
             data/ops/ev.json
           retention-days: 14
