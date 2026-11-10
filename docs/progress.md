@@ -14,7 +14,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-0. **M4-05 EV-05 fixtures:** wait for main `ci` + `deploy to dev` on the run 100 commits, then dispatch ops `record-fixtures` (model `haiku-4-5`); copy the EV-05 fixtures from the log (`FIXTURE-BEGIN agents/golden/ev05_fixtures/...`) into the repo and make CI replay them (`mc-agents ev --ev05 replay`). Gate 90%; if below, fix the AG-03 prompt, never the gate. Then an ops record run for real EV-10 latency, then tick M4-05.
+0. **M4-05 EV-05 to the 90% gate:** check main `ci` + `deploy to dev` for e0ea722 (#219, still running at run 101's end). Live Haiku 4.5 now scores EV-05 6/8 (75%) with the fixed `query_gold` spec (ops 42879147169). Misses: `low-margin-rows` (model used `gross_margin_pct < 20`; the column is a fraction, so say units in the tool description, e.g. "`*_pct` are fractions 0-1") and `revenue-by-month` (model's month is a TIMESTAMP, reference CASTs to DATE; check whether the scorer compares values type-strictly, and fix the prompt/spec, never the gate). Then re-record (ops `record-fixtures`, `haiku-4-5`, cache on), commit `agents/golden/ev05_fixtures/haiku-4-5/`, make CI replay them (`mc-agents ev --ev05 replay`, `MC_CACHE_PROMPT=1`). Then an ops record run for real EV-10 latency, then tick M4-05.
 1. **M5-04:** KPI-09 needs a closed-loop plan change (none yet) and KPI-13 needs the real AWS bill (M2-04 FOCUS export); tick M5-04 when both are real. M5-03 steps 4-6: see Waiting for owner.
 3. **M2-04 (daily check, not a task):** run ops `verify-backfill` once a day and read `finops.json`. Last check 2026-11-10 15:13 UTC: `awaiting_first_export` (AWS FOCUS export still empty). When `status` is `ok`, wire `MC_FINOPS_FOCUS_GLOB` if still needed and tick M2-04. Everything else in M2-04 is done.
 
@@ -22,6 +22,13 @@ Resolved 2026-11-09: CI on main after #184 failed because of a GitHub Actions ou
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed; prompt caching shows 0 cache-read tokens (prompts ~1.5k tokens, likely under the cache minimum).
 Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s during image builds: re-run the failed job.
+
+## 2026-11-10 (autopilot run 101)
+
+- **Start:** main `ci` + `deploy to dev` for run 100 (#217) green.
+- **Task 1:** M4-05. Ops `record-fixtures` 42872499185 failed: Bedrock `ThrottlingException` on EV-05. PR #218 merged (every `ci` job and `attribution` green), main `ci` + `deploy to dev` green: Bedrock client uses adaptive retries, 8 attempts (throttled calls are unbilled; call cap unchanged). Agents 237 passed.
+- **Task 2:** M4-05. Re-run 42876410156 recorded EV-05: 0/8. The model got `query_gold` with no schema, sent `query` instead of `sql` and invented tables. PR #219 merged (every `ci` job and `attribution` green): `query_gold` v2 offers `{sql}` and lists each mart's columns. M1-06 replay still 5/5. Main `ci`/deploy still running at the end of the run. Re-record 42879147169: EV-05 6/8 (75%, gate 90%); fixtures not committed (below gate).
+- **Decisions (§8.2):** none beyond fixing the tool spec; gate unchanged. Cost: 3 ops record runs, about 40 Haiku 4.5 calls, under $0.05 (capped in code).
 
 ## 2026-11-10 (autopilot run 100)
 
