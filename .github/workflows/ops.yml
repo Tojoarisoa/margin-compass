@@ -179,7 +179,7 @@ jobs:
           raise SystemExit(main(["run", "--landing", str(root / "landing" / "booncore"), "--data-root", str(root), "--ingest-date", "2026-11-04"]))
           PY
           line="$(uv run mc-agents nightly --data-root ../data/ops --run-id ops-insight --live)"
-          { echo "## Nightly brief with insights"; echo '```json'; echo "$line"; head -c 3000 ../data/ops/publish/latest/margin_brief.json; echo; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          { echo "## Nightly brief with insights"; echo '```json'; echo "$line"; head -c 3000 ../data/ops/publish/latest/margin_brief.json; echo; echo '```'; } | tee -a "$GITHUB_STEP_SUMMARY"
       - name: rag-eval (EV-04 with Titan embeddings; budget-capped in code)
         if: inputs.task == 'rag-eval'
         working-directory: rag
