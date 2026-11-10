@@ -1,0 +1,34 @@
+{
+  "calls": [
+    {
+      "request_sha": "4e9feb302e01c597364324d903265d0aa705a507c94a0d7325923a47f07cecfa",
+      "response": {
+        "content": [
+          {
+            "toolUse": {
+              "input": {
+                "addresses_job": true,
+                "outcome": true,
+                "reason": "Run correctly identified savings from routing lever, cited evidence properly, answered the optimization question.",
+                "route": true,
+                "tools": true
+              },
+              "name": "record_verdict",
+              "toolUseId": "tooluse_ZniuJNANnc1FFzwmY50jpj",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 967,
+          "outputTokens": 139
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "ev06-judge-v1",
+  "scenario_id": "eff-01"
+}

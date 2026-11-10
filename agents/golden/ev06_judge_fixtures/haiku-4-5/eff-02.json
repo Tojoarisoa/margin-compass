@@ -1,0 +1,34 @@
+{
+  "calls": [
+    {
+      "request_sha": "14c46c621e42f6efeb01f63085805e42e349d7e40be973e5c082e96dcef2ef3a",
+      "response": {
+        "content": [
+          {
+            "toolUse": {
+              "input": {
+                "addresses_job": true,
+                "outcome": true,
+                "reason": "Run correctly answers the optimization question with proper evidence citation and quality guardrail reasoning.",
+                "route": true,
+                "tools": true
+              },
+              "name": "record_verdict",
+              "toolUseId": "tooluse_LbHv9Z6xqfJ7oRnCyrL7pX",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 992,
+          "outputTokens": 139
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "ev06-judge-v1",
+  "scenario_id": "eff-02"
+}

@@ -1,0 +1,34 @@
+{
+  "calls": [
+    {
+      "request_sha": "e0207a5619426724d6ec0ce0795cb4ea248665141d4aaee6e5724ede098062c5",
+      "response": {
+        "content": [
+          {
+            "toolUse": {
+              "input": {
+                "addresses_job": true,
+                "outcome": true,
+                "reason": "Correct route and tool. Answer identifies lowest margin feature with proper citation [E1].",
+                "route": true,
+                "tools": true
+              },
+              "name": "record_verdict",
+              "toolUseId": "tooluse_BNWvA8zQnf9Ce6MAfRhAYa",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 939,
+          "outputTokens": 141
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "ev06-judge-v1",
+  "scenario_id": "cts-01"
+}

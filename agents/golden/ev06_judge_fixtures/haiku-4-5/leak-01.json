@@ -1,0 +1,34 @@
+{
+  "calls": [
+    {
+      "request_sha": "9d98239411774ab30aa68d8f161064b913e6c7c88fb733490ef153083ac988e2",
+      "response": {
+        "content": [
+          {
+            "toolUse": {
+              "input": {
+                "addresses_job": true,
+                "outcome": true,
+                "reason": "Correctly routed to leak. Cites evidence [E1] for -8.4% drop. Acknowledges need for deeper analysis of cost drivers.",
+                "route": true,
+                "tools": true
+              },
+              "name": "record_verdict",
+              "toolUseId": "tooluse_7pZK3EiRspqpXxqJ4tdsi1",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 985,
+          "outputTokens": 156
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "ev06-judge-v1",
+  "scenario_id": "leak-01"
+}

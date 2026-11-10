@@ -1,0 +1,34 @@
+{
+  "calls": [
+    {
+      "request_sha": "1cce280d86d1013da7f3dbe06a94577ee78573d4ddfe69c64f11dcf4eb61c52e",
+      "response": {
+        "content": [
+          {
+            "toolUse": {
+              "input": {
+                "addresses_job": false,
+                "outcome": true,
+                "reason": "Answer establishes baseline but doesn't model the requested price increase; asks for input instead.",
+                "route": true,
+                "tools": true
+              },
+              "name": "record_verdict",
+              "toolUseId": "tooluse_p0XsDyTuTWuF5HYStGAJy8",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 1093,
+          "outputTokens": 140
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "ev06-judge-v1",
+  "scenario_id": "prc-03"
+}

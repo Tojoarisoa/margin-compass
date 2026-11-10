@@ -1,0 +1,34 @@
+{
+  "calls": [
+    {
+      "request_sha": "53dc63844f3aff0b82afa4f656d0e01c4b68d05d4c08a4da3fe14fcb2a2c910c",
+      "response": {
+        "content": [
+          {
+            "toolUse": {
+              "input": {
+                "addresses_job": true,
+                "outcome": true,
+                "reason": "Route matches. All tools allowed. Answered as expected. Answer cites evidence [E1] with margin and revenue figures.",
+                "route": true,
+                "tools": true
+              },
+              "name": "record_verdict",
+              "toolUseId": "tooluse_mYExQU9C7plvlzmhg9dJk6",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 1044,
+          "outputTokens": 148
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "ev06-judge-v1",
+  "scenario_id": "prc-01"
+}
