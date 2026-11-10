@@ -583,3 +583,19 @@ def test_fct_realized_margin_counts_only_verified_rows(tmp_path):
     assert result.success, result.exception
     out = tmp_path / "fct_realized_margin.parquet"
     assert duckdb.sql(f"select sum(realized_margin_usd), count(*) from '{out}'").fetchall()[0] == (9.0, 3)
+
+
+def test_publish_realized_totals(tmp_path):
+    from mc_pipelines.publish import publish_realized
+
+    gold = tmp_path / "gold"
+    gold.mkdir()
+    duckdb.sql(
+        "copy (select * from (values ('a', 'realized', 3.0, 0.0, 3.0), ('b', 'realized', 10.0, -4.0, 6.0), "
+        "('b', 'pending_verification', 2.0, 0.0, 0.0)) t(action_id, status, saved_usd, revenue_delta_usd, realized_margin_usd)) "
+        f"to '{gold / 'fct_realized_margin.parquet'}' (format parquet)")
+    assert publish_realized(tmp_path, "r1") == ["publish/latest/realized.json"]
+    body = json.loads((tmp_path / "publish" / "latest" / "realized.json").read_text())
+    assert (body["realized_margin_usd"], body["saved_usd"], body["revenue_delta_usd"]) == ("9.00", "13.00", "-4.00")
+    assert (body["actions_realized"], body["actions_pending"], body["realization_rate"]) == (2, 1, "0.666667")
+    assert publish_realized(tmp_path / "none", "r1") == []

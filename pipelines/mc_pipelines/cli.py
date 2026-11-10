@@ -228,6 +228,12 @@ def run_m2_dbt(landing: Path, data_root: Path, run_id: str, transform_dir: Path 
             summary["published"] += publish_finops(root, run_id)
         except Exception as exc:  # noqa: BLE001
             summary["finops_error"] = str(exc)[:200]
+        try:  # M5-04: realized margin totals (KPI-02 inputs) for approved runs; never fails the data build
+            from .publish import publish_realized
+
+            summary["published"] += publish_realized(root, run_id)
+        except Exception as exc:  # noqa: BLE001
+            summary["realized_error"] = str(exc)[:200]
         try:  # M5-01: nightly margin review (deterministic, no LLM) -> fct_actions + margin brief; never fails the build
             from mc_agents.nightly import write as write_margin_brief
 

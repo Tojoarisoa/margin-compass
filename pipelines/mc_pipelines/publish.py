@@ -271,6 +271,38 @@ def publish_pg8_quality(data_root: Path, run_id: str, leaks: dict | None, churn:
     return ["publish/latest/quality.json"]
 
 
+def publish_realized(data_root: Path, run_id: str) -> list[str]:
+    """Write publish/latest/realized.json (KPI-02 inputs) from `fct_realized_margin`; nothing for runs without approvals.
+
+    Totals only (no account or action detail). Money is summed in Decimal from the mart; the dashboard formats it.
+    `realization_rate` = realized days / (realized + pending days). Synthetic."""
+    root = Path(data_root)
+    mart = root / "gold" / "fct_realized_margin.parquet"
+    if not mart.exists():
+        return []
+    rows = duckdb.sql(
+        "select status, count(*), count(distinct action_id), coalesce(sum(saved_usd), 0)::varchar, "
+        f"coalesce(sum(revenue_delta_usd), 0)::varchar, coalesce(sum(realized_margin_usd), 0)::varchar from read_parquet('{mart}') group by 1"
+    ).fetchall()
+    by = {r[0]: r for r in rows}
+    done, pend = by.get("realized"), by.get("pending_verification")
+    n_done, n_pend = (done[1] if done else 0), (pend[1] if pend else 0)
+    body = {
+        "schema_version": "realized.v0", "run_id": run_id, "data_label": "synthetic",
+        "actions_realized": done[2] if done else 0, "actions_pending": pend[2] if pend else 0,
+        "saved_usd": str(Decimal(done[3]).quantize(CENT) if done else Decimal("0.00")),
+        "revenue_delta_usd": str(Decimal(done[4]).quantize(CENT) if done else Decimal("0.00")),
+        "realized_margin_usd": str(Decimal(done[5]).quantize(CENT) if done else Decimal("0.00")),
+        "pending_saved_usd": str(Decimal(pend[3]).quantize(CENT) if pend else Decimal("0.00")),
+        "realization_rate": str((Decimal(n_done) / Decimal(n_done + n_pend)).quantize(RATIO)) if n_done + n_pend else None,
+        "method": "counterfactual run minus approved run, per action and day; rows count as realized 14 days after approval",
+    }
+    out = root / "publish" / "latest" / "realized.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(body, separators=(",", ":"), allow_nan=False))
+    return ["publish/latest/realized.json"]
+
+
 def publish_finops(data_root: Path, run_id: str) -> list[str]:
     """Write publish/latest/finops.json (PG-8 Platform FinOps) from MC_FINOPS_FOCUS_GLOB; the M2 build calls this."""
     out = Path(data_root) / "publish" / "latest" / "finops.json"
