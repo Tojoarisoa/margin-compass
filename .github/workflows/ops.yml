@@ -10,7 +10,7 @@ on:
         description: What to do
         required: true
         type: choice
-        options: [status, cost-report, run-pipeline, start-nightly, start-backfill, verify-backfill, record-fixtures, live-eval, rag-eval]
+        options: [status, cost-report, run-pipeline, start-nightly, start-backfill, verify-backfill, record-fixtures, live-eval, rag-eval, nightly-insight]
       model:
         description: Agent model for record-fixtures / live-eval (agents/mc_agents/config.py)
         required: false
@@ -141,7 +141,7 @@ jobs:
           exit "$st"
 
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
-        if: inputs.task == 'record-fixtures' || inputs.task == 'live-eval' || inputs.task == 'rag-eval'
+        if: inputs.task == 'record-fixtures' || inputs.task == 'live-eval' || inputs.task == 'rag-eval' || inputs.task == 'nightly-insight'
         with: { version: "${{ env.UV_VERSION }}", python-version: "${{ env.PYTHON_VERSION }}" }
       - name: record-fixtures / live-eval (live Bedrock, capped per question)
         if: inputs.task == 'record-fixtures' || inputs.task == 'live-eval'
@@ -164,6 +164,22 @@ jobs:
           line="$(uv run mc-agents --gold ../data/ops/gold --model "$MODEL" eval --mode "$MODE" --out ../data/ops/report.json)" || status=$?
           { echo "## Agent eval ($MODE, $MODEL)"; echo "$line"; } >> "$GITHUB_STEP_SUMMARY"
           exit "${status:-0}"
+      - name: nightly-insight (M5-01: nightly brief with Haiku 4.5 insights; capped at $0.50 and 8 calls in code)
+        if: inputs.task == 'nightly-insight'
+        working-directory: agents
+        run: |
+          set -euo pipefail
+          uv sync --frozen
+          uv run python - <<'PY'
+          from pathlib import Path
+          from booncore_sim.cli import run as simulate
+          from mc_pipelines.cli import main
+          root = Path("../data/ops")
+          simulate("m1", 42, root / "landing" / "booncore", run_id="ops")
+          raise SystemExit(main(["run", "--landing", str(root / "landing" / "booncore"), "--data-root", str(root), "--ingest-date", "2026-11-04"]))
+          PY
+          line="$(uv run mc-agents nightly --data-root ../data/ops --run-id ops-insight --live)"
+          { echo "## Nightly brief with insights"; echo '```json'; echo "$line"; head -c 3000 ../data/ops/publish/latest/margin_brief.json; echo; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
       - name: rag-eval (EV-04 with Titan embeddings; budget-capped in code)
         if: inputs.task == 'rag-eval'
         working-directory: rag

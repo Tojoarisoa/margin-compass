@@ -114,3 +114,11 @@ def test_failing_llm_still_writes_plain_brief(tmp_path):
     nightly.write(root, "r1", client=Boom())
     brief = json.loads((root / "publish" / "latest" / "margin_brief.json").read_text())
     assert brief["action_count"] > 0 and all("insight" not in a for a in brief["top_actions"])
+
+
+def test_cli_nightly_without_live_writes_brief(tmp_path, capsys):
+    from mc_agents.cli import main
+    root = _gold(tmp_path)
+    assert main(["nightly", "--data-root", str(root), "--run-id", "r1"]) == 0
+    out = json.loads(capsys.readouterr().out)
+    assert out["live"] is False and out["insights"] == 0 and out["actions"] > 0

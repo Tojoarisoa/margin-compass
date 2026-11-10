@@ -49,6 +49,10 @@ def main(argv: list[str] | None = None) -> int:
     ev = sub.add_parser("eval")
     ev.add_argument("--mode", choices=("replay", "record", "live"), default="replay")
     ev.add_argument("--out", type=Path, default=None)
+    nt = sub.add_parser("nightly", help="write the daily margin brief; --live adds LLM insights (Bedrock, capped at $0.50)")
+    nt.add_argument("--data-root", type=Path, default=Path("../data/local"))
+    nt.add_argument("--run-id", default="manual")
+    nt.add_argument("--live", action="store_true")
     evp = sub.add_parser("ev")
     evp.add_argument("--out", type=Path, default=None)
     args = p.parse_args(argv)
@@ -59,6 +63,13 @@ def main(argv: list[str] | None = None) -> int:
         print(r.answer)
         print(r.cost_line)
         return 0 if r.status == "answered" else 1
+    if args.cmd == "nightly":
+        from . import nightly
+        keys = nightly.write(args.data_root, args.run_id, client=BedrockLLM() if args.live else None)
+        brief = json.loads((args.data_root / keys[0]).read_text())
+        print(json.dumps({"live": args.live, "actions": brief["action_count"],
+                          "insights": sum("insight" in a for a in brief["top_actions"])}))
+        return 0
     if args.cmd == "ev":
         report = run_ev(args.gold)
         text = json.dumps(report, indent=2)

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { money } from "./format";
 
-interface BriefAction { action_id: string; action_type: string; title: string; impact_usd_month: string | number; approver: string }
+interface BriefAction { action_id: string; action_type: string; title: string; impact_usd_month: string | number; approver: string; insight?: string }
 interface Brief { headline: string; action_count: number; total_impact_usd_month: string | number; top_actions: BriefAction[]; data_label?: string }
 
 export function BriefCard() {
@@ -25,13 +25,13 @@ export function BriefCard() {
             <thead><tr><th scope="col">Proposed action</th><th scope="col">Type</th><th scope="col">Approver</th><th scope="col" className="num">At stake per month</th></tr></thead>
             <tbody>
               {brief.top_actions.map((a) => (
-                <tr key={a.action_id}><td>{a.title}</td><td>{a.action_type}</td><td>{a.approver}</td><td className="num">{money(Number(a.impact_usd_month))}</td></tr>
+                <tr key={a.action_id}><td>{a.title}{a.insight && <div className="muted small">{a.insight}</div>}</td><td>{a.action_type}</td><td>{a.approver}</td><td className="num">{money(Number(a.impact_usd_month))}</td></tr>
               ))}
             </tbody>
           </table>
         </div>
       )}
-      <p className="muted small">Proposals only: nothing is applied without approval. Synthetic data.</p>
+      <p className="muted small">Notes under an action are a model's suggestion to check first, not a finding. Proposals only: nothing is applied without approval. Synthetic data.</p>
     </section>
   );
 }
