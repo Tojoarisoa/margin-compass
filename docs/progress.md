@@ -23,7 +23,7 @@ Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s duri
 
 ## 2026-11-10 (autopilot run 89)
 
-- **Task 2:** M5-03 step 1. PR `auto/m5-03-effects`: `simulator/booncore_sim/m5_effects.py` (ACT-1 batch-shift with adoption lag, ramp, partial realization; deterministic, no effect without approvals). Simulator tests 3 new passed, ruff clean. Not wired into any run yet. M5-03 not ticked. Cost $0.
+- **Task 2:** M5-03 step 1. PR #202 merged (`ci` and `deploy to dev` green, `attribution` green after footer removal via MCP): `simulator/booncore_sim/m5_effects.py` (ACT-1 batch-shift with adoption lag, ramp, partial realization; deterministic, no effect without approvals). Simulator tests 3 new passed, ruff clean. Not wired into any run yet. M5-03 not ticked. Cost $0.
 
 - **Task:** M5-02 step 3. PR #201 merged (`ci` and `deploy to dev` green, `attribution` green after footer removal via MCP): `actions.json` carries `renewal_date` for renewal actions (not in `fct_actions`); the Action Center shows a renewal calendar with a playbook per account. Agents nightly tests 10 passed, ruff clean, dashboard build clean. M5-02 ticked.
 - **Also:** wrote `docs/plans/m5-plan.md` (M5-03/M5-04 split into PR-sized steps).
