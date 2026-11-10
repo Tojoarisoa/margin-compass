@@ -14,7 +14,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-0. **M4-05 EV-05 to the 90% gate:** check main `ci` + `deploy to dev` for e0ea722 (#219, still running at run 101's end). Live Haiku 4.5 now scores EV-05 6/8 (75%) with the fixed `query_gold` spec (ops 42879147169). Misses: `low-margin-rows` (model used `gross_margin_pct < 20`; the column is a fraction, so say units in the tool description, e.g. "`*_pct` are fractions 0-1") and `revenue-by-month` (model's month is a TIMESTAMP, reference CASTs to DATE; check whether the scorer compares values type-strictly, and fix the prompt/spec, never the gate). Then re-record (ops `record-fixtures`, `haiku-4-5`, cache on), commit `agents/golden/ev05_fixtures/haiku-4-5/`, make CI replay them (`mc-agents ev --ev05 replay`, `MC_CACHE_PROMPT=1`). Then an ops record run for real EV-10 latency, then tick M4-05.
+0. **M4-05 finish:** check `deploy to dev` in main `ci` run 42889342918 (36d9082, #221; other jobs green). EV-05 now 8/8 and replayed in CI. Left: an ops `record-fixtures` (haiku-4-5, cache on) reading real EV-10 latency from the step summary, then tick M4-05 in PLAN.md §17 with a Change Log entry.
 1. **M5-04:** KPI-09 needs a closed-loop plan change (none yet) and KPI-13 needs the real AWS bill (M2-04 FOCUS export); tick M5-04 when both are real. M5-03 steps 4-6: see Waiting for owner.
 3. **M2-04 (daily check, not a task):** run ops `verify-backfill` once a day and read `finops.json`. Last check 2026-11-10 15:13 UTC: `awaiting_first_export` (AWS FOCUS export still empty). When `status` is `ok`, wire `MC_FINOPS_FOCUS_GLOB` if still needed and tick M2-04. Everything else in M2-04 is done.
 
@@ -22,6 +22,13 @@ Resolved 2026-11-09: CI on main after #184 failed because of a GitHub Actions ou
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed; prompt caching shows 0 cache-read tokens (prompts ~1.5k tokens, likely under the cache minimum).
 Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s during image builds: re-run the failed job.
+
+## 2026-11-10 (autopilot run 102)
+
+- **Start:** main `ci` + `deploy to dev` for run 101 (e0ea722, b090fb6) green; no open PRs.
+- **Task 1:** M4-05. PR #220 merged (every `ci` job and `attribution` green after footer removal via MCP), main `ci` + `deploy to dev` green: `query_gold` v3 lists column types and says `_pct` columns are 0-1 fractions and months are DATE. Agents 239 passed. Ops record 42885698907: both earlier misses fixed.
+- **Task 2:** M4-05. PR #221 merged (every `ci` job and `attribution` green after footer removal): EV-05 fixtures (Haiku 4.5) committed, replay job also runs `ev --ev05 replay`. Local replay on CI gold: EV-05 8/8 (gate 90%). Main `ci` jobs green; `deploy to dev` (run 42889342918) still running at the end of the run (next run checks).
+- **Decisions (§8.2):** fixed the tool description, not the scorer (type-strict DATE compare kept). Cost: 1 ops record run, about 20 Haiku 4.5 calls, under $0.05 (capped in code).
 
 ## 2026-11-10 (autopilot run 101)
 
