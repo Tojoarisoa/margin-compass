@@ -9,8 +9,10 @@ No approvals means unchanged rows, so existing runs are not affected. All output
 from __future__ import annotations
 
 import hashlib
+import json
 from dataclasses import dataclass, replace
 from datetime import date, timedelta
+from pathlib import Path
 
 from .m2_telemetry import TelemetryRow
 
@@ -116,3 +118,22 @@ def apply_act2_act3(rows: list[TelemetryRow], approvals: list[Approval], seed: i
 def apply_effects(rows: list[TelemetryRow], approvals: list[Approval], seed: int) -> list[TelemetryRow]:
     """All effects in a fixed order. No approvals returns the same list."""
     return apply_act2_act3(apply_act1(rows, approvals, seed), approvals, seed)
+
+
+def load_approvals(path: Path | str) -> list[Approval]:
+    """Read approvals.jsonl (action_id, action_type, target, decision, decided_at, ...). A missing file means no
+    approvals. Only `approved` decisions with a known action type and a target produce effects; other lines are
+    skipped. The latest line per action_id wins."""
+    p = Path(path)
+    if not p.exists():
+        return []
+    latest: dict[str, dict] = {}
+    for line in p.read_text().splitlines():
+        if line.strip():
+            d = json.loads(line)
+            latest[d["action_id"]] = d
+    return [
+        Approval(d["action_id"], d["action_type"], d["target"], date.fromisoformat(d["decided_at"][:10]))
+        for d in latest.values()
+        if d.get("decision") == "approved" and d.get("action_type") in ("ACT-1", "ACT-2", "ACT-3") and d.get("target")
+    ]

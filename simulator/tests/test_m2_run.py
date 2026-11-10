@@ -35,3 +35,17 @@ def test_month_alone_equals_month_in_full_run(full):
     in_month = [r for r in full.telemetry if lo <= r.usage_ts.date() <= hi]
     assert alone == in_month
     assert mt.WINDOW_START <= lo and hi <= mt.WINDOW_END
+
+
+def test_approvals_are_opt_in_and_change_only_later_rows(full):
+    from datetime import date
+
+    from booncore_sim.m5_effects import Approval
+
+    assert run.generate_patterned(SEED, []).telemetry == full.telemetry
+    feature = full.telemetry[0].feature_id
+    a = Approval("act-x", "ACT-2", f"{feature}/price", date(2025, 9, 1))
+    out = run.generate_patterned(SEED, [a])
+    assert len(out.telemetry) == len(full.telemetry)
+    assert out.telemetry[0] == full.telemetry[0]
+    assert sum(r.request_count for r in out.telemetry) < sum(r.request_count for r in full.telemetry)

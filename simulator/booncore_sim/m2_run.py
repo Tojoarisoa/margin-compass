@@ -16,6 +16,7 @@ from .m2_patterns import PatternLabel
 from .m2_patterns_b import RenewalEvent
 from .m2_telemetry import RawRequest, TelemetryRow
 from .m2_tenants import WINDOW_END, WINDOW_START, M2Tenant, generate_m2_tenants
+from .m5_effects import Approval, apply_effects
 
 
 @dataclass
@@ -53,7 +54,9 @@ def pt12_label() -> PatternLabel:
     )
 
 
-def generate_patterned(seed: int) -> PatternedRun:
+def generate_patterned(seed: int, approvals: list[Approval] | None = None) -> PatternedRun:
+    """Full run. `approvals` (M5-03, opt-in) apply closed-loop effects to the telemetry after the patterns;
+    None or empty leaves every row unchanged."""
     tenants = generate_m2_tenants(seed)[0]
     base, raw = m2_telemetry.generate_all(seed, tenants)
     outcomes = m2_outcomes.generate_all(seed, tenants)[0]
@@ -62,6 +65,8 @@ def generate_patterned(seed: int) -> PatternedRun:
     pt09 = m2_patterns_b.pt09_safety_downgrade_proposal(base)
     pt11 = m2_patterns_b.pt11_unused_cheaper_option(base, tenants)
     rows, labels = _transform(base, tenants)
+    if approvals:
+        rows = apply_effects(rows, approvals, seed)
     events, pt14 = m2_patterns_b.pt14_churn_events(seed, tenants, outcomes)
     labels += [pt08, pt09, pt11, pt12_label(), m2_patterns_b.pt13_seasonality_and_growth(), pt14]
     labels.sort(key=lambda x: x.pattern_id)

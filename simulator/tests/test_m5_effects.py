@@ -10,6 +10,7 @@ from booncore_sim.m5_effects import (
     apply_effects,
     churn_day,
     lag_days,
+    load_approvals,
     share,
 )
 
@@ -75,3 +76,15 @@ def test_act3_hits_one_tenant_and_may_churn():
 def test_apply_effects_without_approvals_is_identity():
     rows = _rows(20)
     assert apply_effects(rows, [], 42) is rows
+
+
+def test_load_approvals(tmp_path):
+    assert load_approvals(tmp_path / "missing.jsonl") == []
+    f = tmp_path / "approvals.jsonl"
+    f.write_text(
+        '{"action_id":"a1","action_type":"ACT-1","target":"F4/cost","decision":"approved","decided_at":"2026-03-01T10:00:00Z"}\n'
+        '{"action_id":"a2","action_type":"ACT-2","target":"F4/price","decision":"rejected","decided_at":"2026-03-01"}\n'
+        '{"action_id":"a3","action_type":"ACT-1","target":"F1/cost","decision":"approved","decided_at":"2026-03-02"}\n'
+        '{"action_id":"a3","action_type":"ACT-1","target":"F1/cost","decision":"rejected","decided_at":"2026-03-05"}\n'
+    )
+    assert load_approvals(f) == [Approval("a1", "ACT-1", "F4/cost", date(2026, 3, 1))]
