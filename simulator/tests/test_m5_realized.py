@@ -54,7 +54,7 @@ def test_run_m2_all_writes_realized_only_with_approvals(tmp_path, monkeypatch):
     for name in ("write_static", "write_focus", "write_revenue", "write_dimensions", "write_month"):
         monkeypatch.setattr(m2_writer, name, lambda *a, **k: [])
     monkeypatch.setattr(m2_writer, "write_manifest", lambda out, seed, files: {"files": []})
-    monkeypatch.setattr(m2_writer, "write_realized", lambda out, seed, tel, appr: calls.append((tel, appr)) or [])
+    monkeypatch.setattr(m2_writer, "write_realized", lambda out, seed, tel, appr, tenants=None: calls.append((tel, appr)) or [])
     cli.run_m2(42, tmp_path, "all", None)
     assert calls == []
     path = tmp_path / "approvals.jsonl"
@@ -62,3 +62,23 @@ def test_run_m2_all_writes_realized_only_with_approvals(tmp_path, monkeypatch):
                     '"decided_at": "2026-01-01T00:00:00+00:00"}\n')
     cli.run_m2(42, tmp_path, "all", None, path)
     assert len(calls) == 1 and calls[0][0] is run.telemetry
+
+
+def test_churn_loses_revenue_only_from_churn_day():
+    from decimal import Decimal
+    from types import SimpleNamespace
+
+    from booncore_sim.m5_effects import churn_day
+
+    t = SimpleNamespace(tenant_id="t1", arr_usd=Decimal("36500"), discount_pct=Decimal("0.10"))
+    cd = None
+    for n in range(500):
+        a3 = Approval(f"act3-{n}", "ACT-3", "t1/cap", date(2026, 3, 1))
+        cd = churn_day(42, a3)
+        if cd is not None:
+            break
+    assert cd is not None
+    out = realized_by_action(_rows(), [a3], 42, [t])
+    assert all((r.revenue_delta_usd < 0) == (r.day >= cd) for r in out)
+    assert {r.revenue_delta_usd for r in out if r.day >= cd} == {-90.0}  # 36500 * 0.9 / 365
+    assert all(r.revenue_delta_usd == 0 for r in realized_by_action(_rows(), [a3], 42))
