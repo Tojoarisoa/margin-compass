@@ -12,7 +12,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-0. **M5-04 step 2:** write `fct_realized_margin` (parquet from `realized_by_action`, with revenue side from volume change) and wire it into the M2 build; then M5-03 step 4 is the approvals table. Step 5 (Cognito owner user) is owner-only: write it under Waiting for owner when reached.
+0. **M5-04 step 2b:** call `write_realized` from a with-approvals M2 run (baseline telemetry + approvals) and build `fct_realized_margin` in dbt with the revenue side from volume change; then M5-03 step 4 is the approvals table. Step 5 (Cognito owner user) is owner-only: write it under Waiting for owner when reached.
 1. **M4-05:** live-model EV-05/07 (needs analyst SQL generation) and an ops record run for real EV-10 latency, then tick M4-05.
 3. **M2-04 (daily check, not a task):** run ops `verify-backfill` once a day and read `finops.json`. Last check 2026-11-09 17:29 UTC: `awaiting_first_export` (AWS FOCUS export still empty). When `status` is `ok`, wire `MC_FINOPS_FOCUS_GLOB` if still needed and tick M2-04. Everything else in M2-04 is done.
 
@@ -24,6 +24,8 @@ Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s duri
 ## 2026-11-10 (autopilot run 92)
 
 - **Task:** M5-04 step 1. PR #206 merged (every `ci` job green, `attribution` green after footer removal via MCP and re-run), `deploy to dev` green: `simulator/booncore_sim/m5_realized.py` gives counterfactual minus actual cost per approved action and day; `pending_verification` until 14 days after approval. Simulator tests 3 new passed, ruff clean. Not wired into any run. M5-04 not ticked. Cost $0.
+- **Task 2:** M5-04 step 2a. PR #207 merged (every `ci` job green, `attribution` green after footer removal via MCP and re-run), `deploy to dev` green: `m2_writer.write_realized` writes `s5_realized/realized_cost.parquet` from baseline telemetry and approvals. Simulator tests 4 passed, ruff clean. Not wired into a run. Cost $0.
+
 - **Decisions (§8.2):** per-action effect measured by applying that action alone to the baseline rows; cost side only, revenue side later.
 
 ## 2026-11-10 (autopilot run 91)
