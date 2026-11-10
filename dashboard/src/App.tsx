@@ -148,7 +148,7 @@ export function App() {
 
       {snap.m2_kpis && <BriefCard />}
 
-      {snap.m2_kpis && <RealizedCard />}
+      {snap.m2_kpis && <RealizedCard grossMarginUsd={snap.m2_kpis.gross_margin_usd} grossMarginPct={snap.m2_kpis.gross_margin_pct} windowDays={snap.window.days} />}
 
       {snap.m2_kpis && (
         <section className="card" aria-labelledby="actions-title">

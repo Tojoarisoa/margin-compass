@@ -8,7 +8,10 @@ interface Realized {
   realized_margin_usd: string; pending_saved_usd: string; realization_rate: string | null; method?: string; data_label?: string;
 }
 
-export function RealizedCard() {
+/** Platform cost used for KPI-13: the monthly budget cap (cost gate, AGENTS.md 8.2). Real AWS bill is not wired yet (M2-04). */
+const PLATFORM_COST_CAP_USD_PER_MONTH = 3;
+
+export function RealizedCard({ grossMarginUsd, grossMarginPct, windowDays }: { grossMarginUsd?: number | null; grossMarginPct?: number | null; windowDays: number }) {
   const [r, setR] = useState<Realized | null>(null);
   useEffect(() => {
     fetch("/publish/latest/realized.json", { cache: "no-cache" })
@@ -17,6 +20,11 @@ export function RealizedCard() {
       .catch(() => setR(null));
   }, []);
   if (!r) return null;
+  const realized = Number(r.realized_margin_usd);
+  const revenue = grossMarginUsd != null && grossMarginPct ? grossMarginUsd / grossMarginPct : null;
+  const pts = revenue ? `${((realized / revenue) * 100).toFixed(2)} pts` : "n/a";
+  const months = windowDays / 30.4375;
+  const roi = realized / (PLATFORM_COST_CAP_USD_PER_MONTH * months);
   const rate = r.realization_rate === null ? "n/a" : `${(Number(r.realization_rate) * 100).toFixed(1)}%`;
   return (
     <section className="card" aria-labelledby="realized-title">
@@ -30,11 +38,14 @@ export function RealizedCard() {
             <tr><td>Revenue change</td><td className="num">{money(Number(r.revenue_delta_usd))}</td></tr>
             <tr><td>Still pending verification</td><td className="num">{money(Number(r.pending_saved_usd))}</td></tr>
             <tr><td>Realization rate</td><td className="num">{rate}</td></tr>
+            <tr><td>Margin points recovered (KPI-01, realized margin ÷ revenue)</td><td className="num">{pts}</td></tr>
+            <tr><td>Platform ROI multiple (KPI-13, at the ${PLATFORM_COST_CAP_USD_PER_MONTH}/month cost cap)</td><td className="num">{roi.toFixed(0)}x</td></tr>
+            <tr><td>Pricing simulator accuracy (KPI-09)</td><td className="num">n/a, no closed-loop plan change yet</td></tr>
             <tr><td>Actions realized / pending</td><td className="num">{r.actions_realized} / {r.actions_pending}</td></tr>
           </tbody>
         </table>
       </div>
-      <p className="muted small">{r.method ?? ""} Effect sizes are synthetic assumptions. Synthetic data.</p>
+      <p className="muted small">{r.method ?? ""} Effect sizes are synthetic assumptions. KPI-13 uses the budget cap as platform cost, not the real AWS bill, so it is a lower bound. Synthetic data.</p>
     </section>
   );
 }
