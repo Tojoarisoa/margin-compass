@@ -164,7 +164,7 @@ jobs:
           line="$(uv run mc-agents --gold ../data/ops/gold --model "$MODEL" eval --mode "$MODE" --out ../data/ops/report.json)" || status=$?
           { echo "## Agent eval ($MODE, $MODEL)"; echo "$line"; } >> "$GITHUB_STEP_SUMMARY"
           exit "${status:-0}"
-      - name: "nightly-insight (M5-01 brief with Haiku 4.5 insights, capped at $0.50 and 8 calls in code)"
+      - name: "nightly-insight (M5-01 brief with Haiku 4.5 insights on a local M2 simulation, capped at $0.50 and 8 calls in code)"
         if: inputs.task == 'nightly-insight'
         working-directory: agents
         run: |
@@ -172,11 +172,12 @@ jobs:
           uv sync --frozen
           uv run python - <<'PY'
           from pathlib import Path
-          from booncore_sim.cli import run as simulate
-          from mc_pipelines.cli import main
+          from booncore_sim.cli import run_m2
+          from mc_pipelines.cli import run_m2_dbt
           root = Path("../data/ops")
-          simulate("m1", 42, root / "landing" / "booncore", run_id="ops")
-          raise SystemExit(main(["run", "--landing", str(root / "landing" / "booncore"), "--data-root", str(root), "--ingest-date", "2026-11-04"]))
+          run_m2(42, root / "landing" / "m2", "all", None)
+          summary = run_m2_dbt(root / "landing" / "m2", root, "ops")
+          raise SystemExit(0 if summary["success"] else 1)
           PY
           line="$(uv run mc-agents nightly --data-root ../data/ops --run-id ops-insight --live)"
           { echo "## Nightly brief with insights"; echo '```json'; echo "$line"; head -c 3000 ../data/ops/publish/latest/margin_brief.json; echo; echo '```'; } | tee -a "$GITHUB_STEP_SUMMARY"
