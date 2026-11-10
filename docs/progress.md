@@ -12,7 +12,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-0. **M5-01 (next step):** the ops `nightly-insight` run (42730587842, Haiku 4.5, live) succeeded, but the sandbox can't read the job summary, so the insight count is unverified (the step prints it only to the summary). Next: print the JSON line to the job log too, read it, and check the brief card on the dev dashboard with a published brief that has insights; then tick M5-01 and start M5-02.
+0. **M5-01 (next step):** the ops `nightly-insight` run uses the small M1 data, which yields 0 actions, so `insights: 0` proves nothing. Next: make the task feed the model real actions (read-only copy of the published M2 gold from the data bucket, or a local M2 simulation), read the log line `{"live", "actions", "insights"}`, check the brief card on the dev dashboard, then tick M5-01 and start M5-02. The ops role is scoped to `mc-*`; a bucket read grant must stay read-only and is a foundation-stack change (check §8.3 before doing it).
 1. **M4-05:** live-model EV-05/07 (needs analyst SQL generation) and an ops record run for real EV-10 latency, then tick M4-05.
 2. **M5-01 (old note, superseded by 0).**
 3. **M2-04 (daily check, not a task):** run ops `verify-backfill` once a day and read `finops.json`. Last check 2026-11-09 17:29 UTC: `awaiting_first_export` (AWS FOCUS export still empty). When `status` is `ok`, wire `MC_FINOPS_FOCUS_GLOB` if still needed and tick M2-04. Everything else in M2-04 is done.
@@ -21,6 +21,11 @@ Resolved 2026-11-09: CI on main after #184 failed because of a GitHub Actions ou
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed; prompt caching shows 0 cache-read tokens (prompts ~1.5k tokens, likely under the cache minimum).
 Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s during image builds: re-run the failed job.
+
+## 2026-11-10 (autopilot run 86)
+
+- **Task:** M5-01 step 9. PR #196 (ops `nightly-insight` also prints its result to the job log): every `ci` job green, `attribution` green after footer removal via MCP, merged, `ci` and `deploy to dev` green. Ops run 42735742464 succeeded; the log line reads `{"live": true, "actions": 0, "insights": 0}` because the ops data is the small M1 set. M5-01 not ticked. Cost $0 (no insights requested).
+- **Decisions (§8.2):** stopped before the IAM change for reading the data bucket; left as the next step.
 
 ## 2026-11-10 (autopilot run 85)
 
