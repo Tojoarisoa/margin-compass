@@ -16,14 +16,23 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-0. **Check** main `ci` + `deploy to dev` for 9039d78 (#226) and the run 104 progress commit, still running at the end of run 104.
-1. **M4-05 EV-06 step 3:** judge covers 13/40 scenarios (only those with a recorded answer or blocked). Record real AG-03 graph runs for the other 27 (ops, capped) so the judge and rubric score actual answers, then re-record the judge. prc-03 is the judge's one miss: the golden answer should model the increase with `price_plan` (needs a second evidence entry). Calibration: see Waiting for owner.
-2. **M5-04:** KPI-09 needs a closed-loop plan change (none yet) and KPI-13 needs the real AWS bill (M2-04 FOCUS export); tick M5-04 when both are real. M5-03 steps 4-6: see Waiting for owner.
-3. **M2-04 (daily check, not a task):** run ops `verify-backfill` once a day and read `finops.json`. Last check 2026-11-10 15:13 UTC: `awaiting_first_export`. When `status` is `ok`, wire `MC_FINOPS_FOCUS_GLOB` if still needed and tick M2-04.
+0. **Check** main `ci` + `deploy to dev` for PR #228 (EV-06 judge fixtures 13/13) and this progress entry, if still running at the end of run 105.
+1. **M4-05 EV-06 step 3b:** prc-01 and prc-02 golden figures don't match the pricing tool (50000/30000 vs real 51000/31000; listed in `_PRICING_TO_FIX`). Fix one per PR (a drifted judge fixture scores as a fail, so two at once would drop the judge to 84.6%), re-record with ops, commit fixtures, then remove it from the list.
+2. **M4-05 EV-06 step 3c:** judge covers 13/40 scenarios. Record real AG-03 graph runs for the other 27 (ops, capped) so the judge and rubric score actual answers. eff-01/eff-02 evidence args don't match `replay_lever`'s inputs; fix them in that step. Calibration: see Waiting for owner.
+3. **M5-04:** KPI-09 needs a closed-loop plan change (none yet) and KPI-13 needs the real AWS bill (M2-04 FOCUS export); tick M5-04 when both are real. M5-03 steps 4-6: see Waiting for owner.
+4. **M2-04 (daily check, not a task):** run ops `verify-backfill` once a day and read `finops.json`. Last check 2026-11-10 15:13 UTC: `awaiting_first_export`. When `status` is `ok`, wire `MC_FINOPS_FOCUS_GLOB` if still needed and tick M2-04.
 
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed.
 Notes: owner-mode approvals wait for Cognito (M5-03). Ops eval results are now in the job log (step summaries aren't readable by API). Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1). Flaky github.com 504s during image builds: re-run the failed job.
+
+## 2026-11-10 (autopilot run 105)
+
+- **Start:** main `ci` + `deploy to dev` for 9039d78 (#226) and 36a516b green; no open PRs.
+- **Task 1:** M4-05 EV-06 step 3a. PR #227 merged (every `ci` job and `attribution` green after footer removal via MCP), main `ci` + `deploy to dev` green. prc-03 golden now models the increase (5000 -> 5500 cents/seat, two `price_plan` entries E1/E2) with real tool figures; golden evidence may be a list; a changed judge request now scores as a `drifted` fail instead of crashing the replay. New test: golden pricing evidence must match the tool; found prc-01/02 off by the 1000-cent overage (listed, fixed next). Agents 256 passed.
+- **Task 2:** M4-05 step 3a fixtures. Ops record 42915878641 (haiku-4-5, cache on): **judge 13/13 (100%)**, agreement with rubric 100%, M1-06 5/5, EV-10 pass ($0.0043/question). PR #228 commits the 13 judge fixtures (local replay 13/13, no drift).
+- **Decisions (§8.2):** drift scores as a fail (options: this; ops recording on branches, rejected as a trust-boundary change; dropping the judge replay, rejected as weaker). Gate 90% unchanged.
+- **Cost:** 1 ops record run, about 40 Haiku 4.5 calls, under $0.05 (capped in code).
 
 ## 2026-11-10 (autopilot run 104)
 
