@@ -38,10 +38,16 @@ def _transform(rows: list[TelemetryRow], tenants: list[M2Tenant]) -> tuple[list[
     return rows, [*labels, pt10]
 
 
-def patterned_month(seed: int, tenants: list[M2Tenant], month_index: int) -> tuple[list[TelemetryRow], list[RawRequest]]:
-    """One backfill chunk: baseline telemetry with the row-changing patterns applied."""
+def patterned_month(
+    seed: int, tenants: list[M2Tenant], month_index: int, approvals: list[Approval] | None = None
+) -> tuple[list[TelemetryRow], list[RawRequest]]:
+    """One backfill chunk: baseline telemetry with the row-changing patterns applied. `approvals` (M5-03, opt-in)
+    add the closed-loop effects, same as `generate_patterned`; None or empty changes nothing."""
     rows, raw = m2_telemetry.generate_month(seed, tenants, month_index)
-    return _transform(rows, tenants)[0], raw
+    rows = _transform(rows, tenants)[0]
+    if approvals:
+        rows = apply_effects(rows, approvals, seed)
+    return rows, raw
 
 
 def pt12_label() -> PatternLabel:

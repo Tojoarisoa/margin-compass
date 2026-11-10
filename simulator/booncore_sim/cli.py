@@ -60,13 +60,19 @@ def run(profile: str, seed: int | None, out_dir: Path, run_id: str) -> dict:
     return manifest
 
 
-def run_m2(seed: int | None, out_dir: Path, mode: str, month: int | None) -> dict:
+def run_m2(
+    seed: int | None, out_dir: Path, mode: str, month: int | None, approvals_path: Path | None = None
+) -> dict:
     """M2 profile. `month` writes one chunk, `static` the month-independent tables, `all` everything."""
     from . import m2_writer
     from .m2_run import generate_patterned
     from .m2_tenants import MONTHS, generate_m2_tenants
 
+    from .m5_effects import load_approvals
+
     seed = 42 if seed is None else seed
+    # Counterfactual = the same seed without --approvals; the approved run adds the closed-loop effects (M5-03).
+    approvals = load_approvals(approvals_path) if approvals_path else []
     log.info("simulation_started", extra={"fields": {"profile": "m2", "seed": seed, "mode": mode, "out": str(out_dir)}})
     files: list[dict] = []
     manifest_dir = out_dir
@@ -79,7 +85,7 @@ def run_m2(seed: int | None, out_dir: Path, mode: str, month: int | None) -> dic
     if mode == "month":
         if month is None or not 0 <= month < MONTHS:
             raise SystemExit(f"--month must be 0..{MONTHS - 1} in month mode")
-        files += m2_writer.write_month(out_dir, seed, generate_m2_tenants(seed)[0], month)
+        files += m2_writer.write_month(out_dir, seed, generate_m2_tenants(seed)[0], month, approvals)
         manifest_dir = out_dir / "_manifests" / f"month-{month:02d}"
     elif mode == "static":
         static = generate_patterned(seed)
@@ -89,7 +95,7 @@ def run_m2(seed: int | None, out_dir: Path, mode: str, month: int | None) -> dic
         run_all = generate_patterned(seed)
         files += m2_writer.write_static(out_dir, seed, run_all) + whole_window(run_all.tenants)
         for i in range(MONTHS):
-            files += m2_writer.write_month(out_dir, seed, run_all.tenants, i)
+            files += m2_writer.write_month(out_dir, seed, run_all.tenants, i, approvals)
     manifest = m2_writer.write_manifest(manifest_dir, seed, files)
     for f in manifest["files"]:
         log.info("file_written", extra={"fields": {"path": f["path"], "rows": f["rows"]}})
@@ -103,6 +109,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--mode", default="all", choices=["all", "month", "static"], help="m2 only")
     parser.add_argument("--month", type=int, default=None, help="m2 month mode: window month index, 0-based")
     parser.add_argument("--seed", type=int, default=None, help="override the profile's seed")
+    parser.add_argument("--approvals", type=Path, default=None, help="m2 only: approvals.jsonl; omit for the counterfactual")
     parser.add_argument("--out", type=Path, default=Path("../data/local/landing/booncore"))
     args = parser.parse_args(argv)
 
@@ -114,7 +121,7 @@ def main(argv: list[str] | None = None) -> int:
     log.propagate = False
 
     if args.profile == "m2":
-        run_m2(args.seed, args.out, args.mode, args.month)
+        run_m2(args.seed, args.out, args.mode, args.month, args.approvals)
         return 0
     run(args.profile, args.seed, args.out, run_id)
     return 0

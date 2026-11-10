@@ -43,10 +43,12 @@ def _write(out_dir: Path, rel: str, rows: list, seed: int, kind: str) -> dict:
     return {"path": rel, "rows": table.num_rows, "sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
 
 
-def write_month(out_dir: Path, seed: int, tenants: list[M2Tenant], month_index: int) -> list[dict]:
+def write_month(
+    out_dir: Path, seed: int, tenants: list[M2Tenant], month_index: int, approvals: list | None = None
+) -> list[dict]:
     """One backfill chunk: patterned telemetry, 1% raw sample and outcomes for the month. Returns manifest entries."""
     key = month_days(month_index)[0].strftime("%Y-%m")
-    rows, raw = patterned_month(seed, tenants, month_index)
+    rows, raw = patterned_month(seed, tenants, month_index, approvals)
     daily, tickets = m2_outcomes.generate_month(seed, tenants, month_index)
     return [
         _write(out_dir, f"s1_llm_telemetry/month={key}/telemetry.parquet", rows, seed, "telemetry"),

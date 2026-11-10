@@ -49,3 +49,18 @@ def test_approvals_are_opt_in_and_change_only_later_rows(full):
     assert len(out.telemetry) == len(full.telemetry)
     assert out.telemetry[0] == full.telemetry[0]
     assert sum(r.request_count for r in out.telemetry) < sum(r.request_count for r in full.telemetry)
+
+
+def test_month_chunk_with_approvals_equals_full_run(full):
+    from datetime import date
+
+    from booncore_sim.m5_effects import Approval
+
+    feature = full.telemetry[0].feature_id
+    a = Approval("act-x", "ACT-2", f"{feature}/price", date(2025, 9, 1))
+    month = 6
+    chunk, _ = run.patterned_month(SEED, full.tenants, month, [a])
+    base, _ = run.patterned_month(SEED, full.tenants, month)
+    assert chunk != base
+    assert sum(r.request_count for r in chunk) < sum(r.request_count for r in base)
+    assert run.patterned_month(SEED, full.tenants, month, []) == (base, run.patterned_month(SEED, full.tenants, month)[1])
