@@ -16,12 +16,16 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 0. **M5-04:** KPI-09 needs a closed-loop plan change (none yet) and KPI-13 needs the real AWS bill (M2-04 FOCUS export); tick M5-04 when both are real. Meanwhile M5-03 step 4 (approvals table). Step 5 (Cognito owner user) is owner-only: write it under Waiting for owner when reached.
 1. **M4-05:** live-model EV-05/07 (needs analyst SQL generation) and an ops record run for real EV-10 latency, then tick M4-05.
-3. **M2-04 (daily check, not a task):** run ops `verify-backfill` once a day and read `finops.json`. Last check 2026-11-09 17:29 UTC: `awaiting_first_export` (AWS FOCUS export still empty). When `status` is `ok`, wire `MC_FINOPS_FOCUS_GLOB` if still needed and tick M2-04. Everything else in M2-04 is done.
+3. **M2-04 (daily check, not a task):** run ops `verify-backfill` once a day and read `finops.json`. Last check 2026-11-10 15:13 UTC: `awaiting_first_export` (AWS FOCUS export still empty). When `status` is `ok`, wire `MC_FINOPS_FOCUS_GLOB` if still needed and tick M2-04. Everything else in M2-04 is done.
 
 Resolved 2026-11-09: CI on main after #184 failed because of a GitHub Actions outage (githubstatus: Actions major outage, ~18:10-18:45 UTC); every job passed at least once on 17a6bb8, and the owner's PR with the merge guard re-ran the full CI and deployed. New merge guard: AGENTS.md §8.1 step 4.
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed; prompt caching shows 0 cache-read tokens (prompts ~1.5k tokens, likely under the cache minimum).
 Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s during image builds: re-run the failed job.
+
+## 2026-11-10 (autopilot run 99)
+
+- **Task:** none merged; main `ci` green, no open PRs, nothing unblocked (same as run 98). Daily checks: M2-04 `verify-backfill` (ops 42841983115) `finops.json` still `awaiting_first_export`; Haiku 5.5 probe (ops 42842200339) still `AccessDeniedException`. Cost $0.
 
 ## 2026-11-10 (autopilot run 98)
 
