@@ -12,7 +12,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-0. **M5-04 step 3:** make KPI-01, -02, -09, -13 read `fct_realized_margin` (publish the realized totals in the snapshot and show them on the dashboard), then tick M5-04. Then M5-03 step 4 (approvals table). Step 5 (Cognito owner user) is owner-only: write it under Waiting for owner when reached.
+0. **M5-04 step 3b:** show `publish/latest/realized.json` (written since PR #212) on the dashboard (realized margin, realization rate; KPI-02), then wire KPI-01 (margin points vs baseline), KPI-09 and KPI-13 (needs platform cost) and tick M5-04. Then M5-03 step 4 (approvals table). Step 5 (Cognito owner user) is owner-only: write it under Waiting for owner when reached.
 1. **M4-05:** live-model EV-05/07 (needs analyst SQL generation) and an ops record run for real EV-10 latency, then tick M4-05.
 3. **M2-04 (daily check, not a task):** run ops `verify-backfill` once a day and read `finops.json`. Last check 2026-11-09 17:29 UTC: `awaiting_first_export` (AWS FOCUS export still empty). When `status` is `ok`, wire `MC_FINOPS_FOCUS_GLOB` if still needed and tick M2-04. Everything else in M2-04 is done.
 
@@ -25,6 +25,7 @@ Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s duri
 
 - **Task:** M5-04 step 2e. PR #211 (ops `realized-check`, local data, no AWS or model calls) merged (every `ci` job green, `attribution` green after footer removal via MCP), main `ci` and `deploy to dev` green. Ops run 42806523928 succeeded: baseline plus 6 approved actions (top ACT-1/ACT-3 by score, approved 2025-07-01), dbt passed, `fct_realized_margin` has 1058 realized rows ($81,517.48 saved, revenue delta $0 because no churn among the picked) and 6 pending_verification. M5-04 not ticked (KPIs not wired yet). Cost $0.
 - **Decisions (§8.2):** approved top 6 by score for the check; revenue delta 0 is expected when no ACT-3 account churned.
+- **Task 2:** M5-04 step 3a. PR #212 merged (every `ci` job green, `attribution` green after footer removal via MCP), main `ci` and `deploy to dev` green: the M2 build writes `publish/latest/realized.json` (realized margin, saved, revenue delta, realization rate; totals only) from `fct_realized_margin`. Pipelines tests 2 realized passed, ruff clean. M5-04 not ticked. Cost $0.
 
 ## 2026-11-10 (autopilot run 94)
 
