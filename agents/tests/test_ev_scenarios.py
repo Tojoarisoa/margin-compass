@@ -82,8 +82,8 @@ def test_evidence_list_gives_one_ledger_entry_each():
     assert [e.id for e in led.entries] == ["E1", "E2"] and "[E2]" in sc["answer"]
 
 
-# prc-01 and prc-02 still carry illustrative pricing figures; fix each with its judge re-record (docs/progress.md)
-_PRICING_TO_FIX = {"prc-01", "prc-02"}
+# prc-02 still carries illustrative pricing figures; fix it with its judge re-record (docs/progress.md)
+_PRICING_TO_FIX = {"prc-02"}
 
 
 def test_golden_pricing_evidence_matches_the_pricing_tool():
