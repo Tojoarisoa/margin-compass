@@ -8,20 +8,29 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 - **M5-03 steps 4-6 (approvals store, Cognito, owner mode):** the plan's step 4 asks for a new on-demand table `mc-dev-state-approvals`, which contradicts ADR-011 (single provisioned core table, on-demand forbidden). Auto-decision under §8.2: store approvals as an item type in `mc-dev-state-core` (no new table). The write path restricted to the owner needs the Cognito pool (step 5) and creating the owner user is owner-only. Question: OK to build the Cognito pool + API write path (IaC, no users created), then you create the owner user in the console? Until answered, autopilot skips M5-03 steps 4-6.
 
+- **M4-05 EV-06 calibration labels:** PLAN §9 wants the EV-06 LLM judge "calibrated on human labels". Autopilot can build the judge and record its verdicts, but can't produce human labels. Question: will you label about 40 judge verdicts (pass/fail per golden scenario), or accept the deterministic rubric (now in CI, 40/40) as the EV-06 gate until you do? Until answered, M4-05 stays unticked.
+
 ## Owner decision 2026-11-06
 
 - **Window:** BoonCore's fiscal year starts April 1. The simulation window is now **2025-04-01 → 2026-10-31** (19 months, 579 days), set in `simulator/booncore_sim/m2_tenants.py` (`WINDOW_START`, `MONTHS`, `fiscal_year()`). Build the remaining M2 steps (backfill: 19 monthly chunks) on this window. Measured at seed 42: telemetry 2.71M rows, sample 0.44M, outcomes 0.68M, shared infrastructure 16.5% of AI COGS.
 
 ## Next
 
-0. **M4-05 finish:** check `deploy to dev` in main `ci` run 42889342918 (36d9082, #221; other jobs green). EV-05 now 8/8 and replayed in CI. Left: an ops `record-fixtures` (haiku-4-5, cache on) reading real EV-10 latency from the step summary, then tick M4-05 in PLAN.md §17 with a Change Log entry.
-1. **M5-04:** KPI-09 needs a closed-loop plan change (none yet) and KPI-13 needs the real AWS bill (M2-04 FOCUS export); tick M5-04 when both are real. M5-03 steps 4-6: see Waiting for owner.
-3. **M2-04 (daily check, not a task):** run ops `verify-backfill` once a day and read `finops.json`. Last check 2026-11-10 15:13 UTC: `awaiting_first_export` (AWS FOCUS export still empty). When `status` is `ok`, wire `MC_FINOPS_FOCUS_GLOB` if still needed and tick M2-04. Everything else in M2-04 is done.
+0. **Check** main `ci` + `deploy to dev` for 873256e (#223), still running at the end of run 103.
+1. **M4-05 EV-06 step 2:** rubric-based LLM judge (Haiku 4.5, capped, replayed fixtures in CI) over the 40 golden scenarios, scored against the step 1 rubric. Calibration on human labels: see Waiting for owner. EV-05 (8/8 live) and EV-10 (live, pass) are done; EV-06 is the last M4-05 gap, then tick M4-05.
+2. **M5-04:** KPI-09 needs a closed-loop plan change (none yet) and KPI-13 needs the real AWS bill (M2-04 FOCUS export); tick M5-04 when both are real. M5-03 steps 4-6: see Waiting for owner.
+3. **M2-04 (daily check, not a task):** run ops `verify-backfill` once a day and read `finops.json`. Last check 2026-11-10 15:13 UTC: `awaiting_first_export`. When `status` is `ok`, wire `MC_FINOPS_FOCUS_GLOB` if still needed and tick M2-04.
 
-Resolved 2026-11-09: CI on main after #184 failed because of a GitHub Actions outage (githubstatus: Actions major outage, ~18:10-18:45 UTC); every job passed at least once on 17a6bb8, and the owner's PR with the merge guard re-ran the full CI and deployed. New merge guard: AGENTS.md §8.1 step 4.
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-06 (see entries below).
-Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed; prompt caching shows 0 cache-read tokens (prompts ~1.5k tokens, likely under the cache minimum).
-Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s during image builds: re-run the failed job.
+Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed.
+Notes: owner-mode approvals wait for Cognito (M5-03). Ops eval results are now in the job log (step summaries aren't readable by API). Flaky github.com 504s during image builds: re-run the failed job.
+
+## 2026-11-10 (autopilot run 103)
+
+- **Start:** main `ci` + `deploy to dev` for run 102 green; no open PRs.
+- **Task 1:** M4-05 EV-10. Ops record 42893680083 (haiku-4-5, cache on) succeeded, but results only went to the step summary, which the API can't read. PR #222 merged (every `ci` job and `attribution` green after footer removal via MCP), main `ci` + `deploy to dev` green: ops eval prints EV-10/EV-05 to the log. Re-run 42896140554: M1-06 5/5, **EV-10 pass** (mean $0.0043/question, p95 latency 2.25 s, n=5, gates $0.01 and 20 s), EV-05 8/8.
+- **Task 2:** M4-05 EV-06 step 1. Found EV-06 (agent task success) had no implementation, so M4-05 was not tickable. PR #223 merged (every `ci` job and `attribution` green): deterministic task-success rubric per golden scenario (route, allowed tools, blocked ends blocked, answer verifies against its ledger), per-job rates, in `mc-agents ev`. Agents 245 passed; reference 40/40.
+- **Decisions (§8.2):** rubric first as the judge's deterministic floor (no model, gate 90% unchanged); human-label calibration asked under Waiting for owner. Cost: 2 ops record runs, about 26 Haiku 4.5 calls each, under $0.05 total (capped in code).
 
 ## 2026-11-10 (autopilot run 102)
 
