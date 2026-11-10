@@ -1,7 +1,7 @@
 {
   "calls": [
     {
-      "request_sha": "53dc63844f3aff0b82afa4f656d0e01c4b68d05d4c08a4da3fe14fcb2a2c910c",
+      "request_sha": "4a4772aca70a47c58776117731adae179332dfd8fed10c8b8c23aa9c4d3d6da9",
       "response": {
         "content": [
           {
@@ -9,12 +9,12 @@
               "input": {
                 "addresses_job": true,
                 "outcome": true,
-                "reason": "Route matches. All tools allowed. Answered as expected. Answer cites evidence [E1] with margin and revenue figures.",
+                "reason": "Run correctly forecasts pro plan pricing with proper evidence citation [E1].",
                 "route": true,
                 "tools": true
               },
               "name": "record_verdict",
-              "toolUseId": "tooluse_HV0OAxlOtcBDKv6CdvNwoP",
+              "toolUseId": "tooluse_e6AlRccBR8TNEkPFmhftWg",
               "type": "tool_use"
             }
           }
@@ -22,8 +22,8 @@
         "stop_reason": "tool_use",
         "usage": {
           "cacheReadInputTokens": 0,
-          "inputTokens": 1044,
-          "outputTokens": 148
+          "inputTokens": 1073,
+          "outputTokens": 138
         }
       }
     }
