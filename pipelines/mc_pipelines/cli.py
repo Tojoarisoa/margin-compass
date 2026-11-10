@@ -161,6 +161,7 @@ def run_m2_dbt(landing: Path, data_root: Path, run_id: str, transform_dir: Path 
     variables = {
         "m2_landing_path": str(landing.resolve()), "bronze_path": str(root / "bronze"), "silver_path": str(root / "silver"),
         "gold_path": str(root / "gold"), "m2_gates": True, "allocation_rules": load_rules(), "run_id": run_id,
+        "m2_realized": (landing / "s5_realized" / "realized_cost.parquet").exists(),  # M5-04: only for approved runs
     }
     os.environ["MC_DUCKDB_PATH"] = str(root / "margin_compass_m2.duckdb")
     (root / "silver").mkdir(parents=True, exist_ok=True)

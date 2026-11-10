@@ -40,6 +40,12 @@ models:
     columns:
       - name: llm_cost_usd
         data_tests: [not_null]
+  - name: fct_realized_margin
+    columns:
+      - name: realized_margin_usd
+        data_tests: [not_null]
+      - name: action_id
+        data_tests: [not_null]
   - name: fct_quality
     columns:
       - name: tickets

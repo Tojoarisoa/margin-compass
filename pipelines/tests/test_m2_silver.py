@@ -559,3 +559,26 @@ def test_finops_awaits_the_first_export_then_sums_by_stage(tmp_path):
     assert out["latest_month_usd"] == 0.45
     assert not {"budget_usd", "budget_used"} & set(out) and not {"budget_usd", "budget_used"} & set(empty)  # public: no budget
     assert "account" not in str(out).lower()
+
+
+def test_fct_realized_margin_counts_only_verified_rows(tmp_path):
+    from dbt.cli.main import dbtRunner
+
+    from booncore_sim.m2_writer import _write
+
+    landing = tmp_path / "landing"
+    from booncore_sim.m5_realized import RealizedRow
+
+    rows = [RealizedRow("a", date(2026, 3, 1), 10.0, 8.0, 2.0, "pending_verification"),
+            RealizedRow("a", date(2026, 3, 20), 10.0, 7.0, 3.0, "realized")]
+    _write(landing, "s5_realized/realized_cost.parquet", rows, 42, "realized cost")
+    os.environ["MC_DUCKDB_PATH"] = str(tmp_path / "o.duckdb")
+    variables = {"m2_landing_path": str(landing), "m2_realized": True, "silver_path": "x", "bronze_path": "x",
+                 "gold_path": str(tmp_path)}
+    result = dbtRunner().invoke([
+        "build", "--select", "+fct_realized_margin", "--project-dir", str(TRANSFORM_DIR),
+        "--profiles-dir", str(TRANSFORM_DIR), "--target-path", str(tmp_path / "t"), "--log-path", str(tmp_path / "l"),
+        "--vars", json.dumps(variables), "--quiet"])
+    assert result.success, result.exception
+    out = tmp_path / "fct_realized_margin.parquet"
+    assert duckdb.sql(f"select sum(realized_margin_usd), count(*) from '{out}'").fetchall()[0] == (3.0, 2)

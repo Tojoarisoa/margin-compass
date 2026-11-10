@@ -12,7 +12,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-0. **M5-04 step 2c:** build `fct_realized_margin` in dbt from `s5_realized/realized_cost.parquet` (revenue side from volume change); then M5-03 step 4 is the approvals table. Step 5 (Cognito owner user) is owner-only: write it under Waiting for owner when reached.
+0. **M5-04 step 2d:** add the revenue side (volume change) to `fct_realized_margin`, run an approved M2 build with ops to check it end to end, then KPI-01/-02/-09/-13 from it and tick M5-04. After that M5-03 step 4 (approvals table). Step 5 (Cognito owner user) is owner-only: write it under Waiting for owner when reached.
 1. **M4-05:** live-model EV-05/07 (needs analyst SQL generation) and an ops record run for real EV-10 latency, then tick M4-05.
 3. **M2-04 (daily check, not a task):** run ops `verify-backfill` once a day and read `finops.json`. Last check 2026-11-09 17:29 UTC: `awaiting_first_export` (AWS FOCUS export still empty). When `status` is `ok`, wire `MC_FINOPS_FOCUS_GLOB` if still needed and tick M2-04. Everything else in M2-04 is done.
 
@@ -24,6 +24,7 @@ Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s duri
 ## 2026-11-10 (autopilot run 93)
 
 - **Task:** M5-04 step 2b. PR `auto/m5-04-wire-realized`: `run_m2` mode `all` with `--approvals` also writes `s5_realized/realized_cost.parquet` (baseline telemetry vs approvals). Without approvals nothing changes. Simulator `test_m5_realized` 5 passed, ruff clean. Main `ci` and deploy from run 92 were green at start. Cost $0.
+- **Task 2:** M5-04 step 2c. PR `auto/m5-04-fct-realized`: dbt `stg_m2_realized` + gold `fct_realized_margin` (cost side; only rows past the 14-day window count as realized), enabled when the landing has `s5_realized/`. Pipelines silver tests 26 passed, ruff clean. Task 1 (PR #208) merged, `ci` and `deploy to dev` green. Cost $0.
 
 ## 2026-11-10 (autopilot run 92)
 
