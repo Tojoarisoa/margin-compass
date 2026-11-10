@@ -12,7 +12,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-0. **M5-02 step 3:** PG-7 renewal calendar with playbooks (from `fct_actions` ACT-3 renewals; add `renewal_date` to `actions.json`), then tick M5-02. Owner-mode approvals wait for Cognito (M5-03).
+0. **M5-03:** owner mode (Cognito) so approvals reach the simulator. Plan it first: Cognito and any IAM must stay `mc-*` scoped with no `*` actions (else §8.3 hard stop); split into PR-sized steps.
 1. **M4-05:** live-model EV-05/07 (needs analyst SQL generation) and an ops record run for real EV-10 latency, then tick M4-05.
 3. **M2-04 (daily check, not a task):** run ops `verify-backfill` once a day and read `finops.json`. Last check 2026-11-09 17:29 UTC: `awaiting_first_export` (AWS FOCUS export still empty). When `status` is `ok`, wire `MC_FINOPS_FOCUS_GLOB` if still needed and tick M2-04. Everything else in M2-04 is done.
 
@@ -20,6 +20,11 @@ Resolved 2026-11-09: CI on main after #184 failed because of a GitHub Actions ou
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed; prompt caching shows 0 cache-read tokens (prompts ~1.5k tokens, likely under the cache minimum).
 Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s during image builds: re-run the failed job.
+
+## 2026-11-10 (autopilot run 89)
+
+- **Task:** M5-02 step 3. PR `auto/m5-02-renewal-calendar`: `actions.json` carries `renewal_date` for renewal actions (not in `fct_actions`); the Action Center shows a renewal calendar with a playbook per account. Agents nightly tests 10 passed, ruff clean, dashboard build clean. M5-02 ticked on merge.
+- **Decisions (§8.2):** playbook text is generic and static; no new data or cost. Cost $0.
 
 ## 2026-11-10 (autopilot run 88)
 

@@ -85,6 +85,16 @@ def test_deteriorating_margin_and_renewals(tmp_path):
     # 10 points of 2,800 revenue over 28 days, scaled to 30 days
     assert acts["t1/margin-trend"].impact_usd_month == Decimal("300.00")
     assert acts["t1/renewal"].approver == "revops_lead" and "30 days" in acts["t1/renewal"].title
+    assert acts["t1/renewal"].renewal_date == "2026-11-30" and acts["t1/margin-trend"].renewal_date == ""
+
+
+def test_queue_carries_renewal_date_only_for_renewals(tmp_path):
+    root = tmp_path
+    gold = _gold_trend(tmp_path)
+    nightly.write(root, "r1")
+    q = {a["target"]: a for a in json.loads((root / "publish" / "latest" / "actions.json").read_text())["actions"]}
+    assert q["t1/renewal"]["renewal_date"] == "2026-11-30" and "renewal_date" not in q["t1/margin-trend"]
+    assert "renewal_date" not in pq.read_table(gold / "fct_actions.parquet").column_names
 
 
 def test_plan_below_target_drafts_a_pricing_action(tmp_path):

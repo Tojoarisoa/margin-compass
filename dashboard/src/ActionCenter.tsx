@@ -5,7 +5,7 @@ import { money } from "./format";
 
 interface QueueAction {
   action_id: string; action_type: string; target: string; title: string; impact_usd_month: string; confidence: string;
-  effort: number; quality_impact: string; risk: string; status: string; approver: string; assumptions: string; insight?: string;
+  effort: number; quality_impact: string; risk: string; status: string; approver: string; assumptions: string; insight?: string; renewal_date?: string;
 }
 interface Queue { actions: QueueAction[]; data_label?: string }
 type Decision = { choice: "approved" | "rejected"; rationale: string };
@@ -34,6 +34,15 @@ export function waterfall(actions: { action_id: string; impact_usd_month: string
   return { identified, approved, rejected, pending: identified - approved - rejected };
 }
 
+/** Renewal actions sorted by due date, with whole days from `today` (UTC dates, so the result doesn't depend on the time zone). */
+export function renewalCalendar<T extends { renewal_date?: string }>(actions: T[], today: Date): (T & { days: number })[] {
+  const t0 = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
+  return actions
+    .filter((a): a is T & { renewal_date: string } => !!a.renewal_date && !Number.isNaN(Date.parse(a.renewal_date)))
+    .map((a) => ({ ...a, days: Math.round((Date.parse(a.renewal_date) - t0) / 86_400_000) }))
+    .sort((x, y) => x.days - y.days);
+}
+
 export default function ActionCenter() {
   const [queue, setQueue] = useState<QueueAction[] | null>(null);
   const [failed, setFailed] = useState(false);
@@ -55,6 +64,7 @@ export default function ActionCenter() {
 
   const shown = queue.filter((a) => role === "all" || a.approver === role);
   const w = waterfall(queue, decisions);
+  const renewals = renewalCalendar(queue, new Date());
   const decide = (id: string, choice: Decision["choice"]) => {
     setDecisions((d) => ({ ...d, [id]: { choice, rationale: (draft[id] ?? "").trim() } }));
   };
@@ -68,6 +78,25 @@ export default function ActionCenter() {
         <div className="tile"><div className="tile-label">Still pending</div><div className="tile-value">{money(w.pending)}</div></div>
         <div className="tile"><div className="tile-label">Realized</div><div className="tile-value">n/a</div><div className="tile-note">needs the closed loop (M5-04)</div></div>
       </section>
+      {renewals.length > 0 && (
+        <section aria-label="Renewal calendar">
+          <h3>Renewal calendar</h3>
+          <table>
+            <thead><tr><th>Renews</th><th>In</th><th>Account</th><th>At stake / month</th><th>Playbook</th></tr></thead>
+            <tbody>
+              {renewals.map((r) => (
+                <tr key={r.action_id}>
+                  <td>{r.renewal_date}</td>
+                  <td>{r.days < 0 ? `${-r.days} days ago` : `${r.days} days`}</td>
+                  <td>{r.target.split("/")[0]}</td>
+                  <td>{r.impact_usd_month}</td>
+                  <td>Review 28-day margin and usage; propose a fair-use cap or price within the discount-authority matrix; {ROLE_LABEL[r.approver] ?? r.approver} signs off</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      )}
       <p>
         <label>Approver queue{" "}
           <select value={role} onChange={(e) => setRole(e.target.value)}>

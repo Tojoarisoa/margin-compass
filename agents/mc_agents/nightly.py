@@ -59,6 +59,7 @@ class Action:
     status: str
     approver: str
     assumptions: str
+    renewal_date: str = ""  # ISO date, only for renewal actions; shown in the Action Center calendar, not stored in the mart
 
 
 def _q(x: Decimal) -> Decimal:
@@ -71,10 +72,10 @@ def _money(x: Decimal) -> str:
 
 
 def _action(run_id: str, kind: str, target: str, title: str, impact: Decimal, confidence: Decimal, effort: int,
-            quality: str, risk: str) -> Action:
+            quality: str, risk: str, renewal_date: str = "") -> Action:
     aid = "act-" + hashlib.sha256(f"{run_id}|{kind}|{target}".encode()).hexdigest()[:12]
     return Action(aid, run_id, kind, target, title, _q(impact), confidence, effort, _q(impact * confidence / effort),
-                  quality, risk, "proposed", APPROVER[kind], ASSUMPTIONS)
+                  quality, risk, "proposed", APPROVER[kind], ASSUMPTIONS, renewal_date)
 
 
 def _leak_actions(con: duckdb.DuckDBPyConnection, gold: Path, run_id: str) -> list[Action]:
@@ -227,7 +228,7 @@ def _renewal_actions(con, gold: Path, run_id: str) -> list[Action]:
         out.append(_action(run_id, "ACT-3", f"{tenant}/renewal",
                            f"{tenant} renews in {days} days with a {now:.1f}% margin; prepare the renewal terms "
                            "(fair-use cap or price) within the discount-authority matrix",
-                           gap, Decimal("0.50"), 2, "No change to the product", "medium"))
+                           gap, Decimal("0.50"), 2, "No change to the product", "medium", due.isoformat()))
     return out
 
 
@@ -263,6 +264,7 @@ def build_queue(actions: list[Action], run_id: str, insights: dict[str, str] | N
                          "impact_usd_month": _money(a.impact_usd_month), "confidence": str(a.confidence), "effort": a.effort,
                          "quality_impact": a.quality_impact, "risk": a.risk, "status": a.status, "approver": a.approver,
                          "assumptions": a.assumptions,
+                         **({"renewal_date": a.renewal_date} if a.renewal_date else {}),
                          **({"insight": insights[a.action_id]} if insights and a.action_id in insights else {})}
                         for a in actions]}
 
@@ -286,7 +288,7 @@ def write(data_root: Path, run_id: str, client=None) -> list[str]:
             insights = {i.action_id: i.text for i in res.insights}
         except Exception:  # noqa: BLE001 - the deterministic brief must still be written
             insights = {}
-    table = pa.Table.from_pylist([asdict(a) for a in actions], schema=SCHEMA.with_metadata({b"synthetic": b"true"}))
+    table = pa.Table.from_pylist([{k: v for k, v in asdict(a).items() if k != "renewal_date"} for a in actions], schema=SCHEMA.with_metadata({b"synthetic": b"true"}))
     pq.write_table(table, root / "gold" / "fct_actions.parquet", compression="zstd")
     out = root / "publish" / "latest" / "margin_brief.json"
     out.parent.mkdir(parents=True, exist_ok=True)
