@@ -67,7 +67,6 @@ def run_m2(
     from . import m2_writer
     from .m2_run import generate_patterned
     from .m2_tenants import MONTHS, generate_m2_tenants
-
     from .m5_effects import load_approvals
 
     seed = 42 if seed is None else seed
