@@ -29,3 +29,13 @@ def test_batch_shift_saves_money_only_after_approval_and_window_labels():
 
 def test_deterministic():
     assert realized_by_action(_rows(), [A], 7) == realized_by_action(_rows(), [A], 7)
+
+
+def test_write_realized(tmp_path):
+    import pyarrow.parquet as pq
+    from booncore_sim.m2_writer import write_realized
+
+    assert write_realized(tmp_path, 42, _rows(), []) == []
+    files = write_realized(tmp_path, 42, _rows(), [A])
+    t = pq.read_table(tmp_path / files[0]["path"])
+    assert t.num_rows == files[0]["rows"] > 0 and {"action_id", "saved_usd", "status"} <= set(t.column_names)

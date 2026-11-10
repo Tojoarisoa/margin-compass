@@ -99,3 +99,13 @@ def write_manifest(out_dir: Path, seed: int, files: list[dict]) -> dict:
 
 
 __all__ = ["write_month", "write_static", "write_focus", "write_revenue", "write_manifest"]
+
+
+def write_realized(out_dir: Path, seed: int, telemetry: list, approvals: list) -> list[dict]:
+    """M5-04: realized cost effect per approved action and day (`m5_realized`). No approvals writes nothing."""
+    from .m5_realized import realized_by_action
+
+    rows = realized_by_action(telemetry, approvals, seed)
+    if not rows:
+        return []
+    return [_write(out_dir, "s5_realized/realized_cost.parquet", rows, seed, "realized cost")]
