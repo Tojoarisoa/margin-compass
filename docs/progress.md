@@ -12,7 +12,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-0. **M5-04 step 2e:** run an approved M2 build with ops to check it end to end, then KPI-01/-02/-09/-13 from it and tick M5-04. After that M5-03 step 4 (approvals table). Step 5 (Cognito owner user) is owner-only: write it under Waiting for owner when reached.
+0. **M5-04 step 3:** make KPI-01, -02, -09, -13 read `fct_realized_margin` (publish the realized totals in the snapshot and show them on the dashboard), then tick M5-04. Then M5-03 step 4 (approvals table). Step 5 (Cognito owner user) is owner-only: write it under Waiting for owner when reached.
 1. **M4-05:** live-model EV-05/07 (needs analyst SQL generation) and an ops record run for real EV-10 latency, then tick M4-05.
 3. **M2-04 (daily check, not a task):** run ops `verify-backfill` once a day and read `finops.json`. Last check 2026-11-09 17:29 UTC: `awaiting_first_export` (AWS FOCUS export still empty). When `status` is `ok`, wire `MC_FINOPS_FOCUS_GLOB` if still needed and tick M2-04. Everything else in M2-04 is done.
 
@@ -20,6 +20,11 @@ Resolved 2026-11-09: CI on main after #184 failed because of a GitHub Actions ou
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed; prompt caching shows 0 cache-read tokens (prompts ~1.5k tokens, likely under the cache minimum).
 Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s during image builds: re-run the failed job.
+
+## 2026-11-10 (autopilot run 95)
+
+- **Task:** M5-04 step 2e. PR #211 (ops `realized-check`, local data, no AWS or model calls) merged (every `ci` job green, `attribution` green after footer removal via MCP), main `ci` and `deploy to dev` green. Ops run 42806523928 succeeded: baseline plus 6 approved actions (top ACT-1/ACT-3 by score, approved 2025-07-01), dbt passed, `fct_realized_margin` has 1058 realized rows ($81,517.48 saved, revenue delta $0 because no churn among the picked) and 6 pending_verification. M5-04 not ticked (KPIs not wired yet). Cost $0.
+- **Decisions (§8.2):** approved top 6 by score for the check; revenue delta 0 is expected when no ACT-3 account churned.
 
 ## 2026-11-10 (autopilot run 94)
 
