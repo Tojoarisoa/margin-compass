@@ -1,0 +1,46 @@
+{
+  "calls": [
+    {
+      "request_sha": "d28457187c90134d7670d4c584a1a0128ed7afb145814b41bdd83ba737d84b90",
+      "response": {
+        "content": [
+          {
+            "toolUse": {
+              "input": {
+                "sql": "\nSELECT COUNT(*) as tenant_feature_days_under_20pct\nFROM fct_tenant_margin\nWHERE gross_margin_pct < 0.2\n"
+              },
+              "name": "query_gold",
+              "toolUseId": "tooluse_Ze9V39oU0pZ2dIkMTtmYjM",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 831,
+          "outputTokens": 92
+        }
+      }
+    },
+    {
+      "request_sha": "beb5ddb2c11e5d37f312c5b86b4d542776336c573d952bc801e3bc2b77df43b4",
+      "response": {
+        "content": [
+          {
+            "text": "There are **0 tenant-feature-days with a gross margin under 20%** [E1]. All records in the margin data have gross margins at or above the 20% threshold."
+          }
+        ],
+        "stop_reason": "end_turn",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 1022,
+          "outputTokens": 44
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "specialists-v1",
+  "question_id": "low-margin-rows"
+}

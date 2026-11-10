@@ -1,0 +1,46 @@
+{
+  "calls": [
+    {
+      "request_sha": "ae10a110b8a985f95ea6c7323854962fd981e318f031cbe33c750080b24e0d98",
+      "response": {
+        "content": [
+          {
+            "toolUse": {
+              "input": {
+                "sql": "SELECT SUM(llm_cost_usd) AS total_llm_cost FROM fct_tenant_margin"
+              },
+              "name": "query_gold",
+              "toolUseId": "tooluse_JwGYtXOKmqQauaN18eRrJS",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 824,
+          "outputTokens": 79
+        }
+      }
+    },
+    {
+      "request_sha": "6d54058fba8f1a9551170239d3dee3e92978d4cd77769dcfbcadbaf9520b209f",
+      "response": {
+        "content": [
+          {
+            "text": "The total LLM cost is **$1,985.803252** [E1]."
+          }
+        ],
+        "stop_reason": "end_turn",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 985,
+          "outputTokens": 23
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "specialists-v1",
+  "question_id": "total-llm-cost"
+}

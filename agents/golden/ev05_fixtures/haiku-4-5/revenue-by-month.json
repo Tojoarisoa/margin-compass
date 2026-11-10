@@ -1,0 +1,49 @@
+{
+  "calls": [
+    {
+      "request_sha": "103b31e3de914de17bc9d7d2b5714266de0ff34a69800d0151b9d2602bdd5c8e",
+      "response": {
+        "content": [
+          {
+            "text": "I'll query the gold mart to get the AI revenue by month."
+          },
+          {
+            "toolUse": {
+              "input": {
+                "sql": "\nSELECT \n  CAST(date_trunc('month', margin_date) AS DATE) AS month,\n  SUM(ai_revenue_usd) AS total_ai_revenue_usd\nFROM fct_tenant_margin\nGROUP BY CAST(date_trunc('month', margin_date) AS DATE)\nORDER BY month\n"
+              },
+              "name": "query_gold",
+              "toolUseId": "tooluse_ZA0agVuGvZ6Wq1xa9OzUDp",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 823,
+          "outputTokens": 146
+        }
+      }
+    },
+    {
+      "request_sha": "0339ab3d2ff39e9368b51cbde16107b732d3f550af4b238c042bef11098842b7",
+      "response": {
+        "content": [
+          {
+            "text": "Based on the data [E1], AI revenue per month is:\n\n- **August 2025**: $45,534.28\n- **September 2025**: $45,534.28\n- **October 2025**: $42,596.76\n\nRevenue remained flat through August and September, then declined by approximately $2,937 in October."
+          }
+        ],
+        "stop_reason": "end_turn",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 1148,
+          "outputTokens": 80
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "specialists-v1",
+  "question_id": "revenue-by-month"
+}

@@ -1,0 +1,46 @@
+{
+  "calls": [
+    {
+      "request_sha": "fd6e7fbf807b7906b8cf4b0b294403da9e7d02b720f8eeced1d1155c20307212",
+      "response": {
+        "content": [
+          {
+            "toolUse": {
+              "input": {
+                "sql": "\nSELECT \n  tenant_id,\n  SUM(gross_margin_usd) as total_gross_margin_usd\nFROM fct_tenant_margin\nGROUP BY tenant_id\nORDER BY total_gross_margin_usd DESC\nLIMIT 5\n"
+              },
+              "name": "query_gold",
+              "toolUseId": "tooluse_c4hQ63y9VLodaafyhOS8vf",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 828,
+          "outputTokens": 115
+        }
+      }
+    },
+    {
+      "request_sha": "03ccbd0985a34deca5800ff7b459ca663c52fe43824e72043be325c1c75e384a",
+      "response": {
+        "content": [
+          {
+            "text": "The 5 tenants with the highest total gross margin are [E1]:\n\n1. **bc-t0002**: $22,048.72\n2. **bc-t0001**: $17,514.92\n3. **bc-t0004**: $16,159.13\n4. **bc-t0011**: $14,862.12\n5. **bc-t0003**: $11,145.23"
+          }
+        ],
+        "stop_reason": "end_turn",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 1136,
+          "outputTokens": 100
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "specialists-v1",
+  "question_id": "top-tenants-margin"
+}

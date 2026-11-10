@@ -1,0 +1,49 @@
+{
+  "calls": [
+    {
+      "request_sha": "2a45c732e362367f7bb0f5ea80093c16c23aeb04fc7a5bc952790a50c2bf6d8f",
+      "response": {
+        "content": [
+          {
+            "text": "I'll query the data to get the request count for each feature."
+          },
+          {
+            "toolUse": {
+              "input": {
+                "sql": "\nSELECT feature_id, SUM(request_count) as total_requests\nFROM fct_tenant_margin\nGROUP BY feature_id\nORDER BY total_requests DESC\n"
+              },
+              "name": "query_gold",
+              "toolUseId": "tooluse_nkWKoG9BwbIaT3NLo36Cdx",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 823,
+          "outputTokens": 106
+        }
+      }
+    },
+    {
+      "request_sha": "901ea2f2530235a5db81107d0d883da9ae9e1cf2e894587f6d979f6a9be32546",
+      "response": {
+        "content": [
+          {
+            "text": "Feature F1 served 205,783 total requests [E1]. This is the only feature present in the current dataset. The request count represents the cumulative volume across all tenants and dates in the margin data."
+          }
+        ],
+        "stop_reason": "end_turn",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 1032,
+          "outputTokens": 49
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "specialists-v1",
+  "question_id": "requests-per-feature"
+}

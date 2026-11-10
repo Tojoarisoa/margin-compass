@@ -1,0 +1,46 @@
+{
+  "calls": [
+    {
+      "request_sha": "b511bd3b592a5a4a18d4e4b9f7e084e02866c6864ca09a2b48c69469f6ebec31",
+      "response": {
+        "content": [
+          {
+            "toolUse": {
+              "input": {
+                "sql": "SELECT COUNT(DISTINCT tenant_id) AS distinct_tenants FROM fct_tenant_margin"
+              },
+              "name": "query_gold",
+              "toolUseId": "tooluse_Yq5OKuMe6aWbNx5scxOZW0",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 824,
+          "outputTokens": 74
+        }
+      }
+    },
+    {
+      "request_sha": "e3f38822a60eb6145e1bc6cde040c3bd339478e3d3790d8be5b98802b01515e9",
+      "response": {
+        "content": [
+          {
+            "text": "There are **20 distinct tenants** with margin rows in the fct_tenant_margin table [E1]."
+          }
+        ],
+        "stop_reason": "end_turn",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 967,
+          "outputTokens": 28
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "specialists-v1",
+  "question_id": "tenant-count"
+}
