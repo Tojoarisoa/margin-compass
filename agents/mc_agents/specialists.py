@@ -48,7 +48,7 @@ def tool_specs(spec: Specialist, extra: dict[str, registry.ToolSpec] | None = No
         t = registry.TOOLS.get(name) or (extra or {}).get(name)
         if t is not None:  # a tool needing runtime dependencies is offered only when supplied
             out.append({"toolSpec": {"name": name, "description": t.description,
-                                     "inputSchema": {"json": {"type": "object"}}}})
+                                     "inputSchema": {"json": t.input_schema or {"type": "object"}}}})
     return out
 
 

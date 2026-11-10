@@ -26,6 +26,7 @@ class ToolSpec:
     description: str
     fn: Callable[[dict[str, Any]], dict[str, Any]]
     read_only: bool = True
+    input_schema: dict[str, Any] | None = None  # JSON schema offered to the model (None: a bare object)
 
 
 TOOLS: dict[str, ToolSpec] = {t.name: t for t in (
@@ -43,9 +44,14 @@ def search_knowledge_spec(**deps: Any) -> ToolSpec:
 
 
 def query_gold_spec(gold_dir: Any) -> ToolSpec:
-    from mc_agents.tools.sql_guard import make_query_gold
-    return ToolSpec("query_gold", "1", "Guarded read-only SELECT over the gold marts (allow-listed tables, row cap).",
-                    make_query_gold(gold_dir))
+    from mc_agents.tools.sql_guard import make_query_gold, mart_columns
+    marts = "; ".join(f"{m}({', '.join(cols)})" for m, cols in mart_columns(gold_dir).items())
+    return ToolSpec("query_gold", "2", "Guarded read-only DuckDB SELECT over the gold marts (allow-listed tables, "
+                    f"200-row cap). Pass one SELECT in `sql`. Tables and columns: {marts}.",
+                    make_query_gold(gold_dir),
+                    input_schema={"type": "object", "properties": {"sql": {
+                        "type": "string", "description": "One DuckDB SELECT over the listed tables only."}},
+                        "required": ["sql"]})
 
 
 def catalog() -> list[dict[str, Any]]:

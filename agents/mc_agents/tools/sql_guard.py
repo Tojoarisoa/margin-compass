@@ -67,6 +67,18 @@ def check_sql(sql: str, allowed: set[str] | frozenset[str] = frozenset(MARTS)) -
     return sql
 
 
+def mart_columns(gold_dir: Path) -> dict[str, list[str]]:
+    """Column names of each allow-listed mart present in `gold_dir` (read from the parquet schema), so
+    the model is told the real tables instead of guessing them (EV-05)."""
+    gold = Path(gold_dir)
+    out = {}
+    for m in MARTS:
+        path = gold / f"{m}.parquet"
+        if path.exists():
+            out[m] = [r[0] for r in duckdb.sql(f"DESCRIBE SELECT * FROM read_parquet('{path}')").fetchall()]
+    return out
+
+
 def make_query_gold(gold_dir: Path, *, max_rows: int = MAX_ROWS) -> Callable[[dict[str, Any]], dict[str, Any]]:
     gold = Path(gold_dir)
     present = {m for m in MARTS if (gold / f"{m}.parquet").exists()}

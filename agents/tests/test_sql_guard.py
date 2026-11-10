@@ -51,7 +51,7 @@ def test_runtime_errors_are_tool_errors(q):
 def test_registry_records_evidence(gold):
     ledger = Ledger()
     ev = registry.call("query_gold", {"sql": "SELECT 1 AS one"}, ledger, extra={"query_gold": registry.query_gold_spec(gold)})
-    assert ev.tool == "query_gold@1" and len(ledger.entries) == 1
+    assert ev.tool == "query_gold@2" and len(ledger.entries) == 1
     with pytest.raises(ToolError):
         registry.call("query_gold", {"sql": "DROP TABLE dim_tenant"}, ledger, extra={"query_gold": registry.query_gold_spec(gold)})
     assert len(ledger.entries) == 1
@@ -61,3 +61,13 @@ def test_cannot_read_outside_gold(q, tmp_path):
     # table functions are rejected by the parser guard; the session also blocks file access as a second layer
     with pytest.raises(ToolError):
         q({"sql": "SELECT * FROM read_csv('/etc/passwd')"})
+
+
+def test_query_gold_spec_tells_the_model_sql_and_tables(gold):
+    # EV-05 record run 42876410156: with a bare object schema the model sent `query` and invented tables
+    from mc_agents.specialists import SPECIALISTS, tool_specs
+
+    spec = tool_specs(SPECIALISTS["cost_to_serve"], {"query_gold": registry.query_gold_spec(gold)})[0]["toolSpec"]
+    schema = spec["inputSchema"]["json"]
+    assert schema["required"] == ["sql"] and schema["properties"]["sql"]["type"] == "string"
+    assert "fct_tenant_margin(" in spec["description"] and "tenant_feature_days" not in spec["description"]
