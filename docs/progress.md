@@ -12,7 +12,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-0. **M5-01 (next step):** `nightly.write(..., client=)` investigates with an LLM and adds `insight` to the brief, but nothing passes a client yet. Add an ops task (or flag) that runs the nightly with Bedrock Haiku 4.5 (read-only invoke already granted to ops), a replay fixture for CI, and show `insight` on the dashboard brief card. Then tick M5-01 and start M5-02.
+0. **M5-01 (next step):** the ops `nightly-insight` run (42730587842, Haiku 4.5, live) succeeded, but the sandbox can't read the job summary, so the insight count is unverified (the step prints it only to the summary). Next: print the JSON line to the job log too, read it, and check the brief card on the dev dashboard with a published brief that has insights; then tick M5-01 and start M5-02.
 1. **M4-05:** live-model EV-05/07 (needs analyst SQL generation) and an ops record run for real EV-10 latency, then tick M4-05.
 2. **M5-01 (old note, superseded by 0).**
 3. **M2-04 (daily check, not a task):** run ops `verify-backfill` once a day and read `finops.json`. Last check 2026-11-09 17:29 UTC: `awaiting_first_export` (AWS FOCUS export still empty). When `status` is `ok`, wire `MC_FINOPS_FOCUS_GLOB` if still needed and tick M2-04. Everything else in M2-04 is done.
@@ -21,6 +21,11 @@ Resolved 2026-11-09: CI on main after #184 failed because of a GitHub Actions ou
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed; prompt caching shows 0 cache-read tokens (prompts ~1.5k tokens, likely under the cache minimum).
 Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s during image builds: re-run the failed job.
+
+## 2026-11-10 (autopilot run 85)
+
+- **Task:** M5-01 step 8. PR #194 (`mc-agents nightly [--live]`, ops task `nightly-insight`, `insight` shown under each action on the brief card) merged: every `ci` job green, `attribution` green after footer removal via MCP. It broke `ops.yml` (a colon in a step name made the YAML invalid); PR #195 fixed it, merged, `ci` and `deploy to dev` green. Ops `nightly-insight` live run succeeded; cost under $0.01 expected (capped $0.50), exact spend not read. M5-01 not ticked.
+- **Decisions (§8.2):** Haiku 4.5; ops runs on simulated local data, not the published bucket.
 
 ## 2026-11-09 (autopilot run 84)
 
