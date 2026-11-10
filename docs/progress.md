@@ -12,7 +12,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-0. **M5-02:** PG-7 Action Center with visitor-sandbox approvals and role-based queues (owner-mode approvals wait for Cognito, M5-03; start with the sandbox queue). Split into PR-sized steps.
+0. **M5-02 step 3:** PG-7 renewal calendar with playbooks (from `fct_actions` ACT-3 renewals; add `renewal_date` to `actions.json`), then tick M5-02. Owner-mode approvals wait for Cognito (M5-03).
 1. **M4-05:** live-model EV-05/07 (needs analyst SQL generation) and an ops record run for real EV-10 latency, then tick M4-05.
 3. **M2-04 (daily check, not a task):** run ops `verify-backfill` once a day and read `finops.json`. Last check 2026-11-09 17:29 UTC: `awaiting_first_export` (AWS FOCUS export still empty). When `status` is `ok`, wire `MC_FINOPS_FOCUS_GLOB` if still needed and tick M2-04. Everything else in M2-04 is done.
 
@@ -20,6 +20,11 @@ Resolved 2026-11-09: CI on main after #184 failed because of a GitHub Actions ou
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed; prompt caching shows 0 cache-read tokens (prompts ~1.5k tokens, likely under the cache minimum).
 Notes: owner-mode approvals wait for Cognito (M5-03). Flaky github.com 504s during image builds: re-run the failed job.
+
+## 2026-11-10 (autopilot run 88)
+
+- **Task:** M5-02 steps 1 and 2. PR #199: the nightly review also publishes `publish/latest/actions.json` (all actions with approver, risk, assumptions). PR #200: dashboard Action Center (approver-role queues, sandbox Approve/Reject with rationale, local waterfall identified/approved/rejected/pending, realized n/a until M5-04). Both: every `ci` job green, `attribution` green after footer removal via MCP, merged, `deploy to dev` green. M5-02 not ticked (renewal calendar left).
+- **Decisions (§8.2):** decisions stay in the browser (no write API, PLAN §9.3). Cost $0.
 
 ## 2026-11-10 (autopilot run 87)
 
