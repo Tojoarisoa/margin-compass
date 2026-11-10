@@ -11,6 +11,7 @@ const Leaks = lazy(() => import("./Leaks"));
 const PlanDesigner = lazy(() => import("./PlanDesigner"));
 const LeverLab = lazy(() => import("./LeverLab"));
 const CostQualityLab = lazy(() => import("./CostQualityLab"));
+const ActionCenter = lazy(() => import("./ActionCenter"));
 const About = lazy(() => import("./About"));
 
 function Tile({ label, value, note }: { label: string; value: string; note?: string }) {
@@ -30,6 +31,7 @@ export function App() {
   const [showHealth, setShowHealth] = useState(false);
   const [showLeaks, setShowLeaks] = useState(false);
   const [showPlans, setShowPlans] = useState(false);
+  const [showActions, setShowActions] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
 
   useEffect(() => {
@@ -144,6 +146,17 @@ export function App() {
       )}
 
       {snap.m2_kpis && <BriefCard />}
+
+      {snap.m2_kpis && (
+        <section className="card" aria-labelledby="actions-title">
+          <h2 id="actions-title">Action Center</h2>
+          {showActions ? (
+            <Suspense fallback={<p className="muted">Loading actions…</p>}><ActionCenter /></Suspense>
+          ) : (
+            <button onClick={() => setShowActions(true)}>Open action queues</button>
+          )}
+        </section>
+      )}
 
       {snap.m2_kpis && (
         <section className="card" aria-labelledby="explore-title">
