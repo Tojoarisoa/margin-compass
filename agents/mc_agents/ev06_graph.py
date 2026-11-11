@@ -26,7 +26,7 @@ from pathlib import Path
 from typing import Any
 
 from .ev06 import ev06
-from .ev06_judge import judgeable
+from .ev06_judge import judgeable, recorded
 from .ev_scenarios import load_scenarios
 
 FIXTURES = Path(__file__).resolve().parent.parent / "golden" / "ev06_graph_fixtures"
@@ -83,9 +83,10 @@ def graph_runner(make_client: Callable[[str], Any], gold_dir: Path, model_key: s
     return run
 
 
-def default_scenarios() -> list[dict[str, Any]]:
-    """The scenarios with no recorded outcome (the judge's `not_judged` list)."""
-    return [s for s in load_scenarios() if not judgeable(s)]
+def default_scenarios(include_unrecorded: bool = False) -> list[dict[str, Any]]:
+    """The scenarios with no recorded outcome (the judge's `not_judged` list). Replay skips the ones marked
+    `"recorded": false` (no graph fixture yet); record and live runs include them."""
+    return [s for s in load_scenarios() if not judgeable(s) and (include_unrecorded or recorded(s))]
 
 
 def run_graph(gold_dir: Path, model_key: str, mode: str = "replay", fixtures_dir: Path = FIXTURES,
@@ -96,7 +97,7 @@ def run_graph(gold_dir: Path, model_key: str, mode: str = "replay", fixtures_dir
     from .specialists import PROMPT_VERSION
 
     spec = MODELS[model_key]
-    scs = scenarios if scenarios is not None else default_scenarios()
+    scs = scenarios if scenarios is not None else default_scenarios(include_unrecorded=mode != "replay")
     recorders: list[tuple[str, Any]] = []
 
     def make_client(sid: str) -> Any:
