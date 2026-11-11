@@ -142,12 +142,12 @@ def test_recorded_graph_fixtures_replay(gold):
     Step 3c-3c (specialists-v2, AG-05 tool schemas): re-recorded by ops run 42952528429. prc-04..06 now call
     price_plan but end unverified; act-01..04 still call no tool.
 
-    Step 3c-3d (specialists-v3, price_plan v2, verifier feedback on retry): the 13 scenarios below drift (each
-    scored as a fail; all 13 failed before) until the next ops record run.
+    Step 3c-3d (specialists-v3, price_plan v2, verifier feedback on retry): re-recorded by ops run 42958775085,
+    still 10/27. prc-04 now makes one price_plan call but quotes "5%" and an assumed 200 it never passed; prc-06
+    sends a partial plan (rejected); act-01..06 still ask for details. All end capped.
     """
     rep = run_graph(gold, "haiku-4-5", "replay")
     assert set(rep["runs"]) == {s["id"] for s in default_scenarios()}
-    assert rep["drifted"] == ["act-01", "act-02", "act-03", "act-04", "act-05", "act-06", "eff-06", "gov-03",
-                              "gov-05", "leak-04", "prc-04", "prc-05", "prc-06"]
+    assert rep["drifted"] == []
     assert round(rep["ev06"] * 27) == 10 and not rep["passed"]
     assert rep["runs"]["eff-04"] == {"route": "efficiency", "tools": ["query_gold"], "status": "answered"}

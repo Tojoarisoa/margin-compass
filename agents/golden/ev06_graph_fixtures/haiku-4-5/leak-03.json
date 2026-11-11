@@ -13,7 +13,7 @@
                 "sql": "\nSELECT \n  margin_date,\n  feature_id,\n  ai_revenue_usd,\n  llm_cost_usd,\n  cost_to_serve_usd,\n  gross_margin_usd,\n  gross_margin_pct,\n  request_count\nFROM fct_tenant_margin\nWHERE feature_id = 'support'\nORDER BY margin_date DESC\nLIMIT 10\n"
               },
               "name": "query_gold",
-              "toolUseId": "tooluse_6ghW6e92hVpf49zP7xHsxl",
+              "toolUseId": "tooluse_bDNY2f0ktBFxqYfsoVCHiI",
               "type": "tool_use"
             }
           }
@@ -27,7 +27,7 @@
       }
     },
     {
-      "request_sha": "9c6c16f6886922c100ba6b118dd3529e2f13c4171d682451c3d1f3f69a3eb732",
+      "request_sha": "5e4e7cb2d147773f00ebc4bc160df6f1eeeba653490ae052f631348888943592",
       "response": {
         "content": [
           {
@@ -39,7 +39,7 @@
                 "sql": "\nSELECT DISTINCT feature_id\nFROM fct_tenant_margin\nLIMIT 20\n"
               },
               "name": "query_gold",
-              "toolUseId": "tooluse_0Zg7FU3qFqBNs3zwGBVwUb",
+              "toolUseId": "tooluse_EVam0NBlIgcyhsct5JGrIM",
               "type": "tool_use"
             }
           }
@@ -53,7 +53,7 @@
       }
     },
     {
-      "request_sha": "7d480ecb3faba6ab537dbc1bf7629ceffa79cd8c95ee9da449c6126d0fee513c",
+      "request_sha": "1bde563f889004d2c92993ac84042e3d22345eeeefec4e5036b9dafd901224ea",
       "response": {
         "content": [
           {
@@ -65,7 +65,7 @@
                 "sql": "\nSELECT \n  margin_date,\n  feature_id,\n  ai_revenue_usd,\n  llm_cost_usd,\n  cost_to_serve_usd,\n  gross_margin_usd,\n  gross_margin_pct,\n  request_count\nFROM fct_tenant_margin\nWHERE feature_id = 'F1'\nORDER BY margin_date DESC\nLIMIT 10\n"
               },
               "name": "query_gold",
-              "toolUseId": "tooluse_KpoXOTCv037j12F0ulAIR1",
+              "toolUseId": "tooluse_ZYi2IzaNeaq7q4UdOUIQxV",
               "type": "tool_use"
             }
           }
@@ -80,6 +80,6 @@
     }
   ],
   "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
-  "prompt_version": "specialists-v2",
+  "prompt_version": "specialists-v3",
   "scenario_id": "leak-03"
 }

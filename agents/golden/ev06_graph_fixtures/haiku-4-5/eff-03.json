@@ -11,7 +11,7 @@
             "toolUse": {
               "input": {},
               "name": "roi_multiple",
-              "toolUseId": "tooluse_ydkSLIMLJIRVbQfutd2eqs",
+              "toolUseId": "tooluse_j1KuD1Mk2blMHxpu2hC11I",
               "type": "tool_use"
             }
           }
@@ -25,7 +25,7 @@
       }
     },
     {
-      "request_sha": "ac72983b2bf6325167589501b0d9bcfd036c4d815390d39d4ff932f3226075e6",
+      "request_sha": "1503a957921664e8229e209910de8bd5279f964ed8a54aa47e195eae62dc1066",
       "response": {
         "content": [
           {
@@ -37,7 +37,7 @@
                 "sql": "SELECT feature_id, SUM(ai_revenue_usd) as total_revenue, SUM(llm_cost_usd) as total_llm_cost, SUM(gross_margin_usd) as total_margin, AVG(gross_margin_pct) as avg_margin_pct FROM fct_tenant_margin WHERE feature_id LIKE '%cache%' OR feature_id LIKE '%prompt%' GROUP BY feature_id"
               },
               "name": "query_gold",
-              "toolUseId": "tooluse_S2Eukh1tBIFuvo1zMfhnc2",
+              "toolUseId": "tooluse_6aOzlyZG630GT4ACyy6LKN",
               "type": "tool_use"
             }
           }
@@ -51,7 +51,7 @@
       }
     },
     {
-      "request_sha": "aa45793ee1deb90de83f3f707b739b39661f894cb9c08a3ce9f8e32a2d278047",
+      "request_sha": "33d5ffaa66b24ea0e50deaf269cad7a3e8152724ca03e30eeefd077d09791546",
       "response": {
         "content": [
           {
@@ -68,6 +68,6 @@
     }
   ],
   "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
-  "prompt_version": "specialists-v2",
+  "prompt_version": "specialists-v3",
   "scenario_id": "eff-03"
 }

@@ -11,7 +11,7 @@
             "toolUse": {
               "input": {},
               "name": "replay_lever",
-              "toolUseId": "tooluse_oXJTDciDb1TGYfIA5F7t6p",
+              "toolUseId": "tooluse_1mQJBMV7SbvgnsiIrrqveJ",
               "type": "tool_use"
             }
           }
@@ -25,7 +25,7 @@
       }
     },
     {
-      "request_sha": "e2623356640a325b531f2a537063f068b5fe099a8399f91b98c2964243dda4e0",
+      "request_sha": "c89fcd6fc29872f8114c384807a2712945db74f70ff3f20a8d50eae1392fcc16",
       "response": {
         "content": [
           {
@@ -42,6 +42,6 @@
     }
   ],
   "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
-  "prompt_version": "specialists-v2",
+  "prompt_version": "specialists-v3",
   "scenario_id": "eff-05"
 }
