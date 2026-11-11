@@ -2,9 +2,10 @@
 
 - `{"profile": "m2", "step": "month", "month": 0..18}`: simulate one month into `landing/booncore_m2/` in S3.
 - `{"profile": "m2", "step": "static"}`: the month-independent tables (tenants, price catalog, labels, FOCUS, invoices, dimensions).
-- `"approvals": true` (opt-in, M5-03): the static step exports the owner's recorded decisions from the core table
-  (`mc_agents.owner.export_approvals`) to `approvals/approvals.jsonl` in the lake; month steps read that file and apply
-  the closed-loop effects. Without the flag nothing changes.
+- Approvals (opt-in, M5-03): when the backfill's execution input (passed to the static step as `input`) has
+  `"approvals": true`, the static step exports the owner's recorded decisions from the core table
+  (`mc_agents.owner.export_approvals`) to `approvals/approvals.jsonl` in the lake; otherwise it removes that file. Month
+  steps apply the file when it exists, so one execution never mixes runs. Without the flag nothing changes.
 - `{"profile": "m2", "step": "build"}`: pull the landing tree from S3, run the M2 dbt build with gates, and upload
   bronze/silver/gold/publish. Gates failing returns `dbt_failed` and uploads only the quality evidence.
 
@@ -83,13 +84,14 @@ def export_approvals(s3: Any, bucket: str, table: Any, dest: Path) -> int:
 
 
 def fetch_approvals(s3: Any, bucket: str, dest: Path) -> bool:
-    """Copy the exported approvals next to the month chunk; False when the static step has not exported them."""
+    """Copy the exported approvals next to the month chunk; False when this backfill runs without approvals."""
     dest.parent.mkdir(parents=True, exist_ok=True)
     try:
         s3.download_file(bucket, APPROVALS_KEY, str(dest))
-    except Exception as e:  # noqa: BLE001 - reported as a step status, not a crash
-        log.error("approvals_missing", extra={"fields": {"reason": str(e)[:200]}})
-        return False
+    except Exception as e:
+        if "404" in str(e) or "NoSuchKey" in str(e) or "Not Found" in str(e) or isinstance(e, FileNotFoundError):
+            return False
+        raise
     return True
 
 
@@ -149,25 +151,27 @@ def handle(event: dict, run_id: str, s3: Any = None, table: Any = None) -> dict:
         month = event.get("month")
         if step == "month" and (not isinstance(month, int) or not 0 <= month < MONTHS):
             return {"status": "bad_event", "run_id": run_id, "reason": f"month must be an int in 0..{MONTHS - 1}"}
-        approvals_path, decisions = None, None
-        if event.get("approvals") is True:  # M5-03 opt-in: closed-loop effects from the owner's decisions
-            approvals_path = WORK / "approvals.jsonl"
-            if step == "static":
+        approvals_path, decisions = WORK / "approvals.jsonl", None
+        if step == "static":  # M5-03 opt-in: closed-loop effects from the owner's decisions
+            if isinstance(event.get("input"), dict) and event["input"].get("approvals") is True:
                 if table is None:
                     import boto3
 
                     table = boto3.resource("dynamodb").Table(os.environ["REGISTRY_TABLE"])
                 decisions = export_approvals(s3, bucket, table, approvals_path)
                 log.info("approvals_exported", extra={"fields": {"decisions": decisions}})
-            elif bucket and not fetch_approvals(s3, bucket, approvals_path):
-                return {"status": "no_approvals", "run_id": run_id, "month": month}
+            elif bucket:
+                s3.delete_object(Bucket=bucket, Key=APPROVALS_KEY)  # a later run without the flag must not reuse it
+        use_approvals = step == "month" and bool(bucket) and fetch_approvals(s3, bucket, approvals_path)
         manifest = run_m2(seed, landing, step, month if step == "month" else None,
-                          approvals_path if step == "month" else None)
+                          approvals_path if use_approvals else None)
         uploaded = _upload(s3, bucket, landing, LANDING_PREFIX, _extra_args) if bucket else 0
         out = {"status": "success", "run_id": run_id, "step": step, "month": month,
                "files": len(manifest["files"]), "rows": sum(f["rows"] for f in manifest["files"]), "objects_uploaded": uploaded}
         if decisions is not None:
-            out["approvals"] = decisions
+            out["approvals_exported"] = decisions
+        if use_approvals:
+            out["approvals_applied"] = True
         return out
 
     if step == "build":

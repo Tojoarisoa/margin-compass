@@ -22,6 +22,9 @@ class FakeS3:
     def download_file(self, bucket, key, dst):
         shutil.copy(self.root / bucket / key, dst)
 
+    def delete_object(self, Bucket, Key):  # noqa: N803
+        (self.root / Bucket / Key).unlink(missing_ok=True)
+
     def get_paginator(self, _name):
         outer = self
 
@@ -120,12 +123,19 @@ def test_approvals_are_exported_by_static_and_applied_by_months(tmp_path, monkey
         return {"files": []}
 
     monkeypatch.setattr(sim_cli, "run_m2", fake_run_m2)
-    out = m2_lambda.handle({"profile": "m2", "step": "static", "approvals": True}, "r1", s3, table=object())
-    assert out["status"] == "success" and out["approvals"] == 1
+    out = m2_lambda.handle({"profile": "m2", "step": "static", "input": {"approvals": True}}, "r1", s3, table=object())
+    assert out["status"] == "success" and out["approvals_exported"] == 1
     stored = (tmp_path / "s3" / "lake" / m2_lambda.APPROVALS_KEY).read_text()
     assert json.loads(stored) == row
-    assert m2_lambda.handle({"profile": "m2", "step": "month", "month": 3, "approvals": True}, "r1", s3)["status"] == "success"
+    month = m2_lambda.handle({"profile": "m2", "step": "month", "month": 3}, "r1", s3)
+    assert month["status"] == "success" and month["approvals_applied"] is True
     assert calls == [("static", None, None), ("month", 3, stored)]
+
+    # The next backfill without the flag removes the export, so its months run without effects.
+    assert m2_lambda.handle({"profile": "m2", "step": "static", "input": {}}, "r2", s3)["status"] == "success"
+    assert not (tmp_path / "s3" / "lake" / m2_lambda.APPROVALS_KEY).exists()
+    assert "approvals_applied" not in m2_lambda.handle({"profile": "m2", "step": "month", "month": 3}, "r2", s3)
+    assert calls[-1] == ("month", 3, None)
 
 
 def test_without_the_flag_approvals_are_neither_exported_nor_applied(tmp_path, monkeypatch):
@@ -133,16 +143,11 @@ def test_without_the_flag_approvals_are_neither_exported_nor_applied(tmp_path, m
 
     monkeypatch.setenv("LAKE_BUCKET", "lake")
     monkeypatch.setattr(m2_lambda, "WORK", tmp_path / "work")
+    _fake_owner(monkeypatch, [{"action_id": "act-000000000001"}])
     s3 = FakeS3(tmp_path / "s3")
     calls = []
     monkeypatch.setattr(sim_cli, "run_m2", lambda seed, out, mode, month, approvals_path=None: calls.append(approvals_path) or {"files": []})
-    assert m2_lambda.handle({"profile": "m2", "step": "static"}, "r1", s3)["status"] == "success"
-    assert m2_lambda.handle({"profile": "m2", "step": "month", "month": 0}, "r1", s3)["status"] == "success"
-    assert calls == [None, None] and not (tmp_path / "s3" / "lake" / m2_lambda.APPROVALS_KEY).exists()
-
-
-def test_month_with_the_flag_fails_when_static_did_not_export(tmp_path, monkeypatch):
-    monkeypatch.setenv("LAKE_BUCKET", "lake")
-    monkeypatch.setattr(m2_lambda, "WORK", tmp_path / "work")
-    out = m2_lambda.handle({"profile": "m2", "step": "month", "month": 0, "approvals": True}, "r1", FakeS3(tmp_path / "s3"))
-    assert out["status"] == "no_approvals"
+    for event in ({"step": "static"}, {"step": "static", "input": {"approvals": "yes"}}, {"step": "month", "month": 0}):
+        out = m2_lambda.handle({"profile": "m2", **event}, "r1", s3, table=object())
+        assert out["status"] == "success" and "approvals_exported" not in out
+    assert calls == [None, None, None] and not (tmp_path / "s3" / "lake" / m2_lambda.APPROVALS_KEY).exists()
