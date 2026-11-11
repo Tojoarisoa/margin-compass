@@ -4,6 +4,10 @@
 name: ops
 
 on:
+  # M6-02 online evaluation sample, weekly (auto-decided under AGENTS.md §8.2): at most 3 capped
+  # questions (<= $0.03) per run, about $0.13/month worst case. Runs the online-eval task only.
+  schedule:
+    - cron: "17 6 * * 1"
   workflow_dispatch:
     inputs:
       task:
@@ -155,7 +159,7 @@ jobs:
           exit "$st"
 
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
-        if: inputs.task == 'record-fixtures' || inputs.task == 'live-eval' || inputs.task == 'online-eval' || inputs.task == 'rag-eval' || inputs.task == 'nightly-insight' || inputs.task == 'realized-check'
+        if: inputs.task == 'record-fixtures' || inputs.task == 'live-eval' || inputs.task == 'online-eval' || github.event_name == 'schedule' || inputs.task == 'rag-eval' || inputs.task == 'nightly-insight' || inputs.task == 'realized-check'
         with: { version: "${{ env.UV_VERSION }}", python-version: "${{ env.PYTHON_VERSION }}" }
       - name: record-fixtures / live-eval (live Bedrock, capped per question)
         if: inputs.task == 'record-fixtures' || inputs.task == 'live-eval'
@@ -190,10 +194,10 @@ jobs:
           fi
           exit "${status:-${ev_status:-${graph_status:-0}}}"
       - name: online-eval (M6-02 daily golden sample, live vs recorded graph runs, capped per question)
-        if: inputs.task == 'online-eval'
+        if: inputs.task == 'online-eval' || github.event_name == 'schedule'
         working-directory: agents
         env:
-          MODEL: ${{ inputs.model }}
+          MODEL: ${{ inputs.model || 'haiku-4-5' }}
           MC_CACHE_PROMPT: "1"  # the graph fixtures were recorded with caching on; the replay side needs it to match
         run: |
           set -euo pipefail
