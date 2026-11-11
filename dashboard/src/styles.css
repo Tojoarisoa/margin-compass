@@ -188,3 +188,8 @@ section[id] { scroll-margin-top: 64px; }
   select { width: 100%; }
   .suggested .chip { width: 100%; }
 }
+
+/* tour button lives in the section nav: a compact chip on the right, never wrapping */
+.sectionnav { align-items: center; }
+.sectionnav button { flex: none; margin-left: auto; white-space: nowrap; padding: 4px 12px; font-size: .74rem; box-shadow: none; }
+@media (max-width: 560px) { .sectionnav button { margin-left: 4px; padding: 4px 10px; font-size: .68rem; } }
