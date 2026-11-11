@@ -7,7 +7,7 @@ All alarms e-mail the `mc-shared-foundation-alerts` topic (foundation stack). PL
 | `mc-<env>-data-nightly-failed` | A nightly state-machine run failed, timed out, or was aborted (1 h window). | Step Functions console: the failed execution and the step that failed. |
 | `mc-<env>-data-pipeline-errors` | The pipeline Lambda returned an error, timed out, or crashed at least once in an hour (nightly steps, the telemetry export schedule, or an ops run). | Log group `/aws/lambda/mc-<env>-data-pipeline`, filter on `"level": "ERROR"`; every line carries `run_id`. |
 | `mc-<env>-web-api-errors` | The agent API Lambda crashed or timed out 3+ times in an hour. Handled answers (4xx, budget refusals, fail-closed answers) are not Lambda errors and don't count. | Log group `/aws/lambda/mc-<env>-web-api`; check for timeouts (60 s) and image start failures. |
-| Budget `mc-shared-foundation-monthly-total` | Actual spend reached $3, or $5 actual/forecast (the $5 action attaches the kill-switch deny policy). | Cost Explorer by service; see `m0-07-aws-account-setup.md` for the kill switch. |
+| Budget `mc-shared-foundation-monthly-total` | Actual spend reached $3, or $5 actual/forecast (the $5 action attaches the kill-switch deny policy). | Cost Explorer by service; see `m0-07-aws-account-setup.md` for the kill switch and `kill-switch-game-day.md` for the drill and its known gaps. |
 
 ## Steps
 
