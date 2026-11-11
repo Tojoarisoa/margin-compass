@@ -16,14 +16,13 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-1. **Finish PR #247** if still open (3c-3g re-record, 27 graph fixtures from ops 42979357858, baseline 15/27): every `ci` job + `attribution` green (remove the proxy footer via MCP), fast-forward `main`, check `deploy to dev`.
-2. **AG-05 still writes "%"** (act-01..04, prc-04: "4%", "20%", "5%, 2%"; two instruction rewrites failed). Next try a deterministic fix, not a looser verifier: e.g. `price_plan` returns the requested change in percent too (new output: calc-spec entry, vectors, dashboard parity EV-12), or the responder rewrites "N%" only when N*100 bps is in the ledger (needs a guardrail review; must not loosen EV-08). Pick the recommended one under §8.2.
-3. **AG-07 searches twice and hits the $0.01 cap** (act-06, gov-06 regressed): instruct one search call (`top_k` up to 8) and answer from it. Then re-record.
-4. **AG-06 tools have no input schema** (`replay_lever`, `roi_multiple`): eff-03 uses `query_gold`, eff-06 calls nothing. Add schemas like `search_knowledge` v2, then re-record. eff-01/eff-02 evidence args don't match `replay_lever`'s inputs. Also cts-04 (AG-03 rounds `$750.97`; changing AG-03 re-records EV-05), leak-03 (capped after 2 tools), prc-05.
-5. **3c-4:** judge the graph runs; add the CI replay gate at 90%. Calibration: see Waiting for owner.
-6. **API `search_knowledge`:** the deployed graph (`MC_GRAPH`, off by default) still gets no knowledge tool; needs the index in the Lambda (check deploy impact and cost first).
-7. **M5-04:** KPI-09 needs a closed-loop plan change, KPI-13 the real AWS bill (M2-04 FOCUS export). M5-03 steps 4-6: see Waiting for owner.
-8. **Daily checks (not tasks):** ops `verify-backfill` (last 2026-11-11 00:23 UTC: `awaiting_first_export`) and the Haiku 5.5 probe (last 2026-11-11: `AccessDeniedException`). Next due 2026-11-12.
+1. **AG-05 still writes "%"** (act-01..04, prc-04: "4%", "20%", "5%, 2%"; two instruction rewrites failed). Next try a deterministic fix, not a looser verifier: e.g. `price_plan` returns the requested change in percent too (new output: calc-spec entry, vectors, dashboard parity EV-12), or the responder rewrites "N%" only when N*100 bps is in the ledger (needs a guardrail review; must not loosen EV-08). Pick the recommended one under §8.2.
+2. **AG-07 searches twice and hits the $0.01 cap** (act-06, gov-06 regressed): instruct one search call (`top_k` up to 8) and answer from it. Then re-record.
+3. **AG-06 tools have no input schema** (`replay_lever`, `roi_multiple`): eff-03 uses `query_gold`, eff-06 calls nothing. Add schemas like `search_knowledge` v2, then re-record. eff-01/eff-02 evidence args don't match `replay_lever`'s inputs. Also cts-04 (AG-03 rounds `$750.97`; changing AG-03 re-records EV-05), leak-03 (capped after 2 tools), prc-05.
+4. **3c-4:** judge the graph runs; add the CI replay gate at 90%. Calibration: see Waiting for owner.
+5. **API `search_knowledge`:** the deployed graph (`MC_GRAPH`, off by default) still gets no knowledge tool; needs the index in the Lambda (check deploy impact and cost first).
+6. **M5-04:** KPI-09 needs a closed-loop plan change, KPI-13 the real AWS bill (M2-04 FOCUS export). M5-03 steps 4-6: see Waiting for owner.
+7. **Daily checks (not tasks):** ops `verify-backfill` (last 2026-11-11 00:23 UTC: `awaiting_first_export`) and the Haiku 5.5 probe (last 2026-11-11: `AccessDeniedException`). Next due 2026-11-12.
 
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed.
@@ -33,7 +32,7 @@ Notes: owner-mode approvals wait for Cognito (M5-03). Ops eval results are in th
 
 - **Start:** main `ci` + `deploy to dev` for 066c3d9 green; PR #245 (run 113) all checks green, fast-forwarded `main` to 3576041; main `ci` + `deploy to dev` green.
 - **Task 1:** 3c-3g. Replaying with verifier issues: AG-05 restated "4%" and a computed difference (act-01/02/04, prc-04), AG-06 numbered lists read as figures (eff-06, leak-04), AG-07 asked for details on waive/refund (act-05/06). PR #246 merged (all `ci` jobs green, `attribution` green after footer removal via MCP): `specialists-v6`, AG-05 prompt 15 chars shorter (cap headroom), AG-06 instruction, AG-07 authority requests; AG-03 untouched so EV-05 fixtures stay valid. Agents 287 passed.
-- **Task 2:** re-record. Ops 42979357858: M1-06 5/5, EV-10 pass ($0.0043/question), EV-05 8/8, judge 13/13, **graph 15/27** (act-05, eff-06, leak-04 pass; act-03, gov-06 regressed). PR #247: fixtures + baseline.
+- **Task 2:** re-record. Ops 42979357858: M1-06 5/5, EV-10 pass ($0.0043/question), EV-05 8/8, judge 13/13, **graph 15/27** (act-05, eff-06, leak-04 pass; act-03, gov-06 regressed). PR #247 merged (all `ci` jobs + `attribution` green); main `ci` + `deploy to dev` green for 1e2a0c5.
 - **Decisions (§8.2):** instruction only (rejected: verifier accepting question % or list markers, loosens a guardrail; deferred: percent field in `price_plan`, needs calc-spec + parity). Gate, rubric, verifier, cap unchanged.
 - **Cost:** 1 ops record run, about $0.20 of capped Haiku 4.5 calls.
 
