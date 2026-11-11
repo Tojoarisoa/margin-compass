@@ -6,7 +6,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 - **Claude Haiku 5.5 access:** access requested, waiting for AWS. Converse via `us.anthropic.claude-haiku-5-5` still returns `AccessDeniedException`. Autopilot: re-probe with the ops workflow (`record-fixtures`, `haiku-5-5`) at most once a day; when it succeeds, record the M1-06 fixtures and apply the ADR-003 selection rule. Until then Haiku 4.5 stays the default.
 
-- **Hard stop (run 120): `mc-dev-web` deploy failed and rolled back** (main 7a26505, ci run 43031066746). Cause: the new Cognito app client (`infra/margin_compass_infra/web_stack.py`, `o_auth=OAuthSettings(flows=OAuthFlows())`) still enables OAuth, so Cognito wants flows and scopes. Proposed fix (not applied, §8.3): replace `o_auth=...` with `disable_o_auth=True` and assert `AllowedOAuthFlowsUserPoolClient` is not true in `test_dashboard_client_is_public_srp_only`. Stack is `UPDATE_ROLLBACK_COMPLETE`, dev keeps the previous API/dashboard. The pool has `RETAIN`, so a pool `mc-dev-web-owners` may be orphaned in us-east-1 (deletion protection on): please check the Cognito console and delete it, or tell autopilot to leave it. Until you answer, every push to `main` redeploys and fails, so PRs #263 (M4-05 tick + this log) and #264 (approvals export) stay open, both all-green. Reply "apply the fix" to let autopilot push it, merge #263/#264, then add "create the owner user" here.
+- **Orphaned Cognito pool?** The rolled-back deploy of 7a26505 may have left a retained pool `mc-dev-web-owners` (deletion protection on) in us-east-1. Please check the Cognito console: after the fix deploys there may be two pools with that name; the live one is the `OwnerPoolId` output of `mc-dev-web`. Delete the other one, or tell autopilot to leave it (deleting a data store is a hard stop for autopilot).
 
 ## Owner decision 2026-11-11
 
@@ -21,7 +21,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-1. **Blocked (hard stop, see Waiting for owner):** `mc-dev-web` deploy failure. After the owner answers: apply the client fix, merge #263 then #264 (fast-forward), check deploy + smoke. Do not push to `main` before that.
+1. **Finish the client-fix PR** (`auto/m5-03-cognito-client-fix`, stacked on #263 and #264): when every check is green, fast-forward `main` to its head (merges #263, #264 and the fix), then check `deploy to dev` + smoke.
 1b. **Owner step after the fix deploys:** create the owner user in the Cognito console and add it to `owner` (`docs/runbooks/owner-sign-in.md`). Then approve one action in the Action Center; autopilot checks the `APPROVAL#` item and ticks M5-03.
 2. **M5-03 follow-up:** export recorded approvals to `approvals.jsonl` for the simulator (`load_approvals` format) so an approved action feeds the next backfill.
 3. **M6-01:** telemetry lake, alarms, runbooks (PLAN.md §17).
@@ -42,6 +42,7 @@ Notes: Ops eval results are in the job log; fixtures are base64 between FIXTURE-
 - **Task 4:** M4-05 ticked (PR #263, all checks green, not merged: deploy blocked): judge is the EV-06 gate (owner), other gates passed in ops 43018286081; graph replay 17/27 logged as known.
 - **Decisions (§8.2):** SRP via `amazon-cognito-identity-js` 6.3.22 (options: hosted UI, rejected: domain + redirects; USER_PASSWORD_AUTH, rejected: sends the password); token check via Cognito `GetUser` (local JWT check rejected: new crypto dependency, misses revocation). Gates unchanged.
 - **Cost:** $0 (Cognito free to 10,000 MAU; cost gate worst case $1.82/month unchanged). No ops run.
+- **Owner answer (same day):** "Apply the fix". Client now uses `disable_o_auth=True` (synth: `AllowedOAuthFlowsUserPoolClient: false`, SRP + refresh only); the test asserts OAuth stays off. Infra 81 passed, synth + cost gate passed, ruff clean.
 
 ## 2026-11-11 (autopilot run 119)
 

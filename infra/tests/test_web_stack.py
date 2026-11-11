@@ -201,6 +201,9 @@ def test_dashboard_client_is_public_srp_only(synth):
     assert set(client["ExplicitAuthFlows"]) == {"ALLOW_USER_SRP_AUTH", "ALLOW_REFRESH_TOKEN_AUTH"}
     assert client["PreventUserExistenceErrors"] == "ENABLED" and client["EnableTokenRevocation"] is True
     assert not client.get("AllowedOAuthFlows")
+    # Cognito rejects a client that allows OAuth without flows and scopes (deploy of 7a26505 rolled back)
+    assert client.get("AllowedOAuthFlowsUserPoolClient") is not True and not client.get("AllowedOAuthScopes")
+    assert not client.get("CallbackURLs")
 
 
 def test_api_knows_the_owner_pool(synth):

@@ -62,7 +62,7 @@ class WebStack(cdk.Stack):
                                                     group_name="owner", description="May record approvals (M5-03)")
         self.user_pool_client = self.user_pool.add_client(
             "DashboardClient", user_pool_client_name=name("dashboard"), generate_secret=False,
-            auth_flows=cognito.AuthFlow(user_srp=True), o_auth=cognito.OAuthSettings(flows=cognito.OAuthFlows()),
+            auth_flows=cognito.AuthFlow(user_srp=True), disable_o_auth=True,  # SRP only: no OAuth flows, scopes or hosted UI
             supported_identity_providers=[cognito.UserPoolClientIdentityProvider.COGNITO],
             prevent_user_existence_errors=True, enable_token_revocation=True,
             access_token_validity=cdk.Duration.hours(1), id_token_validity=cdk.Duration.hours(1),
