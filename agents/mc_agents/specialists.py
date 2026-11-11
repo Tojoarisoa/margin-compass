@@ -16,21 +16,27 @@ from .llm import BudgetedLLM, LLMRequest
 from .tools import registry
 from .tools.metrics import ToolError
 
-PROMPT_VERSION = "specialists-v3"
+PROMPT_VERSION = "specialists-v4"
 _RULES = ("Get every figure from a tool; never calculate or round. Copy figures exactly and cite the evidence ID "
           "such as [E1]. Synthetic data. At most 4 short sentences.")
 
 # 3c-3c (specialists-v2): AG-05 used to ask the user for a plan instead of calling its tools.
 # 3c-3d (specialists-v3): one price_plan call does before, after and churn (the cost cap allows about two model
 # calls), and figures stay in the tool's units (the verifier rejected "$50" for 5000 cents and "4%" for 400 bps).
-_PRICING = ("Never ask the user for plan details or approval context; call price_plan once, with no preamble. "
-            "When the question names a tenant ID, first read its plan from the gold marts with query_gold and pass "
-            "every plan field. Otherwise pass no plan fields: the tool uses the example plan; say it is an example. "
-            "Put a price change or discount in after, for example a 4% discount is after {\"discount_bps\": 400}; "
-            "for a price rise, put the new seat_price_cents in after. For churn, pass churn_bps; with no rate given "
-            "use 200 and say it is assumed. Report money in cents and rates in bps exactly as the tool returns them; "
-            "never convert to dollars or percent. For an approval request, give the before and after figures and "
-            "say the discount needs approval by the role with authority.")
+# 3c-3e (specialists-v4): "Approve a N% discount" means price it (act-01..04 asked for a tenant and approver), churn
+# questions always pass churn_bps (prc-04), outcome questions use after on the example plan (prc-06 sent a partial plan).
+_PRICING = ("Never ask the user for plan details, a tenant, an approver or approval context; call price_plan once, "
+            "with no preamble. When the question names a tenant ID, first read its plan from the gold marts with "
+            "query_gold and pass every plan field. Otherwise pass no plan fields at all (never a partial plan): the "
+            "tool uses the example plan; say it is an example. Put every change in after: a discount of N% is after "
+            "{\"discount_bps\": N*100}; a price rise is the new seat_price_cents; an outcome-based plan is after "
+            "{\"outcome_price_micro\": ..., \"outcomes\": ...}. Whenever churn is asked, pass churn_bps 200 unless "
+            "a rate is given, and say it is assumed. Report money in cents and rates in bps exactly as the tool "
+            "returns them; never convert to dollars or percent, and never restate a percentage from the question: "
+            "call it the requested change. \"Approve\" a discount means price it: give the before and after figures "
+            "and say approval goes to the role with authority for that discount. Example: \"Approve a 4% discount\" "
+            "-> price_plan {\"after\": {\"discount_bps\": 400}}, then answer with the tool's before and after "
+            "figures.")
 
 
 @dataclass(frozen=True)

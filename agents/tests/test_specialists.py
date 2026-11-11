@@ -99,6 +99,9 @@ def test_pricing_specialist_calls_tools_instead_of_asking():
     pricing = SPECIALISTS["pricing"].system
     assert "Never ask the user" in pricing and "query_gold" in pricing and "churn_bps" in pricing
     assert "never convert to dollars or percent" in pricing
+    # 3c-3e: approval requests are priced, churn always passes churn_bps, no partial plans, no restated %
+    assert "\"Approve\" a discount means price it" in pricing and "never a partial plan" in pricing
+    assert "pass churn_bps 200" in pricing and "never restate a percentage" in pricing
     assert pricing.endswith("At most 4 short sentences.")
     assert "Never ask the user" not in SPECIALISTS["leak"].system
     specs = {s["toolSpec"]["name"]: s["toolSpec"]["inputSchema"]["json"] for s in tool_specs(SPECIALISTS["pricing"])}
