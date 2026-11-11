@@ -599,3 +599,43 @@ def test_publish_realized_totals(tmp_path):
     assert (body["realized_margin_usd"], body["saved_usd"], body["revenue_delta_usd"]) == ("9.00", "13.00", "-4.00")
     assert (body["actions_realized"], body["actions_pending"], body["realization_rate"]) == (2, 1, "0.666667")
     assert publish_realized(tmp_path / "none", "r1") == []
+
+
+def test_m2_build_publishes_pg1_with_m2_sections(tmp_path):
+    """The M2 build writes pg1.json from the M2 marts (the M1 publish cannot run there), so the dashboard shows M2."""
+    import json
+
+    from booncore_sim.m2_writer import write_dimensions, write_focus, write_revenue
+    from mc_pipelines.cli import run_m2_dbt
+    from mc_pipelines.publish import MAX_BYTES
+
+    tenants, history = generate_m2_tenants(42)
+    landing = tmp_path / "landing"
+    write_month(landing, 42, tenants, 5)
+    _write(landing, "tenants/tenants.parquet", tenants, 42, "tenants")
+    write_focus(landing, 42, tenants)
+    write_revenue(landing, 42, tenants, history)
+    write_dimensions(landing, 42, history)
+    _write(landing, "s5_price_catalog/price_catalog.parquet", list(PRICE_CATALOG_V2), 42, "price catalog")
+    summary = run_m2_dbt(landing, tmp_path / "data", "run-m2")
+    assert summary["success"] and "pg1_error" not in summary
+    assert {"publish/latest/pg1.json", "publish/latest/pg2.json", "publish/latest/explore.parquet"} <= set(summary["published"])
+    root = tmp_path / "data"
+    body = (root / "publish" / "latest" / "pg1.json").read_bytes()
+    assert len(body) <= MAX_BYTES
+    snap = json.loads(body)
+    assert snap["schema_version"] == "pg1.v0" and snap["data_label"] == "synthetic"
+    assert {"m2_kpis", "m2_at_risk", "m2_margin_forecast", "m2_features"} <= set(snap)
+    # headline AI revenue is the ai_addon invoice lines over the cost window; cost is fct_cost_to_serve
+    gold, silver = root / "gold", root / "silver"
+    lo, hi, cost = duckdb.sql(f"select min(cost_date), max(cost_date), sum(cost_to_serve_usd) "
+                              f"from read_parquet('{gold}/fct_cost_to_serve.parquet')").fetchall()[0]
+    ai = duckdb.sql(f"select sum(amount_usd) from read_parquet('{silver}/slv_m2_revenue_daily.parquet') "
+                    f"where revenue_component = 'ai_addon' and revenue_date between DATE '{lo}' and DATE '{hi}'").fetchall()[0][0]
+    w = snap["headline"]["window"]
+    assert w["ai_revenue_usd"] == pytest.approx(float(ai), abs=0.01)
+    assert w["ai_cost_to_serve_usd"] == pytest.approx(float(cost), abs=0.01)
+    assert snap["window"] == {"from": lo.isoformat(), "to": hi.isoformat(), "days": len(snap["trend"])}
+    assert snap["headline"]["tenants"] == len(snap["tenants"]) > 0
+    # internal codes stay off public surfaces (AGENTS.md §6)
+    assert "M1" not in snap["feature_scope"] and "F1" not in snap["feature_scope"]
