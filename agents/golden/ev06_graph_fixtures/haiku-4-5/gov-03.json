@@ -10,7 +10,7 @@
                 "query": "discount authority 12%"
               },
               "name": "search_knowledge",
-              "toolUseId": "tooluse_6kHiD11KYAUr6HG9UXLUfP",
+              "toolUseId": "tooluse_lrscJvq7ObmccVkOmgMNqz",
               "type": "tool_use"
             }
           }
@@ -24,7 +24,7 @@
       }
     },
     {
-      "request_sha": "451cdda8ae4b5066c4f97d9f3e39f6046ee314c8439df07d618d956bc2df1183",
+      "request_sha": "694ddb69784d17f589eccc9d1d4d26baf862fbf1530e33b6b0eb71a8ee1a4b7e",
       "response": {
         "content": [
           {
@@ -41,6 +41,6 @@
     }
   ],
   "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
-  "prompt_version": "specialists-v6",
+  "prompt_version": "specialists-v7",
   "scenario_id": "gov-03"
 }

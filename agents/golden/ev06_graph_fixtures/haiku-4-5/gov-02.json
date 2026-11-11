@@ -11,7 +11,7 @@
                 "tenant_id": "bc-t0021"
               },
               "name": "search_knowledge",
-              "toolUseId": "tooluse_bV9JKv76i9ClJryyHZpwDX",
+              "toolUseId": "tooluse_AX5m8BcJXLkR9sQRxqysxm",
               "type": "tool_use"
             }
           }
@@ -25,7 +25,7 @@
       }
     },
     {
-      "request_sha": "ad43be80eef7a731eb2297e7f0e30730ea14abcb931890b8b4e92b029169183c",
+      "request_sha": "bb8f62ec55e46b469489c6dfce20b73c890ce2a4dc85816906413f2450ba7696",
       "response": {
         "content": [
           {
@@ -42,6 +42,6 @@
     }
   ],
   "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
-  "prompt_version": "specialists-v6",
+  "prompt_version": "specialists-v7",
   "scenario_id": "gov-02"
 }

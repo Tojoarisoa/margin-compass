@@ -16,9 +16,9 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-1. **AG-05 still writes "%"** (act-01..04, prc-04: "4%", "20%", "5%, 2%"; two instruction rewrites failed). Next try a deterministic fix, not a looser verifier: e.g. `price_plan` returns the requested change in percent too (new output: calc-spec entry, vectors, dashboard parity EV-12), or the responder rewrites "N%" only when N*100 bps is in the ledger (needs a guardrail review; must not loosen EV-08). Pick the recommended one under §8.2.
-2. **AG-07 searches twice and hits the $0.01 cap** (act-06, gov-06 regressed): instruct one search call (`top_k` up to 8) and answer from it. Then re-record.
-3. **AG-06 tools have no input schema** (`replay_lever`, `roi_multiple`): eff-03 uses `query_gold`, eff-06 calls nothing. Add schemas like `search_knowledge` v2, then re-record. eff-01/eff-02 evidence args don't match `replay_lever`'s inputs. Also cts-04 (AG-03 rounds `$750.97`; changing AG-03 re-records EV-05), leak-03 (capped after 2 tools), prc-05.
+1. **AG-05 computes differences and dollars** (act-01: "a reduction of 2040 cents", "$50/seat", "$20,000"; prc-04..06 similar). The "%" issue is fixed (price_plan v3 percent echo). Next deterministic fix: price_plan returns `after.delta` (revenue/margin change) only if added to calc-spec with vectors and dashboard parity (EV-12); otherwise tighten the instruction (no derived figures, no $). Pick the recommended one under §8.2.
+2. **AG-07 searches twice and hits the $0.01 cap** (act-06, gov-06): instruct one search call (`top_k` up to 8) and answer from it. Then re-record.
+3. **AG-06 tools have no input schema** (`replay_lever`, `roi_multiple`): eff-03 uses `query_gold`. Add schemas like `search_knowledge` v2, then re-record. Also cts-04 (AG-03 rounds `$750.97`; changing AG-03 re-records EV-05), leak-03 (capped after 2 tools).
 4. **3c-4:** judge the graph runs; add the CI replay gate at 90%. Calibration: see Waiting for owner.
 5. **API `search_knowledge`:** the deployed graph (`MC_GRAPH`, off by default) still gets no knowledge tool; needs the index in the Lambda (check deploy impact and cost first).
 6. **M5-04:** KPI-09 needs a closed-loop plan change, KPI-13 the real AWS bill (M2-04 FOCUS export). M5-03 steps 4-6: see Waiting for owner.
@@ -26,7 +26,15 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed.
-Notes: owner-mode approvals wait for Cognito (M5-03). Ops eval results are in the job log; fixtures are base64 between FIXTURE-BEGIN/END lines. Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1; local replays need it too or everything drifts). Ops `ev06_graph: true` adds the graph runs (opt-in, about $0.15; the ops job ends `failure` while the graph gate is unmet, which is expected). Flaky github.com 504s during image builds: re-run the failed job.
+Notes: owner-mode approvals wait for Cognito (M5-03). Ops eval results are in the job log; fixtures are base64 between FIXTURE-BEGIN/END lines. Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1; local replays need it too or everything drifts). Ops `ev06_graph: true` adds the graph runs (opt-in, about $0.15; the ops job ends `failure` while the graph gate is unmet, which is expected). Flaky github.com 504s during image builds: re-run the failed job. Only commit the graph fixtures from a record run; the other fixture sets change only in tool-use IDs.
+
+## 2026-11-11 (autopilot run 115)
+
+- **Start:** main `ci` + `deploy to dev` for 0778068 green; no open PRs.
+- **Task 1:** M4-05 step 3c-3h. PR #248 merged (all `ci` jobs green, latest `attribution` green after footer removal via MCP): `price_plan` v3 echoes bps inputs as exact percent (`changes_pct`, `churn_pct`; calc-spec "Display conversion"), AG-05 `specialists-v7` may write a % only by copying a `_pct` field. Agents 296 passed. Main `ci` + `deploy to dev` + smoke green for 38f2905.
+- **Task 2:** re-record. Ops 42986306676: M1-06 5/5, EV-10 pass ($0.0043/question), EV-05 8/8, judge 13/13, **graph 18/27** (act-02, act-03, act-04 now pass). Graph fixtures + baseline in PR #249.
+- **Decisions (§8.2):** echo in the tool (options: verifier maps N% to N*100 bps, rejected: changes EV-08; `price_change_bps` input, deferred: new math needs calc-spec vectors + parity). Verifier, gate, rubric and cap unchanged.
+- **Cost:** 1 ops record run, about $0.20 of capped Haiku 4.5 calls.
 
 ## 2026-11-11 (autopilot run 114)
 
