@@ -28,6 +28,8 @@ from aws_cdk import aws_logs as logs
 from aws_cdk import aws_s3 as s3
 from constructs import Construct
 
+from .alarms import alert_topic, lambda_errors_alarm
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 # Interim Mid model (ADR-003) through the us. cross-region inference profile.
@@ -102,6 +104,9 @@ class WebStack(cdk.Stack):
                          "OWNER_POOL_ID": self.user_pool.user_pool_id,  # M5-03: owner-only approval writes
                          "OWNER_CLIENT_ID": self.user_pool_client.user_pool_client_id},
         )
+        # M6-01 (§14 "API errors"): handled 4xx/5xx answers are not Lambda errors; this counts crashes and timeouts.
+        lambda_errors_alarm(self, "ApiErrorsAlarm", self.api, alarm_name=name("api-errors"), threshold=3, topic=alert_topic(self),
+                            description="The agent API Lambda crashed or timed out 3+ times in an hour. See its log group (runbook: docs/runbooks/alarms.md).")
         url = self.api.add_function_url(auth_type=lambda_.FunctionUrlAuthType.AWS_IAM,
                                         invoke_mode=lambda_.InvokeMode.BUFFERED)
 

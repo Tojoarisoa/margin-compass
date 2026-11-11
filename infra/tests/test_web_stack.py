@@ -212,3 +212,12 @@ def test_api_knows_the_owner_pool(synth):
               if f["Properties"].get("FunctionName") == "mc-dev-web-api")
     env = fn["Properties"]["Environment"]["Variables"]
     assert "Ref" in env["OWNER_POOL_ID"] and "Ref" in env["OWNER_CLIENT_ID"]
+
+
+def test_api_errors_alarm_to_the_alert_topic(synth):
+    _, t, _ = synth
+    t.resource_count_is("AWS::CloudWatch::Alarm", 1)  # M6-01; §14 allows 10 in the account
+    alarm = next(iter(t.find_resources("AWS::CloudWatch::Alarm").values()))["Properties"]
+    assert alarm["AlarmName"] == "mc-dev-web-api-errors"
+    assert (alarm["MetricName"], alarm["Statistic"], alarm["Period"], alarm["Threshold"]) == ("Errors", "Sum", 3600, 3)
+    assert alarm["TreatMissingData"] == "notBreaching" and "mc-shared-foundation-alerts" in json.dumps(alarm["AlarmActions"])

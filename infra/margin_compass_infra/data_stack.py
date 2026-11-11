@@ -20,10 +20,11 @@ from aws_cdk import aws_s3 as s3
 from aws_cdk import aws_s3vectors as s3vectors
 from aws_cdk import aws_scheduler as scheduler
 from aws_cdk import aws_scheduler_targets as scheduler_targets
-from aws_cdk import aws_sns as sns
 from aws_cdk import aws_stepfunctions as sfn
 from aws_cdk import aws_stepfunctions_tasks as tasks
 from constructs import Construct
+
+from .alarms import alert_topic, lambda_errors_alarm
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -42,7 +43,6 @@ NON_FILTERABLE_METADATA_KEYS = ["text", "heading"]
 NIGHTLY_CRON = "cron(0 5 * * ? *)"  # 05:00 UTC; gold is due by 07:00 UTC (§14)
 TELEMETRY_CRON = "cron(30 0 * * ? *)"  # 00:30 UTC: exports the previous UTC day of the API's gen_ai_call logs (S7)
 API_LOG_GROUP = "/aws/lambda/mc-{env}-web-api"  # web stack's API log group, by name (no cross-stack reference)
-ALERT_TOPIC_NAME = "mc-shared-foundation-alerts"  # foundation stack (account-wide)
 
 
 class DataStack(cdk.Stack):
@@ -282,6 +282,9 @@ class DataStack(cdk.Stack):
             treat_missing_data=cloudwatch.TreatMissingData.NOT_BREACHING,
             alarm_description="The nightly pipeline run failed, timed out, or was aborted. See the Step Functions execution.",
         )
-        topic = sns.Topic.from_topic_arn(self, "Alerts", f"arn:{cdk.Aws.PARTITION}:sns:{self.region}:{self.account}:{ALERT_TOPIC_NAME}")
+        topic = alert_topic(self)
         alarm.add_alarm_action(cw_actions.SnsAction(topic))
+        # M6-01: the pipeline Lambda also runs outside the state machine (telemetry export schedule, ops runs).
+        lambda_errors_alarm(self, "PipelineErrorsAlarm", self.pipeline, alarm_name=name("pipeline-errors"), threshold=1, topic=topic,
+                            description="The pipeline Lambda returned an error, timed out, or crashed. See its log group (runbook: docs/runbooks/alarms.md).")
         cdk.CfnOutput(self, "NightlyStateMachine", value=self.nightly.state_machine_arn)
