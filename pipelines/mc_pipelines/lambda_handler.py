@@ -65,13 +65,18 @@ def handler(event: dict, context) -> dict:
     ingest_date = event.get("ingest_date") or datetime.now(UTC).date().isoformat()
     bucket = os.environ.get("LAKE_BUCKET", "")
     _configure_logging(run_id)
-    if event.get("profile") == "telemetry":  # S7: nightly compaction of the API's gen_ai_call logs
+    if event.get("profile") == "telemetry":  # S7 + M6-01: daily compaction of API gen_ai_call and pipeline run logs
         import boto3
 
         day = event.get("day") or (datetime.now(UTC).date() - timedelta(days=1)).isoformat()
+        from . import pipeline_runs
         from .dogfood import export_day
 
-        out = export_day(boto3.client("logs"), boto3.client("s3"), bucket, os.environ["MC_API_LOG_GROUP"], day, WORK / "telemetry")
+        logs_client, s3 = boto3.client("logs"), boto3.client("s3")
+        out = export_day(logs_client, s3, bucket, os.environ["MC_API_LOG_GROUP"], day, WORK / "telemetry")
+        out["pipeline"] = {}  # M6-01: the pipeline's own run logs (skipped when the log group is not configured)
+        if os.environ.get("MC_PIPELINE_LOG_GROUP"):
+            out["pipeline"] = pipeline_runs.export_day(logs_client, s3, bucket, os.environ["MC_PIPELINE_LOG_GROUP"], day, WORK / "telemetry")
         return {"status": "success", "run_id": run_id, **out}
     if event.get("profile") == "m2":  # chunked backfill steps (M2-01.8), see m2_lambda.py
         from .m2_lambda import handle
