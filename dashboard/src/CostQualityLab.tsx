@@ -2,7 +2,9 @@
 // cheaper tier with the shared lever engine (calc-spec, ADR-016) and mark where a guardrail first blocks the change.
 // Synthetic baseline, integer arithmetic only.
 import { useMemo, useState } from "react";
+import { Chart } from "./charts";
 import { replayLever, type LeverInput } from "./levers";
+import { ACCENT } from "./theme";
 
 const BASE: LeverInput = {
   cost_cents: 500_000, route_bps: 0, cheap_cost_ratio_bps: 2_500, cache_hit_bps: 1_000,
@@ -25,9 +27,6 @@ export default function CostQualityLab() {
     const n = Number(e.target.value);
     if (e.target.value.trim() !== "" && Number.isSafeInteger(n) && n >= 0 && n <= 10_000) setter(n);
   };
-  const w = 320, h = 140, minC = Math.min(...rows.map((r) => r.new_cost_cents)), maxC = BASE.cost_cents;
-  const x = (q: number) => 10 + ((q - Math.min(...rows.map((r) => r.quality_after_bps))) / Math.max(1, BASE.quality_bps - Math.min(...rows.map((r) => r.quality_after_bps)))) * (w - 20);
-  const y = (c: number) => h - 10 - ((c - minC) / Math.max(1, maxC - minC)) * (h - 20);
   return (
     <div>
       <p className="muted small">
@@ -36,15 +35,26 @@ export default function CostQualityLab() {
       </p>
       <label>Largest allowed quality loss (bps) <input aria-label="Largest allowed quality loss (bps)" inputMode="numeric" value={guard} onChange={num(setGuard)} size={6} /></label>{" "}
       <label>Cache hit share (bps) <input aria-label="Cache hit share (bps)" inputMode="numeric" value={cache} onChange={num(setCache)} size={6} /></label>
-      <svg role="img" aria-label="Cost against quality frontier" viewBox={`0 0 ${w} ${h}`} width="100%" style={{ maxWidth: 420 }}>
-        <polyline fill="none" stroke="currentColor" strokeWidth="1.5" points={frontier.map((r) => `${x(r.quality_after_bps)},${y(r.new_cost_cents)}`).join(" ")} />
-        {rows.map((r) => (
-          <circle key={r.route_bps} cx={x(r.quality_after_bps)} cy={y(r.new_cost_cents)} r="3" fill={r.allowed ? "currentColor" : "none"} stroke="currentColor">
-            <title>{`${pct(r.route_bps)} routed: ${usd(r.new_cost_cents)}, quality ${pct(r.quality_after_bps)}${r.allowed ? "" : " (blocked)"}`}</title>
-          </circle>
-        ))}
-      </svg>
-      <p className="muted small">Filled points are allowed; hollow points are blocked. Left is lower quality, bottom is lower cost.</p>
+      <Chart label="Cost against quality frontier" option={{
+        grid: { left: 16, right: 24, top: 56, bottom: 48, containLabel: true },
+        legend: { top: 0, data: ["Frontier", "Allowed", "Blocked"] },
+        tooltip: { trigger: "item", formatter: (p: { data: { route: number; value: [number, number]; allowed: boolean } }) => p.data?.route === undefined ? "" :
+          `<b>${pct(p.data.route)} routed to the cheaper tier</b><br/>Quality ${p.data.value[0].toFixed(1)}%<br/>` +
+          `AI cost ${usd(p.data.value[1] * 100)}/month<br/>${p.data.allowed ? "Allowed" : "Blocked by a guardrail"}` },
+        xAxis: { type: "value", name: "Quality (%)", nameLocation: "middle", nameGap: 28, scale: true, axisLabel: { formatter: (v: number) => `${v}%` } },
+        yAxis: { type: "value", name: "AI cost per month", nameLocation: "end", nameGap: 12, scale: true,
+          axisLabel: { formatter: (v: number) => `$${(v / 1000).toFixed(1)}k` } },
+        series: [
+          { name: "Frontier", type: "line", color: ACCENT, symbol: "none", lineStyle: { width: 2 }, tooltip: { show: false },
+            data: frontier.map((r) => [r.quality_after_bps / 100, r.new_cost_cents / 100]) },
+          { name: "Allowed", type: "scatter", symbolSize: 10, color: ACCENT, emphasis: { scale: 1.6 },
+            data: rows.filter((r) => r.allowed).map((r) => ({ value: [r.quality_after_bps / 100, r.new_cost_cents / 100], route: r.route_bps, allowed: true })) },
+          { name: "Blocked", type: "scatter", symbolSize: 10, color: "#fb7185", itemStyle: { color: "transparent", borderColor: "#fb7185", borderWidth: 2 },
+            emphasis: { scale: 1.6 },
+            data: rows.filter((r) => !r.allowed).map((r) => ({ value: [r.quality_after_bps / 100, r.new_cost_cents / 100], route: r.route_bps, allowed: false })) },
+        ],
+      }} />
+      <p className="muted small">Filled points are allowed; hollow red points are blocked. Hover a point for its details.</p>
       <p>Best allowed: route {pct(best.route_bps)} for savings of {usd(best.savings_cents)} per month at quality {pct(best.quality_after_bps)}.</p>
       <div className="table-wrap">
         <table>
