@@ -13,7 +13,7 @@
                 "sql": "\nSELECT \n  margin_date,\n  tenant_id,\n  ai_revenue_usd,\n  llm_cost_usd,\n  cost_to_serve_usd,\n  gross_margin_usd,\n  gross_margin_pct,\n  request_count\nFROM fct_tenant_margin\nWHERE tenant_id = 'bc-t0113'\nORDER BY margin_date DESC\nLIMIT 12\n"
               },
               "name": "query_gold",
-              "toolUseId": "tooluse_63j9SxVd0A0hyd1x0Y8WA3",
+              "toolUseId": "tooluse_8wYrqh7zM6wnhQogpC88JX",
               "type": "tool_use"
             }
           }
@@ -27,7 +27,7 @@
       }
     },
     {
-      "request_sha": "9deb2986880472d8558d45e24e071fd5ed8ca69dda47ce7ca22734729ec0304e",
+      "request_sha": "1a83f7f78e91e3ae0c0a444b03c1d5b394c81e5c818f54a0768d78ee2702bba5",
       "response": {
         "content": [
           {
@@ -44,6 +44,6 @@
     }
   ],
   "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
-  "prompt_version": "specialists-v5",
+  "prompt_version": "specialists-v6",
   "scenario_id": "leak-06"
 }

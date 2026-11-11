@@ -1,7 +1,7 @@
 {
   "calls": [
     {
-      "request_sha": "9a4b0cab4a5db712a3272a924f0ab2806a67a5d7249db7b03ad8351100d1edf7",
+      "request_sha": "0080dd1090ea97116be1ff117f0ee94cddb5b2e122bda45113d70352cfebdf27",
       "response": {
         "content": [
           {
@@ -11,7 +11,7 @@
                 "tenant_id": "bc-t0050"
               },
               "name": "search_knowledge",
-              "toolUseId": "tooluse_C5H8sleXDFttqrQPR2uZWA",
+              "toolUseId": "tooluse_LvIWJs5BaaNym9HPYIdYbu",
               "type": "tool_use"
             }
           }
@@ -19,29 +19,40 @@
         "stop_reason": "tool_use",
         "usage": {
           "cacheReadInputTokens": 0,
-          "inputTokens": 899,
+          "inputTokens": 966,
           "outputTokens": 78
         }
       }
     },
     {
-      "request_sha": "54760b85f3c8f8b4e5fe1d81a5f2554a678a9b9ce6db2a1d6386ebbdbb04974b",
+      "request_sha": "56438268cee930f149ce338026aff1bf53cb8fb075e45b4dd9b0a7910a57cf30",
       "response": {
         "content": [
           {
-            "text": "The search returned general renewal policies but not bc-t0050's specific contract terms. To summarize renewal terms for bc-t0050, I would need to search for their actual contract or order form. The results show that:\n\n- If bc-t0050 has an \"unlimited AI\" clause, it does not renew automatically; at renewal the account team must reprice or move them to a standard allowance [E1].\n- Any replacement of an unlimited clause requires RevOps or customer-success lead approval [E1].\n- Discounts at renewal are subject to the discount-authority matrix, with account managers able to approve up to 5%, RevOps/customer-success leads up to 15%, and the Head of revenue up to 25% [E1].\n\nHowever, I don't have bc-t0050's specific renewal terms, dates, pricing, or allowances from the search results. Could you clarify what specific renewal information you need, or would you like me to search for their contract details?"
+            "text": "The search returned general renewal policies but not bc-t0050's specific contract terms. Let me search for bc-t0050's contract directly."
+          },
+          {
+            "toolUse": {
+              "input": {
+                "query": "bc-t0050 contract",
+                "tenant_id": "bc-t0050"
+              },
+              "name": "search_knowledge",
+              "toolUseId": "tooluse_JGCbZ2SePx9FaYGHAKjFFK",
+              "type": "tool_use"
+            }
           }
         ],
-        "stop_reason": "end_turn",
+        "stop_reason": "tool_use",
         "usage": {
           "cacheReadInputTokens": 0,
-          "inputTokens": 1866,
-          "outputTokens": 223
+          "inputTokens": 1933,
+          "outputTokens": 114
         }
       }
     }
   ],
   "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
-  "prompt_version": "specialists-v5",
+  "prompt_version": "specialists-v6",
   "scenario_id": "gov-06"
 }

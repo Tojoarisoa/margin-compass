@@ -1,7 +1,7 @@
 {
   "calls": [
     {
-      "request_sha": "529255b4c082cc4fadf931967058a4d9328ce633cbf214d0a5211b0ddda5602e",
+      "request_sha": "884df7536d7f09238f03c936ccabdce2004caa21b4aa462c970531537407b2d7",
       "response": {
         "content": [
           {
@@ -10,7 +10,7 @@
                 "query": "discount approval authority 30%"
               },
               "name": "search_knowledge",
-              "toolUseId": "tooluse_C0b71Unw7hueECxKkfhNSy",
+              "toolUseId": "tooluse_kAXkwrDclkCo79LqBsNxir",
               "type": "tool_use"
             }
           }
@@ -18,29 +18,29 @@
         "stop_reason": "tool_use",
         "usage": {
           "cacheReadInputTokens": 0,
-          "inputTokens": 898,
+          "inputTokens": 965,
           "outputTokens": 59
         }
       }
     },
     {
-      "request_sha": "dcc862b869a05cccaf615514b40b3730c733a15d8677c46e262d6b93c49c554c",
+      "request_sha": "234c5933e0d111aaf6d69f4168af3c2cd66924d18f5ece25a9e37b4772e68603",
       "response": {
         "content": [
           {
-            "text": "According to the BoonCore Discount Authority Matrix, a 30% discount must be approved jointly by **Finance and CEO** [E1]. The matrix shows that the Head of Revenue may approve up to 25%, but discounts above 25% require joint approval from Finance and CEO [E1]."
+            "text": "According to the BoonCore Discount Authority Matrix, **Finance and CEO jointly** have authority to approve a 30% discount [E1]. The matrix shows that the Head of Revenue may approve up to 25%, but discounts above 25% require joint approval from Finance and the CEO."
           }
         ],
         "stop_reason": "end_turn",
         "usage": {
           "cacheReadInputTokens": 0,
-          "inputTokens": 1750,
-          "outputTokens": 66
+          "inputTokens": 1817,
+          "outputTokens": 64
         }
       }
     }
   ],
   "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
-  "prompt_version": "specialists-v5",
+  "prompt_version": "specialists-v6",
   "scenario_id": "gov-05"
 }

@@ -1,61 +1,44 @@
 {
   "calls": [
     {
-      "request_sha": "6e94f31c7ce36bdf64da5823ad08bac9a1f94dffda728a7861b4a1673ff297e5",
+      "request_sha": "271ff3c5ff77f432425a01716727b9a815231fe42368b19f03d381be72c1ee70",
       "response": {
         "content": [
           {
-            "text": "I'll show you an example outcome-based pricing model:"
-          },
-          {
-            "toolUse": {
-              "input": {
-                "cost_cents": 25000,
-                "included_units": 1000,
-                "outcome_price_micro": 500000,
-                "outcomes": 250,
-                "overage_rate_micro": 100000,
-                "seat_price_cents": 50000,
-                "seats": 10,
-                "usage_units": 500
-              },
-              "name": "price_plan",
-              "toolUseId": "tooluse_JeKIijSODiVrGF2NrDmvCT",
-              "type": "tool_use"
-            }
+            "text": "An outcome-based plan fits a pricing model where you charge per result or deliverable rather than per unit of usage or per seat. This model uses two key parameters:\n\n1. **outcome_price_micro**: The price charged per billed outcome (in micro-dollars)\n2. **outcomes**: The number of outcomes delivered or billed in the month\n\nThis approach works well when:\n- You want to align revenue with customer value delivered (e.g., per API call completed, per document processed, per decision made)\n- Outcomes are measurable and tied to business results\n- You want to shift risk to the provider\u2014customers only pay for what actually succeeds or completes\n\nYou can combine outcome pricing with other model elements:\n- **Seat pricing** (seat_price_cents + seats) for a base team cost\n- **Usage-based overage** (included_units + overage_rate_micro) for consumption above a threshold\n- **Flat add-ons** (addon_cents) for ancillary services\n- **Usage caps** (usage_cap_cents) to limit total variable charges\n\nWould you like me to price an example outcome-based plan or compare it to other models?"
           }
         ],
-        "stop_reason": "tool_use",
+        "stop_reason": "end_turn",
         "usage": {
           "cacheReadInputTokens": 0,
-          "inputTokens": 2058,
-          "outputTokens": 209
+          "inputTokens": 2065,
+          "outputTokens": 263
         }
       }
     },
     {
-      "request_sha": "f7597382bfc5a2c8c8a80823825c09aa4df2cdc9cd228f41f86f776ccc910a9c",
+      "request_sha": "9ef3c12ee41e180422593bc6f266433818a01015b87fd60301e0f450451bb0a9",
       "response": {
         "content": [
           {
-            "text": "Let me correct that with the complete plan:"
+            "text": "I'll price an example outcome-based plan to show you the model:"
           },
           {
             "toolUse": {
               "input": {
                 "addon_cents": 0,
-                "cost_cents": 25000,
+                "cost_cents": 10000,
                 "discount_bps": 0,
-                "included_units": 1000,
+                "included_units": 0,
                 "outcome_price_micro": 500000,
-                "outcomes": 250,
-                "overage_rate_micro": 100000,
-                "seat_price_cents": 50000,
-                "seats": 10,
-                "usage_units": 500
+                "outcomes": 100,
+                "overage_rate_micro": 0,
+                "seat_price_cents": 0,
+                "seats": 1,
+                "usage_units": 0
               },
               "name": "price_plan",
-              "toolUseId": "tooluse_72SolesrBwE6J6xvknsIov",
+              "toolUseId": "tooluse_ZOVUmFfgYQ99IAfSViaBto",
               "type": "tool_use"
             }
           }
@@ -63,13 +46,13 @@
         "stop_reason": "tool_use",
         "usage": {
           "cacheReadInputTokens": 0,
-          "inputTokens": 2324,
-          "outputTokens": 245
+          "inputTokens": 2083,
+          "outputTokens": 248
         }
       }
     }
   ],
   "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
-  "prompt_version": "specialists-v5",
+  "prompt_version": "specialists-v6",
   "scenario_id": "prc-06"
 }

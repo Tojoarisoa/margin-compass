@@ -1,7 +1,7 @@
 {
   "calls": [
     {
-      "request_sha": "b9afe430e4ae1447eb18824367ee332e1b1130acf804d09c97e7173d33e640f7",
+      "request_sha": "f42b9e94d24d13a8e90bc645f5e8cb12998cd0a8fc64b41017a01983ba9e3063",
       "response": {
         "content": [
           {
@@ -10,7 +10,7 @@
                 "query": "BAA data residency"
               },
               "name": "search_knowledge",
-              "toolUseId": "tooluse_1IeHt7jgGcNAeK7W1hCK6e",
+              "toolUseId": "tooluse_o8Xaun450WlwHoR4sd3YnN",
               "type": "tool_use"
             }
           }
@@ -18,29 +18,29 @@
         "stop_reason": "tool_use",
         "usage": {
           "cacheReadInputTokens": 0,
-          "inputTokens": 898,
+          "inputTokens": 965,
           "outputTokens": 58
         }
       }
     },
     {
-      "request_sha": "543c2eb65eee9cfcb60354700da4caea71cf243c28edf9588b4ed21ab90970e1",
+      "request_sha": "36260fa748b239b377093c83513b88b5d5ca03d95e8b7b3daf607134eb73e05a",
       "response": {
         "content": [
           {
-            "text": "The BAA (Business Associate Agreement) is not explicitly mentioned in the retrieved results. However, the **Compliance-Constraint Policy** [E1] states that \"some tenants require processing in the EU only\" and that \"routing, caching, and batch levers must keep each request in the tenant's contracted region.\" Data residency is a non-waivable limit [E1], and any change to data-residency terms requires approval from the Head of Revenue and the Compliance Owner [E1]. If you have a specific BAA document or tenant in mind, please provide the tenant ID and I can search for more targeted information."
+            "text": "The BAA (Business Associate Agreement) is not explicitly mentioned in the search results. However, the compliance framework shows that **data residency is a non-waivable constraint** [E1]. Specifically, some tenants require processing in the EU only, and routing, caching, and batch operations must keep each request in the tenant's contracted region [E1]. No discount or contract change may move processing outside a tenant's data residency, and any change to data-residency terms requires approval from the Head of revenue with the compliance owner [E1]."
           }
         ],
         "stop_reason": "end_turn",
         "usage": {
           "cacheReadInputTokens": 0,
-          "inputTokens": 1645,
-          "outputTokens": 138
+          "inputTokens": 1712,
+          "outputTokens": 120
         }
       }
     }
   ],
   "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
-  "prompt_version": "specialists-v5",
+  "prompt_version": "specialists-v6",
   "scenario_id": "gov-01"
 }

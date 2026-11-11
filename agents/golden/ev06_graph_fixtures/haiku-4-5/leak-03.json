@@ -13,7 +13,7 @@
                 "query": "support feature cost leak root cause"
               },
               "name": "search_knowledge",
-              "toolUseId": "tooluse_p5sa23J7qYYffbjH5zVNOw",
+              "toolUseId": "tooluse_S9AWpF4JM8zjdgJGMIMYCN",
               "type": "tool_use"
             }
           }
@@ -27,7 +27,7 @@
       }
     },
     {
-      "request_sha": "96490dc7cea3a00cb5d2de01ff425f2ac2d537c78e83e8f7190713cbaf5fe661",
+      "request_sha": "59d03fe748e6cfe4c3436276468886a6bf894515429b3f70f3e1de405b6b38ed",
       "response": {
         "content": [
           {
@@ -39,7 +39,7 @@
                 "sql": "SELECT margin_date, tenant_id, feature_id, ai_revenue_usd, llm_cost_usd, cost_to_serve_usd, gross_margin_usd, gross_margin_pct, request_count FROM fct_tenant_margin WHERE feature_id LIKE '%support%' OR feature_id LIKE '%F1%' OR feature_id LIKE '%F2%' ORDER BY margin_date DESC, gross_margin_pct ASC LIMIT 50"
               },
               "name": "query_gold",
-              "toolUseId": "tooluse_7N1HMxtEwCy6FRhxPCOVIP",
+              "toolUseId": "tooluse_mgoii2jRZFylEjSE9NMhwd",
               "type": "tool_use"
             }
           }
@@ -54,6 +54,6 @@
     }
   ],
   "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
-  "prompt_version": "specialists-v5",
+  "prompt_version": "specialists-v6",
   "scenario_id": "leak-03"
 }

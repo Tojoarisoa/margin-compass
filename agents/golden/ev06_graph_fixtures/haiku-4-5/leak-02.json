@@ -13,7 +13,7 @@
                 "sql": "\nSELECT \n  margin_date,\n  tenant_id,\n  SUM(llm_cost_usd) as total_llm_cost,\n  SUM(cost_to_serve_usd) as total_cost_to_serve,\n  SUM(llm_cost_usd) + SUM(cost_to_serve_usd) as total_spend\nFROM fct_tenant_margin\nWHERE tenant_id = 'bc-t0042'\nGROUP BY margin_date, tenant_id\nORDER BY margin_date DESC\nLIMIT 200\n"
               },
               "name": "query_gold",
-              "toolUseId": "tooluse_PU2IHuPA1XVFZvTMfV8eq2",
+              "toolUseId": "tooluse_rc5nhiP8x3GtPT4FPC5zIr",
               "type": "tool_use"
             }
           }
@@ -27,7 +27,7 @@
       }
     },
     {
-      "request_sha": "88493f0fee3c91fc724907e24323f0fd043ec604ca0c7ba2966198792ee83d6c",
+      "request_sha": "fcf10ca4389872d6bab26bbb4b3b386bf09eb0a76e1652ba4a1c2ea142b7281f",
       "response": {
         "content": [
           {
@@ -44,6 +44,6 @@
     }
   ],
   "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
-  "prompt_version": "specialists-v5",
+  "prompt_version": "specialists-v6",
   "scenario_id": "leak-02"
 }

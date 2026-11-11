@@ -1,7 +1,7 @@
 {
   "calls": [
     {
-      "request_sha": "1ce4c100c0c933a9738760818a626c06d9e9173cd58f2e1f46f48d4f03043cd9",
+      "request_sha": "25979572dc3355af5570b8e0d7ea4c95af8e83c5d56a24479f22bf71363fe979",
       "response": {
         "content": [
           {
@@ -10,7 +10,7 @@
                 "query": "price caps contract policy"
               },
               "name": "search_knowledge",
-              "toolUseId": "tooluse_bwKH13KzAQkaOkad55rwDa",
+              "toolUseId": "tooluse_f39XH86Xq8CjJVjnHIeKYC",
               "type": "tool_use"
             }
           }
@@ -18,29 +18,29 @@
         "stop_reason": "tool_use",
         "usage": {
           "cacheReadInputTokens": 0,
-          "inputTokens": 896,
+          "inputTokens": 963,
           "outputTokens": 57
         }
       }
     },
     {
-      "request_sha": "1a861f47f0bc341154a6f174a1e1351609439fd6da65a564c307deb0491878c0",
+      "request_sha": "c06e4cd997c99c828c3d9c834ac439043910110c483bd4a5d46c7bdbe66d603f",
       "response": {
         "content": [
           {
-            "text": "The search results address discount authority and contract changes, but do not contain a specific policy on price caps. The retrieved documents cover discount approval limits by role [E1] and contract change authority, but neither defines a general price-cap policy. To answer your question accurately, I would need to search for more specific documentation on price caps or pricing limits. Could you clarify whether you're asking about discount caps, pricing limits in a specific contract, or a different aspect of price controls?"
+            "text": "The search results address discount authority and contract changes, but do not contain a specific policy on price caps. The closest relevant information is that **RevOps or a customer-success lead may approve replacing an \"unlimited AI\" clause with a fair-use cap at renewal** [E1], and that **no discount or contract change may lower safety screening or move processing outside a tenant's approved-model list or data residency** [E1]. \n\nIf you're asking about a different aspect of price caps (such as pricing limits, rate adjustments, or escalation clauses), please clarify and I can search more specifically."
           }
         ],
         "stop_reason": "end_turn",
         "usage": {
           "cacheReadInputTokens": 0,
-          "inputTokens": 1727,
-          "outputTokens": 101
+          "inputTokens": 1794,
+          "outputTokens": 133
         }
       }
     }
   ],
   "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
-  "prompt_version": "specialists-v5",
+  "prompt_version": "specialists-v6",
   "scenario_id": "gov-04"
 }

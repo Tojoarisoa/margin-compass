@@ -1,7 +1,7 @@
 {
   "calls": [
     {
-      "request_sha": "cec6f897d0ea8d249b532bdb94fb28e32266bbe939353092dd54c95c024fba03",
+      "request_sha": "043c6dc63479ff67187536025f836c421a61cdfb3fa304a0bcf53b5d96a921aa",
       "response": {
         "content": [
           {
@@ -10,7 +10,7 @@
                 "query": "discount authority 12%"
               },
               "name": "search_knowledge",
-              "toolUseId": "tooluse_gpjmm1UDg3eqzOuCf3SvPV",
+              "toolUseId": "tooluse_6kHiD11KYAUr6HG9UXLUfP",
               "type": "tool_use"
             }
           }
@@ -18,29 +18,29 @@
         "stop_reason": "tool_use",
         "usage": {
           "cacheReadInputTokens": 0,
-          "inputTokens": 898,
+          "inputTokens": 965,
           "outputTokens": 58
         }
       }
     },
     {
-      "request_sha": "39e3975eaf9c6768295dfd32d4b1ff3d70bba038291fa84f0daad3dc2055f348",
+      "request_sha": "451cdda8ae4b5066c4f97d9f3e39f6046ee314c8439df07d618d956bc2df1183",
       "response": {
         "content": [
           {
-            "text": "A 12% discount falls within the authority of **RevOps or customer-success lead**, who may approve discounts of up to 15% [E1]. An Account manager may only approve up to 5%, so a 12% discount exceeds their authority and must go to the next role."
+            "text": "A 12% discount requires approval by **RevOps or customer-success lead**, who may approve discounts up to 15% [E1]. An Account manager may only approve up to 5%, so a 12% discount exceeds their authority."
           }
         ],
         "stop_reason": "end_turn",
         "usage": {
           "cacheReadInputTokens": 0,
-          "inputTokens": 1790,
-          "outputTokens": 67
+          "inputTokens": 1857,
+          "outputTokens": 57
         }
       }
     }
   ],
   "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
-  "prompt_version": "specialists-v5",
+  "prompt_version": "specialists-v6",
   "scenario_id": "gov-03"
 }
