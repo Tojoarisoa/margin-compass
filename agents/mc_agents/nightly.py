@@ -86,8 +86,15 @@ def _leak_actions(con: duckdb.DuckDBPyConnection, gold: Path, run_id: str) -> li
         SELECT feature_id, metric, sum(impact_usd_per_day), max(peak_ratio)
         FROM read_parquet('{path}') WHERE status = 'open' AND impact_usd_per_day > 0
         GROUP BY feature_id, metric ORDER BY feature_id, metric""").fetchall()
+    # "Recent" counts back from the last day of data (the margin mart), not from the newest leak: otherwise a
+    # cluster of months-old leaks would be drafted as new. Without the mart, fall back to the leaks' own dates.
+    margin = gold / "fct_m2_tenant_margin.parquet"
+    as_of = (f"(SELECT max(margin_date) FROM read_parquet('{margin}'))" if margin.exists()
+             else f"(SELECT max(coalesce(end_date, start_date)) FROM read_parquet('{path}'))"
+             if "end_date" in {r[0] for r in con.execute(f"SELECT name FROM parquet_schema('{path}')").fetchall()}
+             else f"(SELECT max(start_date) FROM read_parquet('{path}'))")
     recent = con.execute(f"""
-        WITH last AS (SELECT max(start_date) AS d FROM read_parquet('{path}'))
+        WITH last AS (SELECT {as_of} AS d)
         SELECT feature_id, metric, sum(impact_usd_per_day), max(peak_ratio)
         FROM read_parquet('{path}'), last
         WHERE status <> 'open' AND impact_usd_per_day > 0 AND start_date > last.d - INTERVAL {TRAILING_DAYS} DAY
@@ -225,11 +232,32 @@ def _renewal_actions(con, gold: Path, run_id: str) -> list[Action]:
         if days > RENEWAL_DAYS or Decimal(mar) < 0 or not (now < RENEWAL_TARGET_PCT or falling):
             continue
         gap = max(Decimal(0), RENEWAL_TARGET_PCT - now) / 100 * Decimal(rev) * MONTH_DAYS / TRAILING_DAYS
+        if falling:  # a falling margin above target is sized by the fall itself, so the action is never $0
+            gap = max(gap, (before - now) / 100 * Decimal(rev) * MONTH_DAYS / TRAILING_DAYS)
+        trend = f" (down from {before:.1f}%)" if falling else ""
         out.append(_action(run_id, "ACT-3", f"{tenant}/renewal",
-                           f"{tenant} renews in {days} days with a {now:.1f}% margin; prepare the renewal terms "
+                           f"{tenant} renews in {days} days with a {now:.1f}% margin{trend}; prepare the renewal terms "
                            "(fair-use cap or price) within the discount-authority matrix",
                            gap, Decimal("0.50"), 2, "No change to the product", "medium", due.isoformat()))
     return out
+
+
+def _one_per_tenant(actions) -> list[Action]:
+    """Deduplicate (PLAN.md §8.5): at most one ACT-3 per tenant, so the brief's total never counts a tenant twice.
+
+    A renewal wins (it carries the deadline and already mentions a falling margin); otherwise the highest score.
+    """
+    keep: dict[str, Action] = {}
+    rest = []
+    for a in sorted(actions, key=lambda a: (-a.score, a.action_id)):
+        if a.action_type != "ACT-3":
+            rest.append(a)
+            continue
+        tenant = a.target.split("/")[0]
+        cur = keep.get(tenant)
+        if cur is None or (a.target.endswith("/renewal") and not cur.target.endswith("/renewal")):
+            keep[tenant] = a
+    return rest + list(keep.values())
 
 
 def review(gold: Path, run_id: str) -> list[Action]:
@@ -240,7 +268,7 @@ def review(gold: Path, run_id: str) -> list[Action]:
     found = {a.action_id: a for a in (_leak_actions(con, g, run_id) + _tenant_actions(con, g, run_id)
                                       + _trend_actions(con, g, run_id) + _renewal_actions(con, g, run_id)
                                       + _plan_actions(con, g, run_id))}
-    ranked = sorted(found.values(), key=lambda a: (-a.score, a.action_id))
+    ranked = sorted(_one_per_tenant(found.values()), key=lambda a: (-a.score, a.action_id))
     return ranked[:MAX_ACTIONS]
 
 

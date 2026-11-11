@@ -26,7 +26,7 @@ def _gold(tmp_path, leaks=True):
 
 def test_ranks_open_leaks_and_losing_tenants(tmp_path):
     acts = nightly.review(_gold(tmp_path) / "gold", "r1")
-    # F2 closed on 2026-10-05, within 28 days of the latest leak: drafted at low confidence; profitable tenant excluded
+    # F2 closed, started 2026-10-05, within 28 days of the last data day (2026-10-31): drafted at low confidence; profitable tenant excluded
     assert {a.target for a in acts} == {"F4/cost", "F1/cost", "F2/cost", "bc-t0002", "bc-t0003"}
     assert [a.score for a in acts] == sorted((a.score for a in acts), reverse=True)
     top = acts[0]
@@ -81,11 +81,32 @@ def _gold_trend(tmp_path):
 
 def test_deteriorating_margin_and_renewals(tmp_path):
     acts = {a.target: a for a in nightly.review(_gold_trend(tmp_path), "r1")}
-    assert set(acts) == {"t1/margin-trend", "t1/renewal"}  # t2 healthy; t3 is low but renews in 200 days
-    # 10 points of 2,800 revenue over 28 days, scaled to 30 days
+    # t2 healthy; t3 is low but renews in 200 days; t1 falls AND renews: one action (the renewal), not two
+    assert set(acts) == {"t1/renewal"}
+    r = acts["t1/renewal"]
+    assert r.approver == "revops_lead" and "30 days" in r.title and "down from 40.0%" in r.title
+    assert r.renewal_date == "2026-11-30"
+    # 30% is at the target, so the gap is the 10-point fall: 10 points of 2,800 revenue over 28 days, scaled to 30
+    assert r.impact_usd_month == Decimal("300.00")
+
+
+def test_trend_without_renewal_keeps_the_trend_action(tmp_path):
+    gold = _gold_trend(tmp_path)
+    duckdb.sql("""select * from (values ('t1',DATE '2025-05-19',true),('t2',DATE '2025-11-30',true),
+        ('t3',DATE '2025-05-19',true)) v(tenant_id, renewal_date, is_current)""").write_parquet(str(gold / "dim_tenant.parquet"))
+    acts = {a.target: a for a in nightly.review(gold, "r1")}
+    assert set(acts) == {"t1/margin-trend"} and acts["t1/margin-trend"].renewal_date == ""
     assert acts["t1/margin-trend"].impact_usd_month == Decimal("300.00")
-    assert acts["t1/renewal"].approver == "revops_lead" and "30 days" in acts["t1/renewal"].title
-    assert acts["t1/renewal"].renewal_date == "2026-11-30" and acts["t1/margin-trend"].renewal_date == ""
+
+
+def test_recent_closed_leaks_count_back_from_the_last_day_of_data(tmp_path):
+    root = _gold(tmp_path, leaks=False)  # margin data ends 2026-10-31
+    duckdb.sql("""select * from (values ('F2','cost',DATE '2026-05-01','closed',9.0::decimal(18,6),5.0),
+        ('F3','cost',DATE '2026-05-20','closed',4.0::decimal(18,6),3.0))
+        v(feature_id, metric, start_date, status, impact_usd_per_day, peak_ratio)""").write_parquet(
+        str(root / "gold" / "fct_margin_leaks.parquet"))
+    # both leaks are within 28 days of each other but months before the data ends: neither is "recent"
+    assert not {a.target for a in nightly.review(root / "gold", "r1")} & {"F2/cost", "F3/cost"}
 
 
 def test_queue_carries_renewal_date_only_for_renewals(tmp_path):
@@ -93,7 +114,7 @@ def test_queue_carries_renewal_date_only_for_renewals(tmp_path):
     gold = _gold_trend(tmp_path)
     nightly.write(root, "r1")
     q = {a["target"]: a for a in json.loads((root / "publish" / "latest" / "actions.json").read_text())["actions"]}
-    assert q["t1/renewal"]["renewal_date"] == "2026-11-30" and "renewal_date" not in q["t1/margin-trend"]
+    assert q["t1/renewal"]["renewal_date"] == "2026-11-30" and "t1/margin-trend" not in q
     assert "renewal_date" not in pq.read_table(gold / "fct_actions.parquet").column_names
 
 

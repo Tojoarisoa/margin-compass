@@ -6,9 +6,12 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 - **Claude Haiku 5.5 access:** access requested, waiting for AWS. Converse via `us.anthropic.claude-haiku-5-5` still returns `AccessDeniedException`. Autopilot: re-probe with the ops workflow (`record-fixtures`, `haiku-5-5`) at most once a day; when it succeeds, record the M1-06 fixtures and apply the ADR-003 selection rule. Until then Haiku 4.5 stays the default.
 
-- **M5-03 steps 4-6 (approvals store, Cognito, owner mode):** the plan's step 4 asks for a new on-demand table `mc-dev-state-approvals`, which contradicts ADR-011 (single provisioned core table, on-demand forbidden). Auto-decision under §8.2: store approvals as an item type in `mc-dev-state-core` (no new table). The write path restricted to the owner needs the Cognito pool (step 5) and creating the owner user is owner-only. Question: OK to build the Cognito pool + API write path (IaC, no users created), then you create the owner user in the console? Until answered, autopilot skips M5-03 steps 4-6.
+## Owner decision 2026-11-11
 
-- **M4-05 EV-06 calibration labels:** the rubric-based LLM judge now runs (Haiku 4.5, 12/13 = 92.3% on the scenarios with a recorded outcome, replayed in CI). PLAN §9 wants it "calibrated on human labels", which autopilot can't produce. Question: will you label the 13 judge verdicts (pass/fail each; fixtures in `agents/golden/ev06_judge_fixtures/haiku-4-5/`), or accept rubric + judge (agreement 92.3%) as the EV-06 gate until you do? Until answered, M4-05 stays unticked.
+- **M5-03 steps 4-6: yes.** Build the Cognito user pool and the owner-only API write path as IaC (no users created). Approvals are an item type in `mc-dev-state-core` (ADR-011, no new table). When the pool is deployed, add "create the owner user in the Cognito console" under Waiting for owner; the owner does that step.
+- **EV-06 judge: accepted.** The rubric-based LLM judge (agreement 92.3% on the 13 recorded outcomes) is the EV-06 gate until the owner labels the verdicts. No human labels are needed to tick M4-05.
+- **EV-06 graph tuning:** runs 109-119 cycled prompt tweaks, re-records and reverts with the graph replay between 10 and 18 of 27. Stop that loop: do M5-03 steps 4-6 first, then M6. Return to the graph gate later with a different approach (fewer scenarios per change, or a gate on the judge instead of exact replay), and log the current baseline (17/27, specialists-v9) as known.
+- **Nightly review fixes (owner PR):** "recent" closed leaks now count back from the last day of data, not from the newest leak; at most one ACT-3 per tenant (a renewal wins and mentions a falling margin), so the brief total never counts a tenant twice; a renewal with a falling margin above target is sized by the fall, never $0.
 
 ## Owner decision 2026-11-06
 
@@ -16,14 +19,12 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-1. **Check main `ci` + `deploy to dev`** for 61ef333 and 74e3cec (#258, merged at 45 min; deploys were still running when run 119 ended). No re-record needed: main's graph fixtures are v9 (ops 43018286081).
-2. **AG-05 still open:** act-04 regressed, act-01 unverified, prc-04 restates the question's "5%", prc-05 asks the user (bc-t0021 has no plan), prc-06 capped. Read the 43018286081 fixtures (committed) before changing anything; the AG-05 prompt is at the cost-cap edge.
-3. **AG-07 double search (act-06):** v10 "search once, top_k 8" fixed gov-06 but made act-05, gov-02, gov-04 unverified (longer answers from 8 hits). Next try: search once with the default top_k (5), or check what the verifier withheld in the 43021580730 log first.
-4. **AG-06 tools have no input schema** (`replay_lever`, `roi_multiple`): eff-03 uses `query_gold`. Add schemas, then re-record. Also cts-04 (AG-03 rounds), leak-03 (capped after 2 tools).
-5. **3c-4:** judge the graph runs; add the CI replay gate at 90%. Calibration: see Waiting for owner.
-6. **API `search_knowledge`:** the deployed graph (`MC_GRAPH`, off by default) still gets no knowledge tool; needs the index in the Lambda (check deploy impact and cost first).
-7. **M5-04:** KPI-09 needs a closed-loop plan change, KPI-13 the real AWS bill (M2-04 FOCUS export). M5-03 steps 4-6: see Waiting for owner.
-8. **Daily checks (not tasks):** ops `verify-backfill` (last 2026-11-11 00:23 UTC: `awaiting_first_export`) and the Haiku 5.5 probe (last 2026-11-11: `AccessDeniedException`). Next due 2026-11-12.
+1. **M5-03 steps 4-6** (owner said yes, 2026-11-11): Cognito pool + owner-only approval write path (IaC, no users), approvals in `mc-dev-state-core`, owner mode in the Action Center. Cost gate stays at or below $3. Tick M5-03 once the owner has created the user and an approval round-trips.
+2. **M4-05:** EV-06 judge accepted as the gate (see Owner decision 2026-11-11). Check the remaining M4-05 gates; tick M4-05 if they pass. Do not resume the graph prompt-tuning loop; the open AG-05/06/07 items (act-01/04, prc-04/05/06, act-05/06, gov-02/04, eff-03, cts-04, leak-03) wait.
+3. **M5-04:** KPI-09 needs a closed-loop plan change, KPI-13 the real AWS bill (M2-04 FOCUS export).
+4. **Then M6** per PLAN.md §17 (M6-01 telemetry lake, alarms, runbooks first).
+5. **API `search_knowledge`:** the deployed graph (`MC_GRAPH`, off by default) still gets no knowledge tool; needs the index in the Lambda (check deploy impact and cost first).
+6. **Daily checks (not tasks):** ops `verify-backfill` (last 2026-11-11 00:23 UTC: `awaiting_first_export`) and the Haiku 5.5 probe (last 2026-11-11: `AccessDeniedException`). Next due 2026-11-12. After the owner's nightly fix is deployed, the next `start-backfill` should publish a brief with no tenant listed twice.
 
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed.
