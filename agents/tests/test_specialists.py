@@ -101,9 +101,16 @@ def test_pricing_specialist_calls_tools_instead_of_asking():
     assert "never convert to dollars or percent" in pricing
     # 3c-3e: approval requests are priced, churn always passes churn_bps, no partial plans, no restated %
     assert "\"Approve\" a discount means price it" in pricing and "never a partial plan" in pricing
-    assert "pass churn_bps 200" in pricing and "never restate a percentage" in pricing
+    assert "pass churn_bps 200" in pricing
+    # 3c-3g: no % sign and no computed difference (the verifier withheld "4%" and a before-after difference)
+    assert "never write a % sign" in pricing and "never state a difference the tool did not return" in pricing
     assert pricing.endswith("At most 4 short sentences.")
     assert "Never ask the user" not in SPECIALISTS["leak"].system
+    # 3c-3g: AG-06 writes no numbered lists or questions; AG-07 answers change/waive/refund requests from the
+    # authority documents; AG-03 (replayed by EV-05) keeps the shared rules only
+    assert "Never number your points" in SPECIALISTS["efficiency"].system
+    assert "never refuse it or ask for details" in SPECIALISTS["contract_policy"].system
+    assert SPECIALISTS["cost_to_serve"].instructions == ""
     specs = {s["toolSpec"]["name"]: s["toolSpec"]["inputSchema"]["json"] for s in tool_specs(SPECIALISTS["pricing"])}
     assert SPECIALISTS["pricing"].tools == ("price_plan", "query_gold")  # churn is price_plan's churn_bps now
     assert specs["price_plan"]["required"] == [] and "after" in specs["price_plan"]["properties"]

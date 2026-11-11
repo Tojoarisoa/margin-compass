@@ -151,9 +151,15 @@ def test_recorded_graph_fixtures_replay(gold):
 
     Step 3c-3f (search_knowledge v2 schema, specialists-v5 AG-07 instruction): the 12 scenarios routed to AG-04 or
     AG-07 drifted until re-recorded by ops run 42974835149: 14/27 (gov-03, gov-05, leak-05 now pass).
+
+    Step 3c-3g (specialists-v6: AG-05 no restated %, AG-06 no numbered lists, AG-07 answers change/waive/refund
+    requests from the authority matrix): the 20 scenarios routed to AG-05, AG-06 or AG-07 below drift (each
+    scored as a fail, so 5/27) until the next ops record run. AG-03 and AG-04 are unchanged (EV-05 replays AG-03).
     """
     rep = run_graph(gold, "haiku-4-5", "replay")
     assert set(rep["runs"]) == {s["id"] for s in default_scenarios()}
-    assert rep["drifted"] == []
-    assert round(rep["ev06"] * 27) == 14 and not rep["passed"]
-    assert rep["runs"]["eff-04"] == {"route": "efficiency", "tools": ["query_gold"], "status": "answered"}
+    assert rep["drifted"] == ["act-01", "act-02", "act-03", "act-04", "act-05", "act-06", "eff-03", "eff-04",
+                              "eff-05", "eff-06", "gov-01", "gov-02", "gov-03", "gov-04", "gov-05", "gov-06",
+                              "leak-04", "prc-04", "prc-05", "prc-06"]
+    assert round(rep["ev06"] * 27) == 5 and not rep["passed"]
+    assert rep["runs"]["leak-02"] == {"route": "leak", "tools": ["query_gold"], "status": "answered"}

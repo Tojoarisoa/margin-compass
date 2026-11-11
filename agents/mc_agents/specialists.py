@@ -16,7 +16,7 @@ from .llm import BudgetedLLM, LLMRequest
 from .tools import registry
 from .tools.metrics import ToolError
 
-PROMPT_VERSION = "specialists-v5"
+PROMPT_VERSION = "specialists-v6"
 _RULES = ("Get every figure from a tool; never calculate or round. Copy figures exactly and cite the evidence ID "
           "such as [E1]. Synthetic data. At most 4 short sentences.")
 
@@ -32,18 +32,28 @@ _PRICING = ("Never ask the user for plan details, a tenant, an approver or appro
             "{\"discount_bps\": N*100}; a price rise is the new seat_price_cents; an outcome-based plan is after "
             "{\"outcome_price_micro\": ..., \"outcomes\": ...}. Whenever churn is asked, pass churn_bps 200 unless "
             "a rate is given, and say it is assumed. Report money in cents and rates in bps exactly as the tool "
-            "returns them; never convert to dollars or percent, and never restate a percentage from the question: "
-            "call it the requested change. \"Approve\" a discount means price it: give the before and after figures "
-            "and say approval goes to the role with authority for that discount. Example: \"Approve a 4% discount\" "
-            "-> price_plan {\"after\": {\"discount_bps\": 400}}, then answer with the tool's before and after "
-            "figures.")
+            "returns them; never convert to dollars or percent, never write a % sign, and never state a "
+            "difference the tool did not return. \"Approve\" a discount means price it and say approval goes to "
+            "the role with authority for it. Example: \"Approve a 4% discount\" -> price_plan {\"after\": "
+            "{\"discount_bps\": 400}}, then answer \"For the requested discount (400 bps), revenue goes from X to "
+            "Y cents [E1].\"")
+# 3c-3g (specialists-v6): act-01/02/04 and prc-04 restated the question's percentage ("4%"), and act-01 wrote
+# a difference it computed; the verifier withheld both. AG-07 refused or asked for details on change, waive and
+# refund requests (act-05/06) instead of searching the authority matrix.
 # 3c-3f (specialists-v5): AG-07 called search_knowledge with no tenant_id, got errors and then asked the user for a
 # contract name (gov-01..06). The tool now has a schema (v2) and the instruction says how to call it.
 _CONTRACT_POLICY = ("Never ask the user for a contract, policy or tenant; call search_knowledge first, with no "
                     "preamble, passing the question's key words as query, and tenant_id only when the question "
                     "names a tenant ID like bc-t0021. Answer only from the retrieved text and cite its evidence ID. "
                     "If the hits don't answer the question, say so. Never approve or waive anything: say which role "
-                    "has authority.")
+                    "has authority. A request to change, waive, refund or approve something is a question about "
+                    "authority: never refuse it or ask for details; search for the clause and who may approve it "
+                    "(for example \"liability cap waiver approval authority\"), then say which role has authority, "
+                    "or that no role can waive it, citing the hit.")
+# 3c-3g (specialists-v6): AG-06 numbered its points ("1.", "2.", "3."), which the verifier reads as unsupported
+# figures (eff-06, leak-04), and ended answers with a question to the user (eff-03).
+_EFFICIENCY = ("Never number your points or use numbered lists; write plain sentences. Never ask the user a "
+               "question; answer from the tool results, or say the data does not answer it.")
 
 
 @dataclass(frozen=True)
@@ -64,7 +74,8 @@ SPECIALISTS: dict[str, Specialist] = {s.node: s for s in (
     Specialist("leak", "AG-04", "Margin-Leak Investigator", ("query_gold", "search_knowledge")),
     Specialist("pricing", "AG-05", "Forecast and Pricing Strategist", ("price_plan", "query_gold"),
                _PRICING),
-    Specialist("efficiency", "AG-06", "AI Efficiency Engineer", ("replay_lever", "roi_multiple", "query_gold")),
+    Specialist("efficiency", "AG-06", "AI Efficiency Engineer", ("replay_lever", "roi_multiple", "query_gold"),
+               _EFFICIENCY),
     Specialist("contract_policy", "AG-07", "Contract and Policy Advisor", ("search_knowledge",),
                _CONTRACT_POLICY),
 )}
