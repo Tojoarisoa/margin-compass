@@ -38,7 +38,7 @@ def test_contract_policy_run_gets_search_knowledge(gold):
     offered = [t["toolSpec"]["name"] for t in client.requests[0].tools]
     assert offered == ["search_knowledge"]
     ev = out["ledger"].entries[0]
-    assert ev.tool == "search_knowledge@1" and ev.result["hits"]
+    assert ev.tool == "search_knowledge@2" and ev.result["hits"]
     assert not out["drifted"]
 
 
@@ -148,9 +148,13 @@ def test_recorded_graph_fixtures_replay(gold):
 
     Step 3c-3e (specialists-v4, AG-05 instruction only): re-recorded by ops run 42970965596, 11/27. act-03 now
     passes; act-01/02/04, prc-04..06 still fail.
+
+    Step 3c-3f (search_knowledge v2 schema, specialists-v5 AG-07 instruction): the 12 scenarios routed to AG-04 or
+    AG-07 below drift (each scored as a fail, so 5/27) until the next ops record run.
     """
     rep = run_graph(gold, "haiku-4-5", "replay")
     assert set(rep["runs"]) == {s["id"] for s in default_scenarios()}
-    assert rep["drifted"] == []
-    assert round(rep["ev06"] * 27) == 11 and not rep["passed"]
+    assert rep["drifted"] == ["act-05", "act-06", "gov-01", "gov-02", "gov-03", "gov-04", "gov-05", "gov-06",
+                              "leak-02", "leak-03", "leak-05", "leak-06"]
+    assert round(rep["ev06"] * 27) == 5 and not rep["passed"]
     assert rep["runs"]["eff-04"] == {"route": "efficiency", "tools": ["query_gold"], "status": "answered"}

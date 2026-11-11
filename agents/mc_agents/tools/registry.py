@@ -75,8 +75,19 @@ TOOLS: dict[str, ToolSpec] = {t.name: t for t in (
 
 def search_knowledge_spec(**deps: Any) -> ToolSpec:
     from mc_agents.tools.retrieval import make_search_knowledge
-    return ToolSpec("search_knowledge", "1", "Tenant-filtered hybrid retrieval over contracts, policies, playbooks and schema cards.",
-                    make_search_knowledge(**deps))
+    # v2 (3c-3f): an input schema; AG-07 called it with no tenant_id and failed every time.
+    return ToolSpec("search_knowledge", "2", "Hybrid retrieval over contracts, policies, playbooks and schema cards. "
+                    "Pass `query` (the question's key words). Pass `tenant_id` only when the question names a tenant "
+                    "(adds that tenant's contract); without it only shared policies and playbooks are searched.",
+                    make_search_knowledge(**deps),
+                    input_schema={"type": "object", "properties": {
+                        "query": {"type": "string", "description": "Search words, for example \"discount approval authority\"."},
+                        "tenant_id": {"type": "string", "pattern": "^bc-t[0-9]{4}$",
+                                      "description": "Tenant ID named in the question, like bc-t0021. Omit otherwise."},
+                        "top_k": {"type": "integer", "minimum": 1, "maximum": 20, "description": "Hits to return (default 5)."},
+                        "clause_types": {"type": "array", "items": {"type": "string"},
+                                         "description": "Optional clause types to keep."}},
+                        "required": ["query"]})
 
 
 def query_gold_spec(gold_dir: Any) -> ToolSpec:

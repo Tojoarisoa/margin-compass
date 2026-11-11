@@ -3,6 +3,10 @@
 Read-only, tenant-filtered hybrid retrieval over the knowledge corpus. The tenant filter and the
 fail-closed re-check live in `mc_rag.retrieve`; this wrapper only validates arguments and shapes the
 result for the evidence ledger. Hits carry text, never numbers computed by the model.
+
+v2 (M4-05 3c-3f): `tenant_id` is optional. Without it the search sees shared documents only (policies,
+playbooks, schema cards): it runs under a tenant ID no tenant has, and every hit is re-checked to be shared
+(fail closed). AG-07 used to call the tool with no `tenant_id` and got an error every time.
 """
 
 from __future__ import annotations
@@ -11,9 +15,12 @@ from collections.abc import Callable
 from typing import Any
 
 from mc_rag import BM25Index, hybrid_retrieve
+from mc_rag.corpus import ALL_TENANTS
 from mc_rag.embed import Embedder
-from mc_rag.retrieve import MAX_TOP_K
+from mc_rag.retrieve import MAX_TOP_K, TenantIsolationError
 from mc_rag.store import VectorStore
+
+_NO_TENANT = "bc-t0000"  # never a real tenant (IDs start at bc-t0001): sees shared documents only
 
 
 def make_search_knowledge(*, embedder: Embedder, store: VectorStore, bm25: BM25Index) -> Callable[[dict[str, Any]], dict[str, Any]]:
@@ -27,9 +34,18 @@ def make_search_knowledge(*, embedder: Embedder, store: VectorStore, bm25: BM25I
         clause_types = args.get("clause_types")
         if clause_types is not None and not (isinstance(clause_types, list) and all(isinstance(c, str) for c in clause_types)):
             raise ValueError("clause_types must be a list of strings")
-        hits = hybrid_retrieve(query, tenant_id=args["tenant_id"], embedder=embedder, store=store, bm25=bm25,
-                               top_k=top_k, clause_types=clause_types)
-        return {"tenant_id": args["tenant_id"], "query": query, "hits": [
+        tenant_id = args.get("tenant_id")
+        if tenant_id is None:
+            hits = hybrid_retrieve(query, tenant_id=_NO_TENANT, embedder=embedder, store=store, bm25=bm25,
+                                   top_k=top_k, clause_types=clause_types)
+            if any(h.tenant_id != ALL_TENANTS for h in hits):
+                raise TenantIsolationError("a search without tenant_id returned a tenant's chunk")
+        else:
+            if tenant_id == _NO_TENANT:
+                raise ValueError(f"tenant_id {_NO_TENANT} is reserved")
+            hits = hybrid_retrieve(query, tenant_id=tenant_id, embedder=embedder, store=store, bm25=bm25,
+                                   top_k=top_k, clause_types=clause_types)
+        return {"tenant_id": tenant_id or ALL_TENANTS, "query": query, "hits": [
             {"rank": i + 1, "key": h.key, "doc_id": h.doc_id, "source_type": h.source_type,
              "clause_type": h.clause_type, "heading": h.heading, "text": h.text} for i, h in enumerate(hits)]}
     return search_knowledge

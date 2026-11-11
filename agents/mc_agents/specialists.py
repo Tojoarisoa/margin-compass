@@ -16,7 +16,7 @@ from .llm import BudgetedLLM, LLMRequest
 from .tools import registry
 from .tools.metrics import ToolError
 
-PROMPT_VERSION = "specialists-v4"
+PROMPT_VERSION = "specialists-v5"
 _RULES = ("Get every figure from a tool; never calculate or round. Copy figures exactly and cite the evidence ID "
           "such as [E1]. Synthetic data. At most 4 short sentences.")
 
@@ -37,6 +37,13 @@ _PRICING = ("Never ask the user for plan details, a tenant, an approver or appro
             "and say approval goes to the role with authority for that discount. Example: \"Approve a 4% discount\" "
             "-> price_plan {\"after\": {\"discount_bps\": 400}}, then answer with the tool's before and after "
             "figures.")
+# 3c-3f (specialists-v5): AG-07 called search_knowledge with no tenant_id, got errors and then asked the user for a
+# contract name (gov-01..06). The tool now has a schema (v2) and the instruction says how to call it.
+_CONTRACT_POLICY = ("Never ask the user for a contract, policy or tenant; call search_knowledge first, with no "
+                    "preamble, passing the question's key words as query, and tenant_id only when the question "
+                    "names a tenant ID like bc-t0021. Answer only from the retrieved text and cite its evidence ID. "
+                    "If the hits don't answer the question, say so. Never approve or waive anything: say which role "
+                    "has authority.")
 
 
 @dataclass(frozen=True)
@@ -58,7 +65,8 @@ SPECIALISTS: dict[str, Specialist] = {s.node: s for s in (
     Specialist("pricing", "AG-05", "Forecast and Pricing Strategist", ("price_plan", "query_gold"),
                _PRICING),
     Specialist("efficiency", "AG-06", "AI Efficiency Engineer", ("replay_lever", "roi_multiple", "query_gold")),
-    Specialist("contract_policy", "AG-07", "Contract and Policy Advisor", ("search_knowledge",)),
+    Specialist("contract_policy", "AG-07", "Contract and Policy Advisor", ("search_knowledge",),
+               _CONTRACT_POLICY),
 )}
 
 
