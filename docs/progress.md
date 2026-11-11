@@ -23,17 +23,31 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-1. **Finish PRs #289-#294 (stacked, in order):** main `ci` + `deploy to dev` for efbff03 (run 43098377193) first. Then for each PR head re-check the guard; if its `ci` run is still stuck (jobs `in_progress`, steps done) re-run it (`.../actions/runs/{id}/rerun`). Merge by fast-forwarding `main` to the highest fully green head (#294 = a79e946 + this progress commit). Then dispatch ops `red-team` once and log it.
-2. **Kill-switch G1 step 2:** SNS-triggered handler that writes/deletes `publish/latest/kill_switch.json`, sets API concurrency 0, turns `mc-*` schedules off (scoped IAM; verify the Budgets action SNS message format in AWS docs first; docs.aws.amazon.com was not reachable in run 125). See `docs/runbooks/kill-switch-game-day.md`.
-3. **M6-03 remaining:** drill itself (G3: owner console or ops self-attach, owner's call), CloudFront invalidation grant scoping (low), golden set to 100 (needs graph fixture recording).
-4. **M5-04:** KPI-09 needs a closed-loop plan change, KPI-13 the real AWS bill (M2-04 FOCUS export).
-5. **EV-06 graph replay** (known baseline 17/27, specialists-v9): revisit later with fewer scenarios per change or a judge-based gate.
-6. **API `search_knowledge`:** the deployed graph (`MC_GRAPH`, off by default) still gets no knowledge tool; needs the index in the Lambda (check deploy impact and cost first).
-7. **Daily checks (not tasks):** ops `verify-backfill` and the Haiku 5.5 probe, next due 2026-11-12. Weekly: `online-eval` runs Mondays 06:17 UTC once #287 is on `main` (it is).
+0. **Merge this progress PR** (`auto/progress-run-126`, run 126 ended past 55 min while the owner's `main` push 66896bf was in CI).
+1. **Kill-switch drill (G3):** the app side is live (`mc-dev-web-kill-switch` + ops `kill-switch-sync`). Run ops `kill-switch-sync` once to see `idle`, then the drill per `docs/runbooks/kill-switch-game-day.md` once the owner says who attaches the policy (console, or an ops IAM grant).
+2. **Ops `red-team`** (from run 125, not dispatched yet): run once and log it.
+3. **M6-04 remaining:** case study needs the realized-margin result (M5-04 KPI-09: closed-loop plan change); then tick M6-04. Done: lessons learned, demo script, guided tour.
+4. **M6-03 remaining:** CloudFront invalidation grant scoping (low; needs the distribution ARN in the foundation stack without breaking first-time setup), golden set to 100 (graph fixture recording).
+5. **M5-04:** KPI-09 needs a closed-loop plan change, KPI-13 the real AWS bill (M2-04 FOCUS export).
+6. **EV-06 graph replay** (known baseline 17/27, specialists-v9): revisit later with fewer scenarios per change or a judge-based gate.
+7. **API `search_knowledge`:** the deployed graph still gets no knowledge tool; needs the index in the Lambda (check deploy impact and cost first).
+8. **Daily checks (not tasks):** ops `verify-backfill` and the Haiku 5.5 probe, next due 2026-11-12. Weekly: `online-eval` Mondays 06:17 UTC.
 
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-05, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed.
 Notes: Ops eval results are in the job log; fixtures are base64 between FIXTURE-BEGIN/END lines. Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1; local replays need it too or everything drifts). Ops `ev06_graph: true` adds the graph runs (opt-in, about $0.15; the ops job ends `failure` while the graph gate is unmet, which is expected). Flaky github.com 504s during image builds: re-run the failed job. Only commit the graph fixtures from a record run; the other fixture sets change only in tool-use IDs. AG-05 prompt is at the cost-cap edge (`test_unsupported_figure_retries_then_fails_closed` sums $0.009965 of $0.01): keep it no longer than v8. Gh-created PR bodies get a footer: remove it with the GitHub MCP `update_pull_request` (gh api PATCH gets it re-added).
+
+## 2026-11-11 (autopilot run 126)
+
+- **Start:** main `ci` for efbff03 (run 43098377193) and #294's runs sat `queued` with no jobs (orphaned; newer runs executed). Cancel/re-run denied by the session guard. Stacked #289-#294 had green heads up to #292's parent; #294 never ran.
+- **Task 1:** PR #297, kill-switch G1 step 2: `mc-dev-web-kill-switch` (Python zip) on the alert topic. Checks whether the deny policy is attached to the API role (no alert parsing): attached -> API concurrency 0, enabled dev schedules off, `publish/latest/kill_switch.json`; detached -> restores what it changed. Grants each name one `mc-*` resource. infra 92 passed; cost gate $1.83.
+- **Task 2:** PR #298, ops `kill-switch-sync` (lift after detach); ops role may invoke only `mc-*-web-kill-switch`.
+- **Task 3:** PR #299, `docs/lessons-learned.md` (M6-04).
+- **Task 4:** PR #300, `docs/demo-video-script.md` (M6-04).
+- **Task 5:** PR #302, guided tour on the dashboard (M6-04); checked in Chromium at 390 px.
+- **Merge:** #300 head 97d2926 (contains #289-#300) fully green (every `ci` job + latest `attribution`); `main` fast-forwarded efbff03 -> 97d2926 at 21:28 (the stuck efbff03 run had no jobs; the new push run covers it). Main `ci` + `deploy to dev` + smoke green (run 43103313212). Then #302 -> `main` 160f57d; main `ci` + `deploy to dev` green (run 43105881353). Worker restarted after that; progress entry left on a PR (past 55 min, owner pushed 4d8927c/66896bf).
+- **Decisions (§8.2):** reconcile kill switch from policy state (parsing the Budgets SNS text rejected: not verifiable offline, $3 alerts must not trip it); tour without a library; case study waits for M5-04 (its headline number is the realized margin).
+- **Cost:** about $0.01/month added (log group); no ops run.
 
 ## 2026-11-11 (autopilot run 125)
 
