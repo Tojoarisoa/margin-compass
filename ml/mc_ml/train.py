@@ -18,6 +18,7 @@ import pyarrow.compute as pc
 import pyarrow.parquet as pq
 
 from .cogs_forecast import gbm
+from .cogs_forecast.drift import forecaster_drift
 from .cogs_forecast.evaluate import CANDIDATES, compare, ev02_gate
 from .cogs_forecast.seasonal_naive import SEASON, backtest, fit
 from .registry import ModelVersion, Registry, should_promote
@@ -179,12 +180,21 @@ def train_cogs_forecaster(gold: Path, models_dir: Path, registry: Registry, arti
         registry.set_alias(MODEL_NAME, "champion", version)
     alias = "champion" if (promoted or champion_version == version) else "challenger"
 
+    # M6-02: drift against the previous run's forecasts (read before they are overwritten) and the champion's backtest
+    prior_path = gold / "fct_forecasts.parquet"
+    prior = pq.read_table(prior_path, columns=["target_date", "feature_id", "p50_usd"]).to_pylist() if prior_path.exists() else []
+    reference = (champion.metrics if champion else metrics).get("by_feature", {})
+    drift = forecaster_drift(series, days, prior, {f: m["wape"] for f, m in reference.items() if m and m.get("wape") is not None})
+    (gold / "_quality").mkdir(parents=True, exist_ok=True)
+    (gold / "_quality" / "model_drift.json").write_text(json.dumps({"model": MODEL_NAME, "run_id": run_id, **drift}, indent=2, sort_keys=True) + "\n")
+
     table = pa.Table.from_pylist(
         [{**r, "model_name": MODEL_NAME, "model_version": version, "model_alias": alias, "feature_scope": FEATURE_SCOPE, "run_id": run_id} for r in rows],
         schema=FORECAST_SCHEMA.with_metadata({b"synthetic": b"true"}),
     )
     pq.write_table(table, gold / "fct_forecasts.parquet", compression="zstd")
     summary = {"model": MODEL_NAME, "version": version, "registered": registered, "promoted": promoted,
-               "alias": alias, "wape": metrics["wape"], "forecast_rows": table.num_rows}
+               "alias": alias, "wape": metrics["wape"], "forecast_rows": table.num_rows,
+               "drift_retrain": drift["retrain"], "drifted_features": drift["drifted"]}
     log.info("train_finished", extra={"fields": summary})
     return summary
