@@ -1,0 +1,55 @@
+{
+  "calls": [
+    {
+      "request_sha": "1830a1c1594e472bb4e378a123792c2d7f4a0848df29d7d01c0550f13133d8ce",
+      "response": {
+        "content": [
+          {
+            "text": "I don't have access to Margin Compass's contract policy documents or tools that would contain information about price caps. To provide you with accurate figures and policy details, I would need you to either:\n\n1. Share the specific policy document or evidence ID\n2. Direct me to the tool where this information is stored\n3. Provide the relevant contract reference\n\nOnce you provide the source material, I can extract the exact price cap policy details and cite the evidence appropriately."
+          }
+        ],
+        "stop_reason": "end_turn",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 68,
+          "outputTokens": 101
+        }
+      }
+    },
+    {
+      "request_sha": "1830a1c1594e472bb4e378a123792c2d7f4a0848df29d7d01c0550f13133d8ce",
+      "response": {
+        "content": [
+          {
+            "text": "I don't have access to Margin Compass's contract policy documents or tools that would contain information about price caps. To provide you with accurate figures and policy details, I would need you to either:\n\n1. Share the specific policy document or evidence ID\n2. Direct me to the tool where this information is stored\n3. Provide the relevant contract reference\n\nOnce you provide the source material, I can extract the exact price cap policy details and cite the evidence appropriately."
+          }
+        ],
+        "stop_reason": "end_turn",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 68,
+          "outputTokens": 101
+        }
+      }
+    },
+    {
+      "request_sha": "1830a1c1594e472bb4e378a123792c2d7f4a0848df29d7d01c0550f13133d8ce",
+      "response": {
+        "content": [
+          {
+            "text": "I don't have access to Margin Compass's contract policy documents or tools that would contain information about price caps. To provide you with accurate figures and policy details, I would need you to either:\n\n1. Share the specific policy document or evidence ID\n2. Direct me to the tool where this information is stored\n3. Provide the relevant contract reference\n\nOnce you provide the source material, I can extract the exact price cap policy details and cite the evidence appropriately."
+          }
+        ],
+        "stop_reason": "end_turn",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 68,
+          "outputTokens": 101
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "specialists-v1",
+  "scenario_id": "gov-04"
+}

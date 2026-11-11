@@ -1,0 +1,55 @@
+{
+  "calls": [
+    {
+      "request_sha": "12fe30ac3fb66e18f5e5645494c7c1739200005fee5070dd70aa3f29fc6fcd85",
+      "response": {
+        "content": [
+          {
+            "text": "I don't have enough context to answer this question. To investigate the cache hit rate decline after the last release, I would need:\n\n1. **The specific release date** \u2013 when was the last release?\n2. **The date range** \u2013 what period should I analyze (before and after the release)?\n3. **Which cache or system** \u2013 are you referring to a specific cache layer, feature, or tenant?\n\nCould you provide these details so I can query the relevant data and identify what changed?"
+          }
+        ],
+        "stop_reason": "end_turn",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 916,
+          "outputTokens": 109
+        }
+      }
+    },
+    {
+      "request_sha": "12fe30ac3fb66e18f5e5645494c7c1739200005fee5070dd70aa3f29fc6fcd85",
+      "response": {
+        "content": [
+          {
+            "text": "I don't have enough context to answer this question. To investigate the cache hit rate decline after the last release, I would need:\n\n1. **The specific release date** \u2013 when was the last release?\n2. **The date range** \u2013 what period should I analyze (before and after the release)?\n3. **Which cache or system** \u2013 are you referring to a specific cache layer, feature, or tenant?\n\nCould you provide these details so I can query the relevant data and identify what changed?"
+          }
+        ],
+        "stop_reason": "end_turn",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 916,
+          "outputTokens": 109
+        }
+      }
+    },
+    {
+      "request_sha": "12fe30ac3fb66e18f5e5645494c7c1739200005fee5070dd70aa3f29fc6fcd85",
+      "response": {
+        "content": [
+          {
+            "text": "I don't have enough context to answer this question. To investigate the cache hit rate decline after the last release, I would need:\n\n1. **The specific release date** \u2013 when was the last release?\n2. **The date range** \u2013 what period should I analyze (before and after the release)?\n3. **Which cache or system** \u2013 are you referring to a specific cache layer, feature, or tenant?\n\nCould you provide these details so I can query the relevant data and identify what changed?"
+          }
+        ],
+        "stop_reason": "end_turn",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 916,
+          "outputTokens": 109
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "specialists-v1",
+  "scenario_id": "leak-04"
+}

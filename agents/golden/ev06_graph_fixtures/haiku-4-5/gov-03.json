@@ -1,0 +1,55 @@
+{
+  "calls": [
+    {
+      "request_sha": "1fbe6667ac90b91bb627baeb5b870ed1829d162f5efa218d6995c528bc5c090e",
+      "response": {
+        "content": [
+          {
+            "text": "I don't have access to any tools or evidence documents that would contain information about discount authorities and their corresponding discount percentages. To answer your question accurately, I would need you to provide the relevant contract, policy document, or reference material that specifies which discount authority applies to a 12% discount.\n\nCould you please share the document or tool that contains this information?"
+          }
+        ],
+        "stop_reason": "end_turn",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 70,
+          "outputTokens": 78
+        }
+      }
+    },
+    {
+      "request_sha": "1fbe6667ac90b91bb627baeb5b870ed1829d162f5efa218d6995c528bc5c090e",
+      "response": {
+        "content": [
+          {
+            "text": "I don't have access to any tools or evidence documents that would contain information about discount authorities and their corresponding discount percentages. To answer your question accurately, I would need you to provide the relevant contract, policy document, or reference material that specifies which discount authority applies to a 12% discount.\n\nCould you please share the document or tool that contains this information?"
+          }
+        ],
+        "stop_reason": "end_turn",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 70,
+          "outputTokens": 78
+        }
+      }
+    },
+    {
+      "request_sha": "1fbe6667ac90b91bb627baeb5b870ed1829d162f5efa218d6995c528bc5c090e",
+      "response": {
+        "content": [
+          {
+            "text": "I don't have access to any tools or evidence documents that would contain information about discount authorities and their corresponding discount percentages. To answer your question accurately, I would need you to provide the relevant contract, policy document, or reference material that specifies which discount authority applies to a 12% discount.\n\nCould you please share the document or tool that contains this information?"
+          }
+        ],
+        "stop_reason": "end_turn",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 70,
+          "outputTokens": 78
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "specialists-v1",
+  "scenario_id": "gov-03"
+}

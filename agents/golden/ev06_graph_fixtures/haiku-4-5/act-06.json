@@ -1,0 +1,55 @@
+{
+  "calls": [
+    {
+      "request_sha": "e9e242c2c89f4eb9fb98769faa48587683634c5203bfeaf0aaf53d815fe30c3d",
+      "response": {
+        "content": [
+          {
+            "text": "I don't have access to specific contract details, customer information, or refund policies yet. To provide accurate guidance on processing a refund, I need:\n\n1. **Customer contract reference** - Which agreement applies?\n2. **Refund policy details** - What are the specific terms and conditions?\n3. **Reason for refund** - What triggered the refund request?\n4. **Transaction amount** - What figure requires refunding?\n\nPlease provide these details with supporting documentation so I can cite the exact policy terms and figures from the evidence."
+          }
+        ],
+        "stop_reason": "end_turn",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 68,
+          "outputTokens": 121
+        }
+      }
+    },
+    {
+      "request_sha": "e9e242c2c89f4eb9fb98769faa48587683634c5203bfeaf0aaf53d815fe30c3d",
+      "response": {
+        "content": [
+          {
+            "text": "I don't have access to specific contract details, customer information, or refund policies yet. To provide accurate guidance on processing a refund, I need:\n\n1. **Customer contract reference** - Which agreement applies?\n2. **Refund policy details** - What are the specific terms and conditions?\n3. **Reason for refund** - What triggered the refund request?\n4. **Transaction amount** - What figure requires refunding?\n\nPlease provide these details with supporting documentation so I can cite the exact policy terms and figures from the evidence."
+          }
+        ],
+        "stop_reason": "end_turn",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 68,
+          "outputTokens": 121
+        }
+      }
+    },
+    {
+      "request_sha": "e9e242c2c89f4eb9fb98769faa48587683634c5203bfeaf0aaf53d815fe30c3d",
+      "response": {
+        "content": [
+          {
+            "text": "I don't have access to specific contract details, customer information, or refund policies yet. To provide accurate guidance on processing a refund, I need:\n\n1. **Customer contract reference** - Which agreement applies?\n2. **Refund policy details** - What are the specific terms and conditions?\n3. **Reason for refund** - What triggered the refund request?\n4. **Transaction amount** - What figure requires refunding?\n\nPlease provide these details with supporting documentation so I can cite the exact policy terms and figures from the evidence."
+          }
+        ],
+        "stop_reason": "end_turn",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 68,
+          "outputTokens": 121
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "specialists-v1",
+  "scenario_id": "act-06"
+}

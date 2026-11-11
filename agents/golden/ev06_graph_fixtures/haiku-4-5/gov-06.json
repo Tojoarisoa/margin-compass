@@ -1,0 +1,55 @@
+{
+  "calls": [
+    {
+      "request_sha": "03bf7bee57219b2945599a91f2ebf556d3383dce5ea9f10f9f0e1c34d333cbd3",
+      "response": {
+        "content": [
+          {
+            "text": "I don't have access to a tool or database containing information about contract bc-t0050 or its renewal terms. To provide you with accurate renewal terms with proper evidence citations, I would need you to either:\n\n1. Provide the contract document or relevant data\n2. Specify which tool or system contains this contract information\n3. Share the evidence ID where these renewal terms are documented\n\nPlease share the necessary information so I can give you an accurate summary with proper citations."
+          }
+        ],
+        "stop_reason": "end_turn",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 71,
+          "outputTokens": 102
+        }
+      }
+    },
+    {
+      "request_sha": "03bf7bee57219b2945599a91f2ebf556d3383dce5ea9f10f9f0e1c34d333cbd3",
+      "response": {
+        "content": [
+          {
+            "text": "I don't have access to a tool or database containing information about contract bc-t0050 or its renewal terms. To provide you with accurate renewal terms with proper evidence citations, I would need you to either:\n\n1. Provide the contract document or relevant data\n2. Specify which tool or system contains this contract information\n3. Share the evidence ID where these renewal terms are documented\n\nPlease share the necessary information so I can give you an accurate summary with proper citations."
+          }
+        ],
+        "stop_reason": "end_turn",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 71,
+          "outputTokens": 102
+        }
+      }
+    },
+    {
+      "request_sha": "03bf7bee57219b2945599a91f2ebf556d3383dce5ea9f10f9f0e1c34d333cbd3",
+      "response": {
+        "content": [
+          {
+            "text": "I don't have access to a tool or database containing information about contract bc-t0050 or its renewal terms. To provide you with accurate renewal terms with proper evidence citations, I would need you to either:\n\n1. Provide the contract document or relevant data\n2. Specify which tool or system contains this contract information\n3. Share the evidence ID where these renewal terms are documented\n\nPlease share the necessary information so I can give you an accurate summary with proper citations."
+          }
+        ],
+        "stop_reason": "end_turn",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 71,
+          "outputTokens": 102
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "specialists-v1",
+  "scenario_id": "gov-06"
+}

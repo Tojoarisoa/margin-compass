@@ -1,0 +1,47 @@
+{
+  "calls": [
+    {
+      "request_sha": "b572f274f26760cfb8e45ef46f51ba7d26acdd11aebc1c8462318fe358b74a22",
+      "response": {
+        "content": [
+          {
+            "text": "I'll apply the cache lever to bc-t0007."
+          },
+          {
+            "toolUse": {
+              "input": {},
+              "name": "replay_lever",
+              "toolUseId": "tooluse_1b8uycgTJRswtGWhJlJWCv",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 915,
+          "outputTokens": 50
+        }
+      }
+    },
+    {
+      "request_sha": "caf5c7dea868b22982e6a0f93d87a3959b670ba2c69072afdbebc8f02c135de9",
+      "response": {
+        "content": [
+          {
+            "text": "I need additional parameters to apply the cache lever. Could you provide:\n- **cost_cents**: The cost parameter in cents\n- Any other required configuration for tenant bc-t0007\n\nPlease share these details so I can proceed with the lever replay."
+          }
+        ],
+        "stop_reason": "end_turn",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 1000,
+          "outputTokens": 56
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "specialists-v1",
+  "scenario_id": "eff-05"
+}

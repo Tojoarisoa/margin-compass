@@ -1,0 +1,55 @@
+{
+  "calls": [
+    {
+      "request_sha": "e41cc315db359b865b491c18ebdbb261db7b7869ea74cb0903a54fa3ebd9cde1",
+      "response": {
+        "content": [
+          {
+            "text": "I need more information to approve a 20% discount in the pricing review. Please provide:\n\n1. **Which plan** should the discount apply to? (e.g., plan name or ID)\n2. **Which tenant(s)** or **customer segment** is this for?\n3. **What is the current pricing** for that plan?\n4. **Duration** \u2013 is this a permanent change or temporary (if temporary, how many months)?\n\nOnce you provide these details, I can use the pricing tools to model the revenue, cost, and margin impact of the 20% discount and give you a data-backed recommendation."
+          }
+        ],
+        "stop_reason": "end_turn",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 914,
+          "outputTokens": 138
+        }
+      }
+    },
+    {
+      "request_sha": "e41cc315db359b865b491c18ebdbb261db7b7869ea74cb0903a54fa3ebd9cde1",
+      "response": {
+        "content": [
+          {
+            "text": "I need more information to approve a 20% discount in the pricing review. Please provide:\n\n1. **Which plan** should the discount apply to? (e.g., plan name or ID)\n2. **Which tenant(s)** or **customer segment** is this for?\n3. **What is the current pricing** for that plan?\n4. **Duration** \u2013 is this a permanent change or temporary (if temporary, how many months)?\n\nOnce you provide these details, I can use the pricing tools to model the revenue, cost, and margin impact of the 20% discount and give you a data-backed recommendation."
+          }
+        ],
+        "stop_reason": "end_turn",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 914,
+          "outputTokens": 138
+        }
+      }
+    },
+    {
+      "request_sha": "e41cc315db359b865b491c18ebdbb261db7b7869ea74cb0903a54fa3ebd9cde1",
+      "response": {
+        "content": [
+          {
+            "text": "I need more information to approve a 20% discount in the pricing review. Please provide:\n\n1. **Which plan** should the discount apply to? (e.g., plan name or ID)\n2. **Which tenant(s)** or **customer segment** is this for?\n3. **What is the current pricing** for that plan?\n4. **Duration** \u2013 is this a permanent change or temporary (if temporary, how many months)?\n\nOnce you provide these details, I can use the pricing tools to model the revenue, cost, and margin impact of the 20% discount and give you a data-backed recommendation."
+          }
+        ],
+        "stop_reason": "end_turn",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 914,
+          "outputTokens": 138
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "specialists-v1",
+  "scenario_id": "act-03"
+}

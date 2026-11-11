@@ -1,0 +1,33 @@
+{
+  "calls": [
+    {
+      "request_sha": "5455d94f3eaa46f3af7fd7096d271157f21f261c4e44431e63729be7eb967bd4",
+      "response": {
+        "content": [
+          {
+            "text": "I need to investigate tenant spending in September. Let me query the margin data to see which tenant had doubled spending and understand the drivers."
+          },
+          {
+            "toolUse": {
+              "input": {
+                "sql": "\nSELECT \n  tenant_id,\n  margin_date,\n  ai_revenue_usd,\n  llm_cost_usd,\n  cost_to_serve_usd,\n  gross_margin_usd,\n  request_count\nFROM fct_tenant_margin\nWHERE EXTRACT(MONTH FROM margin_date) = 9\nORDER BY margin_date, tenant_id\n"
+              },
+              "name": "query_gold",
+              "toolUseId": "tooluse_3cwRTVFue5k4F7WNYOCXmS",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 823,
+          "outputTokens": 173
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "specialists-v1",
+  "scenario_id": "leak-05"
+}

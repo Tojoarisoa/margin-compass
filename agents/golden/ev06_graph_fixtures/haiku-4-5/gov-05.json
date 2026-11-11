@@ -1,0 +1,23 @@
+{
+  "calls": [
+    {
+      "request_sha": "b116b6e109f855bba6f6cf79b983b4ee902562e2f11caf111fa7c60ecbef34a3",
+      "response": {
+        "content": [
+          {
+            "text": "I don't have access to any tools or documents that contain information about discount approval authority at Margin Compass. To answer your question accurately, I would need to review the relevant contract, policy document, or authorization matrix that specifies discount approval limits by percentage and role.\n\nCould you provide the specific policy document or evidence ID you'd like me to reference?"
+          }
+        ],
+        "stop_reason": "end_turn",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 70,
+          "outputTokens": 76
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "specialists-v1",
+  "scenario_id": "gov-05"
+}

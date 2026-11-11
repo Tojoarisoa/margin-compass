@@ -1,0 +1,55 @@
+{
+  "calls": [
+    {
+      "request_sha": "797adcc7c146126892f7d7e19f79a43c82ef0d365ce0a6af8822b5eabb4081ed",
+      "response": {
+        "content": [
+          {
+            "text": "I need more information to forecast the margin impact of a discount for tenant bc-t0021:\n\n1. **Current plan**: What pricing plan is bc-t0021 currently on?\n2. **Discount level**: What discount percentage or new price would you like to model?\n3. **Forecast period**: Over how many months should I project the churn-adjusted margin?\n\nOnce you provide these details, I can use the pricing and churn-adjustment tools to forecast the margin impact."
+          }
+        ],
+        "stop_reason": "end_turn",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 916,
+          "outputTokens": 109
+        }
+      }
+    },
+    {
+      "request_sha": "797adcc7c146126892f7d7e19f79a43c82ef0d365ce0a6af8822b5eabb4081ed",
+      "response": {
+        "content": [
+          {
+            "text": "I need more information to forecast the margin impact of a discount for tenant bc-t0021:\n\n1. **Current plan**: What pricing plan is bc-t0021 currently on?\n2. **Discount level**: What discount percentage or new price would you like to model?\n3. **Forecast period**: Over how many months should I project the churn-adjusted margin?\n\nOnce you provide these details, I can use the pricing and churn-adjustment tools to forecast the margin impact."
+          }
+        ],
+        "stop_reason": "end_turn",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 916,
+          "outputTokens": 109
+        }
+      }
+    },
+    {
+      "request_sha": "797adcc7c146126892f7d7e19f79a43c82ef0d365ce0a6af8822b5eabb4081ed",
+      "response": {
+        "content": [
+          {
+            "text": "I need more information to forecast the margin impact of a discount for tenant bc-t0021:\n\n1. **Current plan**: What pricing plan is bc-t0021 currently on?\n2. **Discount level**: What discount percentage or new price would you like to model?\n3. **Forecast period**: Over how many months should I project the churn-adjusted margin?\n\nOnce you provide these details, I can use the pricing and churn-adjustment tools to forecast the margin impact."
+          }
+        ],
+        "stop_reason": "end_turn",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 916,
+          "outputTokens": 109
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "specialists-v1",
+  "scenario_id": "prc-05"
+}

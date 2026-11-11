@@ -96,3 +96,15 @@ def test_run_graph_report_is_json(gold, tmp_path):
     rec = run_graph(gold, "haiku-4-5", "record", tmp_path, live_client=Script(use("price_plan", PLAN), good),
                     scenarios=[SC_PRICING])
     json.dumps(rec)
+
+
+def test_recorded_graph_fixtures_replay(gold):
+    """Step 3c-3: fixtures recorded by ops run 42938779526 (haiku-4-5, cache on) replay with no drift.
+
+    Baseline, not a gate: 7 of 27 scenarios pass the rubric (EV-06 gate 90% is not met yet; see docs/progress.md).
+    Re-record when a prompt, the graph or the model changes.
+    """
+    rep = run_graph(gold, "haiku-4-5", "replay")
+    assert set(rep["runs"]) == {s["id"] for s in default_scenarios()}
+    assert round(rep["ev06"] * 27) == 7 and not rep["passed"]
+    assert rep["runs"]["eff-04"] == {"route": "efficiency", "tools": ["query_gold"], "status": "answered"}

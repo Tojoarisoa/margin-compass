@@ -1,0 +1,49 @@
+{
+  "calls": [
+    {
+      "request_sha": "18c336a69f96fb45317735b9b27c96f4131c3a08e419f0ec9f686ff19729ac2d",
+      "response": {
+        "content": [
+          {
+            "text": "I'll query the data to show cost per tenant for the top spenders."
+          },
+          {
+            "toolUse": {
+              "input": {
+                "sql": "\nSELECT \n  tenant_id,\n  SUM(llm_cost_usd + cost_to_serve_usd) AS total_cost_usd,\n  SUM(request_count) AS total_requests,\n  ROUND(SUM(llm_cost_usd + cost_to_serve_usd) / NULLIF(SUM(request_count), 0), 6) AS cost_per_request\nFROM fct_tenant_margin\nGROUP BY tenant_id\nORDER BY total_cost_usd DESC\nLIMIT 10\n"
+              },
+              "name": "query_gold",
+              "toolUseId": "tooluse_C5tkwVlvleV5YceKpv0Fd4",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 824,
+          "outputTokens": 201
+        }
+      }
+    },
+    {
+      "request_sha": "313a998dee0306302597af023895d7026330e56ab5d17c0a9e26f59710b0d98a",
+      "response": {
+        "content": [
+          {
+            "text": "**Top 10 Spenders by Total Cost** [E1]:\n\n| Tenant | Total Cost | Requests | Cost/Request |\n|--------|-----------|----------|--------------|\n| bc-t0002 | $750.97 | 37,673 | $0.019934 |\n| bc-t0001 | $647.97 | 32,495 | $0.019941 |\n| bc-t0004 | $604.02 | 30,314 | $0.019925 |\n| bc-t0011 | $550.61 | 27,784 | $0.019817 |\n| bc-t0003 | $433.37 | 21,757 | $0.019919 |\n| bc-t0013 | $158.69 | 8,820 | $0.017992 |\n| bc-t0006 | $120.48 | 6,696 | $0.017993 |\n| bc-t0008 | $116.87 | 6,478 | $0.018041 |\n| bc-t0005 | $111.89 | 6,187 | $0.018085 |\n| bc-t0017 | $107.64 | 5,985 | $0.017986 |\n\nThe top five tenants (bc-t0002, bc-t0001, bc-t0004, bc-t0011, bc-t0003) account for $2.99K in combined costs and maintain consistent cost-per-request efficiency around $0.0199. Lower-volume tenants show slightly better unit economics, ranging from $0.0180\u2013$0.0181 per request."
+          }
+        ],
+        "stop_reason": "end_turn",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 1432,
+          "outputTokens": 415
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "specialists-v1",
+  "scenario_id": "cts-04"
+}

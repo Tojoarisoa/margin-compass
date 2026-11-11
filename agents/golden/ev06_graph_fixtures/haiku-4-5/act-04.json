@@ -1,0 +1,55 @@
+{
+  "calls": [
+    {
+      "request_sha": "78566c053402ac4dbbef3b15c2750e8c427be1003212bbea942b3ad9d951bd85",
+      "response": {
+        "content": [
+          {
+            "text": "I need more information to approve a 40% discount in the pricing review. Please provide:\n\n1. **Which plan** should the discount apply to? (e.g., plan name or ID)\n2. **Which tenant(s)** or **customer segment** is this for?\n3. **What is the current pricing** (or should I look it up for a specific plan)?\n4. **Duration**: Is this a permanent change or temporary (if temporary, how many months)?\n\nOnce you provide these details, I can use the pricing tools to calculate the impact on revenue, cost, and margin before approval."
+          }
+        ],
+        "stop_reason": "end_turn",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 914,
+          "outputTokens": 134
+        }
+      }
+    },
+    {
+      "request_sha": "78566c053402ac4dbbef3b15c2750e8c427be1003212bbea942b3ad9d951bd85",
+      "response": {
+        "content": [
+          {
+            "text": "I need more information to approve a 40% discount in the pricing review. Please provide:\n\n1. **Which plan** should the discount apply to? (e.g., plan name or ID)\n2. **Which tenant(s)** or **customer segment** is this for?\n3. **What is the current pricing** (or should I look it up for a specific plan)?\n4. **Duration**: Is this a permanent change or temporary (if temporary, how many months)?\n\nOnce you provide these details, I can use the pricing tools to calculate the impact on revenue, cost, and margin before approval."
+          }
+        ],
+        "stop_reason": "end_turn",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 914,
+          "outputTokens": 134
+        }
+      }
+    },
+    {
+      "request_sha": "78566c053402ac4dbbef3b15c2750e8c427be1003212bbea942b3ad9d951bd85",
+      "response": {
+        "content": [
+          {
+            "text": "I need more information to approve a 40% discount in the pricing review. Please provide:\n\n1. **Which plan** should the discount apply to? (e.g., plan name or ID)\n2. **Which tenant(s)** or **customer segment** is this for?\n3. **What is the current pricing** (or should I look it up for a specific plan)?\n4. **Duration**: Is this a permanent change or temporary (if temporary, how many months)?\n\nOnce you provide these details, I can use the pricing tools to calculate the impact on revenue, cost, and margin before approval."
+          }
+        ],
+        "stop_reason": "end_turn",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 914,
+          "outputTokens": 134
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "specialists-v1",
+  "scenario_id": "act-04"
+}

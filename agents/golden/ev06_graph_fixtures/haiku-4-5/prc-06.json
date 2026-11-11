@@ -1,0 +1,55 @@
+{
+  "calls": [
+    {
+      "request_sha": "da54138a9af640a7aeb91027e0cec4dfa54600b811267f178b8788aeb5e14571",
+      "response": {
+        "content": [
+          {
+            "text": "I need more context to answer this question accurately. Could you please provide:\n\n1. **Which pricing models are you considering?** (e.g., per-request, per-user, per-feature, tiered, usage-based, etc.)\n2. **What specific outcome are you targeting?** (e.g., cost savings, revenue generated, efficiency gains, etc.)\n3. **Do you have tenant or plan data** you'd like me to analyze to compare margin profiles?\n\nOnce you provide these details, I can use the pricing and margin tools to evaluate which model best aligns with your outcome-based objectives."
+          }
+        ],
+        "stop_reason": "end_turn",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 913,
+          "outputTokens": 136
+        }
+      }
+    },
+    {
+      "request_sha": "da54138a9af640a7aeb91027e0cec4dfa54600b811267f178b8788aeb5e14571",
+      "response": {
+        "content": [
+          {
+            "text": "I need more context to answer this question accurately. Could you please provide:\n\n1. **Which pricing models are you considering?** (e.g., per-request, per-user, per-feature, tiered, usage-based, etc.)\n2. **What specific outcome are you targeting?** (e.g., cost savings, revenue generated, efficiency gains, etc.)\n3. **Do you have tenant or plan data** you'd like me to analyze to compare margin profiles?\n\nOnce you provide these details, I can use the pricing and margin tools to evaluate which model best aligns with your outcome-based objectives."
+          }
+        ],
+        "stop_reason": "end_turn",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 913,
+          "outputTokens": 136
+        }
+      }
+    },
+    {
+      "request_sha": "da54138a9af640a7aeb91027e0cec4dfa54600b811267f178b8788aeb5e14571",
+      "response": {
+        "content": [
+          {
+            "text": "I need more context to answer this question accurately. Could you please provide:\n\n1. **Which pricing models are you considering?** (e.g., per-request, per-user, per-feature, tiered, usage-based, etc.)\n2. **What specific outcome are you targeting?** (e.g., cost savings, revenue generated, efficiency gains, etc.)\n3. **Do you have tenant or plan data** you'd like me to analyze to compare margin profiles?\n\nOnce you provide these details, I can use the pricing and margin tools to evaluate which model best aligns with your outcome-based objectives."
+          }
+        ],
+        "stop_reason": "end_turn",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 913,
+          "outputTokens": 136
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "specialists-v1",
+  "scenario_id": "prc-06"
+}
