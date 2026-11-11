@@ -3,11 +3,12 @@
   POST /api/ask         {"question": "..."}  -> 202 {"job_id": ...}   (rate-limited, budget-checked)
   GET  /api/jobs/<id>                        -> {"status": "pending|running|answered|...", ...}
   GET  /api/health                           -> {"ok": true, ...}
+  POST /api/approvals   (owner only, M5-03)  -> 201 {"recorded": ...}   see mc_agents.owner
 
 The POST starts the job and invokes this same function asynchronously ({"mc_job": id}); the worker
 runs the Cost-to-Serve Analyst and stores the result (TTL 1 day). Streaming is the M1-07 spike.
 
-Environment: LAKE_BUCKET (gold source), STATE_TABLE (core table), MC_ENV.
+Environment: LAKE_BUCKET (gold source), STATE_TABLE (core table), MC_ENV, OWNER_POOL_ID, OWNER_CLIENT_ID.
 """
 
 from __future__ import annotations
@@ -20,10 +21,11 @@ import re
 import sys
 import time
 import uuid
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from . import cache
+from . import cache, owner
 from .analyst import PROMPT_VERSION, answer_question
 from .approvals import DynamoStore
 from .budget import BudgetExceeded
@@ -145,6 +147,29 @@ def handle_ask(event: dict[str, Any], context: Any, *, table=None, invoke=None) 
     return _resp(202, {"job_id": job_id, "poll": f"/api/jobs/{job_id}"})
 
 
+def handle_approval(event: dict[str, Any], *, table=None, get_user=None, now: datetime | None = None) -> dict[str, Any]:
+    """Owner-only: records one decision on a proposed action. Everyone else gets 401 and nothing is written."""
+    headers = {k.lower(): v for k, v in (event.get("headers") or {}).items()}
+    now = now or datetime.now(UTC)
+    try:
+        approver = owner.verify_owner(headers.get(owner.TOKEN_HEADER), **owner.config(),
+                                      get_user=get_user or _cognito_get_user, now=now.timestamp())
+    except owner.Unauthorized as exc:
+        log.info("approval_refused", extra={"fields": {"reason": str(exc)}})
+        return _resp(401, {"error": "Owner sign-in required.", "code": "unauthorized"})
+    try:
+        decision = owner.clean_decision(_parse_body(event))
+    except (ValueError, json.JSONDecodeError) as exc:
+        return _resp(400, {"error": str(exc)})
+    item = owner.record(table or _table(), decision, approver, now)
+    log.info("approval_recorded", extra={"fields": {"action_id": item["action_id"], "decision": item["decision"]}})
+    return _resp(201, {"recorded": item})
+
+
+def _cognito_get_user(token: str) -> dict[str, Any]:
+    return _client("cognito-idp").get_user(AccessToken=token)
+
+
 def _invoke_self(context: Any, job_id: str) -> None:
     _client("lambda").invoke(FunctionName=context.invoked_function_arn, InvocationType="Event",
                              Payload=json.dumps({"mc_job": job_id}).encode())
@@ -259,6 +284,8 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
         return handle_ask(event, context)
     if method == "GET" and path.startswith("/api/jobs/"):
         return handle_job(path)
+    if method == "POST" and path == "/api/approvals":
+        return handle_approval(event)
     if method == "GET" and path == "/api/health":
         return _resp(200, {"ok": True})  # no model, caps or environment on the public API
     return _resp(404, {"error": "not found"})

@@ -122,7 +122,7 @@ class WebStack(cdk.Stack):
                                      enable_accept_encoding_gzip=True, enable_accept_encoding_brotli=True)
         api_request = cf.OriginRequestPolicy(
             self, "ApiRequest", origin_request_policy_name=name("api-request"),
-            header_behavior=cf.OriginRequestHeaderBehavior.allow_list("CloudFront-Viewer-Address", "content-type"),  # OAC itself signs with x-amz-content-sha256 (not allowed here)
+            header_behavior=cf.OriginRequestHeaderBehavior.allow_list("CloudFront-Viewer-Address", "content-type", "x-mc-owner-token"),  # owner token: M5-03  # OAC itself signs with x-amz-content-sha256 (not allowed here)
             query_string_behavior=cf.OriginRequestQueryStringBehavior.none(),
             cookie_behavior=cf.OriginRequestCookieBehavior.none(),
         )
