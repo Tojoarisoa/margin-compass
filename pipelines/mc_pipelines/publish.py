@@ -20,6 +20,7 @@ from mc_pipelines import metrics as registry
 
 SCHEMA_VERSION = "pg1.v0"
 MAX_BYTES = 200 * 1024
+TENANT_ROWS_MAX = 400  # PG-1 tenant table (lowest margin first); the M2 profile has 400 tenants
 EXPLORE_MAX_BYTES = 5 * 1024 * 1024  # M2-04: exploration Parquet for PG-2 (DuckDB-WASM)
 CENT, RATIO = Decimal("0.01"), Decimal("0.000001")
 
@@ -108,6 +109,114 @@ def build_pg1(gold: Path, run_id: str, ingest_date: str) -> dict:
         snapshot["not_yet_available"].pop("cost_per_outcome", None)
         snapshot["not_yet_available"].pop("arr_at_risk", None)
     return snapshot
+
+
+def build_pg1_m2(gold: Path, silver: Path, run_id: str) -> dict:
+    """PG-1 snapshot from the M2 marts (same `pg1.v0` shape as `build_pg1`), so the dashboard shows the M2 sections.
+
+    The M2 build has no M1 marts (`agg_exec_kpis`, `fct_tenant_margin`), so `build_pg1` cannot run there and the live
+    `pg1.json` stayed the M1 one. Headline and trend follow KPI-01: AI revenue is the invoices' `ai_addon` lines
+    (silver `slv_m2_revenue_daily`), AI cost to serve is `fct_cost_to_serve` (fully loaded). The fully loaded KPIs over
+    all revenue stay in `m2_kpis`. LLM attribution coverage is the share of LLM cost booked to a tenant.
+    """
+    g, sv = Path(gold), Path(silver)
+    con = duckdb.connect()
+    rev_src = f"read_parquet('{sv}/slv_m2_revenue_daily.parquet')"
+    cost_src = f"read_parquet('{g}/fct_cost_to_serve.parquet')"
+    days = con.execute(f"""
+        WITH r AS (SELECT revenue_date AS d, sum(amount_usd) AS total,
+                          coalesce(sum(amount_usd) FILTER (WHERE revenue_component = 'ai_addon'), 0) AS ai
+                   FROM {rev_src} GROUP BY 1),
+             c AS (SELECT cost_date AS d, sum(cost_to_serve_usd) AS cost FROM {cost_src} GROUP BY 1)
+        SELECT coalesce(r.d, c.d) AS d, coalesce(r.total, 0), coalesce(r.ai, 0), coalesce(c.cost, 0)
+        FROM r FULL OUTER JOIN c ON c.d = r.d
+        WHERE coalesce(r.d, c.d) BETWEEN (SELECT min(cost_date) FROM {cost_src}) AND (SELECT max(cost_date) FROM {cost_src})
+        ORDER BY 1""").fetchall()
+    if not days:
+        raise PublishError("fct_cost_to_serve is empty")
+    first, last = days[0][0], days[-1][0]
+    recent_from = last - timedelta(days=29)
+    window = [(d[2], d[3]) for d in days]
+    recent = [(d[2], d[3]) for d in days if d[0] >= recent_from]
+    cols = {r[0] for r in con.execute(f"SELECT name FROM parquet_schema('{g}/fct_cost_to_serve.parquet')").fetchall()}
+    llm_total, llm_booked = con.execute(
+        f"SELECT sum(llm_cost_usd), sum(llm_cost_usd) FILTER (WHERE tenant_id IS NOT NULL) FROM {cost_src}").fetchall()[0] \
+        if "tenant_id" in cols else (0, 0)
+
+    tenants = con.execute(f"""
+        WITH r AS (SELECT tenant_id, sum(amount_usd) FILTER (WHERE revenue_component = 'ai_addon') AS rev
+                   FROM {rev_src} WHERE revenue_date BETWEEN DATE '{first}' AND DATE '{last}' GROUP BY 1),
+             c AS (SELECT tenant_id, sum(cost_to_serve_usd) AS cost, sum(requests) AS req FROM {cost_src}
+                   WHERE tenant_id IS NOT NULL GROUP BY 1),
+             p AS (SELECT tenant_id, max(plan) AS plan FROM read_parquet('{g}/dim_tenant.parquet') WHERE is_current GROUP BY 1)
+        SELECT coalesce(r.tenant_id, c.tenant_id) AS t, p.plan, coalesce(r.rev, 0), coalesce(c.cost, 0), coalesce(c.req, 0)
+        FROM r FULL OUTER JOIN c ON c.tenant_id = r.tenant_id LEFT JOIN p ON p.tenant_id = coalesce(r.tenant_id, c.tenant_id)
+        ORDER BY 1""").fetchall()
+    tenant_rows = [{"tenant_id": t, "plan": plan, **_totals([(rev, cost)]), "request_count": int(req)}
+                   for t, plan, rev, cost, req in tenants]
+    tenant_rows.sort(key=lambda r: (r["ai_gross_margin_pct"] if r["ai_gross_margin_pct"] is not None else -1e9, r["tenant_id"]))
+    unprofitable = sum(1 for r in tenant_rows if r["ai_gross_margin_usd"] < 0)
+
+    fc = con.execute(f"""SELECT forecast_date, target_date, p10_usd, p50_usd, p90_usd, model_version, model_alias
+                         FROM read_parquet('{g}/fct_forecasts.parquet') WHERE metric = 'ai_cogs_usd' ORDER BY target_date""").fetchall() \
+        if (g / "fct_forecasts.parquet").exists() else []
+
+    snapshot = {
+        "schema_version": SCHEMA_VERSION,
+        "page": "PG-1 Executive Margin Overview (v0)",
+        "generated_at": datetime.now(UTC).isoformat(timespec="seconds"),
+        "run_id": run_id, "ingest_date": last.isoformat(),
+        "data_label": "synthetic", "feature_scope": "all features",
+        "window": {"from": first.isoformat(), "to": last.isoformat(), "days": len(days)},
+        "headline": {
+            "window": _totals(window),
+            "last_30_days": {"from": recent_from.isoformat(), "to": last.isoformat(), **_totals(recent)},
+            "total_revenue_usd": _money(sum((Decimal(d[1]) for d in days), Decimal(0))),
+            "llm_attribution_coverage_pct": _ratio(llm_booked or 0, llm_total or 0),
+            "unprofitable_tenants": unprofitable,
+            "tenants": len(tenant_rows),
+        },
+        "trend": [{"date": d[0].isoformat(), "ai_revenue_usd": _money(d[2]), "ai_cost_to_serve_usd": _money(d[3]),
+                   "ai_gross_margin_pct": _ratio(Decimal(d[2]) - Decimal(d[3]), d[2])} for d in days],
+        "forecast": {
+            "metric": "ai_cogs_usd", "model_version": fc[0][5] if fc else None, "model_alias": fc[0][6] if fc else None,
+            "points": [{"date": r[1].isoformat(), "p10": _money(r[2]), "p50": _money(r[3]), "p90": _money(r[4])} for r in fc],
+        },
+        "tenants": tenant_rows[:TENANT_ROWS_MAX],
+        "not_yet_available": {"margin_recovered": "M3 (actions)", "roi_multiple": "M5", "plan_target": "M2"},
+        "m2_kpis": m2_kpis(g),
+        "m2_at_risk": m2_at_risk(g),
+        "m2_margin_forecast": margin_forecast(recent, fc),
+        "m2_features": m2_feature_costs(g),
+    }
+    return snapshot
+
+
+def publish_m2_pg1(data_root: Path, run_id: str) -> list[str]:
+    """M2 build: write pg1.json (from the M2 marts), explore.parquet and pg2.json; returns the published keys.
+
+    Only when every registry mart and the silver revenue exist; otherwise nothing is written (the M1 snapshot stays).
+    """
+    root = Path(data_root)
+    gold, silver = root / "gold", root / "silver"
+    if not _m2_marts_present(gold) or not (silver / "slv_m2_revenue_daily.parquet").exists():
+        return []
+    snapshot = build_pg1_m2(gold, silver, run_id)
+    body = json.dumps(snapshot, separators=(",", ":"), allow_nan=False).encode()
+    if len(body) > MAX_BYTES:
+        raise PublishError(f"pg1.json is {len(body)} bytes; the §7.5 limit is {MAX_BYTES}")
+    latest = root / "publish" / "latest"
+    write_explore_parquet(gold, latest / "explore.parquet")
+    pg2 = json.dumps(build_pg2(gold, run_id), separators=(",", ":"), allow_nan=False).encode()
+    if len(pg2) > PG2_MAX_BYTES:
+        raise PublishError(f"pg2.json is {len(pg2)} bytes; the M2-04 limit is {PG2_MAX_BYTES}")
+    (latest / "pg2.json").write_bytes(pg2)
+    hist = root / "publish" / "history" / snapshot["ingest_date"] / "pg1.json"
+    for p in (latest / "pg1.json", hist):
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_bytes(body)
+    return ["publish/latest/pg1.json", f"publish/history/{snapshot['ingest_date']}/pg1.json",
+            "publish/latest/explore.parquet", "publish/latest/pg2.json"]
 
 
 def write_explore_parquet(gold: Path, out: Path) -> int:

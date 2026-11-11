@@ -234,6 +234,12 @@ def run_m2_dbt(landing: Path, data_root: Path, run_id: str, transform_dir: Path 
             summary["published"] += publish_realized(root, run_id)
         except Exception as exc:  # noqa: BLE001
             summary["realized_error"] = str(exc)[:200]
+        try:  # PG-1 from the M2 marts (pg1.json, explore.parquet, pg2.json); never fails the data build
+            from .publish import publish_m2_pg1
+
+            summary["published"] += publish_m2_pg1(root, run_id)
+        except Exception as exc:  # noqa: BLE001
+            summary["pg1_error"] = str(exc)[:200]
         try:  # M5-01: nightly margin review (deterministic, no LLM) -> fct_actions + margin brief; never fails the build
             from mc_agents.nightly import write as write_margin_brief
 
