@@ -30,7 +30,8 @@ ACTION_TYPES = ("ACT-1", "ACT-2", "ACT-3")
 DECISIONS = ("approved", "rejected")
 MAX_RATIONALE_CHARS = 500
 _ACTION_ID = re.compile(r"^act-[0-9a-f]{12}$")
-_TARGET = re.compile(r"^[A-Za-z0-9_.:\-]{1,64}$")
+_SEG = r"[A-Za-z0-9][A-Za-z0-9_.:\-]{0,63}"
+_TARGET = re.compile(rf"^{_SEG}(/{_SEG})?$")  # tenant, tenant/renewal, feature/metric, plan/x
 _CONTROL = re.compile(r"[\x00-\x08\x0b-\x1f\x7f]")
 
 

@@ -87,7 +87,7 @@ def test_missing_pool_config_refuses_everyone(table, monkeypatch):  # noqa: F811
 
 
 @pytest.mark.parametrize("change", [
-    {"action_id": "ACT-1"}, {"action_id": "act-xyz"}, {"action_type": "ACT-9"}, {"target": ""}, {"target": "a b"},
+    {"action_id": "ACT-1"}, {"action_id": "act-xyz"}, {"action_type": "ACT-9"}, {"target": ""}, {"target": "a b"}, {"target": "a/b/c"}, {"target": "../x"},
     {"decision": "maybe"}, {"rationale": 5}, {"rationale": "x" * 501},
 ])
 def test_bad_decisions_are_rejected_for_the_owner(table, change):  # noqa: F811
@@ -109,6 +109,11 @@ def test_route_is_wired(monkeypatch):
     monkeypatch.setattr(api, "handle_approval", lambda e: seen.append(e) or {"statusCode": 401})
     api.handler(_event(DECISION), None)
     assert seen and api.handler({"requestContext": {"http": {"method": "GET"}}, "rawPath": "/api/approvals"}, None)["statusCode"] == 404
+
+
+@pytest.mark.parametrize("target", ["bc-t0003", "bc-t0003/renewal", "plan/growth", "summarize/cost_per_request"])
+def test_nightly_target_shapes_are_accepted(target):
+    assert owner.clean_decision(DECISION | {"target": target})["target"] == target
 
 
 def test_rationale_control_characters_are_stripped():
