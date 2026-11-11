@@ -13,6 +13,9 @@ before/after/churn answer took four (price, price, churn, words). Now it takes t
 - v3 (3c-3h): every basis-point input is echoed as an exact percent string (`after.changes_pct`, `churn.churn_pct`;
   calc-spec "Display conversion": percent = bps / 100), so an answer may quote the question's "4%" from the ledger
   instead of the verifier withholding it. A unit conversion of an input, not a new formula.
+- v4 (3c-3i): `after.delta` and `churn.delta` are the signed after-minus-before changes from calc-spec "Scenario
+  difference v1" (`scenario_delta`), and `churn.survival_pct` echoes `survival_bps` as percent, so an answer never
+  has to compute a difference or convert a rate itself.
 Synthetic inputs only.
 """
 
@@ -23,6 +26,7 @@ from typing import Any
 
 from mc_agents.tools.churn_adjust import churn_adjust
 from mc_agents.tools.pricing import _FIELDS, price_plan
+from mc_agents.tools.scenario_delta import scenario_delta
 
 # The prc-01..03 golden plan, labelled as an example in every answer that uses it.
 EXAMPLE_PLAN: dict[str, int] = {
@@ -31,6 +35,12 @@ EXAMPLE_PLAN: dict[str, int] = {
 }
 _PLAN_KEYS = (*_FIELDS, "usage_cap_cents")
 DEFAULT_MONTHS = 12
+_PLAN_DELTA = ("revenue_cents", "margin_cents", "margin_bps")
+_CHURN_DELTA = ("adj_revenue_cents", "adj_margin_cents")
+
+
+def _pick(d: dict[str, Any], keys: tuple[str, ...]) -> dict[str, Any]:
+    return {k: d[k] for k in keys}
 
 
 def bps_to_pct(bps: int) -> str:
@@ -62,6 +72,7 @@ def price_scenario(inp: dict[str, Any]) -> dict[str, Any]:
         pct = {f"{k[:-4]}_pct": bps_to_pct(v) for k, v in changes.items() if k.endswith("_bps")}
         if pct:
             out["after"]["changes_pct"] = pct
+        out["after"]["delta"] = scenario_delta({"before": _pick(out, _PLAN_DELTA), "after": _pick(out["after"], _PLAN_DELTA)})
         runs.append(("after", after_plan, out["after"]))
     if inp.get("churn_bps") is not None:
         months = inp.get("months", DEFAULT_MONTHS)
@@ -70,6 +81,10 @@ def price_scenario(inp: dict[str, Any]) -> dict[str, Any]:
         for key, p, res in runs:
             churn[key] = churn_adjust({"revenue_cents": res["revenue_cents"], "cost_cents": p["cost_cents"],
                                        "churn_bps": inp["churn_bps"], "months": months})
+        churn["survival_pct"] = bps_to_pct(churn["before"]["survival_bps"])
+        if "after" in churn:
+            churn["delta"] = scenario_delta({"before": _pick(churn["before"], _CHURN_DELTA),
+                                             "after": _pick(churn["after"], _CHURN_DELTA)})
         out["churn"] = churn
     elif "months" in inp:
         raise ValueError("months needs churn_bps")

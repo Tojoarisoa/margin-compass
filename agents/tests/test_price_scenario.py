@@ -8,6 +8,7 @@ from mc_agents.tools.churn_adjust import churn_adjust
 from mc_agents.tools.metrics import ToolError
 from mc_agents.tools.price_scenario import EXAMPLE_PLAN, bps_to_pct, price_scenario
 from mc_agents.tools.pricing import price_plan
+from mc_agents.tools.scenario_delta import scenario_delta
 
 
 def test_no_plan_fields_uses_the_labelled_example_plan():
@@ -26,13 +27,16 @@ def test_full_plan_matches_price_plan_v1():
 def test_after_and_churn_are_the_calc_spec_functions():
     out = price_scenario({"after": {"discount_bps": 400}, "churn_bps": 200})
     after = price_plan({**EXAMPLE_PLAN, "discount_bps": 400})
-    assert out["after"] == {"changes": {"discount_bps": 400}, "changes_pct": {"discount_pct": "4"}, **after}
+    assert out["after"] == {"changes": {"discount_bps": 400}, "changes_pct": {"discount_pct": "4"}, **after,
+                            "delta": scenario_delta({"before": out, "after": after})}
     c = out["churn"]
     assert c["churn_bps"] == 200 and c["churn_pct"] == "2" and c["months"] == 12
     assert c["before"] == churn_adjust({"revenue_cents": out["revenue_cents"], "cost_cents": 20000, "churn_bps": 200,
                                         "months": 12})
     assert c["after"] == churn_adjust({"revenue_cents": after["revenue_cents"], "cost_cents": 20000, "churn_bps": 200,
                                        "months": 12})
+    assert c["survival_pct"] == bps_to_pct(c["before"]["survival_bps"])
+    assert c["delta"] == scenario_delta({"before": c["before"], "after": c["after"]})
 
 
 def test_after_cost_change_is_used_for_churn():
@@ -59,7 +63,7 @@ def test_ledger_holds_every_figure_the_answer_may_quote():
     led = Ledger()
     registry.call("price_plan", {"after": {"discount_bps": 400}, "churn_bps": 200}, led)
     vals = led.values()
-    assert led.entries[0].tool == "price_plan@3"
+    assert led.entries[0].tool == "price_plan@4"
     assert {5000, 20000, 400, 200, 12} <= {int(v) for v in vals}
 
 
@@ -81,3 +85,18 @@ def test_question_percent_is_supported_only_through_the_echo():
     q = "Approve a 4% discount in the pricing review"
     assert verify_answer("For the requested 4% discount (400 bps), churn assumed at 2% [E1].", led, q).ok
     assert not verify_answer("A 5% discount would cost more [E1].", led, q).ok
+
+
+def test_delta_is_the_signed_calc_spec_difference():
+    """3c-3i (price_plan v4): the answer copies a change from the ledger instead of subtracting (rule 3)."""
+    out = price_scenario({"after": {"discount_bps": 400}, "churn_bps": 200})
+    assert out["after"]["delta"] == {"revenue_cents_change": -2040, "margin_cents_change": -2040, "margin_bps_change": -163}
+    assert out["churn"]["survival_pct"] == "78.48" and "delta" in out["churn"]
+    assert "delta" not in price_scenario({"churn_bps": 200})["churn"]  # nothing to compare without after
+
+
+def test_a_change_the_tool_did_not_return_is_still_withheld():
+    led = Ledger()
+    registry.call("price_plan", {"after": {"seat_price_cents": 5250}, "churn_bps": 200}, led)
+    assert verify_answer("Adjusted margin changes by 26911 cents [E1].", led, "q").ok
+    assert not verify_answer("Adjusted margin changes by 26912 cents [E1].", led, "q").ok

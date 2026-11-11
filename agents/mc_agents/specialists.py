@@ -16,7 +16,7 @@ from .llm import BudgetedLLM, LLMRequest
 from .tools import registry
 from .tools.metrics import ToolError
 
-PROMPT_VERSION = "specialists-v7"
+PROMPT_VERSION = "specialists-v8"
 _RULES = ("Get every figure from a tool; never calculate or round. Copy figures exactly and cite the evidence ID "
           "such as [E1]. Synthetic data. At most 4 short sentences.")
 
@@ -25,18 +25,21 @@ _RULES = ("Get every figure from a tool; never calculate or round. Copy figures 
 # calls), and figures stay in the tool's units (the verifier rejected "$50" for 5000 cents and "4%" for 400 bps).
 # 3c-3e (specialists-v4): "Approve a N% discount" means price it (act-01..04 asked for a tenant and approver), churn
 # questions always pass churn_bps (prc-04), outcome questions use after on the example plan (prc-06 sent a partial plan).
-_PRICING = ("Never ask the user for plan details, a tenant, an approver or approval context; call price_plan once, "
-            "with no preamble. When the question names a tenant ID, first read its plan from the gold marts with "
-            "query_gold and pass every plan field. Otherwise pass no plan fields at all (never a partial plan): the "
-            "tool uses the example plan; say it is an example. Put every change in after: a discount of N% is after "
-            "{\"discount_bps\": N*100}; a price rise is the new seat_price_cents; an outcome-based plan is after "
-            "{\"outcome_price_micro\": ..., \"outcomes\": ...}. Whenever churn is asked, pass churn_bps 200 unless "
-            "a rate is given, and say it is assumed. Report money in cents and rates in bps exactly as the tool "
-            "returns them; never convert to dollars or percent (a % only copies a _pct field), and never state a "
-            "difference the tool did not return. "
+_PRICING = ("Never ask the user for plan details, a tenant, an approver or approval context; call price_plan before "
+            "any answer, with no preamble. For a named tenant ID, first read its plan with query_gold and pass every "
+            "plan field; if it has none, say so and use the example plan. Otherwise pass no plan fields (never a "
+            "partial plan): the tool uses the example plan; say it is an example, never restate its inputs. Put "
+            "every change in after: a N% discount is {\"discount_bps\": N*100} (no N: 500, assumed); a price rise "
+            "is the new seat_price_cents; an outcome-based plan is {\"outcome_price_micro\": ..., \"outcomes\": "
+            "...}. If churn is asked, pass churn_bps 200 unless given; say it is assumed. Keep cents and bps as "
+            "returned, never convert to dollars or percent: a % only copies a _pct field, a change only a delta "
+            "field with its sign. "
             "\"Approve\" a discount means price it and say approval goes to the role with authority for it. "
-            "Example: \"Approve a 4% discount\" -> price_plan {\"after\": {\"discount_bps\": 400}}, then answer "
-            "\"For the requested 4% discount (400 bps), revenue goes from X to Y cents [E1].\"")
+            "Example: \"Approve a 4% discount\" -> price_plan {\"after\": {\"discount_bps\": 400}}, then "
+            "\"For the requested 4% discount (400 bps), revenue goes from X to Y cents, a change of D cents [E1].\"")
+# 3c-3i (specialists-v8): act-01 wrote "$50/seat" (restated example inputs), prc-04 a difference it computed
+# ("26911") and "78.48%"; price_plan v4 now returns delta and survival_pct. prc-05 asked the user when the tenant
+# had no gold plan; prc-06 answered before calling a tool.
 # 3c-3h (specialists-v7): price_plan v3 echoes bps inputs as percent (changes_pct, churn_pct), so the answer may
 # restate the question's "4%" from the ledger; a % with no _pct source is still withheld by the verifier.
 # 3c-3g (specialists-v6): act-01/02/04 and prc-04 restated the question's percentage ("4%"), and act-01 wrote

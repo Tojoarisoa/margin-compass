@@ -59,9 +59,22 @@ churn applies at each renewal after it.
 
 Vectors: `vectors/churn_v1.json`. Python: `agents/mc_agents/tools/churn_adjust.py`. TypeScript: `dashboard/src/churnAdjust.ts`. Same `npm run parity` check.
 
+## Scenario difference v1
+
+Signed change between two scenarios, integer only. Inputs: `before` and `after`, each an object with some of
+`revenue_cents`, `margin_cents`, `margin_bps` (pricing engine outputs) and `adj_revenue_cents`, `adj_margin_cents`
+(churn-adjusted outputs). A field must be on both sides or neither; only `margin_bps` may be `null`.
+
+1. For every such field `f` on both sides: `f_change = after.f - before.f` (for example `revenue_cents_change`)
+2. `margin_bps_change` is `null` when either `margin_bps` is `null`
+
+Vectors: `vectors/delta_v1.json`. Python: `agents/mc_agents/tools/scenario_delta.py` (the agent tool `price_plan` v4
+returns it as `after.delta` and `churn.delta`). TypeScript: `dashboard/src/scenarioDelta.ts`. Same `npm run parity` check.
+
 ## Display conversion (percent echo)
 
 A basis-point value may be shown as a percent: `percent = bps / 100`, written as an exact decimal string with no rounding
 (`400` → `"4"`, `250` → `"2.5"`, `1` → `"0.01"`). It converts an input for display; it is not a pricing formula, so it has
-no vectors. The agent tool `price_plan` v3 echoes its basis-point inputs this way (`after.changes_pct`, `churn.churn_pct`)
+no vectors. The agent tool `price_plan` v3 echoes its basis-point inputs this way (`after.changes_pct`, `churn.churn_pct`;
+v4 also `churn.survival_pct`)
 so an answer can quote "4%" from the evidence ledger. Python: `bps_to_pct` in `agents/mc_agents/tools/price_scenario.py`.

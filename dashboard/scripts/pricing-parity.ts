@@ -5,6 +5,7 @@ import { isDeepStrictEqual } from "node:util";
 import { pricePlan } from "../src/pricing.ts";
 import { replayLever } from "../src/levers.ts";
 import { churnAdjust } from "../src/churnAdjust.ts";
+import { scenarioDelta } from "../src/scenarioDelta.ts";
 
 let failed = 0;
 function check(file: string, fn: (input: never) => unknown, minimum: number): void {
@@ -22,5 +23,6 @@ function check(file: string, fn: (input: never) => unknown, minimum: number): vo
 check("pricing_v1.json", pricePlan as (i: never) => unknown, 8);
 check("levers_v1.json", replayLever as (i: never) => unknown, 8);
 check("churn_v1.json", churnAdjust as (i: never) => unknown, 8);
+check("delta_v1.json", scenarioDelta as (i: never) => unknown, 8);
 if (failed) process.exit(1);
 console.log("parity: all vectors match");

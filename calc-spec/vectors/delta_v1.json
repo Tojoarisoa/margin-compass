@@ -1,0 +1,176 @@
+[
+  {
+    "name": "example plan 4% discount",
+    "input": {
+      "before": {
+        "revenue_cents": 51000,
+        "margin_cents": 31000,
+        "margin_bps": 6078
+      },
+      "after": {
+        "revenue_cents": 48960,
+        "margin_cents": 28960,
+        "margin_bps": 5915
+      }
+    },
+    "expected": {
+      "revenue_cents_change": -2040,
+      "margin_cents_change": -2040,
+      "margin_bps_change": -163
+    }
+  },
+  {
+    "name": "churn-adjusted, 4% discount",
+    "input": {
+      "before": {
+        "adj_revenue_cents": 548995,
+        "adj_margin_cents": 333703
+      },
+      "after": {
+        "adj_revenue_cents": 527035,
+        "adj_margin_cents": 311743
+      }
+    },
+    "expected": {
+      "adj_revenue_cents_change": -21960,
+      "adj_margin_cents_change": -21960
+    }
+  },
+  {
+    "name": "no change",
+    "input": {
+      "before": {
+        "revenue_cents": 650000,
+        "margin_cents": 500000,
+        "margin_bps": 7692
+      },
+      "after": {
+        "revenue_cents": 650000,
+        "margin_cents": 500000,
+        "margin_bps": 7692
+      }
+    },
+    "expected": {
+      "revenue_cents_change": 0,
+      "margin_cents_change": 0,
+      "margin_bps_change": 0
+    }
+  },
+  {
+    "name": "price rise",
+    "input": {
+      "before": {
+        "revenue_cents": 51000,
+        "margin_cents": 31000,
+        "margin_bps": 6078
+      },
+      "after": {
+        "revenue_cents": 53500,
+        "margin_cents": 33500,
+        "margin_bps": 6262
+      }
+    },
+    "expected": {
+      "revenue_cents_change": 2500,
+      "margin_cents_change": 2500,
+      "margin_bps_change": 184
+    }
+  },
+  {
+    "name": "margin turns negative",
+    "input": {
+      "before": {
+        "revenue_cents": 10000,
+        "margin_cents": 2000,
+        "margin_bps": 2000
+      },
+      "after": {
+        "revenue_cents": 6000,
+        "margin_cents": -2000,
+        "margin_bps": -3333
+      }
+    },
+    "expected": {
+      "revenue_cents_change": -4000,
+      "margin_cents_change": -4000,
+      "margin_bps_change": -5333
+    }
+  },
+  {
+    "name": "revenue from zero (null margin bps)",
+    "input": {
+      "before": {
+        "revenue_cents": 0,
+        "margin_cents": -5000,
+        "margin_bps": null
+      },
+      "after": {
+        "revenue_cents": 20000,
+        "margin_cents": 15000,
+        "margin_bps": 7500
+      }
+    },
+    "expected": {
+      "revenue_cents_change": 20000,
+      "margin_cents_change": 20000,
+      "margin_bps_change": null
+    }
+  },
+  {
+    "name": "revenue only",
+    "input": {
+      "before": {
+        "revenue_cents": 123456
+      },
+      "after": {
+        "revenue_cents": 100000
+      }
+    },
+    "expected": {
+      "revenue_cents_change": -23456
+    }
+  },
+  {
+    "name": "all fields",
+    "input": {
+      "before": {
+        "revenue_cents": 51000,
+        "margin_cents": 31000,
+        "margin_bps": 6078,
+        "adj_revenue_cents": 548917,
+        "adj_margin_cents": 333703
+      },
+      "after": {
+        "revenue_cents": 53500,
+        "margin_cents": 33500,
+        "margin_bps": 6262,
+        "adj_revenue_cents": 575828,
+        "adj_margin_cents": 360614
+      }
+    },
+    "expected": {
+      "revenue_cents_change": 2500,
+      "margin_cents_change": 2500,
+      "margin_bps_change": 184,
+      "adj_revenue_cents_change": 26911,
+      "adj_margin_cents_change": 26911
+    }
+  },
+  {
+    "name": "large values",
+    "input": {
+      "before": {
+        "adj_revenue_cents": 9000000000,
+        "adj_margin_cents": -100
+      },
+      "after": {
+        "adj_revenue_cents": 1,
+        "adj_margin_cents": 8999999999
+      }
+    },
+    "expected": {
+      "adj_revenue_cents_change": -8999999999,
+      "adj_margin_cents_change": 9000000099
+    }
+  }
+]

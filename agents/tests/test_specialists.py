@@ -39,7 +39,7 @@ def test_pricing_specialist_calls_tool_and_answer_verifies():
 
     client = Script(use("price_plan", PLAN), answer)
     run_specialist(s, llm(client), "m")
-    assert s.ledger.entries[0].tool == "price_plan@3" and s.answer
+    assert s.ledger.entries[0].tool == "price_plan@4" and s.answer
     assert verify(s) == "responder"
 
 
@@ -102,8 +102,9 @@ def test_pricing_specialist_calls_tools_instead_of_asking():
     # 3c-3e: approval requests are priced, churn always passes churn_bps, no partial plans, no restated %
     assert "\"Approve\" a discount means price it" in pricing and "never a partial plan" in pricing
     assert "pass churn_bps 200" in pricing
-    # 3c-3g: no % sign and no computed difference (the verifier withheld "4%" and a before-after difference)
-    assert "never state a difference the tool did not return" in pricing
+    # 3c-3g/3c-3i: no computed difference; a change only copies price_plan v4's delta (rule 3)
+    assert "a change only a delta field with its sign" in pricing and "never restate its inputs" in pricing
+    assert "call price_plan before any answer" in pricing and "if it has none, say so and use the example plan" in pricing
     # 3c-3h: a % only copies the price_plan v3 percent echo (changes_pct, churn_pct); the verifier is unchanged
     assert "a % only copies a _pct field" in pricing and "never write a % sign" not in pricing
     assert pricing.endswith("At most 4 short sentences.")
