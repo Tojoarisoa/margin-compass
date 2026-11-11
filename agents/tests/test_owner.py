@@ -118,3 +118,11 @@ def test_nightly_target_shapes_are_accepted(target):
 
 def test_rationale_control_characters_are_stripped():
     assert owner.clean_decision(DECISION | {"rationale": " ok\x07 "})["rationale"] == "ok"
+
+
+def test_owner_config_is_public_but_only_when_set(monkeypatch):
+    get = {"requestContext": {"http": {"method": "GET"}}, "rawPath": "/api/owner-config"}
+    r = api.handler(get, None)
+    assert r["statusCode"] == 200 and json.loads(r["body"]) == {"pool_id": POOL, "client_id": CLIENT, "region": REGION}
+    monkeypatch.setenv("OWNER_CLIENT_ID", "")
+    assert api.handler(get, None)["statusCode"] == 404

@@ -37,7 +37,7 @@ US_PROFILE_REGIONS = ("us-east-1", "us-east-2", "us-west-2")  # where a us. prof
 API_RESERVED_CONCURRENCY = 5
 
 CSP = ("default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; "
-       "connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'")
+       "connect-src 'self' https://cognito-idp.us-east-1.amazonaws.com; font-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'")
 
 
 class WebStack(cdk.Stack):

@@ -4,6 +4,7 @@
   GET  /api/jobs/<id>                        -> {"status": "pending|running|answered|...", ...}
   GET  /api/health                           -> {"ok": true, ...}
   POST /api/approvals   (owner only, M5-03)  -> 201 {"recorded": ...}   see mc_agents.owner
+  GET  /api/owner-config                     -> {"region", "pool_id", "client_id"} for the dashboard sign-in (404 if unset)
 
 The POST starts the job and invokes this same function asynchronously ({"mc_job": id}); the worker
 runs the Cost-to-Serve Analyst and stores the result (TTL 1 day). Streaming is the M1-07 spike.
@@ -286,6 +287,9 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
         return handle_job(path)
     if method == "POST" and path == "/api/approvals":
         return handle_approval(event)
+    if method == "GET" and path == "/api/owner-config":
+        cfg = owner.config()
+        return _resp(200, cfg) if cfg["pool_id"] and cfg["client_id"] else _resp(404, {"error": "not found"})
     if method == "GET" and path == "/api/health":
         return _resp(200, {"ok": True})  # no model, caps or environment on the public API
     return _resp(404, {"error": "not found"})
