@@ -4,6 +4,9 @@
   /publish/*  -> lake bucket (publish/ snapshots written by the pipeline)  S3 OAC
   /api/*      -> agent API Lambda function URL (AWS_IAM)                   Lambda OAC (ADR-012, VER-08)
 
+Owner sign-in (M5-03 step 5): a Cognito user pool (Lite plan, free up to 10,000 MAU; VER-02) with one public
+app client, self sign-up off. No user is created here: the owner adds their user in the console (AGENTS.md §8.3).
+
 The lake's bucket policy (data stack) lets CloudFront distributions of this account read only site/*
 and publish/*; importing the bucket here by name avoids a cross-stack cycle.
 No VPC (ADR-006), no WAF (§11.2): abuse protection is OAC + rate limits + budgets in DynamoDB (§11.3).
@@ -17,6 +20,7 @@ import aws_cdk as cdk
 from aws_cdk import aws_certificatemanager as acm
 from aws_cdk import aws_cloudfront as cf
 from aws_cdk import aws_cloudfront_origins as origins
+from aws_cdk import aws_cognito as cognito
 from aws_cdk import aws_dynamodb as dynamodb
 from aws_cdk import aws_iam as iam
 from aws_cdk import aws_lambda as lambda_
@@ -42,6 +46,28 @@ class WebStack(cdk.Stack):
         super().__init__(scope, construct_id, **kwargs)
         name = lambda resource: f"mc-{env_name}-web-{resource}"  # noqa: E731
         lake = s3.Bucket.from_bucket_name(self, "Lake", lake_bucket_name)
+
+        # --- owner sign-in (M5-03 step 5) ------------------------------------------------------
+        self.user_pool = cognito.UserPool(
+            self, "OwnerPool", user_pool_name=name("owners"), feature_plan=cognito.FeaturePlan.LITE,
+            self_sign_up_enabled=False, sign_in_aliases=cognito.SignInAliases(username=True, email=True),
+            password_policy=cognito.PasswordPolicy(min_length=14, require_lowercase=True, require_uppercase=True,
+                                                   require_digits=True, require_symbols=True,
+                                                   temp_password_validity=cdk.Duration.days(3)),
+            mfa=cognito.Mfa.OPTIONAL, mfa_second_factor=cognito.MfaSecondFactor(sms=False, otp=True),
+            account_recovery=cognito.AccountRecovery.NONE,  # the owner resets through the console; no e-mail/SMS sending
+            deletion_protection=True, removal_policy=cdk.RemovalPolicy.RETAIN,
+        )
+        self.owner_group = cognito.CfnUserPoolGroup(self, "OwnerGroup", user_pool_id=self.user_pool.user_pool_id,
+                                                    group_name="owner", description="May record approvals (M5-03)")
+        self.user_pool_client = self.user_pool.add_client(
+            "DashboardClient", user_pool_client_name=name("dashboard"), generate_secret=False,
+            auth_flows=cognito.AuthFlow(user_srp=True), o_auth=cognito.OAuthSettings(flows=cognito.OAuthFlows()),
+            supported_identity_providers=[cognito.UserPoolClientIdentityProvider.COGNITO],
+            prevent_user_existence_errors=True, enable_token_revocation=True,
+            access_token_validity=cdk.Duration.hours(1), id_token_validity=cdk.Duration.hours(1),
+            refresh_token_validity=cdk.Duration.days(1),
+        )
 
         # --- agent API -----------------------------------------------------------------------
         fn_name = name("api")
@@ -72,7 +98,9 @@ class WebStack(cdk.Stack):
             retry_attempts=0, max_event_age=cdk.Duration.minutes(5),  # a failed job is never re-run (no double spend)
             role=role, log_group=log_group,
             environment={"LAKE_BUCKET": lake_bucket_name, "STATE_TABLE": core_table.table_name, "MC_ENV": env_name,
-                         "MC_CACHE_PROMPT": "1"},  # M4-04: Bedrock prompt caching on the agent worker
+                         "MC_CACHE_PROMPT": "1",  # M4-04: Bedrock prompt caching on the agent worker
+                         "OWNER_POOL_ID": self.user_pool.user_pool_id,  # M5-03: owner-only approval writes
+                         "OWNER_CLIENT_ID": self.user_pool_client.user_pool_client_id},
         )
         url = self.api.add_function_url(auth_type=lambda_.FunctionUrlAuthType.AWS_IAM,
                                         invoke_mode=lambda_.InvokeMode.BUFFERED)
@@ -129,6 +157,8 @@ class WebStack(cdk.Stack):
 
         cdk.CfnOutput(self, "Url", value=f"https://{self.distribution.distribution_domain_name}")
         cdk.CfnOutput(self, "ApiFunction", value=self.api.function_name)
+        cdk.CfnOutput(self, "OwnerPoolId", value=self.user_pool.user_pool_id)
+        cdk.CfnOutput(self, "OwnerClientId", value=self.user_pool_client.user_pool_client_id)
         cdk.CfnOutput(self, "DistributionId", value=self.distribution.distribution_id)
         if dashboard_domain:
             cdk.CfnOutput(self, "DashboardUrl", value=f"https://{dashboard_domain}")

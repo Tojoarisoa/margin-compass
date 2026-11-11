@@ -55,6 +55,8 @@ CATALOG: dict[str, tuple[Decimal, str]] = {
     "AWS::BCMDataExports::Export": (Decimal(0), "export is free; storage counted in its bucket"),
     "AWS::IAM::Role": (Decimal(0), ""), "AWS::IAM::Policy": (Decimal(0), ""), "AWS::IAM::ManagedPolicy": (Decimal(0), ""),
     "AWS::IAM::OIDCProvider": (Decimal(0), ""),
+    "AWS::Cognito::UserPool": (Decimal(0), "Lite plan, free up to 10,000 MAU; one owner user (VER-02)"),
+    "AWS::Cognito::UserPoolClient": (Decimal(0), ""), "AWS::Cognito::UserPoolGroup": (Decimal(0), ""),
     "AWS::CDK::Metadata": (Decimal(0), ""),
 }
 ECR_PER_IMAGE = Decimal("0.04")  # ~0.3-0.4 GB compressed x $0.10/GB-month

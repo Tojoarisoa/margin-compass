@@ -166,3 +166,43 @@ def test_cdk_json_sets_the_medtech_dashboard_domain():
 
     ctx = json.loads((Path(__file__).resolve().parents[1] / "cdk.json").read_text())["context"]
     assert ctx["mc:dashboardDomain"] == "medtech.booncore.com"
+
+
+# --- owner sign-in (M5-03 step 5) ------------------------------------------------------------------
+
+def test_owner_pool_is_closed_and_free_tier(synth):
+    _, t, _ = synth
+    pools = t.find_resources("AWS::Cognito::UserPool")
+    assert len(pools) == 1
+    pool = next(iter(pools.values()))
+    props = pool["Properties"]
+    assert props["UserPoolName"] == "mc-dev-web-owners"
+    assert props["UserPoolTier"] == "LITE"
+    assert props["AdminCreateUserConfig"]["AllowAdminCreateUserOnly"] is True  # no self sign-up
+    assert props["Policies"]["PasswordPolicy"]["MinimumLength"] >= 14
+    assert props["DeletionProtection"] == "ACTIVE" and pool["DeletionPolicy"] == "Retain"
+    t.resource_count_is("AWS::Cognito::UserPoolDomain", 0)  # no hosted UI
+    t.has_resource_properties("AWS::Cognito::UserPoolGroup", {"GroupName": "owner"})
+
+
+def test_no_users_are_created_by_iac(synth):
+    _, t, _ = synth
+    for typ in ("AWS::Cognito::UserPoolUser", "AWS::Cognito::UserPoolUserToGroupAttachment"):
+        t.resource_count_is(typ, 0)
+
+
+def test_dashboard_client_is_public_srp_only(synth):
+    _, t, _ = synth
+    client = next(iter(t.find_resources("AWS::Cognito::UserPoolClient").values()))["Properties"]
+    assert client.get("GenerateSecret") is False
+    assert set(client["ExplicitAuthFlows"]) == {"ALLOW_USER_SRP_AUTH", "ALLOW_REFRESH_TOKEN_AUTH"}
+    assert client["PreventUserExistenceErrors"] == "ENABLED" and client["EnableTokenRevocation"] is True
+    assert not client.get("AllowedOAuthFlows")
+
+
+def test_api_knows_the_owner_pool(synth):
+    _, t, _ = synth
+    fn = next(f for f in t.find_resources("AWS::Lambda::Function").values()
+              if f["Properties"].get("FunctionName") == "mc-dev-web-api")
+    env = fn["Properties"]["Environment"]["Variables"]
+    assert "Ref" in env["OWNER_POOL_ID"] and "Ref" in env["OWNER_CLIENT_ID"]
