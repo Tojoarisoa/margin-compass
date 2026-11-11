@@ -22,7 +22,7 @@ function CostChart({ pg3, feature }: { pg3: Pg3; feature: string }) {
     const chart = echarts.init(ref.current, THEME, { renderer: "canvas" });
     chart.setOption({
       tooltip: { trigger: "axis", valueFormatter: (v: number) => `$${v.toFixed(2)}` },
-      grid: { left: 56, right: 16, top: 16, bottom: 32 },
+      grid: { left: 8, right: 16, top: 16, bottom: 8, containLabel: true },
       xAxis: { type: "category", data: rows.map((r) => r.date) },
       yAxis: { type: "value", axisLabel: { formatter: (v: number) => `$${v.toLocaleString("en-US")}` } },
       series: [{
