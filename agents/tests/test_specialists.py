@@ -103,7 +103,8 @@ def test_pricing_specialist_calls_tools_instead_of_asking():
     assert "\"Approve\" a discount means price it" in pricing and "never a partial plan" in pricing
     assert "pass churn_bps 200" in pricing
     # 3c-3g/3c-3i: no computed difference; a change only copies price_plan v4's delta (rule 3)
-    assert "a change only a delta field with its sign" in pricing and "never restate its inputs" in pricing
+    assert "a change only a delta field, signed" in pricing and 'not "163 bps reduction"' in pricing
+    assert "never restate its inputs" in pricing
     assert "call price_plan before any answer" in pricing and "if it has none, say so and use the example plan" in pricing
     # 3c-3h: a % only copies the price_plan v3 percent echo (changes_pct, churn_pct); the verifier is unchanged
     assert "a % only copies a _pct field" in pricing and "never write a % sign" not in pricing

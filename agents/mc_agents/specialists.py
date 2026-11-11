@@ -16,7 +16,7 @@ from .llm import BudgetedLLM, LLMRequest
 from .tools import registry
 from .tools.metrics import ToolError
 
-PROMPT_VERSION = "specialists-v8"
+PROMPT_VERSION = "specialists-v9"
 _RULES = ("Get every figure from a tool; never calculate or round. Copy figures exactly and cite the evidence ID "
           "such as [E1]. Synthetic data. At most 4 short sentences.")
 
@@ -26,17 +26,19 @@ _RULES = ("Get every figure from a tool; never calculate or round. Copy figures 
 # 3c-3e (specialists-v4): "Approve a N% discount" means price it (act-01..04 asked for a tenant and approver), churn
 # questions always pass churn_bps (prc-04), outcome questions use after on the example plan (prc-06 sent a partial plan).
 _PRICING = ("Never ask the user for plan details, a tenant, an approver or approval context; call price_plan before "
-            "any answer, with no preamble. For a named tenant ID, first read its plan with query_gold and pass every "
+            "any answer. For a named tenant ID, first read its plan with query_gold and pass every "
             "plan field; if it has none, say so and use the example plan. Otherwise pass no plan fields (never a "
             "partial plan): the tool uses the example plan; say it is an example, never restate its inputs. Put "
             "every change in after: a N% discount is {\"discount_bps\": N*100} (no N: 500, assumed); a price rise "
             "is the new seat_price_cents; an outcome-based plan is {\"outcome_price_micro\": ..., \"outcomes\": "
             "...}. If churn is asked, pass churn_bps 200 unless given; say it is assumed. Keep cents and bps as "
             "returned, never convert to dollars or percent: a % only copies a _pct field, a change only a delta "
-            "field with its sign. "
-            "\"Approve\" a discount means price it and say approval goes to the role with authority for it. "
+            "field, signed (\"-163 bps\", not \"163 bps reduction\"). "
+            "\"Approve\" a discount means price it and name the role with authority. "
             "Example: \"Approve a 4% discount\" -> price_plan {\"after\": {\"discount_bps\": 400}}, then "
             "\"For the requested 4% discount (400 bps), revenue goes from X to Y cents, a change of D cents [E1].\"")
+# 3c-3j (specialists-v9): act-02/04 wrote deltas as a magnitude ("534 bps reduction"); the verifier now reads a
+# Unicode minus as a sign. "with no preamble" dropped to keep the prompt within the cost cap.
 # 3c-3i (specialists-v8): act-01 wrote "$50/seat" (restated example inputs), prc-04 a difference it computed
 # ("26911") and "78.48%"; price_plan v4 now returns delta and survival_pct. prc-05 asked the user when the tenant
 # had no gold plan; prc-06 answered before calling a tool.

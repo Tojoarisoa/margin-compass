@@ -166,9 +166,12 @@ def test_recorded_graph_fixtures_replay(gold):
     ("−163 bps") or as a magnitude ("534 bps reduction"), and act-01 converts margin to "59.15%"; prc-05/06 capped.
 
     Verifier reads U+2212 as a minus sign (no fixture change, no re-record): 16/27, act-03 now passes.
+
+    Step 3c-3j (specialists-v9: AG-05 writes a change as a signed delta, never a magnitude): the 7 scenarios routed
+    to AG-05 drift (scored as fails, so 15/27) until the next ops record run.
     """
     rep = run_graph(gold, "haiku-4-5", "replay")
     assert set(rep["runs"]) == {s["id"] for s in default_scenarios()}
-    assert rep["drifted"] == []
-    assert round(rep["ev06"] * 27) == 16 and not rep["passed"]
+    assert rep["drifted"] == ["act-01", "act-02", "act-03", "act-04", "prc-04", "prc-05", "prc-06"]
+    assert round(rep["ev06"] * 27) == 15 and not rep["passed"]
     assert rep["runs"]["leak-02"] == {"route": "leak", "tools": ["query_gold"], "status": "answered"}
