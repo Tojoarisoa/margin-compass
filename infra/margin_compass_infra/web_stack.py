@@ -26,11 +26,14 @@ from aws_cdk import aws_iam as iam
 from aws_cdk import aws_lambda as lambda_
 from aws_cdk import aws_logs as logs
 from aws_cdk import aws_s3 as s3
+from aws_cdk import aws_sns_subscriptions as subs
 from constructs import Construct
 
 from .alarms import alert_topic, lambda_errors_alarm
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+KILL_SWITCH_CODE = REPO_ROOT / "infra" / "functions" / "kill_switch"
+KILL_SWITCH_POLICY_NAME = "mc-shared-foundation-kill-switch-deny"  # foundation stack (account-wide)
 
 # Interim Mid model (ADR-003) through the us. cross-region inference profile.
 AGENT_INFERENCE_PROFILE = "us.anthropic.claude-haiku-4-5-20251001-v1:0"
@@ -107,6 +110,8 @@ class WebStack(cdk.Stack):
         # M6-01 (§14 "API errors"): handled 4xx/5xx answers are not Lambda errors; this counts crashes and timeouts.
         lambda_errors_alarm(self, "ApiErrorsAlarm", self.api, alarm_name=name("api-errors"), threshold=3, topic=alert_topic(self),
                             description="The agent API Lambda crashed or timed out 3+ times in an hour. See its log group (runbook: docs/runbooks/alarms.md).")
+        self._kill_switch(name, env_name, lake, role)
+
         url = self.api.add_function_url(auth_type=lambda_.FunctionUrlAuthType.AWS_IAM,
                                         invoke_mode=lambda_.InvokeMode.BUFFERED)
 
@@ -167,3 +172,46 @@ class WebStack(cdk.Stack):
         cdk.CfnOutput(self, "DistributionId", value=self.distribution.distribution_id)
         if dashboard_domain:
             cdk.CfnOutput(self, "DashboardUrl", value=f"https://{dashboard_domain}")
+
+    def _kill_switch(self, name, env_name: str, lake: s3.IBucket, api_role: iam.IRole) -> None:
+        """G1 (PLAN.md §11.3 item 4): on any alert, follow the deny policy (API concurrency 0, schedules off, banner).
+
+        Not a kill-switch target itself (no model calls). Every grant names one mc-* resource; no List* on "*".
+        """
+        acct, region, part = self.account, self.region, cdk.Aws.PARTITION
+        schedules = [f"mc-{env_name}-data-{s}" for s in ("nightly", "telemetry")]  # data stack schedules
+        scheduler_role = f"arn:{part}:iam::{acct}:role/mc-{env_name}-data-nightly-scheduler"
+        fn_name = name("kill-switch")
+        role = iam.Role(self, "KillSwitchRole", role_name=fn_name, assumed_by=iam.ServicePrincipal("lambda.amazonaws.com"),
+                        description="Kill switch: read the API role's attached policies, set API concurrency, toggle mc-* schedules, flag.")
+        statements = [
+            ("ReadApiRolePolicies", ["iam:ListAttachedRolePolicies"], [api_role.role_arn]),
+            ("SetApiConcurrency", ["lambda:PutFunctionConcurrency"], [self.api.function_arn]),
+            ("ToggleSchedules", ["scheduler:GetSchedule", "scheduler:UpdateSchedule"],
+             [f"arn:{part}:scheduler:{region}:{acct}:schedule/default/{s}" for s in schedules]),
+            ("FlagAndState", ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"],
+             [lake.arn_for_objects("publish/latest/kill_switch.json"), lake.arn_for_objects("kill_switch/state.json")]),
+        ]
+        for sid, actions, resources in statements:
+            role.add_to_policy(iam.PolicyStatement(sid=sid, actions=actions, resources=resources))
+        # Without List, GetObject on the missing state key is a 403 instead of NoSuchKey; limit it to that key.
+        role.add_to_policy(iam.PolicyStatement(sid="ListStateKey", actions=["s3:ListBucket"], resources=[lake.bucket_arn],
+                                               conditions={"StringEquals": {"s3:prefix": "kill_switch/state.json"}}))
+        # UpdateSchedule re-sends the target, which passes the scheduler role again.
+        role.add_to_policy(iam.PolicyStatement(sid="PassSchedulerRole", actions=["iam:PassRole"], resources=[scheduler_role],
+                                               conditions={"StringEquals": {"iam:PassedToService": "scheduler.amazonaws.com"}}))
+        log_group = logs.LogGroup(self, "KillSwitchLogs", log_group_name=f"/aws/lambda/{fn_name}",
+                                  retention=logs.RetentionDays.ONE_WEEK, removal_policy=cdk.RemovalPolicy.DESTROY)
+        log_group.grant_write(role)
+        self.kill_switch = lambda_.Function(
+            self, "KillSwitch", function_name=fn_name, runtime=lambda_.Runtime.PYTHON_3_12, handler="handler.handler",
+            code=lambda_.Code.from_asset(str(KILL_SWITCH_CODE)), architecture=lambda_.Architecture.ARM_64,
+            memory_size=128, timeout=cdk.Duration.seconds(90), retry_attempts=0, role=role, log_group=log_group,
+            description="Kill switch (PLAN.md 11.3): follow the budget deny policy; pause the API and schedules, raise the banner.",
+            environment={"KILL_SWITCH_POLICY_ARN": f"arn:{part}:iam::{acct}:policy/{KILL_SWITCH_POLICY_NAME}",
+                         "API_ROLE_NAME": api_role.role_name, "API_FUNCTION_NAME": self.api.function_name,
+                         "API_RESERVED_CONCURRENCY": str(API_RESERVED_CONCURRENCY), "SCHEDULE_NAMES": ",".join(schedules),
+                         "LAKE_BUCKET": lake.bucket_name},
+        )
+        alert_topic(self, "KillSwitchAlerts").add_subscription(subs.LambdaSubscription(self.kill_switch))
+        cdk.CfnOutput(self, "KillSwitchFunction", value=self.kill_switch.function_name)

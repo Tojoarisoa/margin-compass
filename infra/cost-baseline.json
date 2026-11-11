@@ -30,13 +30,14 @@
       "AWS::Cognito::UserPool": 1,
       "AWS::Cognito::UserPoolClient": 1,
       "AWS::Cognito::UserPoolGroup": 1,
-      "AWS::IAM::Policy": 1,
-      "AWS::IAM::Role": 1,
-      "AWS::Lambda::EventInvokeConfig": 1,
-      "AWS::Lambda::Function": 1,
-      "AWS::Lambda::Permission": 2,
+      "AWS::IAM::Policy": 2,
+      "AWS::IAM::Role": 2,
+      "AWS::Lambda::EventInvokeConfig": 2,
+      "AWS::Lambda::Function": 2,
+      "AWS::Lambda::Permission": 3,
       "AWS::Lambda::Url": 1,
-      "AWS::Logs::LogGroup": 1
+      "AWS::Logs::LogGroup": 2,
+      "AWS::SNS::Subscription": 1
     },
     "mc-shared-foundation": {
       "AWS::BCMDataExports::Export": 1,
@@ -56,5 +57,5 @@
       "AWS::SNS::TopicPolicy": 1
     }
   },
-  "total_usd": "1.82"
+  "total_usd": "1.83"
 }

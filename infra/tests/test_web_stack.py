@@ -53,9 +53,14 @@ def test_three_behaviors_on_one_distribution(synth):
 def test_api_is_only_reachable_through_cloudfront(synth):
     _, t, _ = synth
     t.has_resource_properties("AWS::Lambda::Url", {"AuthType": "AWS_IAM"})
-    perms = [p["Properties"] for p in t.find_resources("AWS::Lambda::Permission").values()]
+    all_perms = [p["Properties"] for p in t.find_resources("AWS::Lambda::Permission").values()]
+    kill_switch = [p for p in all_perms if "KillSwitch" in json.dumps(p["FunctionName"])]
+    perms = [p for p in all_perms if p not in kill_switch]
     assert {p["Action"] for p in perms} == {"lambda:InvokeFunctionUrl", "lambda:InvokeFunction"}
     assert all(p["Principal"] == "cloudfront.amazonaws.com" and "distribution/" in json.dumps(p["SourceArn"]) for p in perms)
+    # The only other invoker: the kill switch (not the API), from the account alert topic.
+    assert len(kill_switch) == 1 and kill_switch[0]["Principal"] == "sns.amazonaws.com"
+    assert "mc-shared-foundation-alerts" in json.dumps(kill_switch[0]["SourceArn"])
 
 
 def test_api_request_policy_never_forwards_host_or_cookies(synth):
@@ -136,7 +141,11 @@ def test_no_bucket_deployment_with_lake_wide_write(synth):
     """The dashboard is uploaded by scripts/deploy-dashboard.sh, not by a Lambda that could write the whole lake."""
     _, t, _ = synth
     t.resource_count_is("Custom::CDKBucketDeployment", 0)
-    assert not [s for s in _statements(t) if any(a.startswith(("s3:Put", "s3:Delete", "s3:Abort")) for a in _actions(s))]
+    writes = [s for s in _statements(t) if any(a.startswith(("s3:Put", "s3:Delete", "s3:Abort")) for a in _actions(s))]
+    # Only the kill switch writes, and only its two exact keys (no wildcard, nothing else in publish/).
+    assert [s.get("Sid") for s in writes] == ["FlagAndState"]
+    keys = [r["Fn::Join"][1][-1] for r in writes[0]["Resource"]]
+    assert keys == ["/publish/latest/kill_switch.json", "/kill_switch/state.json"]
 
 
 # --- dashboard custom domain (medtech.booncore.com) ---------------------------------------------------
@@ -221,3 +230,48 @@ def test_api_errors_alarm_to_the_alert_topic(synth):
     assert alarm["AlarmName"] == "mc-dev-web-api-errors"
     assert (alarm["MetricName"], alarm["Statistic"], alarm["Period"], alarm["Threshold"]) == ("Errors", "Sum", 3600, 3)
     assert alarm["TreatMissingData"] == "notBreaching" and "mc-shared-foundation-alerts" in json.dumps(alarm["AlarmActions"])
+
+
+def _role_statements(t, role_logical_prefix):
+    out = []
+    for p in t.find_resources("AWS::IAM::Policy").values():
+        roles = p["Properties"]["Roles"]
+        if any(r.get("Ref", "").startswith(role_logical_prefix) for r in roles):
+            out += p["Properties"]["PolicyDocument"]["Statement"]
+    return out
+
+
+def test_kill_switch_lambda_follows_alerts_with_scoped_grants(synth):
+    _, t, _ = synth
+    t.has_resource_properties("AWS::Lambda::Function", {"FunctionName": "mc-dev-web-kill-switch", "Runtime": "python3.12",
+                                                        "Handler": "handler.handler", "Timeout": 90})
+    t.has_resource_properties("AWS::SNS::Subscription", {
+        "Protocol": "lambda",
+        "TopicArn": {"Fn::Join": ["", Match.array_with([":sns:us-east-1:123456789012:mc-shared-foundation-alerts"])]},
+    })
+    stmts = _role_statements(t, "KillSwitchRole")
+    actions = sorted(a for s in stmts for a in _actions(s))
+    assert actions == sorted(["iam:ListAttachedRolePolicies", "lambda:PutFunctionConcurrency", "scheduler:GetSchedule",
+                              "scheduler:UpdateSchedule", "s3:GetObject", "s3:PutObject", "s3:DeleteObject", "s3:ListBucket",
+                              "iam:PassRole", "logs:CreateLogStream", "logs:PutLogEvents"])
+    for s in stmts:
+        assert s["Effect"] == "Allow" and not any("*" in a for a in _actions(s))
+        assert s["Resource"] != "*" and "*" not in json.dumps(s["Resource"]).replace("/*", "")  # no wildcard resources
+    by_sid = {s.get("Sid"): s for s in stmts}
+    assert by_sid["PassSchedulerRole"]["Condition"] == {"StringEquals": {"iam:PassedToService": "scheduler.amazonaws.com"}}
+    assert "mc-dev-data-nightly-scheduler" in json.dumps(by_sid["PassSchedulerRole"]["Resource"])
+    sched = json.dumps(by_sid["ToggleSchedules"]["Resource"])
+    assert "schedule/default/mc-dev-data-nightly" in sched and "schedule/default/mc-dev-data-telemetry" in sched
+    flag = json.dumps(by_sid["FlagAndState"]["Resource"])
+    assert "/publish/latest/kill_switch.json" in flag and "/kill_switch/state.json" in flag and "publish/*" not in flag
+
+
+def test_kill_switch_is_not_reserved_and_not_bedrock(synth):
+    _, t, _ = synth
+    fns = [f["Properties"] for f in t.find_resources("AWS::Lambda::Function").values()
+           if f["Properties"].get("FunctionName") == "mc-dev-web-kill-switch"]
+    assert len(fns) == 1 and "ReservedConcurrentExecutions" not in fns[0]
+    env = fns[0]["Environment"]["Variables"]
+    assert env["API_RESERVED_CONCURRENCY"] == str(API_RESERVED_CONCURRENCY)
+    assert env["SCHEDULE_NAMES"] == "mc-dev-data-nightly,mc-dev-data-telemetry"
+    assert all("bedrock" not in a for s in _role_statements(t, "KillSwitchRole") for a in _actions(s))
