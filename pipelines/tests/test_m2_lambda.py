@@ -89,3 +89,60 @@ def test_focus_export_is_fetched_and_missing_export_is_not_an_error(tmp_path):
     assert glob == f"{tmp_path / 'w'}/focus-1-2/**/*.parquet"
     assert (tmp_path / "w" / "focus-1-2" / "data" / "a.parquet").exists()
     assert not (tmp_path / "w" / "focus-1-2" / "data" / "manifest.json").exists()
+
+
+def _fake_owner(monkeypatch, rows):
+    """Stands in for mc_agents.owner (not installed in the pipelines env; tested in agents/tests/test_owner.py)."""
+    import sys
+    import types
+
+    pkg, mod = types.ModuleType("mc_agents"), types.ModuleType("mc_agents.owner")
+    mod.export_approvals = lambda table: rows
+    mod.to_jsonl = lambda rs: "".join(json.dumps(r, sort_keys=True) + "\n" for r in rs)
+    pkg.owner = mod
+    monkeypatch.setitem(sys.modules, "mc_agents", pkg)
+    monkeypatch.setitem(sys.modules, "mc_agents.owner", mod)
+
+
+def test_approvals_are_exported_by_static_and_applied_by_months(tmp_path, monkeypatch):
+    import booncore_sim.cli as sim_cli
+
+    monkeypatch.setenv("LAKE_BUCKET", "lake")
+    monkeypatch.setattr(m2_lambda, "WORK", tmp_path / "work")
+    s3 = FakeS3(tmp_path / "s3")
+    row = {"action_id": "act-000000000001", "action_type": "ACT-1", "target": "F4/cost", "decision": "approved",
+           "approver": "owner", "rationale": "", "decided_at": "2025-07-01T00:00:00+00:00"}
+    _fake_owner(monkeypatch, [row])
+    calls = []
+
+    def fake_run_m2(seed, out, mode, month, approvals_path=None):
+        calls.append((mode, month, approvals_path and approvals_path.read_text()))
+        return {"files": []}
+
+    monkeypatch.setattr(sim_cli, "run_m2", fake_run_m2)
+    out = m2_lambda.handle({"profile": "m2", "step": "static", "approvals": True}, "r1", s3, table=object())
+    assert out["status"] == "success" and out["approvals"] == 1
+    stored = (tmp_path / "s3" / "lake" / m2_lambda.APPROVALS_KEY).read_text()
+    assert json.loads(stored) == row
+    assert m2_lambda.handle({"profile": "m2", "step": "month", "month": 3, "approvals": True}, "r1", s3)["status"] == "success"
+    assert calls == [("static", None, None), ("month", 3, stored)]
+
+
+def test_without_the_flag_approvals_are_neither_exported_nor_applied(tmp_path, monkeypatch):
+    import booncore_sim.cli as sim_cli
+
+    monkeypatch.setenv("LAKE_BUCKET", "lake")
+    monkeypatch.setattr(m2_lambda, "WORK", tmp_path / "work")
+    s3 = FakeS3(tmp_path / "s3")
+    calls = []
+    monkeypatch.setattr(sim_cli, "run_m2", lambda seed, out, mode, month, approvals_path=None: calls.append(approvals_path) or {"files": []})
+    assert m2_lambda.handle({"profile": "m2", "step": "static"}, "r1", s3)["status"] == "success"
+    assert m2_lambda.handle({"profile": "m2", "step": "month", "month": 0}, "r1", s3)["status"] == "success"
+    assert calls == [None, None] and not (tmp_path / "s3" / "lake" / m2_lambda.APPROVALS_KEY).exists()
+
+
+def test_month_with_the_flag_fails_when_static_did_not_export(tmp_path, monkeypatch):
+    monkeypatch.setenv("LAKE_BUCKET", "lake")
+    monkeypatch.setattr(m2_lambda, "WORK", tmp_path / "work")
+    out = m2_lambda.handle({"profile": "m2", "step": "month", "month": 0, "approvals": True}, "r1", FakeS3(tmp_path / "s3"))
+    assert out["status"] == "no_approvals"

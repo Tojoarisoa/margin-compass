@@ -26,3 +26,11 @@ in the `owner` group; Cognito `GetUser` validates the token. Each decision is an
    PK starting `APPROVAL#`). That round trip ticks M5-03.
 
 To revoke access, remove the user from `owner` or disable the user; tokens expire within an hour.
+
+## Decisions in the simulation (backfill, opt-in)
+
+A backfill started with `{"approvals": true}` in the execution input makes the static step export the latest decision
+per action (`mc_agents.owner.export_approvals`, one Scan of the core table filtered on `APPROVAL#`) to
+`approvals/approvals.jsonl` in the lake; each month step reads that file and applies the closed-loop effects. Without the
+flag the backfill is unchanged. A month step with the flag fails with `no_approvals` if the export is missing. Effects
+start at `decided_at`, so a decision made after the simulation window (ends 2026-10-31) changes nothing.

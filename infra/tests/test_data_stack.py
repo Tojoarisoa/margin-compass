@@ -81,7 +81,11 @@ def test_pipeline_role_only_touches_its_own_resources(synth):
     # bedrock: and s3vectors: arrived in M1-05; their resources are pinned by the M1-05 tests below.
     assert all(a.startswith(("s3:", "logs:", "dynamodb:", "s3vectors:")) or a == "bedrock:InvokeModel" for a in actions), actions
     dynamo = {a for a in actions if a.startswith("dynamodb:")}
-    assert dynamo == {"dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:Query"}  # no scans, deletes, or table admin
+    # No deletes, updates, batch writes, or table admin. Scan (M5-03) is only for the opt-in approvals export.
+    assert dynamo == {"dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:Query", "dynamodb:Scan"}
+    dynamo_resources = [s["Resource"] for s in statements
+                        if any(a.startswith("dynamodb:") for a in (s["Action"] if isinstance(s["Action"], list) else [s["Action"]]))]
+    assert len(dynamo_resources) == 1 and not isinstance(dynamo_resources[0], list), dynamo_resources  # the core table only, no indexes
     assert "s3:*" not in actions and not any(a.startswith("s3:PutBucket") for a in actions)
 
 
