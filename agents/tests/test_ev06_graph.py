@@ -67,3 +67,32 @@ def test_record_then_replay_roundtrip(gold, tmp_path):
     assert (tmp_path / "haiku-4-5" / "t-prc.json").exists()
     rep = run_graph(gold, "haiku-4-5", "replay", tmp_path, scenarios=[SC_PRICING])
     assert rep["ev06"] == 1.0 and rep["runs"] == rec["runs"]
+
+
+def test_cli_ev06_graph_flag(gold, tmp_path, monkeypatch):
+    """`mc-agents ev --ev06-graph MODE` adds the graph runs to the report and to the overall gate (step 3c-2)."""
+    import json
+
+    from mc_agents import cli, ev06_graph
+
+    seen = {}
+
+    def fake(gold_dir, model_key, mode):
+        seen.update(gold=gold_dir, model=model_key, mode=mode)
+        return {"ev06": 0.5, "passed": False, "failed": ["x"], "model": model_key, "mode": mode, "runs": {}}
+
+    monkeypatch.setattr(ev06_graph, "run_graph", fake)
+    out = tmp_path / "ev.json"
+    assert cli.main(["--gold", str(gold), "ev", "--ev06-graph", "replay", "--out", str(out)]) == 1
+    report = json.loads(out.read_text())
+    assert seen == {"gold": gold, "model": "haiku-4-5", "mode": "replay"}
+    assert report["ev06_graph"]["ev06"] == 0.5 and report["passed"] is False
+    assert "ev06_graph" not in cli.run_ev(gold)  # off by default: CI unchanged until fixtures exist
+
+
+def test_run_graph_report_is_json(gold, tmp_path):
+    import json
+
+    rec = run_graph(gold, "haiku-4-5", "record", tmp_path, live_client=Script(use("price_plan", PLAN), good),
+                    scenarios=[SC_PRICING])
+    json.dumps(rec)
