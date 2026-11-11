@@ -34,7 +34,9 @@ def task_success(sc: dict[str, Any], out: dict[str, Any]) -> bool:
     if sc["route"] == "blocked":
         return out["status"] == "blocked"
     if not sc.get("answer"):  # no expected answer (e.g. unverified, approval-only): route and tools decide
-        return out["status"] != "blocked"
+        if sc["route"] == "unverified":
+            return out["status"] != "blocked"
+        return out["status"] not in ("blocked", "unverified")  # a withheld or capped run did not do the job
     led: Ledger = out["ledger"]
     return out["status"] == "answered" and bool(out["answer"]) and verify_answer(out["answer"], led, sc["question"]).ok
 

@@ -32,8 +32,9 @@ def _checkpoint(store: Store | None, run_id: str, trail: list[dict[str, Any]], n
 def ask(question: str, llm: BudgetedLLM, model_id: str, *, run_id: str, approval_store: Store,
         checkpoints: Store | None = None, extra: dict[str, registry.ToolSpec] | None = None,
         propose_actions: ActionsFn | None = None, usd: Decimal = Decimal(0), calls: int = 0,
-        label: str = "") -> dict[str, Any]:
-    state = GraphState(question)
+        label: str = "", state: GraphState | None = None) -> dict[str, Any]:
+    # `state` lets a caller (EV-06 graph runs) read the route and ledger, also after a capped run raises.
+    state = state if state is not None else GraphState(question)
     trail: list[dict[str, Any]] = []
     nxt = route(state)
     _checkpoint(checkpoints, run_id, trail, "route", state)
