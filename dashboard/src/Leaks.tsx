@@ -6,6 +6,7 @@ import { LineChart } from "echarts/charts";
 import { MarkAreaComponent, GridComponent, TooltipComponent } from "echarts/components";
 import { CanvasRenderer } from "echarts/renderers";
 import { money } from "./format";
+import { THEME, ACCENT } from "./theme";
 
 echarts.use([LineChart, GridComponent, MarkAreaComponent, TooltipComponent, CanvasRenderer]);
 
@@ -18,14 +19,14 @@ function CostChart({ pg3, feature }: { pg3: Pg3; feature: string }) {
   const leaks = useMemo(() => pg3.leaks.filter((l) => l.feature_id === feature), [pg3, feature]);
   useEffect(() => {
     if (!ref.current) return;
-    const chart = echarts.init(ref.current, undefined, { renderer: "canvas" });
+    const chart = echarts.init(ref.current, THEME, { renderer: "canvas" });
     chart.setOption({
       tooltip: { trigger: "axis", valueFormatter: (v: number) => `$${v.toFixed(2)}` },
       grid: { left: 56, right: 16, top: 16, bottom: 32 },
       xAxis: { type: "category", data: rows.map((r) => r.date) },
       yAxis: { type: "value", axisLabel: { formatter: (v: number) => `$${v.toLocaleString("en-US")}` } },
       series: [{
-        name: "LLM cost per day", type: "line", showSymbol: false, color: "#2563eb", data: rows.map((r) => r.llm_cost_usd),
+        name: "LLM cost per day", type: "line", showSymbol: false, color: ACCENT, data: rows.map((r) => r.llm_cost_usd),
         markArea: { itemStyle: { color: "rgba(220,38,38,0.12)" },
           data: leaks.map((l) => [{ xAxis: l.start_date }, { xAxis: l.end_date ?? rows[rows.length - 1]?.date ?? l.start_date }]) },
       }],
