@@ -19,16 +19,25 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-1. **M5-03 steps 4-6** (owner said yes, 2026-11-11): Cognito pool + owner-only approval write path (IaC, no users), approvals in `mc-dev-state-core`, owner mode in the Action Center. Cost gate stays at or below $3. Tick M5-03 once the owner has created the user and an approval round-trips.
-2. **M4-05:** EV-06 judge accepted as the gate (see Owner decision 2026-11-11). Check the remaining M4-05 gates; tick M4-05 if they pass. Do not resume the graph prompt-tuning loop; the open AG-05/06/07 items (act-01/04, prc-04/05/06, act-05/06, gov-02/04, eff-03, cts-04, leak-03) wait.
-3. **M5-04:** KPI-09 needs a closed-loop plan change, KPI-13 the real AWS bill (M2-04 FOCUS export).
-4. **Then M6** per PLAN.md §17 (M6-01 telemetry lake, alarms, runbooks first).
-5. **API `search_knowledge`:** the deployed graph (`MC_GRAPH`, off by default) still gets no knowledge tool; needs the index in the Lambda (check deploy impact and cost first).
-6. **Daily checks (not tasks):** ops `verify-backfill` (last 2026-11-11 00:23 UTC: `awaiting_first_export`) and the Haiku 5.5 probe (last 2026-11-11: `AccessDeniedException`). Next due 2026-11-12. After the owner's nightly fix is deployed, the next `start-backfill` should publish a brief with no tenant listed twice.
+1. **Owner step (see Waiting for owner):** create the owner user in the Cognito console and add it to `owner` (`docs/runbooks/owner-sign-in.md`). Then approve one action in the Action Center; autopilot checks the `APPROVAL#` item and ticks M5-03.
+2. **M5-03 follow-up:** export recorded approvals to `approvals.jsonl` for the simulator (`load_approvals` format) so an approved action feeds the next backfill.
+3. **M6-01:** telemetry lake, alarms, runbooks (PLAN.md §17).
+4. **M5-04:** KPI-09 needs a closed-loop plan change, KPI-13 the real AWS bill (M2-04 FOCUS export).
+5. **EV-06 graph replay** (known baseline 17/27, specialists-v9): revisit later with fewer scenarios per change or a judge-based gate; open AG-05/06/07 items wait.
+6. **API `search_knowledge`:** the deployed graph (`MC_GRAPH`, off by default) still gets no knowledge tool; needs the index in the Lambda (check deploy impact and cost first).
+7. **Daily checks (not tasks):** ops `verify-backfill` (last 2026-11-11 00:23 UTC: `awaiting_first_export`) and the Haiku 5.5 probe (last 2026-11-11: `AccessDeniedException`). Next due 2026-11-12. The next `start-backfill` should publish a brief with no tenant listed twice.
 
-Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-06 (see entries below).
+Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-05, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed.
-Notes: owner-mode approvals wait for Cognito (M5-03). Ops eval results are in the job log; fixtures are base64 between FIXTURE-BEGIN/END lines. Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1; local replays need it too or everything drifts). Ops `ev06_graph: true` adds the graph runs (opt-in, about $0.15; the ops job ends `failure` while the graph gate is unmet, which is expected). Flaky github.com 504s during image builds: re-run the failed job. Only commit the graph fixtures from a record run; the other fixture sets change only in tool-use IDs. AG-05 prompt is at the cost-cap edge (`test_unsupported_figure_retries_then_fails_closed` sums $0.009965 of $0.01): keep it no longer than v8.
+Notes: Ops eval results are in the job log; fixtures are base64 between FIXTURE-BEGIN/END lines. Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1; local replays need it too or everything drifts). Ops `ev06_graph: true` adds the graph runs (opt-in, about $0.15; the ops job ends `failure` while the graph gate is unmet, which is expected). Flaky github.com 504s during image builds: re-run the failed job. Only commit the graph fixtures from a record run; the other fixture sets change only in tool-use IDs. AG-05 prompt is at the cost-cap edge (`test_unsupported_figure_retries_then_fails_closed` sums $0.009965 of $0.01): keep it no longer than v8. Gh-created PR bodies get a footer: remove it with the GitHub MCP `update_pull_request` (gh api PATCH gets it re-added).
+
+## 2026-11-11 (autopilot run 120)
+
+- **Start:** main `ci` + `deploy to dev` green for ce7767c (owner fix); no open PRs.
+- **Tasks 1-3: M5-03 steps 5, 4, 6.** PR #260 Cognito pool `mc-dev-web-owners` (Lite, no self sign-up, group `owner`, SRP-only public client, no users). PR #261 owner-only `POST /api/approvals` (token in `x-mc-owner-token`, claim checks + Cognito `GetUser`), decisions as `APPROVAL#` items in `mc-dev-state-core`, no TTL. PR #262 Action Center owner sign-in (memory-only tokens), `/api/owner-config`, CSP adds cognito-idp only, runbook. All `ci` jobs + latest `attribution` green on each head; main fast-forwarded to 7a26505 (all three merged). Main deploy: see below.
+- **Task 4:** M4-05 ticked (this PR): judge is the EV-06 gate (owner), other gates passed in ops 43018286081; graph replay 17/27 logged as known.
+- **Decisions (§8.2):** SRP via `amazon-cognito-identity-js` 6.3.22 (options: hosted UI, rejected: domain + redirects; USER_PASSWORD_AUTH, rejected: sends the password); token check via Cognito `GetUser` (local JWT check rejected: new crypto dependency, misses revocation). Gates unchanged.
+- **Cost:** $0 (Cognito free to 10,000 MAU; cost gate worst case $1.82/month unchanged). No ops run.
 
 ## 2026-11-11 (autopilot run 119)
 
