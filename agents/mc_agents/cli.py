@@ -77,6 +77,8 @@ def main(argv: list[str] | None = None) -> int:
                      help="EV-06: deterministic rubric only ($0), or also the LLM judge (replay $0; record/live call Bedrock)")
     evp.add_argument("--ev06-graph", choices=("off", "replay", "record", "live"), default="off",
                      help="EV-06 on real graph runs for the scenarios with no recorded outcome (replay $0; record/live call Bedrock)")
+    rt = sub.add_parser("redteam-api", help="M6-03: EV-09 cases the public API must refuse, sent to a deployed URL ($0 when they pass)")
+    rt.add_argument("--url", required=True)
     on = sub.add_parser("online-eval", help="M6-02: live run of the day's golden sample vs its recording (Bedrock, capped per question)")
     on.add_argument("--day", type=date.fromisoformat, default=None, help="sample day (default: today, UTC)")
     on.add_argument("--k", type=int, default=3)
@@ -96,6 +98,11 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps({"live": args.live, "actions": brief["action_count"],
                           "insights": sum("insight" in a for a in brief["top_actions"])}))
         return 0
+    if args.cmd == "redteam-api":
+        from . import ev09_live
+        report = ev09_live.run(args.url)
+        print(json.dumps({k: report[k] for k in ("passed", "sent", "selected", "failed", "accepted")}))
+        return 0 if report["passed"] else 1
     if args.cmd == "online-eval":
         from .online_eval import online_eval
         day = args.day or datetime.now(UTC).date()

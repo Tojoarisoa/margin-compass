@@ -14,7 +14,7 @@ on:
         description: What to do
         required: true
         type: choice
-        options: [status, cost-report, run-pipeline, start-nightly, start-backfill, verify-backfill, record-fixtures, live-eval, online-eval, rag-eval, nightly-insight, realized-check]
+        options: [status, cost-report, run-pipeline, start-nightly, start-backfill, verify-backfill, record-fixtures, live-eval, online-eval, red-team, rag-eval, nightly-insight, realized-check]
       model:
         description: Agent model for record-fixtures / live-eval / online-eval (agents/mc_agents/config.py)
         required: false
@@ -165,7 +165,7 @@ jobs:
           exit "$st"
 
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
-        if: inputs.task == 'record-fixtures' || inputs.task == 'live-eval' || inputs.task == 'online-eval' || github.event_name == 'schedule' || inputs.task == 'rag-eval' || inputs.task == 'nightly-insight' || inputs.task == 'realized-check'
+        if: inputs.task == 'record-fixtures' || inputs.task == 'live-eval' || inputs.task == 'online-eval' || github.event_name == 'schedule' || inputs.task == 'red-team' || inputs.task == 'rag-eval' || inputs.task == 'nightly-insight' || inputs.task == 'realized-check'
         with: { version: "${{ env.UV_VERSION }}", python-version: "${{ env.PYTHON_VERSION }}" }
       - name: record-fixtures / live-eval (live Bedrock, capped per question)
         if: inputs.task == 'record-fixtures' || inputs.task == 'live-eval'
@@ -218,6 +218,14 @@ jobs:
           PY
           line="$(uv run mc-agents --gold ../data/ops/gold --model "$MODEL" online-eval --out ../data/ops/online_eval.json)"
           { echo "## Online evaluation ($MODEL)"; echo '```json'; echo "$line"; python3 -c "import json; r=json.load(open('../data/ops/online_eval.json')); print(json.dumps({k: r[k] for k in ('live', 'recorded')}))"; echo '```'; } | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: red-team (M6-03 EV-09 cases the public API must refuse; stops at the first accepted one)
+        if: inputs.task == 'red-team'
+        working-directory: agents
+        run: |
+          set -euo pipefail
+          uv sync --frozen
+          url="$(aws cloudformation describe-stacks --stack-name mc-dev-web --query "Stacks[0].Outputs[?OutputKey=='Url'].OutputValue" --output text)"
+          { echo "## Red team on the public API"; echo '```json'; uv run mc-agents redteam-api --url "$url"; echo '```'; } | tee -a "$GITHUB_STEP_SUMMARY"
       - name: "nightly-insight (M5-01 brief with Haiku 4.5 insights on a local M2 simulation, capped at $0.50 and 8 calls in code)"
         if: inputs.task == 'nightly-insight'
         working-directory: agents
