@@ -126,3 +126,23 @@ def test_owner_config_is_public_but_only_when_set(monkeypatch):
     assert r["statusCode"] == 200 and json.loads(r["body"]) == {"pool_id": POOL, "client_id": CLIENT, "region": REGION}
     monkeypatch.setenv("OWNER_CLIENT_ID", "")
     assert api.handler(get, None)["statusCode"] == 404
+
+
+def test_export_matches_the_simulator_loader(table, tmp_path):  # noqa: F811
+    from booncore_sim.m5_effects import load_approvals
+
+    api.handle_approval(_event(DECISION, _token()), table=table, get_user=_ok_user, now=NOW)
+    later = NOW.replace(minute=45)
+    tok = _token(exp=int(later.timestamp()) + 60)
+    api.handle_approval(_event(DECISION | {"decision": "rejected"}, tok), table=table, get_user=_ok_user, now=later)
+    other = DECISION | {"action_id": "act-aaaaaaaaaaaa", "action_type": "ACT-3", "target": "bc-t0007/renewal"}
+    api.handle_approval(_event(other, tok), table=table, get_user=_ok_user, now=later)
+    table.put_item(Item={"PK": "JOB#x", "SK": "JOB", "status": "pending"})  # other item types are ignored
+
+    rows = owner.export_approvals(table)
+    assert [(r["action_id"], r["decision"]) for r in rows] == [("act-0123456789ab", "rejected"), ("act-aaaaaaaaaaaa", "approved")]
+    path = tmp_path / "approvals.jsonl"
+    path.write_text(owner.to_jsonl(rows))
+    [a] = load_approvals(path)
+    assert (a.action_id, a.action_type, a.target) == ("act-aaaaaaaaaaaa", "ACT-3", "bc-t0007/renewal")
+    assert a.approved_on.isoformat() == "2026-11-11"

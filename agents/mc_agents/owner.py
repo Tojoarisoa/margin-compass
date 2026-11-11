@@ -107,3 +107,29 @@ def record(table: Any, decision: dict[str, str], approver: str, now: datetime) -
 def config() -> dict[str, str]:
     return {"pool_id": os.environ.get("OWNER_POOL_ID", ""), "client_id": os.environ.get("OWNER_CLIENT_ID", ""),
             "region": os.environ.get("AWS_REGION", "us-east-1")}
+
+
+def export_approvals(table: Any) -> list[dict[str, str]]:
+    """Recorded decisions in `booncore_sim.m5_effects.load_approvals` format, latest per action, sorted by action id.
+
+    One paginated Scan filtered on the `APPROVAL#` prefix (the core table holds a few hundred items; no index needed).
+    """
+    from boto3.dynamodb.conditions import Attr
+
+    latest: dict[str, dict[str, Any]] = {}
+    kwargs: dict[str, Any] = {"FilterExpression": Attr("PK").begins_with("APPROVAL#")}
+    while True:
+        page = table.scan(**kwargs)
+        for item in page.get("Items", []):
+            cur = latest.get(item["action_id"])
+            if cur is None or item["SK"] > cur["SK"]:
+                latest[item["action_id"]] = item
+        if "LastEvaluatedKey" not in page:
+            break
+        kwargs["ExclusiveStartKey"] = page["LastEvaluatedKey"]
+    keys = ("action_id", "action_type", "target", "decision", "approver", "rationale", "decided_at")
+    return [{k: str(latest[a].get(k, "")) for k in keys} for a in sorted(latest)]
+
+
+def to_jsonl(rows: list[dict[str, str]]) -> str:
+    return "".join(json.dumps(r, sort_keys=True) + "\n" for r in rows)
