@@ -20,9 +20,9 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-1. **M6-01 step 3 = tick:** no DLQ exists in the infra (checked), so no DLQ alarm; alarms 3/10 cover pipeline failure, API errors, budget. Tick M6-01 in PLAN.md §17 with that note.
-2. **M5-03 follow-up step 2:** run `owner.export_approvals` before a backfill (needs `dynamodb:Scan` on `mc-dev-state-core` for the runner role; scoped to that table).
-3. **M5-03 tick:** after the owner creates the user and one approval round-trips (Waiting for owner).
+1. **Close superseded PRs #273 and #276** (both replaced and merged as #275 / #277; closing was denied by this run's session guard). Don't "finish" them; their branches can be deleted.
+2. **M5-03 tick:** the owner's round trip is done (Owner decision 2026-11-11): tick M5-03 in PLAN.md §17 + Change Log.
+3. **M5-03 approvals in the simulation:** owner decisions are dated 2026-11-11, after the window (ends 2026-10-31), so they change nothing in a backfill. Decide (§8.2) how a live decision maps into the window (e.g. shift to the last month) before running `start-backfill` with `approvals: true`. Chunked months also don't write the realized (counterfactual) files; check M5-04 `fct_realized_margin` in the backfill path.
 4. **M6-02:** drift monitoring, online evaluation sampling.
 5. **M5-04:** KPI-09 needs a closed-loop plan change, KPI-13 the real AWS bill (M2-04 FOCUS export).
 6. **EV-06 graph replay** (known baseline 17/27, specialists-v9): revisit later with fewer scenarios per change or a judge-based gate.
@@ -32,6 +32,15 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-05, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed.
 Notes: Ops eval results are in the job log; fixtures are base64 between FIXTURE-BEGIN/END lines. Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1; local replays need it too or everything drifts). Ops `ev06_graph: true` adds the graph runs (opt-in, about $0.15; the ops job ends `failure` while the graph gate is unmet, which is expected). Flaky github.com 504s during image builds: re-run the failed job. Only commit the graph fixtures from a record run; the other fixture sets change only in tool-use IDs. AG-05 prompt is at the cost-cap edge (`test_unsupported_figure_retries_then_fails_closed` sums $0.009965 of $0.01): keep it no longer than v8. Gh-created PR bodies get a footer: remove it with the GitHub MCP `update_pull_request` (gh api PATCH gets it re-added).
+
+## 2026-11-11 (autopilot run 123)
+
+- **Start:** main `ci` + `deploy to dev` green for a81cafc (owner fix). Open `auto/*` PR #273 (M6-01 tick) was behind main -> #275 (`-r2`, PLAN change-log conflict, kept both rows). All checks green; `main` fast-forwarded to b7ad41a; main `ci` + `deploy to dev` green.
+- **Task 1:** M5-03 follow-up step 2. Backfill static step gets the execution input; with `{"approvals": true}` it exports the owner's latest decisions (`owner.export_approvals`) to `approvals/approvals.jsonl` in the lake, else removes the file; months apply it when present. Pipeline role +`dynamodb:Scan` on `mc-dev-state-core` only (infra test pins actions and a single table resource). PR #276 behind main -> #277; all checks green; `main` -> fb5e80e. Pipelines 89 passed, infra 83 passed, ruff clean.
+- **Task 2:** PR #278, ops `start-backfill` input `approvals` (default false). All checks green; `main` -> 30b644e; main `ci` + `deploy to dev` green for fb5e80e and 30b644e. Ended at 46 min (past the 35-min mark).
+- **Decisions (§8.2):** Scan on the table (options: an index item per decision for Query, rejected: existing decisions lack it; a GSI, rejected: table change). Opt-in flag, default backfill unchanged.
+- **Blocked:** closing #273/#276 and deleting old branches denied by the session guard (see Next 1).
+- **Cost:** $0 (no new resources; no ops run).
 
 ## 2026-11-11 (autopilot run 122)
 
