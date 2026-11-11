@@ -3,12 +3,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as echarts from "echarts/core";
 import { LineChart } from "echarts/charts";
-import { MarkAreaComponent, GridComponent, TooltipComponent } from "echarts/components";
+import { DataZoomComponent, MarkAreaComponent, GridComponent, TooltipComponent } from "echarts/components";
 import { CanvasRenderer } from "echarts/renderers";
 import { money } from "./format";
+import { tipMoney, zoom } from "./charts";
 import { THEME, ACCENT } from "./theme";
 
-echarts.use([LineChart, GridComponent, MarkAreaComponent, TooltipComponent, CanvasRenderer]);
+echarts.use([LineChart, GridComponent, MarkAreaComponent, TooltipComponent, DataZoomComponent, CanvasRenderer]);
 
 interface Leak { feature_id: string; metric: string; start_date: string; detected_date: string; end_date: string | null; impact_usd_per_day: number; peak_ratio: number; status: string }
 interface Pg3 { leaks: Leak[]; daily_llm_cost: { date: string; feature_id: string; llm_cost_usd: number }[]; open_leaks: number; open_impact_usd_per_day: number }
@@ -21,8 +22,9 @@ function CostChart({ pg3, feature }: { pg3: Pg3; feature: string }) {
     if (!ref.current) return;
     const chart = echarts.init(ref.current, THEME, { renderer: "canvas" });
     chart.setOption({
-      tooltip: { trigger: "axis", valueFormatter: (v: number) => `$${v.toFixed(2)}` },
+      tooltip: { trigger: "axis", valueFormatter: tipMoney },
       grid: { left: 8, right: 16, top: 16, bottom: 8, containLabel: true },
+      dataZoom: zoom(false),
       xAxis: { type: "category", data: rows.map((r) => r.date) },
       yAxis: { type: "value", axisLabel: { formatter: (v: number) => `$${v.toLocaleString("en-US")}` } },
       series: [{

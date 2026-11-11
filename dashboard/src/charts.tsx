@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { memo, useEffect, useRef } from "react";
 import * as echarts from "echarts/core";
 import { LineChart, ScatterChart } from "echarts/charts";
 import { DataZoomComponent, GridComponent, LegendComponent, TooltipComponent } from "echarts/components";
@@ -26,12 +26,29 @@ export function Chart({ option, label, className = "chart" }: { option: EChartsC
   return <div ref={ref} className={className} role="img" aria-label={label} />;
 }
 
+// ECharts passes undefined (not null) for padded points; guard every formatter.
+export const isNum = (v: unknown): v is number => typeof v === "number" && Number.isFinite(v);
+export const tipMoney = (v: unknown) => (isNum(v) ? `$${v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "–");
+const pctFmt = (v: unknown) => (isNum(v) ? `${v.toFixed(2)}%` : "–");
+
+// Drag to pan, Ctrl/Shift + wheel (or pinch) to zoom, so plain scrolling still scrolls the page.
+export const zoom = (slider: boolean) => [
+  { type: "inside", xAxisIndex: 0, zoomOnMouseWheel: "ctrl", moveOnMouseWheel: "shift", moveOnMouseMove: true },
+  ...(slider ? [{ type: "slider", xAxisIndex: 0, height: 18, bottom: 4, brushSelect: false }] : []),
+];
+
+type Row = { label: string; value: string; color?: string };
+const tipHtml = (date: string, rows: Row[]) =>
+  `<div style="font-weight:600;margin-bottom:4px">${date}</div>` +
+  rows.map((r) => `<div style="display:flex;gap:12px;justify-content:space-between"><span>${r.color ? `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${r.color};margin-right:6px"></span>` : ""}${r.label}</span><b>${r.value}</b></div>`).join("");
+
 const axisMoney = { type: "value" as const, axisLabel: { formatter: (v: number) => `$${v.toLocaleString("en-US")}` } };
 
-export function MarginTrend({ snap }: { snap: Snapshot }) {
+export const MarginTrend = memo(function MarginTrend({ snap }: { snap: Snapshot }) {
   const option: EChartsCoreOption = {
-    tooltip: { trigger: "axis", valueFormatter: (v: number) => `${v.toFixed(2)}%` },
-    grid: { left: 8, right: 16, top: 24, bottom: 8, containLabel: true },
+    tooltip: { trigger: "axis", axisPointer: { type: "cross", label: { show: false } }, valueFormatter: pctFmt },
+    grid: { left: 8, right: 16, top: 24, bottom: 36, containLabel: true },
+    dataZoom: zoom(true),
     xAxis: { type: "category", data: snap.trend.map((d) => d.date) },
     yAxis: { type: "value", min: (v: { min: number }) => Math.floor(v.min - 0.5), max: 100, axisLabel: { formatter: "{value}%" } },
     series: [{
@@ -40,17 +57,30 @@ export function MarginTrend({ snap }: { snap: Snapshot }) {
     }],
   };
   return <Chart option={option} label="Daily AI gross margin percentage over the simulated window" />;
-}
+});
 
-export function CogsForecast({ snap }: { snap: Snapshot }) {
+export const CogsForecast = memo(function CogsForecast({ snap }: { snap: Snapshot }) {
   const recent = snap.trend.slice(-30);
   const pts = snap.forecast.points;
   const dates = [...recent.map((d) => d.date), ...pts.map((p) => p.date)];
   const pad = (n: number) => Array(n).fill(null);
   const option: EChartsCoreOption = {
-    tooltip: { trigger: "axis", valueFormatter: (v: number | null) => (v === null ? "" : `$${v.toFixed(2)}`) },
+    tooltip: {
+      trigger: "axis",
+      formatter: (ps: { dataIndex: number }[]) => {
+        const i = ps[0]?.dataIndex ?? 0;
+        if (i < recent.length) return tipHtml(dates[i], [{ label: "Actual AI cost to serve", value: tipMoney(recent[i].ai_cost_to_serve_usd), color: MUTED_LINE }]);
+        const p = pts[i - recent.length];
+        return tipHtml(dates[i], [
+          { label: "Forecast P50", value: tipMoney(p.p50), color: ACCENT },
+          { label: "P10", value: tipMoney(p.p10) },
+          { label: "P90", value: tipMoney(p.p90) },
+        ]);
+      },
+    },
     legend: { data: ["Actual AI cost to serve", "Forecast P50", "P10–P90"], top: 0, type: "scroll" },
     grid: { left: 8, right: 16, top: 40, bottom: 8, containLabel: true },
+    dataZoom: zoom(false),
     xAxis: { type: "category", data: dates },
     yAxis: axisMoney,
     series: [
@@ -65,9 +95,9 @@ export function CogsForecast({ snap }: { snap: Snapshot }) {
     ],
   };
   return <Chart option={option} label="Last 30 days of AI cost to serve and the 30-day forecast with its P10 to P90 band" />;
-}
+});
 
-export function MarginForecast({ snap }: { snap: Snapshot }) {
+export const MarginForecast = memo(function MarginForecast({ snap }: { snap: Snapshot }) {
   const f = snap.m2_margin_forecast;
   if (!f || f.points.length === 0) return null;
   const recent = snap.trend.slice(-30);
@@ -76,9 +106,22 @@ export function MarginForecast({ snap }: { snap: Snapshot }) {
   const pad = (n: number) => Array(n).fill(null);
   const pct = (v: number | null) => (v === null ? null : +(v * 100).toFixed(2));
   const option: EChartsCoreOption = {
-    tooltip: { trigger: "axis", valueFormatter: (v: number | null) => (v === null ? "" : `${v.toFixed(2)}%`) },
+    tooltip: {
+      trigger: "axis",
+      formatter: (ps: { dataIndex: number }[]) => {
+        const i = ps[0]?.dataIndex ?? 0;
+        if (i < recent.length) return tipHtml(dates[i], [{ label: "Actual margin", value: pctFmt(pct(recent[i].ai_gross_margin_pct)), color: MUTED_LINE }]);
+        const p = pts[i - recent.length];
+        return tipHtml(dates[i], [
+          { label: "Forecast margin", value: pctFmt(pct(p.mid)), color: ACCENT },
+          { label: "Low", value: pctFmt(pct(p.low)) },
+          { label: "High", value: pctFmt(pct(p.high)) },
+        ]);
+      },
+    },
     legend: { data: ["Actual margin", "Forecast margin", "Margin band"], top: 0, type: "scroll" },
     grid: { left: 8, right: 16, top: 40, bottom: 8, containLabel: true },
+    dataZoom: zoom(false),
     xAxis: { type: "category", data: dates },
     yAxis: { type: "value", scale: true, axisLabel: { formatter: "{value}%" } },
     series: [
@@ -91,4 +134,4 @@ export function MarginForecast({ snap }: { snap: Snapshot }) {
     ],
   };
   return <Chart option={option} label="Last 30 days of AI gross margin and the 30-day margin forecast band" />;
-}
+});
