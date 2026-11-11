@@ -16,15 +16,25 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-0. **Check** main `ci` + `deploy to dev` for d19314d (PR #231, prc-02 golden fix) and this progress entry; they were still running when run 106 ended.
-1. **M4-05 EV-06 step 3b (finish):** after 0 is green, dispatch ops `record-fixtures` (haiku-4-5, cache on), check the judge result in the job log, and commit the 13 judge fixtures in a PR (CI replay is 12/13 with prc-02 `drifted` until then; gate 90% still met).
-2. **M4-05 EV-06 step 3c:** judge covers 13/40 scenarios. Record real AG-03 graph runs for the other 27 (ops, capped) so the judge and rubric score actual answers. eff-01/eff-02 evidence args don't match `replay_lever`'s inputs; fix them in that step. Calibration: see Waiting for owner.
-3. **M5-04:** KPI-09 needs a closed-loop plan change (none yet) and KPI-13 needs the real AWS bill (M2-04 FOCUS export); tick M5-04 when both are real. M5-03 steps 4-6: see Waiting for owner.
-4. **Daily checks (not tasks):** ops `verify-backfill` for M2-04 (last 2026-11-10 15:13 UTC: `awaiting_first_export`; when `ok`, wire `MC_FINOPS_FOCUS_GLOB` if needed and tick M2-04) and the Haiku 5.5 probe (last 2026-11-10). Both are due on 2026-11-11.
+0. **Check** main `ci` for this progress entry (b0295eb / PR #233 `ci` + `deploy to dev` green).
+1. **M4-05 EV-06 step 3c-2:** wire `ev06_graph.run_graph` into `mc-agents ev` (e.g. `--ev06-graph {replay,record,live}`) and the ops `record-fixtures`/`live-eval` step (print its fixtures like the others). CI unchanged until fixtures exist. Add the PLAN §20.3 Change Log entry for the run-107 rubric tightening (auto-decided under §8.2) in that PR.
+2. **3c-3:** ops record (haiku-4-5, cache on) for the 27 scenarios (capped, under $0.30); commit fixtures; add CI replay. eff-01/eff-02 evidence args don't match `replay_lever`'s inputs; fix them then.
+3. **3c-4:** judge the graph runs (`ev06_judge.judge(run=...)`), record judge fixtures. Calibration: see Waiting for owner.
+4. **M5-04:** KPI-09 needs a closed-loop plan change (none yet) and KPI-13 needs the real AWS bill (M2-04 FOCUS export); tick M5-04 when both are real. M5-03 steps 4-6: see Waiting for owner.
+5. **Daily checks (not tasks):** ops `verify-backfill` for M2-04 (last 2026-11-11 00:23 UTC: `awaiting_first_export`) and the Haiku 5.5 probe (last 2026-11-11: still `AccessDeniedException`). Next due 2026-11-12.
 
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed.
-Notes: owner-mode approvals wait for Cognito (M5-03). Ops eval results are now in the job log (step summaries aren't readable by API). Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1). Flaky github.com 504s during image builds: re-run the failed job.
+Notes: owner-mode approvals wait for Cognito (M5-03). Ops eval results are in the job log; fixtures are base64 between FIXTURE-BEGIN/END lines. Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1). Flaky github.com 504s during image builds: re-run the failed job.
+
+## 2026-11-11 (autopilot run 107)
+
+- **Start:** main `ci` + `deploy to dev` for d19314d (#231) and 313f8e5 green; no open PRs.
+- **Task 1:** M4-05 step 3b finish. Ops record 42930258339 (haiku-4-5, cache on): **judge 13/13**, agreement 100%, EV-05 8/8, M1-06 5/5, EV-10 pass ($0.0043/question). PR #232 (13 judge fixtures) merged, every `ci` job and `attribution` green (footer removed via MCP); main `ci` + `deploy to dev` green. CI judge replay now 13/13.
+- **Task 2:** M4-05 step 3c-1. PR #233 merged (every `ci` job and `attribution` green; main `ci` + `deploy to dev` green): `ev06_graph` runs the real graph per scenario (replay/record/live, caps per scenario) for the 27 scenarios with no recorded outcome. Found and fixed (stricter): the rubric passed a withheld or capped run when the scenario had no golden answer. Reference rubric still 40/40. Agents 262 passed.
+- **Daily checks:** M2-04 `verify-backfill` (ops 42930973869) still `awaiting_first_export`; Haiku 5.5 probe (ops 42930976911) still `AccessDeniedException`.
+- **Decisions (§8.2):** rubric tightened (only stricter; options: this, or keep the loose rule and rely on the judge, rejected as weaker). Graph runs propose no actions, as in the deployed API.
+- **Cost:** 2 ops record runs (haiku-4-5 + denied 5.5 probe), about 40 capped Haiku 4.5 calls, under $0.05.
 
 ## 2026-11-10 (autopilot run 106)
 
