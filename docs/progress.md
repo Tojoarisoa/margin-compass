@@ -16,18 +16,27 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-1. **Finish PR #254** (EV-06 graph fixtures, 17/27) if still open: CI, merge, deploy.
-2. **AG-05 preambles and prc-*:** act-01/03 now write "Let me calculate that for you" / extra derived lines after v9 dropped "with no preamble"; act-03 regressed. prc-04 writes "2% monthly churn" (assumed 200 bps restated as %) and prc-05/06 stay capped. Look at the act-01/03 rubric failures in the fixtures first, then decide: restore "no preamble" within the cap, or let AG-05 skip query_gold when the tenant is unknown.
-3. **AG-07 searches twice and hits the $0.01 cap** (act-06, gov-06): instruct one search call (`top_k` up to 8). Then re-record.
-4. **AG-06 tools have no input schema** (`replay_lever`, `roi_multiple`): eff-03 uses `query_gold`. Add schemas, then re-record. Also cts-04 (AG-03 rounds), leak-03 (capped after 2 tools).
-5. **3c-4:** judge the graph runs; add the CI replay gate at 90%. Calibration: see Waiting for owner.
-6. **API `search_knowledge`:** the deployed graph (`MC_GRAPH`, off by default) still gets no knowledge tool; needs the index in the Lambda (check deploy impact and cost first).
-7. **M5-04:** KPI-09 needs a closed-loop plan change, KPI-13 the real AWS bill (M2-04 FOCUS export). M5-03 steps 4-6: see Waiting for owner.
-8. **Daily checks (not tasks):** ops `verify-backfill` (last 2026-11-11 00:23 UTC: `awaiting_first_export`) and the Haiku 5.5 probe (last 2026-11-11: `AccessDeniedException`). Next due 2026-11-12.
+1. **Merge PR #255** (price_plan v5 `margin_pct`): every `ci` job + latest `attribution` green on f8966e5; the autopilot merge push (fast-forward `main`) was denied by the session's permission guard. Owner: fast-forward `main` to the PR head (or say "merge #255"); re-check CI on the head that carries this progress entry.
+2. **Re-record after #255:** ops `record-fixtures` (haiku-4-5, cache, ev06_graph). Graph replay is 15/27 with act-01..04, prc-04, prc-06 drifted until then.
+3. **AG-05 still open:** act-03 writes "drops 980 bps" (magnitude of `margin_bps_change` -980), prc-04 restates the question's "5%" (no echo for a seat-price rise), prc-05 asks the user when bc-t0021 has no plan. Each run uses about $0.006 in 2 calls, so any verifier retry hits the $0.01 cap.
+4. **AG-07 searches twice and hits the $0.01 cap** (act-06, gov-06): instruct one search call (`top_k` up to 8). Then re-record.
+5. **AG-06 tools have no input schema** (`replay_lever`, `roi_multiple`): eff-03 uses `query_gold`. Add schemas, then re-record. Also cts-04 (AG-03 rounds), leak-03 (capped after 2 tools).
+6. **3c-4:** judge the graph runs; add the CI replay gate at 90%. Calibration: see Waiting for owner.
+7. **API `search_knowledge`:** the deployed graph (`MC_GRAPH`, off by default) still gets no knowledge tool; needs the index in the Lambda (check deploy impact and cost first).
+8. **M5-04:** KPI-09 needs a closed-loop plan change, KPI-13 the real AWS bill (M2-04 FOCUS export). M5-03 steps 4-6: see Waiting for owner.
+9. **Daily checks (not tasks):** ops `verify-backfill` (last 2026-11-11 00:23 UTC: `awaiting_first_export`) and the Haiku 5.5 probe (last 2026-11-11: `AccessDeniedException`). Next due 2026-11-12.
 
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed.
 Notes: owner-mode approvals wait for Cognito (M5-03). Ops eval results are in the job log; fixtures are base64 between FIXTURE-BEGIN/END lines. Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1; local replays need it too or everything drifts). Ops `ev06_graph: true` adds the graph runs (opt-in, about $0.15; the ops job ends `failure` while the graph gate is unmet, which is expected). Flaky github.com 504s during image builds: re-run the failed job. Only commit the graph fixtures from a record run; the other fixture sets change only in tool-use IDs. AG-05 prompt is at the cost-cap edge (`test_unsupported_figure_retries_then_fails_closed` sums $0.009965 of $0.01): keep it no longer than v8.
+
+## 2026-11-11 (autopilot run 118)
+
+- **Start:** PR #254 already merged; main `ci` + `deploy to dev` green for 4d4a137; no open PRs.
+- **Task 1:** M4-05 step 3c-3k. Replay of the run-117 fixtures (needs `MC_CACHE_PROMPT=1`): act-01 "59.15%" (5915 bps converted), act-03 "drops 980 bps" (magnitude), prc-04 question "5%", prc-05 asked the user, prc-06 sent outcome fields at the top level and got a partial-plan error; all hit the $0.01 cap on the verifier retry. PR #255: `price_plan` v5 echoes `margin_bps` as `margin_pct` (before/after), partial-plan error points to `after`. Agents 320 passed, ruff clean; every PR `ci` job green, `attribution` green after footer removal via MCP.
+- **Blocked:** merge push to `main` denied by the session's permission guard (as in run 112). PR left open; run ended at 25 min since nothing else can merge until it does.
+- **Decisions (§8.2):** echo in the tool (options: verifier accepts bps/100 as %, rejected: loosens EV-08; instruction only, rejected: prompt at the cost-cap edge). Prompt, verifier, gate, rubric, cap unchanged.
+- **Cost:** $0 (no ops run).
 
 ## 2026-11-11 (autopilot run 117)
 
