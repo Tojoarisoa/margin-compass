@@ -13,7 +13,7 @@
                 "query": "support feature cost leak root cause"
               },
               "name": "search_knowledge",
-              "toolUseId": "tooluse_Lnq08DEpt9AV0agZOgGnz6",
+              "toolUseId": "tooluse_UhjVxppqNPD3UcHhrVUWug",
               "type": "tool_use"
             }
           }
@@ -27,7 +27,7 @@
       }
     },
     {
-      "request_sha": "6d0502aec23846ba3af519dd6f0ed0e0a467395a49f2a174b39262df035294c5",
+      "request_sha": "3f073901651136b8fb2744d0ea1e2331b724fa2319185e40573afb17a7e5ad3d",
       "response": {
         "content": [
           {
@@ -36,10 +36,10 @@
           {
             "toolUse": {
               "input": {
-                "sql": "SELECT margin_date, tenant_id, feature_id, ai_revenue_usd, llm_cost_usd, cost_to_serve_usd, gross_margin_usd, gross_margin_pct, request_count FROM fct_tenant_margin WHERE feature_id LIKE '%support%' OR feature_id LIKE '%F1%' OR feature_id LIKE '%F2%' ORDER BY margin_date DESC, gross_margin_pct ASC LIMIT 50"
+                "sql": "SELECT margin_date, tenant_id, feature_id, ai_revenue_usd, llm_cost_usd, cost_to_serve_usd, gross_margin_usd, gross_margin_pct, request_count FROM fct_tenant_margin WHERE feature_id LIKE '%support%' OR feature_id LIKE '%F%' ORDER BY margin_date DESC, gross_margin_pct ASC LIMIT 50"
               },
               "name": "query_gold",
-              "toolUseId": "tooluse_AJCxVd05W39Z33IlPuzTZy",
+              "toolUseId": "tooluse_CDUdTCQ49KGx9LgaZ0Evrr",
               "type": "tool_use"
             }
           }
@@ -48,12 +48,12 @@
         "usage": {
           "cacheReadInputTokens": 0,
           "inputTokens": 1901,
-          "outputTokens": 193
+          "outputTokens": 181
         }
       }
     }
   ],
   "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
-  "prompt_version": "specialists-v8",
+  "prompt_version": "specialists-v9",
   "scenario_id": "leak-03"
 }

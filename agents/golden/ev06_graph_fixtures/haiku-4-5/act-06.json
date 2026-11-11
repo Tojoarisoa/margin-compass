@@ -13,7 +13,7 @@
                 "query": "refund approval authority"
               },
               "name": "search_knowledge",
-              "toolUseId": "tooluse_1eBRQcqklTokuUofjxKwaJ",
+              "toolUseId": "tooluse_MAJT4tpFsOmFVzdqIINam9",
               "type": "tool_use"
             }
           }
@@ -27,7 +27,7 @@
       }
     },
     {
-      "request_sha": "b7ed180adf89981b9c01c3d09d0d901aa03b5681ab705f83bac130afdef3c932",
+      "request_sha": "13047c4bdafb4539fb9dfd8ee2ac200792468f144a0c2aed2b0efc29b52fd2a3",
       "response": {
         "content": [
           {
@@ -39,7 +39,7 @@
                 "query": "refund customer policy"
               },
               "name": "search_knowledge",
-              "toolUseId": "tooluse_7oxg5XmGK1naqvaNJ7QpIC",
+              "toolUseId": "tooluse_PfHRKEuEmkNEcDiGc9kirV",
               "type": "tool_use"
             }
           }
@@ -54,6 +54,6 @@
     }
   ],
   "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
-  "prompt_version": "specialists-v8",
+  "prompt_version": "specialists-v9",
   "scenario_id": "act-06"
 }

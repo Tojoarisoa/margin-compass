@@ -13,7 +13,7 @@
                 "sql": "SELECT feature_id, feature_scope FROM fct_tenant_margin WHERE feature_id LIKE '%imaging%' LIMIT 10"
               },
               "name": "query_gold",
-              "toolUseId": "tooluse_3SNjOyLyFhLK0GEtBfpiTL",
+              "toolUseId": "tooluse_5CvKob0AWuskqu0oe1LmJr",
               "type": "tool_use"
             }
           }
@@ -27,7 +27,7 @@
       }
     },
     {
-      "request_sha": "a4c121a5e6fe9246bf1e6ca7d82f1fc9351c3b092de201f8e2044fb1382c096c",
+      "request_sha": "5515f6df9c1db61c000c6bdc0e129ef78e5a0c8e8d8442ebdaaf6dac02d40666",
       "response": {
         "content": [
           {
@@ -39,7 +39,7 @@
                 "sql": "SELECT DISTINCT feature_id FROM fct_tenant_margin LIMIT 20"
               },
               "name": "query_gold",
-              "toolUseId": "tooluse_1vAumU6HLGAXULHyvG7ThQ",
+              "toolUseId": "tooluse_Hhk6nYqr3yLu13uxmOCyVV",
               "type": "tool_use"
             }
           }
@@ -53,7 +53,7 @@
       }
     },
     {
-      "request_sha": "4889eb01c17052d50e22c14a3d42b0646e5d8c1515c9c495199bb0981f257f38",
+      "request_sha": "9a481868f317f9cf36c56c7fe84d1f2a8e49bd00e733afb7a61756d401c3f82e",
       "response": {
         "content": [
           {
@@ -70,6 +70,6 @@
     }
   ],
   "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
-  "prompt_version": "specialists-v8",
+  "prompt_version": "specialists-v9",
   "scenario_id": "eff-04"
 }

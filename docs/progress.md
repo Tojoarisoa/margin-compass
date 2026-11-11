@@ -16,19 +16,27 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-1. **Finish this run's fixtures PR** if still open (CI, merge, deploy).
-2. **Verifier sign handling (EV-08 tokenizer):** AG-05 writes deltas with a Unicode minus ("−163 bps"), which `_FIGURE` reads as +163; normalize U+2212 to "-" in `ledger.py` (stricter: the sign is then checked). Also act-02 wrote a magnitude ("534 bps reduction") and act-01 "59.15%": instruct "write the delta as returned, e.g. -163 bps", and no margin %. Then re-record.
-3. **prc-05/06 capped:** prc-05 now falls back to the example plan but spends 3 calls (query_gold, price_plan, words); prc-06 still sends a made-up partial plan. Consider letting AG-05 skip query_gold when the tenant is unknown, or an outcome example in the instruction.
-4. **AG-07 searches twice and hits the $0.01 cap** (act-06, gov-06): instruct one search call (`top_k` up to 8). Then re-record.
-5. **AG-06 tools have no input schema** (`replay_lever`, `roi_multiple`): eff-03 uses `query_gold`. Add schemas, then re-record. Also cts-04 (AG-03 rounds), leak-03 (capped after 2 tools).
-6. **3c-4:** judge the graph runs; add the CI replay gate at 90%. Calibration: see Waiting for owner.
-7. **API `search_knowledge`:** the deployed graph (`MC_GRAPH`, off by default) still gets no knowledge tool; needs the index in the Lambda (check deploy impact and cost first).
-8. **M5-04:** KPI-09 needs a closed-loop plan change, KPI-13 the real AWS bill (M2-04 FOCUS export). M5-03 steps 4-6: see Waiting for owner.
-9. **Daily checks (not tasks):** ops `verify-backfill` (last 2026-11-11 00:23 UTC: `awaiting_first_export`) and the Haiku 5.5 probe (last 2026-11-11: `AccessDeniedException`). Next due 2026-11-12.
+1. **Finish PR #254** (EV-06 graph fixtures, 17/27) if still open: CI, merge, deploy.
+2. **AG-05 preambles and prc-*:** act-01/03 now write "Let me calculate that for you" / extra derived lines after v9 dropped "with no preamble"; act-03 regressed. prc-04 writes "2% monthly churn" (assumed 200 bps restated as %) and prc-05/06 stay capped. Look at the act-01/03 rubric failures in the fixtures first, then decide: restore "no preamble" within the cap, or let AG-05 skip query_gold when the tenant is unknown.
+3. **AG-07 searches twice and hits the $0.01 cap** (act-06, gov-06): instruct one search call (`top_k` up to 8). Then re-record.
+4. **AG-06 tools have no input schema** (`replay_lever`, `roi_multiple`): eff-03 uses `query_gold`. Add schemas, then re-record. Also cts-04 (AG-03 rounds), leak-03 (capped after 2 tools).
+5. **3c-4:** judge the graph runs; add the CI replay gate at 90%. Calibration: see Waiting for owner.
+6. **API `search_knowledge`:** the deployed graph (`MC_GRAPH`, off by default) still gets no knowledge tool; needs the index in the Lambda (check deploy impact and cost first).
+7. **M5-04:** KPI-09 needs a closed-loop plan change, KPI-13 the real AWS bill (M2-04 FOCUS export). M5-03 steps 4-6: see Waiting for owner.
+8. **Daily checks (not tasks):** ops `verify-backfill` (last 2026-11-11 00:23 UTC: `awaiting_first_export`) and the Haiku 5.5 probe (last 2026-11-11: `AccessDeniedException`). Next due 2026-11-12.
 
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed.
 Notes: owner-mode approvals wait for Cognito (M5-03). Ops eval results are in the job log; fixtures are base64 between FIXTURE-BEGIN/END lines. Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1; local replays need it too or everything drifts). Ops `ev06_graph: true` adds the graph runs (opt-in, about $0.15; the ops job ends `failure` while the graph gate is unmet, which is expected). Flaky github.com 504s during image builds: re-run the failed job. Only commit the graph fixtures from a record run; the other fixture sets change only in tool-use IDs. AG-05 prompt is at the cost-cap edge (`test_unsupported_figure_retries_then_fails_closed` sums $0.009965 of $0.01): keep it no longer than v8.
+
+## 2026-11-11 (autopilot run 117)
+
+- **Start:** PR #251 (run 116 fixtures) was already merged; main `ci` + `deploy to dev` green for 29a9d9f; no open PRs.
+- **Task 1:** 3c-3j verifier. PR #252 merged (all `ci` jobs green, `attribution` green after footer removal via MCP; main `ci` + `deploy to dev` green for 229bae0): EV-08 verifier reads U+2212 as a minus sign, so "−163 bps" must match the ledger's -163 (stricter). Replay 15 -> 16/27 with no fixture change.
+- **Task 2:** 3c-3j instruction. PR #253 merged (same checks green): AG-05 `specialists-v9`, a change is a signed delta, never a magnitude; prompt 1312 chars (v8: 1321) by dropping "with no preamble" and shortening the approval sentence.
+- **Task 3:** re-record. Ops 43004723226: M1-06 5/5, EV-10 pass ($0.0043/question), EV-05 8/8, judge 13/13, **graph 17/27** (act-02, act-04 pass; act-03 regressed). PR #254: graph fixtures + baseline.
+- **Decisions (§8.2):** normalize the sign in the verifier (options: accept magnitudes, rejected: loosens EV-08). Gate, rubric, cap unchanged.
+- **Cost:** 1 ops record run, about $0.20 of capped Haiku 4.5 calls.
 
 ## 2026-11-11 (autopilot run 116)
 

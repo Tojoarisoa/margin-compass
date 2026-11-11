@@ -10,7 +10,7 @@
                 "query": "BAA data residency"
               },
               "name": "search_knowledge",
-              "toolUseId": "tooluse_rKR2kMJ6Jha8vjTlRuikXt",
+              "toolUseId": "tooluse_gbmk5vKIaUQWruSdexGlnC",
               "type": "tool_use"
             }
           }
@@ -24,7 +24,7 @@
       }
     },
     {
-      "request_sha": "45f242b9d4c286eaecf467349f5e39915bc6c8eac2efb7c01d71ac42c7e7de1f",
+      "request_sha": "256f8e616686cfc250a7efdba490149163028e11f467c2f8e851848ca677505b",
       "response": {
         "content": [
           {
@@ -41,6 +41,6 @@
     }
   ],
   "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
-  "prompt_version": "specialists-v8",
+  "prompt_version": "specialists-v9",
   "scenario_id": "gov-01"
 }
