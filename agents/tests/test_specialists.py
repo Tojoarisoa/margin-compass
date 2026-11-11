@@ -39,7 +39,7 @@ def test_pricing_specialist_calls_tool_and_answer_verifies():
 
     client = Script(use("price_plan", PLAN), answer)
     run_specialist(s, llm(client), "m")
-    assert s.ledger.entries[0].tool == "price_plan@1" and s.answer
+    assert s.ledger.entries[0].tool == "price_plan@2" and s.answer
     assert verify(s) == "responder"
 
 
@@ -92,12 +92,35 @@ def test_every_specialist_tool_is_known_or_runtime_supplied():
 
 
 def test_pricing_specialist_calls_tools_instead_of_asking():
-    """3c-3c: AG-05 is told to call its tools (query_gold only for a named tenant), other specialists unchanged."""
+    """3c-3c/3c-3d: AG-05 calls price_plan once (example plan, after, churn), keeps tool units, other specialists
+    unchanged."""
     from mc_agents.specialists import SPECIALISTS, tool_specs
 
     pricing = SPECIALISTS["pricing"].system
-    assert "Never ask the user" in pricing and "query_gold" in pricing and "churn_adjust" in pricing
+    assert "Never ask the user" in pricing and "query_gold" in pricing and "churn_bps" in pricing
+    assert "never convert to dollars or percent" in pricing
     assert pricing.endswith("At most 4 short sentences.")
     assert "Never ask the user" not in SPECIALISTS["leak"].system
     specs = {s["toolSpec"]["name"]: s["toolSpec"]["inputSchema"]["json"] for s in tool_specs(SPECIALISTS["pricing"])}
-    assert "seats" in specs["price_plan"]["required"] and "churn_bps" in specs["churn_adjust"]["required"]
+    assert SPECIALISTS["pricing"].tools == ("price_plan", "query_gold")  # churn is price_plan's churn_bps now
+    assert specs["price_plan"]["required"] == [] and "after" in specs["price_plan"]["properties"]
+
+
+def test_verifier_retry_tells_the_specialist_what_failed():
+    """3c-3d: the retry used to resend the bare question, so the model repeated the same draft."""
+    s = GraphState("Forecast pricing")
+    route(s)
+    s.answer = "Margin is $50."
+    assert verify(s) == "supervisor" and s.issues == ["unsupported figures: $50"]
+    client = Script([{"text": "No figures."}])
+    run_specialist(s, llm(client), "m")
+    text = client.requests[0].messages[0]["content"][0]["text"]
+    assert text.startswith("Forecast pricing") and "failed verification: unsupported figures: $50." in text
+
+
+def test_first_attempt_sends_the_bare_question():
+    s = GraphState("Forecast pricing")
+    route(s)
+    client = Script([{"text": "No figures."}])
+    run_specialist(s, llm(client), "m")
+    assert client.requests[0].messages[0]["content"][0]["text"] == "Forecast pricing"

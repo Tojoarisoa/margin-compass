@@ -16,17 +16,21 @@ from .llm import BudgetedLLM, LLMRequest
 from .tools import registry
 from .tools.metrics import ToolError
 
-PROMPT_VERSION = "specialists-v2"
+PROMPT_VERSION = "specialists-v3"
 _RULES = ("Get every figure from a tool; never calculate or round. Copy figures exactly and cite the evidence ID "
           "such as [E1]. Synthetic data. At most 4 short sentences.")
 
 # 3c-3c (specialists-v2): AG-05 used to ask the user for a plan instead of calling its tools.
-_PRICING = ("Never ask the user for plan details; call the tools. When the question names a tenant ID, read its plan "
-            "and month from the gold marts with query_gold first. Otherwise run price_plan on this example plan and "
-            "say it is an example: 10 seats at 5000 cents a seat, 1000 included units, 1500 usage units, overage "
-            "20000 micro-dollars a unit, no add-on, outcomes or discount, cost 20000 cents. For a price change or "
-            "discount, run price_plan before and after. For churn, pass price_plan's revenue_cents and cost_cents "
-            "to churn_adjust; with no churn rate given, use 200 bps a month over 12 months and say it is assumed.")
+# 3c-3d (specialists-v3): one price_plan call does before, after and churn (the cost cap allows about two model
+# calls), and figures stay in the tool's units (the verifier rejected "$50" for 5000 cents and "4%" for 400 bps).
+_PRICING = ("Never ask the user for plan details or approval context; call price_plan once, with no preamble. "
+            "When the question names a tenant ID, first read its plan from the gold marts with query_gold and pass "
+            "every plan field. Otherwise pass no plan fields: the tool uses the example plan; say it is an example. "
+            "Put a price change or discount in after, for example a 4% discount is after {\"discount_bps\": 400}; "
+            "for a price rise, put the new seat_price_cents in after. For churn, pass churn_bps; with no rate given "
+            "use 200 and say it is assumed. Report money in cents and rates in bps exactly as the tool returns them; "
+            "never convert to dollars or percent. For an approval request, give the before and after figures and "
+            "say the discount needs approval by the role with authority.")
 
 
 @dataclass(frozen=True)
@@ -45,7 +49,7 @@ class Specialist:
 SPECIALISTS: dict[str, Specialist] = {s.node: s for s in (
     Specialist("cost_to_serve", "AG-03", "Cost-to-Serve Analyst", ("query_gold",)),
     Specialist("leak", "AG-04", "Margin-Leak Investigator", ("query_gold", "search_knowledge")),
-    Specialist("pricing", "AG-05", "Forecast and Pricing Strategist", ("price_plan", "churn_adjust", "query_gold"),
+    Specialist("pricing", "AG-05", "Forecast and Pricing Strategist", ("price_plan", "query_gold"),
                _PRICING),
     Specialist("efficiency", "AG-06", "AI Efficiency Engineer", ("replay_lever", "roi_multiple", "query_gold")),
     Specialist("contract_policy", "AG-07", "Contract and Policy Advisor", ("search_knowledge",)),
@@ -70,7 +74,10 @@ def run_specialist(state: GraphState, llm: BudgetedLLM, model_id: str,
         state.status, state.issues = "failed", [f"no specialist for route {state.route!r}"]
         return state
     specs = tool_specs(spec, extra)
-    messages: list[dict[str, Any]] = [{"role": "user", "content": [{"text": state.question}]}]
+    text = state.question
+    if state.issues:  # a verifier retry: say what failed (figures and rule names only, no response text)
+        text += "\n\nYour previous answer failed verification: " + "; ".join(state.issues) + "."
+    messages: list[dict[str, Any]] = [{"role": "user", "content": [{"text": text}]}]
     for round_ in range(MAX_TOOL_ROUNDS + 1):
         resp = llm.complete(LLMRequest(model_id, spec.system, messages, specs if round_ < MAX_TOOL_ROUNDS else []))
         messages.append({"role": "assistant", "content": resp.content})

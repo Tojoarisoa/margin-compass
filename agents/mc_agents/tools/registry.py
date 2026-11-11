@@ -15,7 +15,7 @@ from mc_agents.ledger import Evidence, Ledger
 from mc_agents.tools.churn_adjust import churn_adjust
 from mc_agents.tools.levers import replay_lever
 from mc_agents.tools.metrics import ToolError
-from mc_agents.tools.pricing import price_plan
+from mc_agents.tools.price_scenario import price_scenario
 from mc_agents.tools.roi import roi_multiple
 
 
@@ -52,9 +52,20 @@ _CHURN_FIELDS = {
     "months": "Horizon in months, 1 to 60.",
 }
 
+_PLAN_PROPS = {k: {"type": "integer", "minimum": 0, "description": d} for k, d in _PRICE_PLAN_FIELDS.items()}
+# 3c-3d (price_plan v2): one call prices before and after a change, with churn, so AG-05 fits the cost cap.
+_PRICE_PLAN_V2 = {"type": "object", "properties": {
+    **_PLAN_PROPS,
+    "after": {"type": "object", "properties": _PLAN_PROPS,
+              "description": "Only the plan fields that change, for example {\"discount_bps\": 400}."},
+    "churn_bps": {"type": "integer", "minimum": 0, "description": _CHURN_FIELDS["churn_bps"]},
+    "months": {"type": "integer", "minimum": 1, "description": "Churn horizon in months, 1 to 60 (default 12)."},
+}, "required": []}
+
 TOOLS: dict[str, ToolSpec] = {t.name: t for t in (
-    ToolSpec("price_plan", "1", "Revenue and margin of one tenant-month under a plan (integer cents).", price_plan,
-             input_schema=_int_schema(_PRICE_PLAN_FIELDS, tuple(f for f in _PRICE_PLAN_FIELDS if f != "usage_cap_cents"))),
+    ToolSpec("price_plan", "2", "Revenue and margin (integer cents, margin in bps) of one tenant-month under a plan, "
+             "and optionally after a change and churn-adjusted. Give every plan field, or none for the example plan.",
+             price_scenario, input_schema=_PRICE_PLAN_V2),
     ToolSpec("replay_lever", "1", "Routing and caching lever replay with quality and safety-recall guardrails.", replay_lever),
     ToolSpec("churn_adjust", "1", "Churn-adjusted expected revenue, cost and margin over N months.", churn_adjust,
              input_schema=_int_schema(_CHURN_FIELDS, tuple(_CHURN_FIELDS))),

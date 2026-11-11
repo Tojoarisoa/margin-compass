@@ -36,13 +36,15 @@ def test_catalog_is_read_only():
 
 
 def test_pricing_tool_schemas_match_tool_inputs():
-    """3c-3c: price_plan and churn_adjust are offered with explicit integer schemas that match their inputs."""
+    """3c-3c/3c-3d: price_plan (v2) and churn_adjust are offered with explicit integer schemas matching their inputs."""
     from mc_agents.tools import churn_adjust as ca
     from mc_agents.tools import pricing
 
     pp = TOOLS["price_plan"].input_schema
-    assert set(pp["required"]) == set(pricing._FIELDS)
-    assert set(pp["properties"]) == {*pricing._FIELDS, "usage_cap_cents"}
+    assert TOOLS["price_plan"].version == "2" and pp["required"] == []  # no plan fields: the example plan
+    assert set(pp["properties"]) == {*pricing._FIELDS, "usage_cap_cents", "after", "churn_bps", "months"}
+    assert set(pp["properties"]["after"]["properties"]) == {*pricing._FIELDS, "usage_cap_cents"}
     ch = TOOLS["churn_adjust"].input_schema
     assert set(ch["required"]) == set(ch["properties"]) == set(ca._FIELDS)
-    assert all(p["type"] == "integer" for s in (pp, ch) for p in s["properties"].values())
+    props = [p for k, p in pp["properties"].items() if k != "after"] + list(ch["properties"].values())
+    assert all(p["type"] == "integer" for p in props)
