@@ -17,6 +17,7 @@ import argparse
 import json
 import logging
 import sys
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 from .analyst import answer_question
@@ -76,6 +77,10 @@ def main(argv: list[str] | None = None) -> int:
                      help="EV-06: deterministic rubric only ($0), or also the LLM judge (replay $0; record/live call Bedrock)")
     evp.add_argument("--ev06-graph", choices=("off", "replay", "record", "live"), default="off",
                      help="EV-06 on real graph runs for the scenarios with no recorded outcome (replay $0; record/live call Bedrock)")
+    on = sub.add_parser("online-eval", help="M6-02: live run of the day's golden sample vs its recording (Bedrock, capped per question)")
+    on.add_argument("--day", type=date.fromisoformat, default=None, help="sample day (default: today, UTC)")
+    on.add_argument("--k", type=int, default=3)
+    on.add_argument("--out", type=Path, default=None)
     args = p.parse_args(argv)
     logging.basicConfig(level=logging.WARNING, stream=sys.stderr)
 
@@ -90,6 +95,16 @@ def main(argv: list[str] | None = None) -> int:
         brief = json.loads((args.data_root / keys[0]).read_text())
         print(json.dumps({"live": args.live, "actions": brief["action_count"],
                           "insights": sum("insight" in a for a in brief["top_actions"])}))
+        return 0
+    if args.cmd == "online-eval":
+        from .online_eval import online_eval
+        day = args.day or datetime.now(UTC).date()
+        report = online_eval(args.gold, args.model, day, k=args.k, live_client=BedrockLLM())
+        text = json.dumps(report, indent=2)
+        if args.out:
+            args.out.parent.mkdir(parents=True, exist_ok=True)
+            args.out.write_text(text + "\n")
+        print(json.dumps({k: report[k] for k in ("day", "model", "sample", "changed", "stale_fixtures")}))
         return 0
     if args.cmd == "ev":
         report = run_ev(args.gold, args.ev05, args.model, args.ev06, args.ev06_graph)
