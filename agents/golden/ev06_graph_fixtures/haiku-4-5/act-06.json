@@ -29,7 +29,7 @@
                 "query": "customer refund policy contract"
               },
               "name": "search_knowledge",
-              "toolUseId": "tooluse_JsnRwBwvCRemkLmxIADzGL",
+              "toolUseId": "tooluse_vJ9QaaYIFNwigJBqkieyck",
               "type": "tool_use"
             }
           }
@@ -43,7 +43,7 @@
       }
     },
     {
-      "request_sha": "dc1a75d0be6d86586766f7b489694b129dab1b85173421a0d5b8e41f35289163",
+      "request_sha": "fd946e85cd2a8be06fb0e1d5a58733e32f9411f8279146bedaa149d819ed0d48",
       "response": {
         "content": [
           {
@@ -76,6 +76,6 @@
     }
   ],
   "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
-  "prompt_version": "specialists-v3",
+  "prompt_version": "specialists-v4",
   "scenario_id": "act-06"
 }

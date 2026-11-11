@@ -29,7 +29,7 @@
                 "sql": "\nSELECT \n  margin_date,\n  feature_id,\n  feature_scope,\n  request_count,\n  gross_margin_pct\nFROM fct_tenant_margin\nORDER BY margin_date DESC\nLIMIT 200\n"
               },
               "name": "query_gold",
-              "toolUseId": "tooluse_e3lxEXqjxDKVztgJImrzu1",
+              "toolUseId": "tooluse_JehnQNtOREr21vsqu6kDTG",
               "type": "tool_use"
             }
           }
@@ -44,6 +44,6 @@
     }
   ],
   "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
-  "prompt_version": "specialists-v3",
+  "prompt_version": "specialists-v4",
   "scenario_id": "leak-04"
 }

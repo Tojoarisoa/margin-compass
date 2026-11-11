@@ -1,25 +1,26 @@
 {
   "calls": [
     {
-      "request_sha": "9c1f4c5433074d9d7f102d2b53f20f745cb8bdea811f572f6228e172b5f10ba7",
+      "request_sha": "6e94f31c7ce36bdf64da5823ad08bac9a1f94dffda728a7861b4a1673ff297e5",
       "response": {
         "content": [
           {
-            "text": "I'll show you an outcome-based pricing model by calculating revenue and margin for a plan with outcome pricing."
+            "text": "I'll show you an example outcome-based pricing model:"
           },
           {
             "toolUse": {
               "input": {
-                "cost_cents": 15000,
+                "cost_cents": 25000,
                 "included_units": 1000,
-                "outcome_price_micro": 2000000,
+                "outcome_price_micro": 500000,
                 "outcomes": 250,
-                "overage_rate_micro": 500000,
+                "overage_rate_micro": 100000,
                 "seat_price_cents": 50000,
-                "seats": 5
+                "seats": 10,
+                "usage_units": 500
               },
               "name": "price_plan",
-              "toolUseId": "tooluse_F3nNX4xZNSzCeK5yR7Kx3d",
+              "toolUseId": "tooluse_7FQjxCppWSfuKKKw1Sp9U3",
               "type": "tool_use"
             }
           }
@@ -27,35 +28,34 @@
         "stop_reason": "tool_use",
         "usage": {
           "cacheReadInputTokens": 0,
-          "inputTokens": 1966,
-          "outputTokens": 201
+          "inputTokens": 2058,
+          "outputTokens": 209
         }
       }
     },
     {
-      "request_sha": "c9951c7e2d687838bf80b6ff52e126e1e377a9425dc33af60263105908a2b0c8",
+      "request_sha": "e6088e7634514a7ff7cfde7ba7ac9f32f986cd2e9f86461683543e47656677cb",
       "response": {
         "content": [
           {
-            "text": "Let me provide the complete plan fields:"
+            "text": "Let me correct that with the complete plan:"
           },
           {
             "toolUse": {
               "input": {
                 "addon_cents": 0,
-                "cost_cents": 15000,
+                "cost_cents": 25000,
                 "discount_bps": 0,
                 "included_units": 1000,
-                "outcome_price_micro": 2000000,
+                "outcome_price_micro": 500000,
                 "outcomes": 250,
-                "overage_rate_micro": 500000,
+                "overage_rate_micro": 100000,
                 "seat_price_cents": 50000,
-                "seats": 5,
-                "usage_cap_cents": 0,
-                "usage_units": 1200
+                "seats": 10,
+                "usage_units": 500
               },
               "name": "price_plan",
-              "toolUseId": "tooluse_sNtd0evGt9evFRNlfc8e5x",
+              "toolUseId": "tooluse_V4ZCNewOF4QVVZ0HRi8Dxn",
               "type": "tool_use"
             }
           }
@@ -63,13 +63,13 @@
         "stop_reason": "tool_use",
         "usage": {
           "cacheReadInputTokens": 0,
-          "inputTokens": 2230,
-          "outputTokens": 267
+          "inputTokens": 2324,
+          "outputTokens": 245
         }
       }
     }
   ],
   "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
-  "prompt_version": "specialists-v3",
+  "prompt_version": "specialists-v4",
   "scenario_id": "prc-06"
 }

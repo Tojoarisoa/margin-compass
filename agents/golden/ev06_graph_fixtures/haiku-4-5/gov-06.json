@@ -10,7 +10,7 @@
                 "query": "bc-t0050 renewal terms"
               },
               "name": "search_knowledge",
-              "toolUseId": "tooluse_AlornbtA07KPETouylBsxg",
+              "toolUseId": "tooluse_NZZ2u2lA129eoptfGZMxvt",
               "type": "tool_use"
             }
           }
@@ -24,7 +24,7 @@
       }
     },
     {
-      "request_sha": "736149c41c03d79807e5df7b3525c256f73e6a92c30d79e6cdce1a0d6790915f",
+      "request_sha": "15a4c8de3d3f853abc32bfa12c641d4f854c0b40fd437bc1dcbb103c2ae7d506",
       "response": {
         "content": [
           {
@@ -36,7 +36,7 @@
                 "query": "bc-t0050 renewal"
               },
               "name": "search_knowledge",
-              "toolUseId": "tooluse_uamV7DksYyNx2jKPgbSrwl",
+              "toolUseId": "tooluse_7nm5A2v7rO9UB7m4L2xZ8L",
               "type": "tool_use"
             }
           }
@@ -50,7 +50,7 @@
       }
     },
     {
-      "request_sha": "419241dfbd0762e52245038c7ae3cb638064884c116e7a939bdb8dd89fc60b8d",
+      "request_sha": "f6ac77737cc9c2e7fab6f4300eacb288996dc12021432288b7242690aa59a754",
       "response": {
         "content": [
           {
@@ -67,6 +67,6 @@
     }
   ],
   "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
-  "prompt_version": "specialists-v3",
+  "prompt_version": "specialists-v4",
   "scenario_id": "gov-06"
 }

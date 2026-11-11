@@ -13,7 +13,7 @@
                 "query": "30% discount approval authority"
               },
               "name": "search_knowledge",
-              "toolUseId": "tooluse_Fb4ebHfzldUi1lIZJ7JRbv",
+              "toolUseId": "tooluse_I9uru60q2K0hb3lHega1BB",
               "type": "tool_use"
             }
           }
@@ -27,7 +27,7 @@
       }
     },
     {
-      "request_sha": "ffc13d96dc5ef9e9625fbf5b71faab1e31f87c70eafb6d9847c30c00a6ecd1b4",
+      "request_sha": "8b50b90ab9e26ed89e331d7dcaad98e24484f2a52ab25c4f3df5a139bd40dfd8",
       "response": {
         "content": [
           {
@@ -39,7 +39,7 @@
                 "query": "discount approval authority limits"
               },
               "name": "search_knowledge",
-              "toolUseId": "tooluse_tA7UseBl0lHKlMQMMKSrJP",
+              "toolUseId": "tooluse_adMkEP5WENM3QBir7VvYW3",
               "type": "tool_use"
             }
           }
@@ -53,7 +53,7 @@
       }
     },
     {
-      "request_sha": "3113200a2eae7a55536c104462bd0e4d7ee2e4db6c210088611ec1fa8a90f7db",
+      "request_sha": "0e023b070383bd9ec3d05469bd90c8ac54fdcc49106c1d0f9f636da60049ea04",
       "response": {
         "content": [
           {
@@ -81,7 +81,7 @@
                 "query": "discount approval authority 30%"
               },
               "name": "search_knowledge",
-              "toolUseId": "tooluse_pXsMcNntOsjcDyGZhUK4TP",
+              "toolUseId": "tooluse_u4LUerIPCWop8i9bjjk1Fx",
               "type": "tool_use"
             }
           }
@@ -95,7 +95,7 @@
       }
     },
     {
-      "request_sha": "df3c31ee46f0d9017ca0bf27ec848a2c4a702fbdd5ac39fb2a5d3e12b349df00",
+      "request_sha": "8649ddd69f71c1319eaa8db53017eb15c68370aebef9b53a10fde95e92d93475",
       "response": {
         "content": [
           {
@@ -107,7 +107,7 @@
                 "query": "discount approval authority levels"
               },
               "name": "search_knowledge",
-              "toolUseId": "tooluse_bHACedF9nZMtdajG3sVpx6",
+              "toolUseId": "tooluse_kC6CWgneLDb0F2DwLqPzQ1",
               "type": "tool_use"
             }
           }
@@ -122,6 +122,6 @@
     }
   ],
   "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
-  "prompt_version": "specialists-v3",
+  "prompt_version": "specialists-v4",
   "scenario_id": "gov-05"
 }

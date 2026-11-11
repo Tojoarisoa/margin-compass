@@ -146,11 +146,11 @@ def test_recorded_graph_fixtures_replay(gold):
     still 10/27. prc-04 now makes one price_plan call but quotes "5%" and an assumed 200 it never passed; prc-06
     sends a partial plan (rejected); act-01..06 still ask for details. All end capped.
 
-    Step 3c-3e (specialists-v4, AG-05 instruction only): the 7 pricing-routed scenarios below drift (each scored
-    as a fail; all 7 failed before) until the next ops record run.
+    Step 3c-3e (specialists-v4, AG-05 instruction only): re-recorded by ops run 42970965596, 11/27. act-03 now
+    passes; act-01/02/04, prc-04..06 still fail.
     """
     rep = run_graph(gold, "haiku-4-5", "replay")
     assert set(rep["runs"]) == {s["id"] for s in default_scenarios()}
-    assert rep["drifted"] == ["act-01", "act-02", "act-03", "act-04", "prc-04", "prc-05", "prc-06"]
-    assert round(rep["ev06"] * 27) == 10 and not rep["passed"]
+    assert rep["drifted"] == []
+    assert round(rep["ev06"] * 27) == 11 and not rep["passed"]
     assert rep["runs"]["eff-04"] == {"route": "efficiency", "tools": ["query_gold"], "status": "answered"}

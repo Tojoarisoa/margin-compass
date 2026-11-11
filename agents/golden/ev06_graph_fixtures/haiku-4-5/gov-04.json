@@ -13,7 +13,7 @@
                 "query": "price caps contract policy"
               },
               "name": "search_knowledge",
-              "toolUseId": "tooluse_cWAA3p6hNBuEhSXJxobIg4",
+              "toolUseId": "tooluse_OsZc4oltzYFVTCNjsv13Rj",
               "type": "tool_use"
             }
           }
@@ -27,7 +27,7 @@
       }
     },
     {
-      "request_sha": "d9653139df486248a26a49dc5d2b9f4d2d63861524a4e354c26987ed3cb1de79",
+      "request_sha": "b5c90bd8e33685b1f5e86b3482310900c99967f9b61c720dbf4323fdd0da2675",
       "response": {
         "content": [
           {
@@ -44,6 +44,6 @@
     }
   ],
   "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
-  "prompt_version": "specialists-v3",
+  "prompt_version": "specialists-v4",
   "scenario_id": "gov-04"
 }

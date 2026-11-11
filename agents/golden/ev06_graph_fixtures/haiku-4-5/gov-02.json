@@ -13,7 +13,7 @@
                 "query": "bc-t0021 renewal clause waive"
               },
               "name": "search_knowledge",
-              "toolUseId": "tooluse_iUJ0bmJAo8Mb27fpHYJua3",
+              "toolUseId": "tooluse_cNJDc1HbrgFxTo4J5A9lYh",
               "type": "tool_use"
             }
           }
@@ -27,7 +27,7 @@
       }
     },
     {
-      "request_sha": "eb798ef4bee1d5d3d37d533fa38f365adec7a5344a9eea6720a581a7f60162fd",
+      "request_sha": "bf1dcad3c3cacbbf1a5dfb2d7dd9fd6f1a722d64f1cc1a4e2ff257bd14009732",
       "response": {
         "content": [
           {
@@ -44,6 +44,6 @@
     }
   ],
   "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
-  "prompt_version": "specialists-v3",
+  "prompt_version": "specialists-v4",
   "scenario_id": "gov-02"
 }
