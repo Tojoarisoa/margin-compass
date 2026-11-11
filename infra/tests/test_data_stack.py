@@ -128,7 +128,7 @@ def test_scheduler_role_may_only_start_the_nightly_machine(synth):
     assert not any(s["Resource"] == "*" for s in stmts)
 
 
-def test_telemetry_export_is_scheduled_daily_off_by_default_and_reads_only_the_api_log_group(synth):
+def test_telemetry_export_is_scheduled_daily_off_by_default_and_reads_only_the_api_and_pipeline_log_groups(synth):
     _, t = synth
     t.has_resource_properties("AWS::Scheduler::Schedule", {
         "State": "DISABLED", "ScheduleExpression": "cron(30 0 * * ? *)",
@@ -137,7 +137,10 @@ def test_telemetry_export_is_scheduled_daily_off_by_default_and_reads_only_the_a
     assert fn["Properties"]["Environment"]["Variables"]["MC_API_LOG_GROUP"] == "/aws/lambda/mc-dev-web-api"
     stmts = [s for p in t.find_resources("AWS::IAM::Policy").values() for s in p["Properties"]["PolicyDocument"]["Statement"]]
     logs_stmt = [s for s in stmts if "logs:FilterLogEvents" in (s["Action"] if isinstance(s["Action"], list) else [s["Action"]])]
-    assert len(logs_stmt) == 1 and "mc-dev-web-api" in json.dumps(logs_stmt[0]["Resource"])
+    assert len(logs_stmt) == 1 and len(logs_stmt[0]["Resource"]) == 2
+    res = json.dumps(logs_stmt[0]["Resource"])
+    assert "mc-dev-web-api" in res and "PipelineLogs" in res  # M6-01: the pipeline's own log group, nothing else
+    assert "MC_PIPELINE_LOG_GROUP" in fn["Properties"]["Environment"]["Variables"]
 
 
 def test_nightly_and_pipeline_alarms_to_the_alert_topic(synth):

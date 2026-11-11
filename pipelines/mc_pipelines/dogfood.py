@@ -61,11 +61,11 @@ def compact(events: list[dict]) -> list[dict]:
     return [{"tenant_id": TENANT, "date": d, "model_id": m, **v} for (d, m), v in sorted(agg.items())]
 
 
-def write_parquet(rows: list[dict], path: Path) -> None:
+def write_parquet(rows: list[dict], path: Path, schema: pa.Schema = _SCHEMA) -> None:
     from datetime import date
-    cols = {k: [(date.fromisoformat(r[k]) if k == "date" else r[k]) for r in rows] for k in _SCHEMA.names}
+    cols = {k: [(date.fromisoformat(r[k]) if k == "date" else r[k]) for r in rows] for k in schema.names}
     path.parent.mkdir(parents=True, exist_ok=True)
-    pq.write_table(pa.table(cols, schema=_SCHEMA), path)
+    pq.write_table(pa.table(cols, schema=schema), path)
 
 
 def summary(rows: list[dict], run_id: str) -> dict:
@@ -92,14 +92,11 @@ def read_summary(path: Path, run_id: str) -> dict:
     return summary(rows, run_id)
 
 
-def export_day(logs, s3, bucket: str, log_group: str, day: str, work: Path) -> dict:
-    """Compact one UTC day of `gen_ai_call` events from CloudWatch Logs into `telemetry/dogfood.parquet`.
-
-    Re-running a day replaces that day's rows, so the export is idempotent. `logs` and `s3` are boto3 clients.
-    """
-    from datetime import UTC, date, datetime, timedelta
+def fetch_day(logs, log_group: str, filter_pattern: str, day: str) -> list[str]:
+    """All messages of one UTC day in `log_group` that match `filter_pattern` (every page)."""
+    from datetime import UTC, datetime, timedelta
     start = datetime.fromisoformat(day).replace(tzinfo=UTC)
-    kw = {"logGroupName": log_group, "filterPattern": '"gen_ai_call"',
+    kw = {"logGroupName": log_group, "filterPattern": filter_pattern,
           "startTime": int(start.timestamp() * 1000), "endTime": int((start + timedelta(days=1)).timestamp() * 1000) - 1}
     lines: list[str] = []
     while True:
@@ -108,9 +105,14 @@ def export_day(logs, s3, bucket: str, log_group: str, day: str, work: Path) -> d
         if not page.get("nextToken"):
             break
         kw["nextToken"] = page["nextToken"]
-    rows = compact(parse_events(lines, day))
-    key, path = "telemetry/dogfood.parquet", work / "dogfood.parquet"
-    work.mkdir(parents=True, exist_ok=True)
+    return lines
+
+
+def merge_day(s3, bucket: str, key: str, rows: list[dict], day: str, path: Path, schema: pa.Schema,
+              sort_key=lambda r: (r["date"], r["model_id"])) -> int:
+    """Replace `day`'s rows in the Parquet object `key` with `rows` (idempotent); returns the stored row count."""
+    from datetime import date
+    path.parent.mkdir(parents=True, exist_ok=True)
     old: list[dict] = []
     try:
         s3.download_file(bucket, key, str(path))
@@ -118,7 +120,18 @@ def export_day(logs, s3, bucket: str, log_group: str, day: str, work: Path) -> d
     except Exception as e:  # first run: nothing stored yet
         if "404" not in str(e) and "NoSuchKey" not in str(e) and not isinstance(e, FileNotFoundError):
             raise
-    merged = sorted(old + rows, key=lambda r: (r["date"], r["model_id"]))
-    write_parquet(merged, path)
+    merged = sorted(old + rows, key=sort_key)
+    write_parquet(merged, path, schema)
     s3.upload_file(str(path), bucket, key)
-    return {"day": day, "events": len(lines), "rows": len(merged)}
+    return len(merged)
+
+
+def export_day(logs, s3, bucket: str, log_group: str, day: str, work: Path) -> dict:
+    """Compact one UTC day of `gen_ai_call` events from CloudWatch Logs into `telemetry/dogfood.parquet`.
+
+    Re-running a day replaces that day's rows, so the export is idempotent. `logs` and `s3` are boto3 clients.
+    """
+    lines = fetch_day(logs, log_group, '"gen_ai_call"', day)
+    rows = compact(parse_events(lines, day))
+    n = merge_day(s3, bucket, "telemetry/dogfood.parquet", rows, day, work / "dogfood.parquet", _SCHEMA)
+    return {"day": day, "events": len(lines), "rows": n}
