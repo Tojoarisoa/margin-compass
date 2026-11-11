@@ -22,18 +22,27 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-1. **Finish the M6-01 step 1 PR** (`auto/m6-01-lambda-alarms-r2`, replaces #266) if still open: all checks green, fast-forward `main`, check `deploy to dev` + smoke.
-2. **M6-01 step 2:** telemetry lake check: confirm the nightly compaction writes agent/pipeline logs to `telemetry/` as Parquet (PLAN.md §14); fill the gap if not. Then step 3: remaining §14 alarms (DLQ depth if a DLQ exists; at most 10 in total).
+1. **Finish PR #272** (`auto/m6-01-telemetry-lake-r3`, M6-01 step 2) if still open: all checks green, fast-forward `main`, check `deploy to dev` + smoke. If `main` moved again, `-r4` per §8.1.
+2. **M6-01 step 3 = tick:** no DLQ exists in the infra (checked), so no DLQ alarm; alarms 3/10 cover pipeline failure, API errors, budget. Tick M6-01 in PLAN.md §17 with that note.
 3. **M5-03 follow-up step 2:** run `owner.export_approvals` before a backfill (needs `dynamodb:Scan` on `mc-dev-state-core` for the runner role; scoped to that table).
 4. **M5-03 tick:** after the owner creates the user and one approval round-trips (Waiting for owner).
-5. **M5-04:** KPI-09 needs a closed-loop plan change, KPI-13 the real AWS bill (M2-04 FOCUS export).
-6. **EV-06 graph replay** (known baseline 17/27, specialists-v9): revisit later with fewer scenarios per change or a judge-based gate.
-7. **API `search_knowledge`:** the deployed graph (`MC_GRAPH`, off by default) still gets no knowledge tool; needs the index in the Lambda (check deploy impact and cost first).
-8. **Daily checks (not tasks):** ops `verify-backfill` (last 2026-11-11 00:23 UTC: `awaiting_first_export`) and the Haiku 5.5 probe (last 2026-11-11: `AccessDeniedException`). Next due 2026-11-12.
+5. **M6-02:** drift monitoring, online evaluation sampling.
+6. **M5-04:** KPI-09 needs a closed-loop plan change, KPI-13 the real AWS bill (M2-04 FOCUS export).
+7. **EV-06 graph replay** (known baseline 17/27, specialists-v9): revisit later with fewer scenarios per change or a judge-based gate.
+8. **API `search_knowledge`:** the deployed graph (`MC_GRAPH`, off by default) still gets no knowledge tool; needs the index in the Lambda (check deploy impact and cost first).
+9. **Daily checks (not tasks):** ops `verify-backfill` (last 2026-11-11 00:23 UTC: `awaiting_first_export`) and the Haiku 5.5 probe (last 2026-11-11: `AccessDeniedException`). Next due 2026-11-12.
 
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-05, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed.
 Notes: Ops eval results are in the job log; fixtures are base64 between FIXTURE-BEGIN/END lines. Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1; local replays need it too or everything drifts). Ops `ev06_graph: true` adds the graph runs (opt-in, about $0.15; the ops job ends `failure` while the graph gate is unmet, which is expected). Flaky github.com 504s during image builds: re-run the failed job. Only commit the graph fixtures from a record run; the other fixture sets change only in tool-use IDs. AG-05 prompt is at the cost-cap edge (`test_unsupported_figure_retries_then_fails_closed` sums $0.009965 of $0.01): keep it no longer than v8. Gh-created PR bodies get a footer: remove it with the GitHub MCP `update_pull_request` (gh api PATCH gets it re-added).
+
+## 2026-11-11 (autopilot run 122)
+
+- **Start:** M6-01 step 1 already on `main` (0fb9bb7); main `ci` + `deploy to dev` green; no open `auto/*` PR (owner PR #268 open, left alone).
+- **Task 1:** M6-01 step 2, telemetry lake check. Gap: only API `gen_ai_call` logs were compacted (`telemetry/dogfood.parquet`); pipeline run logs were not. Added `telemetry/pipeline_runs.parquet` (one row per run and day: duration, status, errors), written by the same daily `telemetry` schedule; pipeline role may also `logs:FilterLogEvents` on its own log group. Pipelines 86 passed, infra 82 passed, synth + cost gate passed (+$0.00, alarms 3/10), ruff clean.
+- **PR churn:** #269 green, but `main` moved (owner a9c7e0c) -> #271 green, then `main` moved again (owner #268, b9aa1f0) -> #272 (PLAN change-log conflict, kept both rows). Old branches `auto/m6-01-telemetry-lake` and `-r2` not deleted (branch delete denied by the session's guard); safe to delete.
+- **Decisions (§8.2):** reuse the dogfood schedule and Lambda (option rejected: a second schedule).
+- **Cost:** $0 (no new resources; no ops run).
 
 ## 2026-11-11 (autopilot run 121)
 
