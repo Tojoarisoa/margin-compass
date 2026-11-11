@@ -38,6 +38,10 @@ def _ratio(num, den) -> float | None:
     return float((Decimal(num) / den).quantize(RATIO, ROUND_HALF_UP)) if den else None
 
 
+def _fmt_money(x) -> str:
+    return f"${Decimal(x).quantize(CENT, ROUND_HALF_UP):,}"
+
+
 def _totals(rows) -> dict:
     rev = sum((Decimal(r[0]) for r in rows), Decimal(0))
     cost = sum((Decimal(r[1]) for r in rows), Decimal(0))
@@ -157,9 +161,17 @@ def build_pg1_m2(gold: Path, silver: Path, run_id: str) -> dict:
     tenant_rows.sort(key=lambda r: (r["ai_gross_margin_pct"] if r["ai_gross_margin_pct"] is not None else -1e9, r["tenant_id"]))
     unprofitable = sum(1 for r in tenant_rows if r["ai_gross_margin_usd"] < 0)
 
-    fc = con.execute(f"""SELECT forecast_date, target_date, p10_usd, p50_usd, p90_usd, model_version, model_alias
-                         FROM read_parquet('{g}/fct_forecasts.parquet') WHERE metric = 'ai_cogs_usd' ORDER BY target_date""").fetchall() \
-        if (g / "fct_forecasts.parquet").exists() else []
+    # The forecaster predicts LLM cost per feature (F0-F4). The page compares it with fully loaded actual cost, so the
+    # features are summed per day and the recent mean non-LLM cost (infrastructure) is added; the band sums the
+    # per-feature P10/P90, which is wider than the true band of the sum (conservative).
+    non_llm = Decimal(con.execute(f"""
+        SELECT coalesce(avg(d), 0) FROM (SELECT sum(cost_to_serve_usd) - sum(llm_cost_usd) AS d FROM {cost_src}
+                                         WHERE cost_date >= DATE '{recent_from}' GROUP BY cost_date)""").fetchone()[0])
+    fc = con.execute(f"""
+        SELECT max(forecast_date), target_date, sum(p10_usd) + {non_llm}, sum(p50_usd) + {non_llm}, sum(p90_usd) + {non_llm},
+               max(model_version), max(model_alias)
+        FROM read_parquet('{g}/fct_forecasts.parquet') WHERE metric = 'ai_cogs_usd'
+        GROUP BY target_date ORDER BY target_date""").fetchall() if (g / "fct_forecasts.parquet").exists() else []
 
     snapshot = {
         "schema_version": SCHEMA_VERSION,
@@ -181,6 +193,7 @@ def build_pg1_m2(gold: Path, silver: Path, run_id: str) -> dict:
         "forecast": {
             "metric": "ai_cogs_usd", "model_version": fc[0][5] if fc else None, "model_alias": fc[0][6] if fc else None,
             "points": [{"date": r[1].isoformat(), "p10": _money(r[2]), "p50": _money(r[3]), "p90": _money(r[4])} for r in fc],
+            "assumption": f"LLM cost forecast summed over features plus the last-30-day mean non-LLM cost ({_fmt_money(non_llm)}/day)",
         },
         "tenants": tenant_rows[:TENANT_ROWS_MAX],
         "not_yet_available": {"margin_recovered": "M3 (actions)", "roi_multiple": "M5", "plan_target": "M2"},

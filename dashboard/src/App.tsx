@@ -19,7 +19,7 @@ function Tile({ label, value, note }: { label: string; value: string; note?: str
   return (
     <div className="tile">
       <div className="tile-label">{label}</div>
-      <div className="tile-value">{value}</div>
+      <div className="tile-value" title={value}>{value}</div>
       {note && <div className="tile-note">{note}</div>}
     </div>
   );
@@ -55,6 +55,12 @@ export function App() {
         <h1>Executive Margin Overview <span className="tag">v0</span></h1>
         <p className="muted">AI cost-to-serve and gross margin, {snap.window.from} to {snap.window.to} ({snap.window.days} days).</p>
       </header>
+      <nav className="sectionnav" aria-label="Sections">
+        <a href="#overview">Overview</a>
+        {snap.m2_kpis && <><a href="#brief">Brief</a><a href="#actions">Actions</a><a href="#explore">Explorer</a>
+          <a href="#leaks">Leaks</a><a href="#plans">Pricing</a><a href="#health">Health</a></>}
+        <a href="#ask">Analyst</a><a href="#tenants">Tenants</a><a href="#about">About</a>
+      </nav>
 
       <section className="tiles" aria-label="Headline KPIs">
         <Tile label="AI gross margin" value={percent(h.window.ai_gross_margin_pct)} note={`last 30 days: ${percent(h.last_30_days.ai_gross_margin_pct)}`} />
@@ -76,7 +82,7 @@ export function App() {
       )}
 
       <div className="grid">
-        <section className="card" aria-labelledby="trend-title">
+        <section id="overview" className="card wide" aria-labelledby="trend-title">
           <h2 id="trend-title">Daily AI gross margin</h2>
           <MarginTrend snap={snap} />
         </section>
@@ -90,7 +96,7 @@ export function App() {
         <section className="card" aria-labelledby="fc-title">
           <h2 id="fc-title">AI COGS: last 30 days and 30-day forecast</h2>
           <CogsForecast snap={snap} />
-          <p className="muted small">Model {snap.forecast.model_version} ({snap.forecast.model_alias}), seasonal naive. Band: P10–P90.</p>
+          <p className="muted small">{snap.forecast.assumption ? `${snap.forecast.assumption}. ` : ""}Band: P10–P90.</p>
         </section>
       </div>
 
@@ -150,8 +156,9 @@ export function App() {
 
       {snap.m2_kpis && <RealizedCard grossMarginUsd={snap.m2_kpis.gross_margin_usd} grossMarginPct={snap.m2_kpis.gross_margin_pct} windowDays={snap.window.days} />}
 
+      <div className="tools">
       {snap.m2_kpis && (
-        <section className="card" aria-labelledby="actions-title">
+        <section id="actions" className={showActions ? "card tool open" : "card tool"} aria-labelledby="actions-title">
           <h2 id="actions-title">Action Center</h2>
           {showActions ? (
             <Suspense fallback={<p className="muted">Loading actions…</p>}><ActionCenter /></Suspense>
@@ -162,7 +169,7 @@ export function App() {
       )}
 
       {snap.m2_kpis && (
-        <section className="card" aria-labelledby="explore-title">
+        <section id="explore" className={showExplorer ? "card tool open" : "card tool"} aria-labelledby="explore-title">
           <h2 id="explore-title">Cost-to-serve explorer</h2>
           {showExplorer ? (
             <Suspense fallback={<p className="muted">Loading explorer…</p>}><Explorer /></Suspense>
@@ -173,7 +180,7 @@ export function App() {
       )}
 
       {snap.m2_kpis && (
-        <section className="card" aria-labelledby="leaks-title">
+        <section id="leaks" className={showLeaks ? "card tool open" : "card tool"} aria-labelledby="leaks-title">
           <h2 id="leaks-title">Margin leaks</h2>
           {showLeaks ? (
             <Suspense fallback={<p className="muted">Loading leaks…</p>}><Leaks /></Suspense>
@@ -184,7 +191,7 @@ export function App() {
       )}
 
       {snap.m2_kpis && (
-        <section className="card" aria-labelledby="plans-title">
+        <section id="plans" className={showPlans ? "card tool open" : "card tool"} aria-labelledby="plans-title">
           <h2 id="plans-title">Forecast &amp; pricing simulator</h2>
           {showPlans ? (
             <Suspense fallback={<p className="muted">Loading simulator…</p>}><PlanDesigner /><h3>Engineering levers</h3><LeverLab /><h3>Cost–quality lab</h3><CostQualityLab /></Suspense>
@@ -195,7 +202,7 @@ export function App() {
       )}
 
       {snap.m2_kpis && (
-        <section className="card" aria-labelledby="health-title">
+        <section id="health" className={showHealth ? "card tool open" : "card tool"} aria-labelledby="health-title">
           <h2 id="health-title">Pipeline and data health</h2>
           {showHealth ? (
             <Suspense fallback={<p className="muted">Loading health…</p>}><Health /></Suspense>
@@ -204,12 +211,13 @@ export function App() {
           )}
         </section>
       )}
+      </div>
 
       <AskPanel />
 
-      <section className="card" aria-labelledby="tenants-title">
+      <section id="tenants" className="card" aria-labelledby="tenants-title">
         <h2 id="tenants-title">Tenants by AI gross margin (lowest first)</h2>
-        <div className="table-wrap">
+        <div className="table-wrap tall">
           <table>
             <thead>
               <tr><th scope="col">Tenant</th><th scope="col">Plan</th><th scope="col" className="num">AI revenue</th>
@@ -229,7 +237,7 @@ export function App() {
         </div>
       </section>
 
-      <section className="card" aria-labelledby="about-title">
+      <section id="about" className="card" aria-labelledby="about-title">
         <h2 id="about-title">Architecture &amp; about</h2>
         {showAbout ? (
           <Suspense fallback={<p className="muted">Loading…</p>}><About /></Suspense>

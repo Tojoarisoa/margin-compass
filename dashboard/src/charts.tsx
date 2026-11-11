@@ -15,10 +15,11 @@ function Chart({ option, label }: { option: EChartsCoreOption; label: string }) 
     if (!ref.current) return;
     const chart = echarts.init(ref.current, THEME, { renderer: "canvas" });
     chart.setOption(option);
-    const onResize = () => chart.resize();
-    window.addEventListener("resize", onResize);
+    // resize with the card (grid columns change width without a window resize)
+    const ro = new ResizeObserver(() => chart.resize());
+    ro.observe(ref.current);
     return () => {
-      window.removeEventListener("resize", onResize);
+      ro.disconnect();
       chart.dispose();
     };
   }, [option]);

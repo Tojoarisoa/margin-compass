@@ -31,9 +31,9 @@ function CostChart({ pg3, feature }: { pg3: Pg3; feature: string }) {
           data: leaks.map((l) => [{ xAxis: l.start_date }, { xAxis: l.end_date ?? rows[rows.length - 1]?.date ?? l.start_date }]) },
       }],
     });
-    const onResize = () => chart.resize();
-    window.addEventListener("resize", onResize);
-    return () => { window.removeEventListener("resize", onResize); chart.dispose(); };
+    const ro = new ResizeObserver(() => chart.resize());  // resize with the card, not only the window
+    ro.observe(ref.current);
+    return () => { ro.disconnect(); chart.dispose(); };
   }, [rows, leaks]);
   return <div ref={ref} className="chart" role="img" aria-label={`Daily LLM cost for ${feature}; detected leaks are shaded`} />;
 }

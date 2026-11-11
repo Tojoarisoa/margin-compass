@@ -16,7 +16,7 @@ export function BriefCard() {
   }, []);
   if (!brief) return null;
   return (
-    <section className="card" aria-labelledby="brief-title">
+    <section id="brief" className="card" aria-labelledby="brief-title">
       <h2 id="brief-title">Daily margin brief</h2>
       <p>{brief.headline}</p>
       {brief.top_actions.length > 0 && (
@@ -25,7 +25,7 @@ export function BriefCard() {
             <thead><tr><th scope="col">Proposed action</th><th scope="col">Type</th><th scope="col">Approver</th><th scope="col" className="num">At stake per month</th></tr></thead>
             <tbody>
               {brief.top_actions.map((a) => (
-                <tr key={a.action_id}><td>{a.title}{a.insight && <div className="muted small">{a.insight}</div>}</td><td>{a.action_type}</td><td>{a.approver}</td><td className="num">{money(Number(a.impact_usd_month))}</td></tr>
+                <tr key={a.action_id}><td>{a.title}{a.insight && <div className="muted small">{a.insight}</div>}</td><td className="code">{a.action_type}</td><td className="code">{roleLabel(a.approver)}</td><td className="num">{amount(a.impact_usd_month)}</td></tr>
               ))}
             </tbody>
           </table>
@@ -34,4 +34,17 @@ export function BriefCard() {
       <p className="muted small">Notes under an action are a model's suggestion to check first, not a finding. Proposals only: nothing is applied without approval. Synthetic data.</p>
     </section>
   );
+}
+
+
+/** The brief publishes money already formatted ("$1,234.56"); older snapshots carried a number. */
+function amount(v: string | number): string {
+  return typeof v === "number" ? money(v) : String(v).startsWith("$") || String(v).startsWith("-$") ? String(v) : money(Number(v));
+}
+
+/** "revops_lead" -> "RevOps lead": a readable role, not an internal key. */
+function roleLabel(role: string): string {
+  const words = role.split("_");
+  const head = { revops: "RevOps", head: "Head", pricing: "Pricing" }[words[0]] ?? words[0];
+  return [head, ...words.slice(1)].join(" ");
 }

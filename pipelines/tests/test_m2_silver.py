@@ -642,5 +642,11 @@ def test_m2_build_publishes_pg1_with_m2_sections(tmp_path):
     assert w["ai_cost_to_serve_usd"] == pytest.approx(float(cost), abs=0.01)
     assert snap["window"] == {"from": lo.isoformat(), "to": hi.isoformat(), "days": len(snap["trend"])}
     assert snap["headline"]["tenants"] == len(snap["tenants"]) > 0
+    # one forecast point per day (features summed), compared with fully loaded cost
+    dates = [p["date"] for p in snap["forecast"]["points"]]
+    assert len(dates) == len(set(dates)) and dates == sorted(dates)
+    if dates:
+        assert "non-LLM" in snap["forecast"]["assumption"]
+        assert all(p["p10"] <= p["p50"] <= p["p90"] for p in snap["forecast"]["points"])
     # internal codes stay off public surfaces (AGENTS.md §6)
     assert "M1" not in snap["feature_scope"] and "F1" not in snap["feature_scope"]

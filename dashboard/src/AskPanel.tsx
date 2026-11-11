@@ -114,7 +114,7 @@ export function AskPanel() {
   }
 
   return (
-    <section className="card ask" aria-labelledby="ask-title">
+    <section id="ask" className="card ask" aria-labelledby="ask-title">
       <h2 id="ask-title">Ask the Cost-to-Serve Analyst</h2>
       <p className="muted">
         The analyst answers from deterministic metric tools; every figure is checked against the evidence ledger.
