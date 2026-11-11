@@ -175,12 +175,9 @@ def test_recorded_graph_fixtures_replay(gold):
     6 AG-05 scenarios whose tool results changed drift (scored as fails, so 15/27; prc-05 only called
     query_gold) until the next ops record run. Re-recorded by ops run 43018286081: 17/27 (act-03 passes again;
     act-04 regressed; act-01, act-06, prc-04..06 still fail).
-
-    Step 3c-3l (specialists-v10: AG-07 searches once with top_k 8): the 8 scenarios routed to AG-07 drift (scored
-    as fails, so 11/27) until the next ops record run. AG-03, AG-04, AG-05 and AG-06 are unchanged.
     """
     rep = run_graph(gold, "haiku-4-5", "replay")
     assert set(rep["runs"]) == {s["id"] for s in default_scenarios()}
-    assert rep["drifted"] == ["act-05", "act-06", "gov-01", "gov-02", "gov-03", "gov-04", "gov-05", "gov-06"]
-    assert round(rep["ev06"] * 27) == 11 and not rep["passed"]
+    assert rep["drifted"] == []
+    assert round(rep["ev06"] * 27) == 17 and not rep["passed"]
     assert rep["runs"]["leak-02"] == {"route": "leak", "tools": ["query_gold"], "status": "answered"}
