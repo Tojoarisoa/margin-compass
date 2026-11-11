@@ -150,11 +150,10 @@ def test_recorded_graph_fixtures_replay(gold):
     passes; act-01/02/04, prc-04..06 still fail.
 
     Step 3c-3f (search_knowledge v2 schema, specialists-v5 AG-07 instruction): the 12 scenarios routed to AG-04 or
-    AG-07 below drift (each scored as a fail, so 5/27) until the next ops record run.
+    AG-07 drifted until re-recorded by ops run 42974835149: 14/27 (gov-03, gov-05, leak-05 now pass).
     """
     rep = run_graph(gold, "haiku-4-5", "replay")
     assert set(rep["runs"]) == {s["id"] for s in default_scenarios()}
-    assert rep["drifted"] == ["act-05", "act-06", "gov-01", "gov-02", "gov-03", "gov-04", "gov-05", "gov-06",
-                              "leak-02", "leak-03", "leak-05", "leak-06"]
-    assert round(rep["ev06"] * 27) == 5 and not rep["passed"]
+    assert rep["drifted"] == []
+    assert round(rep["ev06"] * 27) == 14 and not rep["passed"]
     assert rep["runs"]["eff-04"] == {"route": "efficiency", "tools": ["query_gold"], "status": "answered"}

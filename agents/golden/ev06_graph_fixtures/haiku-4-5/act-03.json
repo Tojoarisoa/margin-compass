@@ -15,7 +15,7 @@
                 }
               },
               "name": "price_plan",
-              "toolUseId": "tooluse_7zoYpI6Vz02KvKJf0vhekz",
+              "toolUseId": "tooluse_khz1U9Ex1n0oXB73bWVuod",
               "type": "tool_use"
             }
           }
@@ -29,7 +29,7 @@
       }
     },
     {
-      "request_sha": "9e36b144ddc4ac5f2f5cbdb363bc12aff2a100359870c3ae9f89bc4001d2ece7",
+      "request_sha": "ef3670c9701ddb81543b7109ee0aa196edfc6b012213c194507f9646c6d0a5fe",
       "response": {
         "content": [
           {
@@ -46,6 +46,6 @@
     }
   ],
   "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
-  "prompt_version": "specialists-v4",
+  "prompt_version": "specialists-v5",
   "scenario_id": "act-03"
 }

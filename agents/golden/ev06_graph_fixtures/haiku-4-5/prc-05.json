@@ -13,7 +13,7 @@
                 "sql": "SELECT * FROM fct_tenant_margin WHERE tenant_id = 'bc-t0021' LIMIT 1"
               },
               "name": "query_gold",
-              "toolUseId": "tooluse_DhkffC0I8ZJptjyrbk0dpN",
+              "toolUseId": "tooluse_XSPIqadZARYPROxG59O2u3",
               "type": "tool_use"
             }
           }
@@ -27,7 +27,7 @@
       }
     },
     {
-      "request_sha": "74d9dc13f9653e2f47ee961e2ebb0e01edcbfa2bbe98d74cb8884c4737603d0e",
+      "request_sha": "6fc54cb5adad9f9f163327816c0ef91b47341ac093a2c572c282bb9817921c42",
       "response": {
         "content": [
           {
@@ -44,6 +44,6 @@
     }
   ],
   "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
-  "prompt_version": "specialists-v4",
+  "prompt_version": "specialists-v5",
   "scenario_id": "prc-05"
 }

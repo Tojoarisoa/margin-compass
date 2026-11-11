@@ -16,8 +16,8 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-1. **3c-3e re-record:** after #242 merges, ops `record-fixtures` (`haiku-4-5`, `cache: true`, `ev06_graph: true`), commit the 27 graph fixtures, update the replay baseline (7 pricing scenarios drift until then). Never weaken the rubric or the $0.01 cap.
-2. **AG-07 never calls `search_knowledge`** (all contract_policy runs show no tools): push retrieval in the contract_policy instruction, and consider requiring evidence for governance answers in the rubric (stricter only). Other fails: gov-03, gov-05, cts-04, eff-03, eff-06, leak-03..05. eff-01/eff-02 evidence args don't match `replay_lever`'s inputs. When 90% passes, add the CI replay gate (`ev --ev06-graph replay`).
+1. **Finish PR #245** (3c-3f re-record, 27 graph fixtures from ops 42974835149, baseline 14/27): wait for every `ci` job + `attribution` (remove the proxy footer via MCP), fast-forward `main`, check `deploy to dev`.
+2. **Remaining EV-06 graph fails (14/27, gate 90%):** act-01/02/04 and prc-04..06 (pricing), act-05/06, cts-04, eff-03, eff-06, leak-03, leak-04. Read their fixtures for the cause before changing prompts; eff-01/eff-02 evidence args don't match `replay_lever`'s inputs. When 90% passes, add the CI replay gate (`ev --ev06-graph replay`). Never weaken the rubric or the $0.01 cap.
 3. **3c-4:** judge the graph runs. Calibration: see Waiting for owner.
 4. **API `search_knowledge`:** the deployed graph (`MC_GRAPH`, off by default) still gets no knowledge tool; needs the index in the Lambda (check deploy impact and cost first).
 5. **M5-04:** KPI-09 needs a closed-loop plan change, KPI-13 the real AWS bill (M2-04 FOCUS export). M5-03 steps 4-6: see Waiting for owner.
@@ -27,6 +27,15 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed.
 Notes: owner-mode approvals wait for Cognito (M5-03). Ops eval results are in the job log; fixtures are base64 between FIXTURE-BEGIN/END lines. Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1). Ops `ev06_graph: true` adds the graph runs (opt-in, about $0.15; the ops job ends `failure` while the graph gate is unmet, which is expected). Flaky github.com 504s during image builds: re-run the failed job.
+
+## 2026-11-11 (autopilot run 113)
+
+- **Start:** main `ci` + `deploy to dev` for 2c0d482 green; no open PRs.
+- **Task 1:** 3c-3e re-record. Ops 42970965596 (haiku-4-5, cache, graph): M1-06 5/5, EV-10 pass ($0.0043/question), EV-05 8/8, judge 13/13, **graph 11/27** (act-03 now passes). PR #243 merged (all `ci` jobs green, `attribution` green after footer removal via MCP); main `ci` + `deploy to dev` green.
+- **Task 2:** 3c-3f. Cause found: AG-07 called `search_knowledge` with no `tenant_id` (the tool had no input schema), so every call errored. PR #244 merged (all green; main `ci` + `deploy to dev` green): `search_knowledge` v2 schema, `tenant_id` optional (without it: shared documents only, reserved ID, every hit re-checked, fail closed), AG-07 instruction `specialists-v5`. Agents 287, rag 54 passed.
+- **Task 3:** 3c-3f re-record. Ops 42974835149: same M1-06/EV-10/EV-05/judge results, **graph 14/27 (52%)**: gov-03, gov-05, leak-05 now pass. PR #245 (fixtures + baseline) opened at 50 min, left open (Next 1).
+- **Decisions (§8.2):** no tenant = shared documents only (options: make tenant required and tell the model to ask, rejected: governance questions name no tenant; allow `all` in mc_rag, rejected: changes the tested isolation API). Rubric, gate and cap unchanged.
+- **Cost:** 2 ops record runs, about $0.40 of capped Haiku 4.5 calls.
 
 ## 2026-11-11 (autopilot run 112)
 

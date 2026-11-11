@@ -11,7 +11,7 @@
             "toolUse": {
               "input": {},
               "name": "replay_lever",
-              "toolUseId": "tooluse_zfkLwAmrHFeygaUpN0UuvR",
+              "toolUseId": "tooluse_d2PFVhVt117BvFLfcyCs1N",
               "type": "tool_use"
             }
           }
@@ -25,7 +25,7 @@
       }
     },
     {
-      "request_sha": "d59f0149d03da72c0d16e8f9f7ffa91482a208eb21710a97e99cf0dd811a76ab",
+      "request_sha": "641e3c45b5a187672c27a7be2de746d729462de60bb7da4f11133ea8dd2c288a",
       "response": {
         "content": [
           {
@@ -51,7 +51,7 @@
             "toolUse": {
               "input": {},
               "name": "replay_lever",
-              "toolUseId": "tooluse_rIvsiGBZE65IcJS5nG0jrG",
+              "toolUseId": "tooluse_y0lK1XJCf3zFC7GPCbre4X",
               "type": "tool_use"
             }
           }
@@ -65,7 +65,7 @@
       }
     },
     {
-      "request_sha": "7f26488a2714ba90415719dd3b754ce80e12ec669cd862f020946e6ddbf51cbc",
+      "request_sha": "e2ea51c9939220a85d6c39a55b15f6bcc3604f9d815723d44095d4a84623a75b",
       "response": {
         "content": [
           {
@@ -82,6 +82,6 @@
     }
   ],
   "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
-  "prompt_version": "specialists-v4",
+  "prompt_version": "specialists-v5",
   "scenario_id": "eff-06"
 }

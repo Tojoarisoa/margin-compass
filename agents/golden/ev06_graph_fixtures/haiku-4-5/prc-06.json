@@ -20,7 +20,7 @@
                 "usage_units": 500
               },
               "name": "price_plan",
-              "toolUseId": "tooluse_7FQjxCppWSfuKKKw1Sp9U3",
+              "toolUseId": "tooluse_JeKIijSODiVrGF2NrDmvCT",
               "type": "tool_use"
             }
           }
@@ -34,7 +34,7 @@
       }
     },
     {
-      "request_sha": "e6088e7634514a7ff7cfde7ba7ac9f32f986cd2e9f86461683543e47656677cb",
+      "request_sha": "f7597382bfc5a2c8c8a80823825c09aa4df2cdc9cd228f41f86f776ccc910a9c",
       "response": {
         "content": [
           {
@@ -55,7 +55,7 @@
                 "usage_units": 500
               },
               "name": "price_plan",
-              "toolUseId": "tooluse_V4ZCNewOF4QVVZ0HRi8Dxn",
+              "toolUseId": "tooluse_72SolesrBwE6J6xvknsIov",
               "type": "tool_use"
             }
           }
@@ -70,6 +70,6 @@
     }
   ],
   "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
-  "prompt_version": "specialists-v4",
+  "prompt_version": "specialists-v5",
   "scenario_id": "prc-06"
 }
