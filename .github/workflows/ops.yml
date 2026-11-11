@@ -27,6 +27,11 @@ on:
         required: false
         default: false
         type: boolean
+      approvals:
+        description: start-backfill only - export the owner's approvals and apply them in the simulation (M5-03)
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -95,10 +100,13 @@ jobs:
 
       - name: start-backfill
         if: inputs.task == 'start-backfill'
+        env:
+          APPROVALS: ${{ inputs.approvals }}
         run: |
           set -euo pipefail
           sm="$(aws cloudformation describe-stacks --stack-name mc-dev-data --query "Stacks[0].Outputs[?OutputKey=='BackfillStateMachine'].OutputValue" --output text)"
-          ex="$(aws stepfunctions start-execution --state-machine-arn "$sm" --name "ops-${GITHUB_RUN_ID}" --query executionArn --output text)"
+          input='{}'; [[ "$APPROVALS" == true ]] && input='{"approvals": true}'  # M5-03: the static step exports, months apply
+          ex="$(aws stepfunctions start-execution --state-machine-arn "$sm" --name "ops-${GITHUB_RUN_ID}" --input "$input" --query executionArn --output text)"
           for _ in $(seq 1 100); do st="$(aws stepfunctions describe-execution --execution-arn "$ex" --query status --output text)"; [[ "$st" != RUNNING ]] && break; sleep 15; done
           { echo "## Backfill execution: $st"; echo "$ex"; echo '```json'; aws stepfunctions describe-execution --execution-arn "$ex" --query output --output text | head -c 6000; echo; echo '```'; } | tee -a "$GITHUB_STEP_SUMMARY"
           [[ "$st" == SUCCEEDED ]]

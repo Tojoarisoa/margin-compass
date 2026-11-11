@@ -29,7 +29,7 @@ To revoke access, remove the user from `owner` or disable the user; tokens expir
 
 ## Decisions in the simulation (backfill, opt-in)
 
-A backfill started with `{"approvals": true}` as its execution input (the state machine passes the input to the static
+A backfill started with `{"approvals": true}` as its execution input (ops workflow: `start-backfill` with `approvals: true`) (the state machine passes the input to the static
 step only) makes the static step export the latest decision per action (`mc_agents.owner.export_approvals`, one Scan of
 the core table filtered on `APPROVAL#`) to `approvals/approvals.jsonl` in the lake (not under `publish/`, so never
 served); each month step applies that file. A backfill without the flag removes the file first, so its months run
