@@ -3,6 +3,7 @@ import { AskPanel } from "./AskPanel";
 import { BriefCard } from "./Brief";
 import { PausedNotice } from "./Paused";
 import { RealizedCard } from "./Realized";
+import { Tour } from "./Tour";
 import { CogsForecast, MarginForecast, MarginTrend } from "./charts";
 import { count, money, percent } from "./format";
 import type { Snapshot } from "./types";
@@ -62,6 +63,7 @@ export function App() {
         {snap.m2_kpis && <><a href="#brief">Brief</a><a href="#actions">Actions</a><a href="#explore">Explorer</a>
           <a href="#leaks">Leaks</a><a href="#plans">Pricing</a><a href="#health">Health</a></>}
         <a href="#ask">Analyst</a><a href="#tenants">Tenants</a><a href="#about">About</a>
+        <Tour />
       </nav>
 
       <section className="tiles" aria-label="Headline KPIs">
