@@ -10,9 +10,9 @@ on:
         description: What to do
         required: true
         type: choice
-        options: [status, cost-report, run-pipeline, start-nightly, start-backfill, verify-backfill, record-fixtures, live-eval, rag-eval, nightly-insight, realized-check]
+        options: [status, cost-report, run-pipeline, start-nightly, start-backfill, verify-backfill, record-fixtures, live-eval, online-eval, rag-eval, nightly-insight, realized-check]
       model:
-        description: Agent model for record-fixtures / live-eval (agents/mc_agents/config.py)
+        description: Agent model for record-fixtures / live-eval / online-eval (agents/mc_agents/config.py)
         required: false
         default: haiku-4-5
         type: choice
@@ -154,7 +154,7 @@ jobs:
           exit "$st"
 
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
-        if: inputs.task == 'record-fixtures' || inputs.task == 'live-eval' || inputs.task == 'rag-eval' || inputs.task == 'nightly-insight' || inputs.task == 'realized-check'
+        if: inputs.task == 'record-fixtures' || inputs.task == 'live-eval' || inputs.task == 'online-eval' || inputs.task == 'rag-eval' || inputs.task == 'nightly-insight' || inputs.task == 'realized-check'
         with: { version: "${{ env.UV_VERSION }}", python-version: "${{ env.PYTHON_VERSION }}" }
       - name: record-fixtures / live-eval (live Bedrock, capped per question)
         if: inputs.task == 'record-fixtures' || inputs.task == 'live-eval'
@@ -188,6 +188,25 @@ jobs:
             { echo "## EV-06 graph runs ($MODE, $MODEL)"; echo "$g"; echo '```json'; python3 -c "import json; r=json.load(open('../data/ops/ev06_graph.json'))['ev06_graph']; print(json.dumps({k: r.get(k) for k in ('ev06', 'passed', 'by_jtbd', 'failed', 'runs')}))" || true; echo '```'; } | tee -a "$GITHUB_STEP_SUMMARY"
           fi
           exit "${status:-${ev_status:-${graph_status:-0}}}"
+      - name: online-eval (M6-02 daily golden sample, live vs recorded graph runs, capped per question)
+        if: inputs.task == 'online-eval'
+        working-directory: agents
+        env:
+          MODEL: ${{ inputs.model }}
+          MC_CACHE_PROMPT: "1"  # the graph fixtures were recorded with caching on; the replay side needs it to match
+        run: |
+          set -euo pipefail
+          uv sync --frozen
+          uv run python - <<'PY'
+          from pathlib import Path
+          from booncore_sim.cli import run as simulate
+          from mc_pipelines.cli import main
+          root = Path("../data/ops")
+          simulate("m1", 42, root / "landing" / "booncore", run_id="ops")
+          raise SystemExit(main(["run", "--landing", str(root / "landing" / "booncore"), "--data-root", str(root), "--ingest-date", "2026-11-04"]))
+          PY
+          line="$(uv run mc-agents --gold ../data/ops/gold --model "$MODEL" online-eval --out ../data/ops/online_eval.json)"
+          { echo "## Online evaluation ($MODEL)"; echo '```json'; echo "$line"; python3 -c "import json; r=json.load(open('../data/ops/online_eval.json')); print(json.dumps({k: r[k] for k in ('live', 'recorded')}))"; echo '```'; } | tee -a "$GITHUB_STEP_SUMMARY"
       - name: "nightly-insight (M5-01 brief with Haiku 4.5 insights on a local M2 simulation, capped at $0.50 and 8 calls in code)"
         if: inputs.task == 'nightly-insight'
         working-directory: agents
