@@ -1,15 +1,15 @@
 import { useEffect, useRef } from "react";
 import * as echarts from "echarts/core";
-import { LineChart } from "echarts/charts";
-import { GridComponent, LegendComponent, TooltipComponent } from "echarts/components";
+import { LineChart, ScatterChart } from "echarts/charts";
+import { DataZoomComponent, GridComponent, LegendComponent, TooltipComponent } from "echarts/components";
 import { CanvasRenderer } from "echarts/renderers";
 import type { EChartsCoreOption } from "echarts/core";
 import type { Snapshot } from "./types";
 import { THEME, ACCENT, ACCENT_SOFT, MUTED_LINE } from "./theme";
 
-echarts.use([LineChart, GridComponent, LegendComponent, TooltipComponent, CanvasRenderer]);
+echarts.use([LineChart, ScatterChart, GridComponent, LegendComponent, TooltipComponent, DataZoomComponent, CanvasRenderer]);
 
-function Chart({ option, label }: { option: EChartsCoreOption; label: string }) {
+export function Chart({ option, label, className = "chart" }: { option: EChartsCoreOption; label: string; className?: string }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!ref.current) return;
@@ -23,7 +23,7 @@ function Chart({ option, label }: { option: EChartsCoreOption; label: string }) 
       chart.dispose();
     };
   }, [option]);
-  return <div ref={ref} className="chart" role="img" aria-label={label} />;
+  return <div ref={ref} className={className} role="img" aria-label={label} />;
 }
 
 const axisMoney = { type: "value" as const, axisLabel: { formatter: (v: number) => `$${v.toLocaleString("en-US")}` } };
@@ -31,7 +31,7 @@ const axisMoney = { type: "value" as const, axisLabel: { formatter: (v: number) 
 export function MarginTrend({ snap }: { snap: Snapshot }) {
   const option: EChartsCoreOption = {
     tooltip: { trigger: "axis", valueFormatter: (v: number) => `${v.toFixed(2)}%` },
-    grid: { left: 56, right: 16, top: 24, bottom: 32 },
+    grid: { left: 8, right: 16, top: 24, bottom: 8, containLabel: true },
     xAxis: { type: "category", data: snap.trend.map((d) => d.date) },
     yAxis: { type: "value", min: (v: { min: number }) => Math.floor(v.min - 0.5), max: 100, axisLabel: { formatter: "{value}%" } },
     series: [{
@@ -49,8 +49,8 @@ export function CogsForecast({ snap }: { snap: Snapshot }) {
   const pad = (n: number) => Array(n).fill(null);
   const option: EChartsCoreOption = {
     tooltip: { trigger: "axis", valueFormatter: (v: number | null) => (v === null ? "" : `$${v.toFixed(2)}`) },
-    legend: { data: ["Actual AI cost to serve", "Forecast P50", "P10–P90"], bottom: 0 },
-    grid: { left: 56, right: 16, top: 16, bottom: 48 },
+    legend: { data: ["Actual AI cost to serve", "Forecast P50", "P10–P90"], top: 0, type: "scroll" },
+    grid: { left: 8, right: 16, top: 40, bottom: 8, containLabel: true },
     xAxis: { type: "category", data: dates },
     yAxis: axisMoney,
     series: [
@@ -77,8 +77,8 @@ export function MarginForecast({ snap }: { snap: Snapshot }) {
   const pct = (v: number | null) => (v === null ? null : +(v * 100).toFixed(2));
   const option: EChartsCoreOption = {
     tooltip: { trigger: "axis", valueFormatter: (v: number | null) => (v === null ? "" : `${v.toFixed(2)}%`) },
-    legend: { data: ["Actual margin", "Forecast margin", "Margin band"], bottom: 0 },
-    grid: { left: 56, right: 16, top: 16, bottom: 48 },
+    legend: { data: ["Actual margin", "Forecast margin", "Margin band"], top: 0, type: "scroll" },
+    grid: { left: 8, right: 16, top: 40, bottom: 8, containLabel: true },
     xAxis: { type: "category", data: dates },
     yAxis: { type: "value", scale: true, axisLabel: { formatter: "{value}%" } },
     series: [

@@ -1,7 +1,10 @@
 // PG-2 Cost-to-Serve Explorer. Reads publish/latest/pg2.json: views pre-aggregated by the pipeline, so every figure
 // equals the marts (ADR-009 fallback: the DuckDB-WASM spike needs the parquet extension from a public CDN).
 import { useEffect, useState } from "react";
+import type { EChartsCoreOption } from "echarts/core";
+import { Chart } from "./charts";
 import { money, percent } from "./format";
+import { ACCENT } from "./theme";
 
 interface Cost { requests: number; llm_cost_usd: number; agent_compute_usd: number; vector_usd: number; network_observability_usd: number; third_party_usd: number; cost_to_serve_usd: number }
 type Row = Cost & { tenant_id?: string; feature_id?: string; feature_name?: string | null; month?: string };
@@ -14,26 +17,32 @@ type View = keyof typeof VIEWS;
 
 const label = (r: Row) => [r.tenant_id, r.month, r.feature_id && `${r.feature_id}${r.feature_name ? ` ${r.feature_name}` : ""}`].filter(Boolean).join(" / ");
 
+const compact = (v: number) => Math.abs(v) >= 1e6 ? `${(v / 1e6).toFixed(1)}M` : Math.abs(v) >= 1e3 ? `${(v / 1e3).toFixed(0)}k` : `${v}`;
+const compactUsd = (v: number) => `${v < 0 ? "−" : ""}$${compact(Math.abs(v))}`;
+
+/** Margin against usage, one point per tenant: hover for the tenant, drag or scroll to zoom. */
 function Scatter({ rows }: { rows: Wf[] }) {
-  const W = 480, H = 240, L = 56, B = 28, P = 8;
-  const xs = rows.map((r) => r.requests), ys = rows.map((r) => r.margin_usd);
-  const x1 = Math.max(...xs, 1), y0 = Math.min(...ys, 0), y1 = Math.max(...ys, 0), span = y1 - y0 || 1;
-  const sx = (v: number) => L + (v / x1) * (W - L - P), sy = (v: number) => P + (1 - (v - y0) / span) * (H - B - P);
-  return (
-    <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Margin against usage, one point per tenant" style={{ width: "100%", maxWidth: W }}>
-      <line x1={L} y1={sy(0)} x2={W - P} y2={sy(0)} stroke="currentColor" strokeOpacity={0.4} />
-      <line x1={L} y1={P} x2={L} y2={H - B} stroke="currentColor" strokeOpacity={0.4} />
-      {rows.map((r) => (
-        <circle key={r.tenant_id} cx={sx(r.requests)} cy={sy(r.margin_usd)} r={3.5} fill="currentColor" fillOpacity={r.margin_usd < 0 ? 0.9 : 0.45}>
-          <title>{`${r.tenant_id}: ${r.requests.toLocaleString("en-US")} requests, margin ${money(r.margin_usd)}`}</title>
-        </circle>
-      ))}
-      <text x={L - 4} y={P + 8} textAnchor="end" fontSize="10" fill="currentColor">{money(y1)}</text>
-      <text x={L - 4} y={H - B} textAnchor="end" fontSize="10" fill="currentColor">{money(y0)}</text>
-      <text x={W - P} y={H - 8} textAnchor="end" fontSize="10" fill="currentColor">{x1.toLocaleString("en-US")} requests</text>
-      <text x={L} y={H - 8} fontSize="10" fill="currentColor">0</text>
-    </svg>
-  );
+  const point = (r: Wf) => ({ value: [r.requests, r.margin_usd], name: r.tenant_id, revenue: r.revenue_usd });
+  const option: EChartsCoreOption = {
+    grid: { left: 16, right: 24, top: 56, bottom: 48, containLabel: true },
+    legend: { top: 0, data: ["Profitable", "Losing money"] },
+    tooltip: {
+      trigger: "item",
+      formatter: (p: { data: { name: string; value: [number, number]; revenue: number } }) =>
+        `<b>${p.data.name}</b><br/>${p.data.value[0].toLocaleString("en-US")} requests<br/>` +
+        `Revenue ${money(p.data.revenue)}<br/>Margin ${money(p.data.value[1])}`,
+    },
+    xAxis: { type: "value", name: "Requests", nameLocation: "middle", nameGap: 28, axisLabel: { formatter: compact } },
+    yAxis: { type: "value", name: "Margin (USD)", nameLocation: "end", nameGap: 12, axisLabel: { formatter: compactUsd } },
+    dataZoom: [{ type: "inside", xAxisIndex: 0 }, { type: "inside", yAxisIndex: 0 }],
+    series: [
+      { name: "Profitable", type: "scatter", symbolSize: 7, color: ACCENT, data: rows.filter((r) => r.margin_usd >= 0).map(point),
+        itemStyle: { opacity: 0.6 }, emphasis: { scale: 1.8 } },
+      { name: "Losing money", type: "scatter", symbolSize: 8, color: "#fb7185", data: rows.filter((r) => r.margin_usd < 0).map(point),
+        emphasis: { scale: 1.8 }, markLine: { silent: true, symbol: "none", lineStyle: { color: "rgba(251,113,133,0.5)", type: "dashed" }, data: [{ yAxis: 0 }], label: { show: false } } },
+    ],
+  };
+  return <Chart option={option} label="Margin against usage, one point per tenant" />;
 }
 
 export default function Explorer() {
