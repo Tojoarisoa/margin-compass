@@ -133,17 +133,14 @@ def test_run_graph_report_is_json(gold, tmp_path):
 
 
 def test_recorded_graph_fixtures_replay(gold):
-    """Step 3c-3: fixtures recorded by ops run 42938779526 (haiku-4-5, cache on) before step 3c-3b.
+    """Step 3c-3b: fixtures recorded by ops run 42945146001 (haiku-4-5, cache on, `search_knowledge` offered to
+    AG-04 and AG-07) replay with no drift.
 
-    Baseline, not a gate: 7 of 27 scenarios passed the rubric (EV-06 gate 90% is not met yet; see docs/progress.md).
-    Step 3c-3b offers `search_knowledge` to AG-04 (leak) and AG-07 (contract_policy), so their recorded requests
-    drift and fail closed until re-recorded: 4 of 27 pass now (gov-05, leak-02, leak-06 drift). Every other run
-    replays unchanged. Re-record when a prompt, the graph, the tools or the model changes.
+    Baseline, not a gate: 10 of 27 scenarios pass the rubric (EV-06 gate 90% is not met yet; see docs/progress.md).
+    Re-record when a prompt, the graph, the tools or the model changes.
     """
     rep = run_graph(gold, "haiku-4-5", "replay")
     assert set(rep["runs"]) == {s["id"] for s in default_scenarios()}
-    routes = {k: r["route"] for k, r in rep["runs"].items()}
-    assert set(rep["drifted"]) == {k for k, r in routes.items() if r in ("leak", "contract_policy")}
-    assert round(rep["ev06"] * 27) == 4 and not rep["passed"]
-    assert {"gov-05", "leak-02", "leak-06"} <= set(rep["drifted"])
+    assert rep["drifted"] == []
+    assert round(rep["ev06"] * 27) == 10 and not rep["passed"]
     assert rep["runs"]["eff-04"] == {"route": "efficiency", "tools": ["query_gold"], "status": "answered"}

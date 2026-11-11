@@ -16,17 +16,25 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-0. **Check** main `ci` for this progress entry (870fb6c `ci` + `deploy to dev` green).
-1. **M4-05 EV-06 step 3c-3b: wire `search_knowledge`.** The contract_policy specialist (AG-07) gets no tool: neither `api.py` (line 184) nor `ev06_graph` passes `registry.search_knowledge_spec`, so gov-01..06 and act-05/06 end unverified. Wire it into the graph runner first (local RAG index, $0), then the API (needs the index in the Lambda; check deploy impact and cost).
-2. **3c-3c: pricing scenarios (prc-04..06, act-01..04)** ask the user for plan/price instead of calling `price_plan`/`churn_adjust`. Fix in the pricing specialist prompt (bump the prompt version, re-record every fixture set with ops `cache: true`). Never weaken the rubric.
-3. **3c-3d:** re-record graph fixtures (ops `record-fixtures`, `ev06_graph: true`, under $0.30); when 90% passes, add the CI replay gate (`ev --ev06-graph replay`). Other fails: cts-04, eff-03, eff-06, leak-03..05. eff-01/eff-02 evidence args don't match `replay_lever`'s inputs.
-4. **3c-4:** judge the graph runs. Calibration: see Waiting for owner.
+0. **Check** main `ci` + `deploy to dev` for the run-109 fixtures PR (#237) if it was still running at the end of the run.
+1. **3c-3c: pricing scenarios (prc-04..06, act-01..04)** ask the user for plan/price instead of calling `price_plan`/`churn_adjust` (both tools are offered with no input schema). Fix: input schemas for `price_plan`/`churn_adjust` + a pricing-only instruction to read the tenant's plan with `query_gold` first; bump `PROMPT_VERSION`. This also changes EV-05 requests for pricing questions, so re-record every fixture set with ops `record-fixtures`, `cache: true`, `ev06_graph: true` in the same step. Never weaken the rubric.
+2. **3c-3d: AG-07 never calls `search_knowledge`** (all contract_policy runs show no tools, even the 4 that pass): push retrieval in the contract_policy instruction, and consider requiring evidence for governance answers in the rubric (stricter only). Other fails: gov-03, gov-05, act-05/06, cts-04, eff-03, eff-06, leak-03..05. eff-01/eff-02 evidence args don't match `replay_lever`'s inputs. When 90% passes, add the CI replay gate (`ev --ev06-graph replay`).
+3. **3c-4:** judge the graph runs. Calibration: see Waiting for owner.
+4. **API `search_knowledge`:** the deployed graph (`MC_GRAPH`, off by default) still gets no knowledge tool; needs the index in the Lambda (check deploy impact and cost first).
 5. **M5-04:** KPI-09 needs a closed-loop plan change, KPI-13 the real AWS bill (M2-04 FOCUS export). M5-03 steps 4-6: see Waiting for owner.
 6. **Daily checks (not tasks):** ops `verify-backfill` (last 2026-11-11 00:23 UTC: `awaiting_first_export`) and the Haiku 5.5 probe (last 2026-11-11: `AccessDeniedException`). Next due 2026-11-12.
 
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed.
-Notes: owner-mode approvals wait for Cognito (M5-03). Ops eval results are in the job log; fixtures are base64 between FIXTURE-BEGIN/END lines. Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1). Ops `ev06_graph: true` adds the graph runs (opt-in, about $0.15). Flaky github.com 504s during image builds: re-run the failed job.
+Notes: owner-mode approvals wait for Cognito (M5-03). Ops eval results are in the job log; fixtures are base64 between FIXTURE-BEGIN/END lines. Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1). Ops `ev06_graph: true` adds the graph runs (opt-in, about $0.15; the ops job ends `failure` while the graph gate is unmet, which is expected). Flaky github.com 504s during image builds: re-run the failed job.
+
+## 2026-11-11 (autopilot run 109)
+
+- **Start:** main `ci` + `deploy to dev` for 0736803 green; no open PRs.
+- **Task 1:** M4-05 step 3c-3b. PR #236 merged (every `ci` job and `attribution` green after footer removal via MCP; main `ci` + `deploy to dev` green): EV-06 graph runs offer `search_knowledge` to AG-04/AG-07 over an in-memory hashing index of `knowledge/` ($0); a drifted replay now scores as a `drifted` fail instead of aborting. Agents 268 passed.
+- **Task 2:** re-record. Ops 42945146001 (haiku-4-5, cache on, graph on): M1-06 5/5, EV-10 pass ($0.0043/question), EV-05 8/8, judge 13/13, **graph runs 10/27 (37%, was 26%)**: gov-01/02/04/06 now pass; gov-05 now fails. PR #237: 27 graph fixtures + baseline 10/27, no drift.
+- **Decisions (§8.2):** drift fails closed and is reported (options: keep aborting the replay, rejected because one changed tool hid every other result). Local hashing index for the evaluation, not Titan (options: Titan/S3 Vectors, rejected for now: needs AWS and spend in every replay). Gate 90% unchanged.
+- **Cost:** 1 ops record run, about $0.20 of capped Haiku 4.5 calls.
 
 ## 2026-11-11 (autopilot run 108)
 

@@ -10,7 +10,7 @@
                 "sql": "\nSELECT DISTINCT tenant_id, SUM(gross_margin_usd) as total_margin_usd\nFROM fct_tenant_margin\nGROUP BY tenant_id\nHAVING SUM(gross_margin_usd) < 0\nORDER BY total_margin_usd ASC\n"
               },
               "name": "query_gold",
-              "toolUseId": "tooluse_WRF50NwImo70zMXMp7YX5I",
+              "toolUseId": "tooluse_E45su6nqPhvYSn6tMLWTM3",
               "type": "tool_use"
             }
           }
@@ -24,7 +24,7 @@
       }
     },
     {
-      "request_sha": "63d36aaa3d8aa87285eab37a4d2f187645f67713c369b88bca2852445b306e8e",
+      "request_sha": "caaa3e479247ba81e09446cc4174d1cac9b15c93b5a63b0e7a8899d92353220d",
       "response": {
         "content": [
           {

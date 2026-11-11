@@ -13,7 +13,7 @@
                 "sql": "\nSELECT DISTINCT feature_id, feature_scope\nFROM fct_tenant_margin\nWHERE feature_scope LIKE '%imaging%' OR feature_id LIKE '%imaging%'\nLIMIT 10\n"
               },
               "name": "query_gold",
-              "toolUseId": "tooluse_2JTrI0BuacWSuNdgvHFOOo",
+              "toolUseId": "tooluse_2ykheSYpOtGhZBkOuDJFP1",
               "type": "tool_use"
             }
           }
@@ -27,7 +27,7 @@
       }
     },
     {
-      "request_sha": "feffce12e843cfb2f3ca59cd2bf990a9b1d8b70917742c624c4a8b8346cb264e",
+      "request_sha": "a65c68fd9cec1a58d4240d8cc8d5ce59cbaf3abcf5356e29bd2bc8174484f074",
       "response": {
         "content": [
           {
@@ -39,7 +39,7 @@
                 "sql": "\nSELECT DISTINCT feature_id, feature_scope\nFROM fct_tenant_margin\nLIMIT 20\n"
               },
               "name": "query_gold",
-              "toolUseId": "tooluse_1YDA5OHQXFrM10BidVFX6W",
+              "toolUseId": "tooluse_9z0JDHh4KECOV8NX184coV",
               "type": "tool_use"
             }
           }
@@ -53,7 +53,7 @@
       }
     },
     {
-      "request_sha": "3503654ccd37f8792c59ea33c5bc94e734fd960b3d64f1b15ae473ea413ad2b3",
+      "request_sha": "17ab751f00b7dc371b97f8bc560f1ddd9f944fed0b3aa7ad4934b3471328dc1b",
       "response": {
         "content": [
           {

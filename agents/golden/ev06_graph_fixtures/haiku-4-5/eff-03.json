@@ -11,7 +11,7 @@
             "toolUse": {
               "input": {},
               "name": "roi_multiple",
-              "toolUseId": "tooluse_ytmM0QG5ubqh3JKFFG9RoZ",
+              "toolUseId": "tooluse_ZsiNrShPmLAy1ymlrPxPRN",
               "type": "tool_use"
             }
           }
@@ -25,7 +25,7 @@
       }
     },
     {
-      "request_sha": "05c2fd71a5d86695bdca4a7a9d328c90d9627e3c39cb26e91575fef8097c6636",
+      "request_sha": "f2b43b52e66ee339f81a3ac121b64c4bde93dcb2dd48bf1591ff16e825df7f2f",
       "response": {
         "content": [
           {
@@ -37,7 +37,7 @@
                 "sql": "SELECT feature_id, SUM(ai_revenue_usd) as total_revenue, SUM(llm_cost_usd) as total_llm_cost, SUM(gross_margin_usd) as total_margin, AVG(gross_margin_pct) as avg_margin_pct FROM fct_tenant_margin WHERE feature_id LIKE '%cache%' OR feature_id LIKE '%prompt%' GROUP BY feature_id"
               },
               "name": "query_gold",
-              "toolUseId": "tooluse_ru8oR58L83RCljc1wyJ8T8",
+              "toolUseId": "tooluse_wh9wo9l7tjIxmA7TH8saRl",
               "type": "tool_use"
             }
           }
@@ -51,7 +51,7 @@
       }
     },
     {
-      "request_sha": "f07d7cd2503ad33716717bff008772fcff37ae9a702c482969e06302882e2ef5",
+      "request_sha": "376a96e4901484840b7cf966594efcda7bb1c64c61802dc03c1ba6cb12bac92a",
       "response": {
         "content": [
           {

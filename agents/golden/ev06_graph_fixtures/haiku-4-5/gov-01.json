@@ -1,50 +1,44 @@
 {
   "calls": [
     {
-      "request_sha": "5777c9792ec6cc07cc915c933092bd95d3e83c425b877ff9a505777fe7a648c9",
+      "request_sha": "e94d40359a0e73f569a41d21f0ae7fc7ce4ad1d0bed8be95a8124674ca723d70",
       "response": {
         "content": [
           {
-            "text": "I don't have access to a Business Associate Agreement (BAA) or any tools containing BAA documentation to retrieve specific data residency provisions. To provide you with accurate information citing evidence, I would need you to either:\n\n1. Share the specific BAA document or relevant sections\n2. Provide access to a tool or database containing the BAA text\n3. Clarify which BAA you're referring to (as they vary by organization)\n\nOnce you provide the source material, I can extract the exact data residency language and cite it appropriately."
+            "text": "I'll search for information about data residency in the BAA (Business Associate Agreement)."
+          },
+          {
+            "toolUse": {
+              "input": {
+                "query": "BAA data residency"
+              },
+              "name": "search_knowledge",
+              "toolUseId": "tooluse_Z7iu6pD4EwPhie5RxyqUHO",
+              "type": "tool_use"
+            }
           }
         ],
-        "stop_reason": "end_turn",
+        "stop_reason": "tool_use",
         "usage": {
           "cacheReadInputTokens": 0,
-          "inputTokens": 70,
-          "outputTokens": 119
+          "inputTokens": 613,
+          "outputTokens": 76
         }
       }
     },
     {
-      "request_sha": "5777c9792ec6cc07cc915c933092bd95d3e83c425b877ff9a505777fe7a648c9",
+      "request_sha": "7684834837fea02f91d7a77d74be3d8d945d7852bb297871736d03d806f1f73d",
       "response": {
         "content": [
           {
-            "text": "I don't have access to a Business Associate Agreement (BAA) or any tools containing BAA documentation to retrieve specific data residency provisions. To provide you with accurate information citing evidence, I would need you to either:\n\n1. Share the specific BAA document or relevant sections\n2. Provide access to a tool or database containing the BAA text\n3. Clarify which BAA you're referring to (as they vary by organization)\n\nOnce you provide the source material, I can extract the exact data residency language and cite it appropriately."
+            "text": "I apologize, but I'm unable to retrieve the information at this moment due to a system error. Could you provide additional context, such as which specific BAA document you're referring to or which tenant/organization this relates to? This will help me search the knowledge base more effectively."
           }
         ],
         "stop_reason": "end_turn",
         "usage": {
           "cacheReadInputTokens": 0,
-          "inputTokens": 70,
-          "outputTokens": 119
-        }
-      }
-    },
-    {
-      "request_sha": "5777c9792ec6cc07cc915c933092bd95d3e83c425b877ff9a505777fe7a648c9",
-      "response": {
-        "content": [
-          {
-            "text": "I don't have access to a Business Associate Agreement (BAA) or any tools containing BAA documentation to retrieve specific data residency provisions. To provide you with accurate information citing evidence, I would need you to either:\n\n1. Share the specific BAA document or relevant sections\n2. Provide access to a tool or database containing the BAA text\n3. Clarify which BAA you're referring to (as they vary by organization)\n\nOnce you provide the source material, I can extract the exact data residency language and cite it appropriately."
-          }
-        ],
-        "stop_reason": "end_turn",
-        "usage": {
-          "cacheReadInputTokens": 0,
-          "inputTokens": 70,
-          "outputTokens": 119
+          "inputTokens": 724,
+          "outputTokens": 61
         }
       }
     }

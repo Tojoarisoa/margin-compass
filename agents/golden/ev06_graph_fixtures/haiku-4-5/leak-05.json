@@ -1,19 +1,19 @@
 {
   "calls": [
     {
-      "request_sha": "5455d94f3eaa46f3af7fd7096d271157f21f261c4e44431e63729be7eb967bd4",
+      "request_sha": "f33df48d117d656f0943ad71d7d962fb35492435b486717f7a13801134410d25",
       "response": {
         "content": [
           {
-            "text": "I need to investigate tenant spending in September. Let me query the margin data to see which tenant had doubled spending and understand the drivers."
+            "text": "I need to investigate tenant spending in September. Let me query the margin data to see what happened."
           },
           {
             "toolUse": {
               "input": {
-                "sql": "\nSELECT \n  tenant_id,\n  margin_date,\n  ai_revenue_usd,\n  llm_cost_usd,\n  cost_to_serve_usd,\n  gross_margin_usd,\n  request_count\nFROM fct_tenant_margin\nWHERE EXTRACT(MONTH FROM margin_date) = 9\nORDER BY margin_date, tenant_id\n"
+                "sql": "\nSELECT \n  margin_date,\n  tenant_id,\n  ai_revenue_usd,\n  llm_cost_usd,\n  cost_to_serve_usd,\n  request_count,\n  feature_scope\nFROM fct_tenant_margin\nWHERE EXTRACT(MONTH FROM margin_date) = 9\nORDER BY margin_date, tenant_id\nLIMIT 200\n"
               },
               "name": "query_gold",
-              "toolUseId": "tooluse_3cwRTVFue5k4F7WNYOCXmS",
+              "toolUseId": "tooluse_jhyTSATHsAMLCrJIN1t3nw",
               "type": "tool_use"
             }
           }
@@ -21,8 +21,8 @@
         "stop_reason": "tool_use",
         "usage": {
           "cacheReadInputTokens": 0,
-          "inputTokens": 823,
-          "outputTokens": 173
+          "inputTokens": 869,
+          "outputTokens": 168
         }
       }
     }

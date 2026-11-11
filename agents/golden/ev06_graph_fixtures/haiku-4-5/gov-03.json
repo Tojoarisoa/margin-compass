@@ -1,50 +1,116 @@
 {
   "calls": [
     {
-      "request_sha": "1fbe6667ac90b91bb627baeb5b870ed1829d162f5efa218d6995c528bc5c090e",
+      "request_sha": "983e9c5f91cc7f9647ed0aea3332a3df26959397faf11885ca81ed937e3dc34c",
       "response": {
         "content": [
           {
-            "text": "I don't have access to any tools or evidence documents that would contain information about discount authorities and their corresponding discount percentages. To answer your question accurately, I would need you to provide the relevant contract, policy document, or reference material that specifies which discount authority applies to a 12% discount.\n\nCould you please share the document or tool that contains this information?"
+            "toolUse": {
+              "input": {
+                "query": "12% discount authority"
+              },
+              "name": "search_knowledge",
+              "toolUseId": "tooluse_36ex1qMBfd2ZnJcjx8jdTD",
+              "type": "tool_use"
+            }
           }
         ],
-        "stop_reason": "end_turn",
+        "stop_reason": "tool_use",
         "usage": {
           "cacheReadInputTokens": 0,
-          "inputTokens": 70,
-          "outputTokens": 78
+          "inputTokens": 613,
+          "outputTokens": 57
         }
       }
     },
     {
-      "request_sha": "1fbe6667ac90b91bb627baeb5b870ed1829d162f5efa218d6995c528bc5c090e",
+      "request_sha": "bd9e4aa53c1992fc7c9781adb65c8558f2fc3b0994540317c293e53af14507c3",
       "response": {
         "content": [
           {
-            "text": "I don't have access to any tools or evidence documents that would contain information about discount authorities and their corresponding discount percentages. To answer your question accurately, I would need you to provide the relevant contract, policy document, or reference material that specifies which discount authority applies to a 12% discount.\n\nCould you please share the document or tool that contains this information?"
+            "text": "I need to search the knowledge base with the proper parameters. Let me try again:"
+          },
+          {
+            "toolUse": {
+              "input": {
+                "query": "discount authority 12 percent"
+              },
+              "name": "search_knowledge",
+              "toolUseId": "tooluse_HgsCCv4TKIDtT3QKWkU2i8",
+              "type": "tool_use"
+            }
           }
         ],
-        "stop_reason": "end_turn",
+        "stop_reason": "tool_use",
         "usage": {
           "cacheReadInputTokens": 0,
-          "inputTokens": 70,
-          "outputTokens": 78
+          "inputTokens": 705,
+          "outputTokens": 76
         }
       }
     },
     {
-      "request_sha": "1fbe6667ac90b91bb627baeb5b870ed1829d162f5efa218d6995c528bc5c090e",
+      "request_sha": "eac102cc589ace4975aa26837eb97e992661a23804ee0169b03dfe9037060970",
       "response": {
         "content": [
           {
-            "text": "I don't have access to any tools or evidence documents that would contain information about discount authorities and their corresponding discount percentages. To answer your question accurately, I would need you to provide the relevant contract, policy document, or reference material that specifies which discount authority applies to a 12% discount.\n\nCould you please share the document or tool that contains this information?"
+            "text": "I apologize, but I'm unable to retrieve the discount authority information at this moment due to a system issue with accessing the knowledge base. Could you provide additional context, such as the contract or policy name you're referring to, so I can better assist you in finding which discount authority applies to a 12% discount?"
           }
         ],
         "stop_reason": "end_turn",
         "usage": {
           "cacheReadInputTokens": 0,
-          "inputTokens": 70,
-          "outputTokens": 78
+          "inputTokens": 816,
+          "outputTokens": 68
+        }
+      }
+    },
+    {
+      "request_sha": "983e9c5f91cc7f9647ed0aea3332a3df26959397faf11885ca81ed937e3dc34c",
+      "response": {
+        "content": [
+          {
+            "toolUse": {
+              "input": {
+                "query": "12% discount authority"
+              },
+              "name": "search_knowledge",
+              "toolUseId": "tooluse_Mjy2pTtZMAheZBAVBAeGgq",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 613,
+          "outputTokens": 57
+        }
+      }
+    },
+    {
+      "request_sha": "64eb687074fbabbbf405587c183f37a076112016b98bb0e3a73ef766a030ddc9",
+      "response": {
+        "content": [
+          {
+            "text": "I need to search the knowledge base with the proper parameters. Let me try again:"
+          },
+          {
+            "toolUse": {
+              "input": {
+                "query": "discount authority 12 percent"
+              },
+              "name": "search_knowledge",
+              "toolUseId": "tooluse_bTYv39OzMd53237xob5cEQ",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 705,
+          "outputTokens": 76
         }
       }
     }

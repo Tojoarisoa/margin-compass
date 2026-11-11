@@ -1,11 +1,11 @@
 {
   "calls": [
     {
-      "request_sha": "580adf72aab4d645583be2c7eda392009d573d2e889e6a793383e956d1df72b0",
+      "request_sha": "886166dadfa250e547524ea2f4362285b8210fa6fc9e4ecbecdf26dc2909f2a5",
       "response": {
         "content": [
           {
-            "text": "I'll check for spend spikes on tenant bc-t0042 by examining their cost trends over time."
+            "text": "I'll check for spend spikes on tenant bc-t0042 by examining their cost data over time."
           },
           {
             "toolUse": {
@@ -13,7 +13,7 @@
                 "sql": "\nSELECT \n  margin_date,\n  tenant_id,\n  SUM(llm_cost_usd) as total_llm_cost,\n  SUM(cost_to_serve_usd) as total_cost_to_serve,\n  SUM(llm_cost_usd + cost_to_serve_usd) as total_spend\nFROM fct_tenant_margin\nWHERE tenant_id = 'bc-t0042'\nGROUP BY margin_date, tenant_id\nORDER BY margin_date DESC\n"
               },
               "name": "query_gold",
-              "toolUseId": "tooluse_v5aPlacusdOek19mD7NkDV",
+              "toolUseId": "tooluse_kGH93WM9ceidkjOvVPAyoD",
               "type": "tool_use"
             }
           }
@@ -21,24 +21,24 @@
         "stop_reason": "tool_use",
         "usage": {
           "cacheReadInputTokens": 0,
-          "inputTokens": 827,
+          "inputTokens": 873,
           "outputTokens": 201
         }
       }
     },
     {
-      "request_sha": "a9c5912f7c4b5a6dd5809eb86a02054b54ef50782bfa50cdb709b83f2ea5b4b6",
+      "request_sha": "caeeba4c02221bdccf854c1b1ae2668f755f203607e34c8c8ee40a2769b347f2",
       "response": {
         "content": [
           {
-            "text": "No data found for tenant bc-t0042 [E1]. The tenant either doesn't exist in the margin data or has no recorded transactions. Could you verify the tenant ID or provide additional context about the time period you're investigating?"
+            "text": "No data found for tenant bc-t0042 in the margin fact table [E1]. The tenant either doesn't exist in the system, has no recorded margin activity, or the tenant ID may be spelled differently. Can you verify the tenant ID or provide additional context about when you expect to see activity?"
           }
         ],
         "stop_reason": "end_turn",
         "usage": {
           "cacheReadInputTokens": 0,
-          "inputTokens": 1236,
-          "outputTokens": 52
+          "inputTokens": 1282,
+          "outputTokens": 66
         }
       }
     }
