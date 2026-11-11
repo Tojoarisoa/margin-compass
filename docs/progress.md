@@ -16,16 +16,25 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-0. **Check** main `ci` for this progress entry (b0295eb / PR #233 `ci` + `deploy to dev` green).
-1. **M4-05 EV-06 step 3c-2:** wire `ev06_graph.run_graph` into `mc-agents ev` (e.g. `--ev06-graph {replay,record,live}`) and the ops `record-fixtures`/`live-eval` step (print its fixtures like the others). CI unchanged until fixtures exist. Add the PLAN §20.3 Change Log entry for the run-107 rubric tightening (auto-decided under §8.2) in that PR.
-2. **3c-3:** ops record (haiku-4-5, cache on) for the 27 scenarios (capped, under $0.30); commit fixtures; add CI replay. eff-01/eff-02 evidence args don't match `replay_lever`'s inputs; fix them then.
-3. **3c-4:** judge the graph runs (`ev06_judge.judge(run=...)`), record judge fixtures. Calibration: see Waiting for owner.
-4. **M5-04:** KPI-09 needs a closed-loop plan change (none yet) and KPI-13 needs the real AWS bill (M2-04 FOCUS export); tick M5-04 when both are real. M5-03 steps 4-6: see Waiting for owner.
-5. **Daily checks (not tasks):** ops `verify-backfill` for M2-04 (last 2026-11-11 00:23 UTC: `awaiting_first_export`) and the Haiku 5.5 probe (last 2026-11-11: still `AccessDeniedException`). Next due 2026-11-12.
+0. **Check** main `ci` for this progress entry (870fb6c `ci` + `deploy to dev` green).
+1. **M4-05 EV-06 step 3c-3b: wire `search_knowledge`.** The contract_policy specialist (AG-07) gets no tool: neither `api.py` (line 184) nor `ev06_graph` passes `registry.search_knowledge_spec`, so gov-01..06 and act-05/06 end unverified. Wire it into the graph runner first (local RAG index, $0), then the API (needs the index in the Lambda; check deploy impact and cost).
+2. **3c-3c: pricing scenarios (prc-04..06, act-01..04)** ask the user for plan/price instead of calling `price_plan`/`churn_adjust`. Fix in the pricing specialist prompt (bump the prompt version, re-record every fixture set with ops `cache: true`). Never weaken the rubric.
+3. **3c-3d:** re-record graph fixtures (ops `record-fixtures`, `ev06_graph: true`, under $0.30); when 90% passes, add the CI replay gate (`ev --ev06-graph replay`). Other fails: cts-04, eff-03, eff-06, leak-03..05. eff-01/eff-02 evidence args don't match `replay_lever`'s inputs.
+4. **3c-4:** judge the graph runs. Calibration: see Waiting for owner.
+5. **M5-04:** KPI-09 needs a closed-loop plan change, KPI-13 the real AWS bill (M2-04 FOCUS export). M5-03 steps 4-6: see Waiting for owner.
+6. **Daily checks (not tasks):** ops `verify-backfill` (last 2026-11-11 00:23 UTC: `awaiting_first_export`) and the Haiku 5.5 probe (last 2026-11-11: `AccessDeniedException`). Next due 2026-11-12.
 
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed.
-Notes: owner-mode approvals wait for Cognito (M5-03). Ops eval results are in the job log; fixtures are base64 between FIXTURE-BEGIN/END lines. Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1). Flaky github.com 504s during image builds: re-run the failed job.
+Notes: owner-mode approvals wait for Cognito (M5-03). Ops eval results are in the job log; fixtures are base64 between FIXTURE-BEGIN/END lines. Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1). Ops `ev06_graph: true` adds the graph runs (opt-in, about $0.15). Flaky github.com 504s during image builds: re-run the failed job.
+
+## 2026-11-11 (autopilot run 108)
+
+- **Start:** main `ci` + `deploy to dev` for b0295eb and dc59de4 green; no open PRs.
+- **Task 1:** M4-05 step 3c-2. PR #234 merged (every `ci` job and `attribution` green after footer removal via MCP; main `ci` + `deploy to dev` green): `mc-agents ev --ev06-graph`, opt-in ops input `ev06_graph`, PLAN Change Log entry for the run-107 rubric tightening. Agents 264 passed.
+- **Task 2:** M4-05 step 3c-3. Ops record 42938779526 (haiku-4-5, cache on, graph on): M1-06 5/5, EV-05 8/8, judge 13/13, **graph runs 7/27 (26%)**, gate 90% not met. PR #235 merged (all green): 27 graph fixtures + replay baseline test. Causes in Next 1-2.
+- **Decisions (§8.2):** graph runs are opt-in in ops (options: always on with record, rejected: +$0.15 per record run). No CI gate until 90% passes (a failing gate would block every merge); the gate itself is unchanged.
+- **Cost:** 1 ops record run, about $0.20 total of capped Haiku 4.5 calls.
 
 ## 2026-11-11 (autopilot run 107)
 
