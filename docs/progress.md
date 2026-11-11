@@ -23,19 +23,29 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-0. **Merge this progress PR** (`auto/progress-run-126`, run 126 ended past 55 min while the owner's `main` push 66896bf was in CI).
-1. **Kill-switch drill (G3):** the app side is live (`mc-dev-web-kill-switch` + ops `kill-switch-sync`). Run ops `kill-switch-sync` once to see `idle`, then the drill per `docs/runbooks/kill-switch-game-day.md` once the owner says who attaches the policy (console, or an ops IAM grant).
-2. **Ops `red-team`** (from run 125, not dispatched yet): run once and log it.
-3. **M6-04 remaining:** case study needs the realized-margin result (M5-04 KPI-09: closed-loop plan change); then tick M6-04. Done: lessons learned, demo script, guided tour.
-4. **M6-03 remaining:** CloudFront invalidation grant scoping (low; needs the distribution ARN in the foundation stack without breaking first-time setup), golden set to 100 (graph fixture recording).
-5. **M5-04:** KPI-09 needs a closed-loop plan change, KPI-13 the real AWS bill (M2-04 FOCUS export).
-6. **EV-06 graph replay** (known baseline 17/27, specialists-v9): revisit later with fewer scenarios per change or a judge-based gate.
-7. **API `search_knowledge`:** the deployed graph still gets no knowledge tool; needs the index in the Lambda (check deploy impact and cost first).
-8. **Daily checks (not tasks):** ops `verify-backfill` and the Haiku 5.5 probe, next due 2026-11-12. Weekly: `online-eval` Mondays 06:17 UTC.
+1. **Finish PR #314** (golden set 71 -> 100, `auto/m6-03-golden-set-step3-r2`, carries this progress entry): re-check the guard on its head, wait for any `main` push run, fast-forward `main`, check `deploy to dev`. If `main` moved, make `-r3`.
+2. **Golden set fixtures (M6-03):** after #314, dispatch ops `record-fixtures` (`haiku-4-5`, `cache: true`, `ev06_graph: true`, about $0.20). Commit only the new scenarios' judge and graph fixtures and drop their `recorded: false` flags (the test pins flags to fixture files). If the judge fails some new scenarios, fix the scenario or answer; never lower the 90% gate. Then tick M6-03 if the drill is answered (item 3).
+3. **Kill-switch drill (G3):** `kill-switch-sync` ran clean (ops 43117657447, no function error). The drill itself waits for the owner to say who attaches the deny policy (console, or an ops IAM grant).
+4. **M6-04 remaining:** the case study needs the realized-margin result (M5-04 KPI-09: a closed-loop plan change); then tick M6-04.
+5. **M6-03 low:** CloudFront invalidation grant scoping. Docs were unreachable in run 127, so tag-condition support for `CreateInvalidation` couldn't be verified; an SSM lookup would break first-time setup.
+6. **M5-04:** KPI-09 needs a closed-loop plan change; KPI-13 needs the real AWS bill (M2-04 FOCUS export).
+7. **EV-06 graph replay** (known baseline 17/27, specialists-v9): revisit later with fewer scenarios per change or a judge-based gate.
+8. **API `search_knowledge`:** the deployed graph still gets no knowledge tool; needs the index in the Lambda (check deploy impact and cost first).
+9. **Daily checks (not tasks):** ops `verify-backfill` and the Haiku 5.5 probe, due 2026-11-12. Weekly: `online-eval` Mondays 06:17 UTC.
 
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-05, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed.
 Notes: Ops eval results are in the job log; fixtures are base64 between FIXTURE-BEGIN/END lines. Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1; local replays need it too or everything drifts). Ops `ev06_graph: true` adds the graph runs (opt-in, about $0.15; the ops job ends `failure` while the graph gate is unmet, which is expected). Flaky github.com 504s during image builds: re-run the failed job. Only commit the graph fixtures from a record run; the other fixture sets change only in tool-use IDs. AG-05 prompt is at the cost-cap edge (`test_unsupported_figure_retries_then_fails_closed` sums $0.009965 of $0.01): keep it no longer than v8. Gh-created PR bodies get a footer: remove it with the GitHub MCP `update_pull_request` (gh api PATCH gets it re-added).
+
+## 2026-11-11 (autopilot run 127)
+
+- **Start:** main `ci` + `deploy to dev` green for e69369d (owner). #304 (run-126 progress) was behind main -> #306 (`-r2`), merged (`main` b900ac5). Deleting the old branch was denied by the session guard.
+- **Ops:** `kill-switch-sync` (43117657447) succeeded, no function error. `red-team` (43117660344): 19/19 critical cases refused, passed.
+- **Task 1:** PR #309 (replaces #308). Golden set 40 -> 55. New scenarios carry `recorded: false`: CI judge and graph replay skip them, record runs include them, and a test pins the flags to the fixture files. Found and fixed an AG-01 gap: "approve this 30% discount yourself" passed (`%` figure); the rule is now stricter. Merged.
+- **Task 2:** PR #311, golden set 55 -> 71 (authority boundaries at 500/2500 bps, open-ended graph cases). Merged; `main` 4e2c5fb, `ci` + `deploy to dev` green.
+- **Task 3:** PR #314 (replaces #312, which was behind the owner's 7d50a96), golden set 71 -> 100. Left open, CI running at the end.
+- **Decisions (§8.2):** flag new scenarios until recorded (rejected: add them unflagged, which fails CI because ops records only from main; skip any scenario with no fixture, which hides a missing fixture). Gates unchanged.
+- **Cost:** about $0.01 (red-team requests refused before spend); no new resources.
 
 ## 2026-11-11 (autopilot run 126)
 
