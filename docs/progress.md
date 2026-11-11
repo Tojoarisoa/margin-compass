@@ -32,7 +32,7 @@ Notes: owner-mode approvals wait for Cognito (M5-03). Ops eval results are in th
 
 - **Start:** main `ci` + `deploy to dev` for 0778068 green; no open PRs.
 - **Task 1:** M4-05 step 3c-3h. PR #248 merged (all `ci` jobs green, latest `attribution` green after footer removal via MCP): `price_plan` v3 echoes bps inputs as exact percent (`changes_pct`, `churn_pct`; calc-spec "Display conversion"), AG-05 `specialists-v7` may write a % only by copying a `_pct` field. Agents 296 passed. Main `ci` + `deploy to dev` + smoke green for 38f2905.
-- **Task 2:** re-record. Ops 42986306676: M1-06 5/5, EV-10 pass ($0.0043/question), EV-05 8/8, judge 13/13, **graph 18/27** (act-02, act-03, act-04 now pass). Graph fixtures + baseline in PR #249.
+- **Task 2:** re-record. Ops 42986306676: M1-06 5/5, EV-10 pass ($0.0043/question), EV-05 8/8, judge 13/13, **graph 18/27** (act-02, act-03, act-04 now pass). PR #249 merged (all `ci` jobs + `attribution` green); main `ci` + `deploy to dev` green for 8a75c79.
 - **Decisions (§8.2):** echo in the tool (options: verifier maps N% to N*100 bps, rejected: changes EV-08; `price_change_bps` input, deferred: new math needs calc-spec vectors + parity). Verifier, gate, rubric and cap unchanged.
 - **Cost:** 1 ops record run, about $0.20 of capped Haiku 4.5 calls.
 
