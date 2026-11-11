@@ -16,6 +16,9 @@ before/after/churn answer took four (price, price, churn, words). Now it takes t
 - v4 (3c-3i): `after.delta` and `churn.delta` are the signed after-minus-before changes from calc-spec "Scenario
   difference v1" (`scenario_delta`), and `churn.survival_pct` echoes `survival_bps` as percent, so an answer never
   has to compute a difference or convert a rate itself.
+- v5 (3c-3k): `margin_pct` (before and after) echoes `margin_bps` as percent (same display conversion; null when
+  `margin_bps` is null), since act-01 converted 5915 bps to "59.15%" itself and the verifier withheld it. A partial
+  plan's error now says to put changes to the example plan in `after` (prc-06 sent outcome fields at the top level).
 Synthetic inputs only.
 """
 
@@ -49,6 +52,11 @@ def bps_to_pct(bps: int) -> str:
     return format(d.normalize() if d == d.to_integral_value() else d, "f")
 
 
+def _with_margin_pct(res: dict[str, Any]) -> dict[str, Any]:
+    m = res.get("margin_bps")
+    return {**res, "margin_pct": None if m is None else bps_to_pct(m)}
+
+
 def price_scenario(inp: dict[str, Any]) -> dict[str, Any]:
     unknown = set(inp) - {*_PLAN_KEYS, "after", "churn_bps", "months"}
     if unknown:
@@ -59,16 +67,17 @@ def price_scenario(inp: dict[str, Any]) -> dict[str, Any]:
     else:
         missing = [f for f in _FIELDS if f not in given]
         if missing:
-            raise ValueError(f"missing plan fields {missing}; give all of them or none (example plan)")
+            raise ValueError(f"missing plan fields {missing}; give all of them, or none for the example plan and put "
+                             "the fields that change in after")
         plan, source = given, "given"
-    out: dict[str, Any] = {"plan_source": source, "plan": plan, **price_plan(plan)}
+    out: dict[str, Any] = {"plan_source": source, "plan": plan, **_with_margin_pct(price_plan(plan))}
     runs: list[tuple[str, dict[str, Any], dict[str, Any]]] = [("before", plan, out)]
     if inp.get("after") is not None:
         changes = inp["after"]
         if not isinstance(changes, dict) or not changes or set(changes) - set(_PLAN_KEYS):
             raise ValueError("after must be a non-empty object of plan fields to change")
         after_plan = {**plan, **changes}
-        out["after"] = {"changes": changes, **price_plan(after_plan)}
+        out["after"] = {"changes": changes, **_with_margin_pct(price_plan(after_plan))}
         pct = {f"{k[:-4]}_pct": bps_to_pct(v) for k, v in changes.items() if k.endswith("_bps")}
         if pct:
             out["after"]["changes_pct"] = pct

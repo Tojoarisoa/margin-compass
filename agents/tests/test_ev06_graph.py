@@ -170,9 +170,13 @@ def test_recorded_graph_fixtures_replay(gold):
     Step 3c-3j (specialists-v9: AG-05 writes a change as a signed delta, never a magnitude): the 7 scenarios routed
     to AG-05 drift (scored as fails, so 15/27) until the next ops record run. Re-recorded by ops run 43004723226:
     17/27 (act-02, act-04 now pass; act-03 regressed; act-01, act-06, prc-04..06 still fail).
+
+    Step 3c-3k (price_plan v5 echoes margin_bps as margin_pct; a partial plan's error points to `after`): the
+    6 AG-05 scenarios whose tool results changed drift (scored as fails, so 15/27; prc-05 only called
+    query_gold) until the next ops record run.
     """
     rep = run_graph(gold, "haiku-4-5", "replay")
     assert set(rep["runs"]) == {s["id"] for s in default_scenarios()}
-    assert rep["drifted"] == []
-    assert round(rep["ev06"] * 27) == 17 and not rep["passed"]
+    assert rep["drifted"] == ["act-01", "act-02", "act-03", "act-04", "prc-04", "prc-06"]
+    assert round(rep["ev06"] * 27) == 15 and not rep["passed"]
     assert rep["runs"]["leak-02"] == {"route": "leak", "tools": ["query_gold"], "status": "answered"}

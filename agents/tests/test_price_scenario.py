@@ -1,4 +1,4 @@
-"""M4-05 step 3c-3d/3c-3h: price_plan v2/v3 composes the calc-spec functions; it adds no formula of its own."""
+"""M4-05 step 3c-3d/3c-3h/3c-3k: price_plan v2/v3/v5 composes the calc-spec functions; it adds no formula of its own."""
 
 import pytest
 
@@ -15,6 +15,7 @@ def test_no_plan_fields_uses_the_labelled_example_plan():
     out = price_scenario({})
     assert out["plan_source"] == "example" and out["plan"] == EXAMPLE_PLAN
     assert {k: out[k] for k in price_plan(EXAMPLE_PLAN)} == price_plan(EXAMPLE_PLAN)
+    assert out["margin_pct"] == bps_to_pct(out["margin_bps"])
     assert "after" not in out and "churn" not in out
 
 
@@ -28,6 +29,7 @@ def test_after_and_churn_are_the_calc_spec_functions():
     out = price_scenario({"after": {"discount_bps": 400}, "churn_bps": 200})
     after = price_plan({**EXAMPLE_PLAN, "discount_bps": 400})
     assert out["after"] == {"changes": {"discount_bps": 400}, "changes_pct": {"discount_pct": "4"}, **after,
+                            "margin_pct": bps_to_pct(after["margin_bps"]),
                             "delta": scenario_delta({"before": out, "after": after})}
     c = out["churn"]
     assert c["churn_bps"] == 200 and c["churn_pct"] == "2" and c["months"] == 12
@@ -63,7 +65,7 @@ def test_ledger_holds_every_figure_the_answer_may_quote():
     led = Ledger()
     registry.call("price_plan", {"after": {"discount_bps": 400}, "churn_bps": 200}, led)
     vals = led.values()
-    assert led.entries[0].tool == "price_plan@4"
+    assert led.entries[0].tool == "price_plan@5"
     assert {5000, 20000, 400, 200, 12} <= {int(v) for v in vals}
 
 
@@ -100,3 +102,23 @@ def test_a_change_the_tool_did_not_return_is_still_withheld():
     registry.call("price_plan", {"after": {"seat_price_cents": 5250}, "churn_bps": 200}, led)
     assert verify_answer("Adjusted margin changes by 26911 cents [E1].", led, "q").ok
     assert not verify_answer("Adjusted margin changes by 26912 cents [E1].", led, "q").ok
+
+
+def test_margin_rate_is_echoed_as_percent():
+    """3c-3k (price_plan v5): act-01 wrote "59.15%" for 5915 bps; now the ledger holds it, a wrong rate is still withheld."""
+    led = Ledger()
+    registry.call("price_plan", {"after": {"discount_bps": 400}}, led)
+    out = price_scenario({"after": {"discount_bps": 400}})
+    assert out["margin_pct"] == "60.78" and out["after"]["margin_bps"] == 5915 and out["after"]["margin_pct"] == "59.15"
+    assert verify_answer("Margin is 59.15% after the discount [E1].", led, "q").ok
+    assert not verify_answer("Margin is 59.2% after the discount [E1].", led, "q").ok
+
+
+def test_margin_pct_is_null_when_margin_rate_is_null():
+    out = price_scenario({**EXAMPLE_PLAN, "seats": 0, "seat_price_cents": 0, "usage_units": 0})
+    assert out["margin_bps"] is None and out["margin_pct"] is None
+
+
+def test_partial_plan_error_points_to_after():
+    with pytest.raises(ValueError, match="in after"):
+        price_scenario({"outcome_price_micro": 500000, "outcomes": 1000})

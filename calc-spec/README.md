@@ -76,5 +76,5 @@ returns it as `after.delta` and `churn.delta`). TypeScript: `dashboard/src/scena
 A basis-point value may be shown as a percent: `percent = bps / 100`, written as an exact decimal string with no rounding
 (`400` → `"4"`, `250` → `"2.5"`, `1` → `"0.01"`). It converts an input for display; it is not a pricing formula, so it has
 no vectors. The agent tool `price_plan` v3 echoes its basis-point inputs this way (`after.changes_pct`, `churn.churn_pct`;
-v4 also `churn.survival_pct`)
+v4 also `churn.survival_pct`, v5 also `margin_pct` and `after.margin_pct` from `margin_bps`)
 so an answer can quote "4%" from the evidence ledger. Python: `bps_to_pct` in `agents/mc_agents/tools/price_scenario.py`.

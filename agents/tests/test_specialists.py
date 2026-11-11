@@ -39,7 +39,7 @@ def test_pricing_specialist_calls_tool_and_answer_verifies():
 
     client = Script(use("price_plan", PLAN), answer)
     run_specialist(s, llm(client), "m")
-    assert s.ledger.entries[0].tool == "price_plan@4" and s.answer
+    assert s.ledger.entries[0].tool == "price_plan@5" and s.answer
     assert verify(s) == "responder"
 
 

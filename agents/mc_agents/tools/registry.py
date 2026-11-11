@@ -56,6 +56,7 @@ _PLAN_PROPS = {k: {"type": "integer", "minimum": 0, "description": d} for k, d i
 # 3c-3d (price_plan v2): one call prices before and after a change, with churn, so AG-05 fits the cost cap.
 # 3c-3h (v3): same inputs; the output echoes basis-point inputs as percent strings.
 # 3c-3i (v4): same inputs; the output adds after.delta, churn.delta (calc-spec scenario difference) and churn.survival_pct.
+# 3c-3k (v5): same inputs; the output adds margin_pct (before and after.margin_pct, margin_bps as percent).
 _PRICE_PLAN_V2 = {"type": "object", "properties": {
     **_PLAN_PROPS,
     "after": {"type": "object", "properties": _PLAN_PROPS,
@@ -65,7 +66,7 @@ _PRICE_PLAN_V2 = {"type": "object", "properties": {
 }, "required": []}
 
 TOOLS: dict[str, ToolSpec] = {t.name: t for t in (
-    ToolSpec("price_plan", "4", "Revenue and margin (integer cents, margin in bps) of one tenant-month under a plan, "
+    ToolSpec("price_plan", "5", "Revenue and margin (integer cents, margin in bps) of one tenant-month under a plan, "
              "and optionally after a change and churn-adjusted. Give every plan field, or none for the example plan.",
              price_scenario, input_schema=_PRICE_PLAN_V2),
     ToolSpec("replay_lever", "1", "Routing and caching lever replay with quality and safety-recall guardrails.", replay_lever),
