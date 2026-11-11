@@ -10,7 +10,7 @@
                 "query": "discount approval authority 30%"
               },
               "name": "search_knowledge",
-              "toolUseId": "tooluse_SK7XIm1U4WxdCvNoEZGE8V",
+              "toolUseId": "tooluse_Z1RtwNLZRFtFJiuxeM2Sl8",
               "type": "tool_use"
             }
           }
@@ -24,7 +24,7 @@
       }
     },
     {
-      "request_sha": "72245ba830de62c391bec5e790721ef3862f3fb015138dac1ff76a154b44b3ae",
+      "request_sha": "84d28c967f22c0aecde076f21d5790c95c5439823764746bd792b4582737b14c",
       "response": {
         "content": [
           {
@@ -41,6 +41,6 @@
     }
   ],
   "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
-  "prompt_version": "specialists-v7",
+  "prompt_version": "specialists-v8",
   "scenario_id": "gov-05"
 }

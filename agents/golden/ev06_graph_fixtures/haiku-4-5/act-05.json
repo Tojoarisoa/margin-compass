@@ -14,7 +14,7 @@
                 "top_k": 5
               },
               "name": "search_knowledge",
-              "toolUseId": "tooluse_47oUgYNRBSkPTMQ0Mln8uH",
+              "toolUseId": "tooluse_7lWG6pRetzY56iaMSh4orZ",
               "type": "tool_use"
             }
           }
@@ -28,7 +28,7 @@
       }
     },
     {
-      "request_sha": "65a319c70082f7ebf00646fec31fda700702786c9722894f88e200be80fd9550",
+      "request_sha": "411b40bddf536fe7ecc7e5ac25e4e9fd02a9a7bf65b4ccb4df21b8fdbd48a3ae",
       "response": {
         "content": [
           {
@@ -45,6 +45,6 @@
     }
   ],
   "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
-  "prompt_version": "specialists-v7",
+  "prompt_version": "specialists-v8",
   "scenario_id": "act-05"
 }

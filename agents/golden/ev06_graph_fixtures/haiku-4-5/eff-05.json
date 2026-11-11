@@ -11,7 +11,7 @@
                 "tenant_id": "bc-t0007"
               },
               "name": "replay_lever",
-              "toolUseId": "tooluse_11eI6eFjmzB03ZTYJJrmUJ",
+              "toolUseId": "tooluse_lt5T303Hg84RnQpAT38yzW",
               "type": "tool_use"
             }
           }
@@ -25,7 +25,7 @@
       }
     },
     {
-      "request_sha": "63c85ebcfb0bd77306591621b300f03f1d7d19787b4a24c7e8b3ad0ebe65f34e",
+      "request_sha": "1a5e379e6e97cdaaae766b94a6e7487cfeeb4c328e1307a2ed91d7031cf554fb",
       "response": {
         "content": [
           {
@@ -42,6 +42,6 @@
     }
   ],
   "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
-  "prompt_version": "specialists-v7",
+  "prompt_version": "specialists-v8",
   "scenario_id": "eff-05"
 }

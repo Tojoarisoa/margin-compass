@@ -13,7 +13,7 @@
                 "sql": "\nSELECT \n  tenant_id,\n  SUM(llm_cost_usd + cost_to_serve_usd) AS total_cost_usd,\n  SUM(request_count) AS total_requests,\n  ROUND(SUM(llm_cost_usd + cost_to_serve_usd) / NULLIF(SUM(request_count), 0), 6) AS cost_per_request\nFROM fct_tenant_margin\nGROUP BY tenant_id\nORDER BY total_cost_usd DESC\nLIMIT 10\n"
               },
               "name": "query_gold",
-              "toolUseId": "tooluse_A8qnh8C7dcDvCmzC3K0T23",
+              "toolUseId": "tooluse_xyZWsJqN2UEmgTuK20mxNo",
               "type": "tool_use"
             }
           }
@@ -27,7 +27,7 @@
       }
     },
     {
-      "request_sha": "206ae1b7fb181d9ebee4d9ce3920fa399ebc9d11ff9c63015fa7c5c03eb4c90f",
+      "request_sha": "4655cc882f89b95a47564d3c7c2e7921832ee32dcb7e05cd5cf6a949276eb60f",
       "response": {
         "content": [
           {
@@ -44,6 +44,6 @@
     }
   ],
   "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
-  "prompt_version": "specialists-v7",
+  "prompt_version": "specialists-v8",
   "scenario_id": "cts-04"
 }

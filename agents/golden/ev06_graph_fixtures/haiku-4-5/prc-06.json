@@ -1,23 +1,7 @@
 {
   "calls": [
     {
-      "request_sha": "cb675e8fb40a5d489d96ffbcb8a6c31bb0901a971f0c2b7d112335f7b6cd8544",
-      "response": {
-        "content": [
-          {
-            "text": "An outcome-based plan fits a pricing model where revenue is generated based on **billed outcomes** rather than (or in addition to) usage units or seats.\n\nIn the `price_plan` tool, an outcome-based plan uses these fields:\n\n- **`outcome_price_micro`**: The price per billed outcome, in micro-dollars (e.g., 500000 micro-dollars = $0.50 per outcome)\n- **`outcomes`**: The number of billed outcomes consumed in the month\n\nThis model works well when:\n- You want to charge for **results delivered** rather than inputs consumed (e.g., per API call completed, per document processed, per decision made)\n- Outcomes are **measurable and attributable** to customer value\n- You want to align pricing with **customer success metrics**\n\nYou can combine outcome-based pricing with other elements:\n- **Seat pricing** (`seat_price_cents` + `seats`) for a base fee\n- **Usage-based overage** (`included_units`, `overage_rate_micro`, `usage_units`) for consumption above a threshold\n- **Flat add-ons** (`addon_cents`) for ancillary services\n- **Usage caps** (`usage_cap_cents`) to limit total variable charges\n\nWould you like me to price an example outcome-based plan or analyze one for a specific tenant?"
-          }
-        ],
-        "stop_reason": "end_turn",
-        "usage": {
-          "cacheReadInputTokens": 0,
-          "inputTokens": 2072,
-          "outputTokens": 308
-        }
-      }
-    },
-    {
-      "request_sha": "d05b67e1ed6575e77cd4d45390094f85fa16b70cef39848c5a7b19ef3a747e9e",
+      "request_sha": "522a3b4f8fdb702f522eaff464fca19979259d8fff6982e0ceed98f09437a00c",
       "response": {
         "content": [
           {
@@ -26,17 +10,17 @@
           {
             "toolUse": {
               "input": {
-                "cost_cents": 8000,
+                "cost_cents": 15000,
                 "included_units": 1000,
-                "outcome_price_micro": 50000,
-                "outcomes": 200,
-                "overage_rate_micro": 100000,
+                "outcome_price_micro": 100000,
+                "outcomes": 250,
+                "overage_rate_micro": 500000,
                 "seat_price_cents": 5000,
                 "seats": 5,
                 "usage_units": 1500
               },
               "name": "price_plan",
-              "toolUseId": "tooluse_jsn4rYkaahtG9IRNDhLJc2",
+              "toolUseId": "tooluse_g9NaAK19gQUj86IuzEBfdS",
               "type": "tool_use"
             }
           }
@@ -44,13 +28,48 @@
         "stop_reason": "tool_use",
         "usage": {
           "cacheReadInputTokens": 0,
-          "inputTokens": 2093,
+          "inputTokens": 2081,
           "outputTokens": 213
+        }
+      }
+    },
+    {
+      "request_sha": "c96d0cec9e63692d36cff39215e9fcfa51357cd7bd1d55d58b82f8574d55fa40",
+      "response": {
+        "content": [
+          {
+            "text": "Let me correct that by providing all required fields:"
+          },
+          {
+            "toolUse": {
+              "input": {
+                "addon_cents": 0,
+                "cost_cents": 15000,
+                "discount_bps": 0,
+                "included_units": 1000,
+                "outcome_price_micro": 100000,
+                "outcomes": 250,
+                "overage_rate_micro": 500000,
+                "seat_price_cents": 5000,
+                "seats": 5,
+                "usage_units": 1500
+              },
+              "name": "price_plan",
+              "toolUseId": "tooluse_EaNMTfMtxPV2GHGN42I9c6",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 2351,
+          "outputTokens": 247
         }
       }
     }
   ],
   "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
-  "prompt_version": "specialists-v7",
+  "prompt_version": "specialists-v8",
   "scenario_id": "prc-06"
 }
