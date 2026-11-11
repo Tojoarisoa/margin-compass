@@ -1019,7 +1019,7 @@ Each milestone ends with a demoable increment and exit criteria. Effort assumes 
 
 - [x] M5-01 Nightly margin review graph → `fct_actions` + daily margin brief
 - [x] M5-02 PG-7 Action Center with visitor-sandbox approvals and role-based queues
-- [ ] M5-03 Owner mode (Cognito) → the simulator applies ACT-1/2/3 effects
+- [x] M5-03 Owner mode (Cognito) → the simulator applies ACT-1/2/3 effects
 - [ ] M5-04 `fct_realized_margin` (counterfactual method); KPI-01, -02, -09, -13 go live
 
 **Exit:** a leak → RCA → ACT-1 → approval → recovered-margin path, and a renewal → ACT-3 → churn-adjusted outcome path, are both visible end to end.
@@ -1230,3 +1230,4 @@ Status: all ADRs are written up in `docs/adr/` and **accepted** (ADR-017 on 2026
 | 2026-11-11 | 0.4 | M6-01 step 2 (**auto-decided under AGENTS.md §8.2**): telemetry lake check. The daily `telemetry` schedule already compacted the API `gen_ai_call` logs (`telemetry/dogfood.parquet`); the pipeline's own run logs were missing. It now also writes `telemetry/pipeline_runs.parquet` (one row per run and day: duration, status, error count). Options: a separate schedule (rejected: one more resource for the same job). The pipeline role may also `logs:FilterLogEvents` on its own log group. Cost $0 |
 | 2026-11-12 | 0.4 | Owner fixes: PG-1 forecast sums the per-feature LLM forecasts per day and adds the last-30-day mean non-LLM cost, so it is comparable with fully loaded actual cost (the page had plotted 5 rows per day). Dashboard layout: section nav, charts resize with their card, tables wrap or scroll inside their card, collapsed tools in one row, brief amounts and role labels fixed |
 | 2026-11-11 | 0.4 | M6-01 ticked (**auto-decided under AGENTS.md §8.2**): step 3 checked for a DLQ alarm; the infra has no queue or dead-letter queue (no SQS, no Lambda async DLQ), so none is added. Alarms 3 of 10 cover pipeline failure, API errors and the budget; telemetry lake = `telemetry/dogfood.parquet` + `telemetry/pipeline_runs.parquet`; runbook `docs/runbooks/alarms.md`. Options: add a DLQ to have something to alarm on (rejected: a new resource with no producer). Cost $0 |
+| 2026-11-11 | 0.4 | M5-03 ticked (owner, 2026-11-11: round trip done; tick **auto-applied under AGENTS.md §8.2**): owner user signed in on the dashboard and recorded one approval and one rejection through `POST /api/approvals`, both read back from `mc-dev-state-core`. The backfill applies the owner's latest decisions to the simulated months when started with `approvals: true` (opt-in, default unchanged). Open follow-up: live decisions are dated after the simulation window, so mapping them into the window is still to decide. Cost $0 |
