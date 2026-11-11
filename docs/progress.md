@@ -16,7 +16,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-1. **Finish PR #258** (revert AG-07 v10, back to v9 at 17/27) if still open: CI, merge, deploy. No re-record needed: main's graph fixtures are v9 (ops 43018286081).
+1. **Check main `ci` + `deploy to dev`** for 61ef333 and 74e3cec (#258, merged at 45 min; deploys were still running when run 119 ended). No re-record needed: main's graph fixtures are v9 (ops 43018286081).
 2. **AG-05 still open:** act-04 regressed, act-01 unverified, prc-04 restates the question's "5%", prc-05 asks the user (bc-t0021 has no plan), prc-06 capped. Read the 43018286081 fixtures (committed) before changing anything; the AG-05 prompt is at the cost-cap edge.
 3. **AG-07 double search (act-06):** v10 "search once, top_k 8" fixed gov-06 but made act-05, gov-02, gov-04 unverified (longer answers from 8 hits). Next try: search once with the default top_k (5), or check what the verifier withheld in the 43021580730 log first.
 4. **AG-06 tools have no input schema** (`replay_lever`, `roi_multiple`): eff-03 uses `query_gold`. Add schemas, then re-record. Also cts-04 (AG-03 rounds), leak-03 (capped after 2 tools).
@@ -34,7 +34,7 @@ Notes: owner-mode approvals wait for Cognito (M5-03). Ops eval results are in th
 - **Start:** PR #255 (run 118) open, all checks green; merge push worked this run. Fast-forwarded `main` to cad8f43; main `ci` + `deploy to dev` green.
 - **Task 1:** re-record after #255. Ops 43018286081: M1-06 5/5, EV-10 pass ($0.0043/question), EV-05 8/8, judge 13/13, **graph 17/27** (act-03 passes again, act-04 regressed). PR #256 merged (all `ci` jobs green, `attribution` green after footer removal via MCP); main `ci` + `deploy to dev` green for f675256.
 - **Task 2:** 3c-3l AG-07 `specialists-v10` (search once, top_k 8). PR #257 merged (all checks green). Ops 43021580730: same M1-06/EV-10/EV-05/judge, **graph 15/27** (gov-06 passes; act-05, gov-02, gov-04 now unverified).
-- **Task 3:** PR #258 reverts v10 (back to v9; replay 17/27, no drift). Opened at 36 min.
+- **Task 3:** PR #258 reverts v10 (back to v9; replay 17/27, no drift). All `ci` jobs + `attribution` green; merged at 45 min. Main `ci` jobs for 61ef333 green, its `deploy to dev` and 74e3cec's run still in progress at run end.
 - **Decisions (§8.2):** revert rather than commit the v10 fixtures (net regression). Gate, rubric, verifier, cap unchanged.
 - **Cost:** 2 ops record runs, about $0.40 of capped Haiku 4.5 calls.
 
