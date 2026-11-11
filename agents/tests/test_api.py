@@ -209,3 +209,42 @@ def test_every_critical_api_category_of_the_red_team_set_is_blocked(table):
         if c["critical"] and c["category"] in api.API_BLOCKED and len(c["question"]) <= 300:
             r = api.handle_ask(_event({"question": c["question"]}), None, table=table, invoke=lambda *a, cid=c["id"]: pytest.fail(cid))
             assert r["statusCode"] == 400, c["id"]
+
+
+def _fb(job_id, rating):
+    return {"requestContext": {"http": {"method": "POST"}}, "rawPath": f"/api/jobs/{job_id}/feedback",
+            "body": json.dumps({"rating": rating}), "isBase64Encoded": False}
+
+
+def test_feedback_is_one_vote_per_answered_job(table, monkeypatch):
+    """M6-02: thumbs up/down on a finished answer, once; the daily counter keeps the totals."""
+    monkeypatch.setattr(api, "_table", lambda: table)
+    jid = "e" * 32
+    table.put_item(Item={"PK": f"JOB#{jid}", "SK": "JOB", "status": "answered", "question": "q"})
+    r = api.handler(_fb(jid, "up"), None)
+    assert r["statusCode"] == 201 and json.loads(r["body"]) == {"job_id": jid, "rating": "up"}
+    assert api.handler(_fb(jid, "down"), None)["statusCode"] == 409  # no second vote, no flip
+    assert table.get_item(Key={"PK": f"JOB#{jid}", "SK": "JOB"})["Item"]["feedback"] == "up"
+    counters = [i for i in table.scan()["Items"] if i["PK"].startswith("FEEDBACK#")]
+    assert len(counters) == 1 and counters[0]["up"] == 1 and "down" not in counters[0] and counters[0]["ttl"] > 0
+    assert "feedback" not in json.loads(api.handle_job(f"/api/jobs/{jid}", table=table)["body"])
+
+
+@pytest.mark.parametrize("status", ["pending", "running", "error", "budget_exceeded", "blocked"])
+def test_feedback_needs_a_shown_answer(table, status):
+    jid = "f" * 32
+    table.put_item(Item={"PK": f"JOB#{jid}", "SK": "JOB", "status": status, "question": "q"})
+    assert api.handle_feedback(_fb(jid, "down"), f"/api/jobs/{jid}/feedback", table=table)["statusCode"] == 409
+    assert not [i for i in table.scan()["Items"] if i["PK"].startswith("FEEDBACK#")]
+
+
+@pytest.mark.parametrize(("path", "rating", "code"), [
+    ("/api/jobs/" + "a" * 32 + "/feedback", "up", 409),  # unknown or expired job: nothing is created
+    ("/api/jobs/../feedback", "up", 404),
+    ("/api/jobs/" + "a" * 32 + "/feedback", "meh", 400),
+    ("/api/jobs/" + "a" * 32 + "/feedback", None, 400),
+])
+def test_feedback_rejects_bad_requests(table, path, rating, code):
+    ev = _fb("x", rating) | {"rawPath": path}
+    assert api.handle_feedback(ev, path, table=table)["statusCode"] == code
+    assert table.scan()["Items"] == []

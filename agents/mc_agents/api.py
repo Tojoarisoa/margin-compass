@@ -298,6 +298,46 @@ def _configure_logging() -> None:
     log.propagate = False
 
 
+# M6-02 online feedback (PLAN.md §13, online row): one thumbs up/down per answered job, no free text.
+_FEEDBACK_TTL_S = 90 * 86_400
+
+
+def handle_feedback(event: dict[str, Any], path: str, *, table=None, now: float | None = None) -> dict[str, Any]:
+    """`POST /api/jobs/{id}/feedback` with `{"rating": "up"|"down"}`. Only the job's own id (32 hex, known to the
+    asker) can rate it, once; the daily `FEEDBACK#<day>` counter keeps the totals after the job expires."""
+    job_id = path.rstrip("/").rsplit("/", 2)[-2]
+    if not _JOB_ID.match(job_id):
+        return _resp(404, {"error": "not found"})
+    try:
+        rating = _parse_body(event).get("rating")
+    except (ValueError, json.JSONDecodeError, AttributeError):
+        rating = None
+    if rating not in ("up", "down"):
+        return _resp(400, {"error": "rating must be 'up' or 'down'"})
+    table, now = table or _table(), time.time() if now is None else now
+    from botocore.exceptions import ClientError
+
+    try:
+        item = table.update_item(
+            Key={"PK": f"JOB#{job_id}", "SK": "JOB"}, ReturnValues="ALL_NEW",
+            UpdateExpression="SET feedback = :r, feedback_at = :t",
+            ConditionExpression="attribute_exists(PK) AND attribute_not_exists(feedback) AND #s IN (:a, :u, :n)",
+            ExpressionAttributeNames={"#s": "status"},
+            ExpressionAttributeValues={":r": rating, ":t": int(now), ":a": "answered", ":u": "unverified", ":n": "needs_approval"},
+        )["Attributes"]
+    except ClientError as exc:
+        if exc.response.get("Error", {}).get("Code") != "ConditionalCheckFailedException":
+            raise
+        return _resp(409, {"error": "This answer can't be rated (already rated, not finished, or expired)."})
+    day = datetime.fromtimestamp(now, UTC).date().isoformat()
+    table.update_item(Key={"PK": f"FEEDBACK#{day}", "SK": "FEEDBACK"},
+                      UpdateExpression="ADD #r :one SET #ttl = :ttl",
+                      ExpressionAttributeNames={"#r": rating, "#ttl": "ttl"},
+                      ExpressionAttributeValues={":one": 1, ":ttl": int(now) + _FEEDBACK_TTL_S})
+    log.info("job_feedback", extra={"fields": {"job_id": job_id, "rating": rating, "status": item.get("status")}})
+    return _resp(201, {"job_id": job_id, "rating": rating})
+
+
 def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
     _configure_logging()
     if "mc_job" in event:
@@ -306,6 +346,8 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
     method, path = http.get("method", ""), event.get("rawPath", "")
     if method == "POST" and path == "/api/ask":
         return handle_ask(event, context)
+    if method == "POST" and path.startswith("/api/jobs/") and path.rstrip("/").endswith("/feedback"):
+        return handle_feedback(event, path)
     if method == "GET" and path.startswith("/api/jobs/"):
         return handle_job(path)
     if method == "POST" and path == "/api/approvals":
