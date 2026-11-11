@@ -7,7 +7,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 - **Claude Haiku 5.5 access:** access requested, waiting for AWS. Converse via `us.anthropic.claude-haiku-5-5` still returns `AccessDeniedException`. Autopilot: re-probe with the ops workflow (`record-fixtures`, `haiku-5-5`) at most once a day; when it succeeds, record the M1-06 fixtures and apply the ADR-003 selection rule. Until then Haiku 4.5 stays the default.
 - **M5-03 approvals in the simulation window (choice with no recommended option):** the owner's live decisions are dated 2026-11-11, the window ends 2026-10-31, and effects start 3-14 days after approval, so any mapping that keeps "nothing before the approval date" shows no effect; a visible effect needs a backdated approval date. Options: (a) leave as is (decisions only count for windows that include them); (b) map each decision to the action's data date minus a fixed lead (for example 60 days), labeled as simulated; (c) extend the window past 2026-10-31. Which one?
 - **Intake `secrets` rule false positive:** AG-01 blocks any question with the bare word "token(s)" (for example "tokens per request for F4"), on the graph path. Narrowing it to "api/access/auth/bearer/refresh token" would loosen a guardrail, so autopilot won't. The public ask path skips that one rule for now. Narrow it?
-- **Superseded PRs #273 and #276:** closing them (and deleting their branches) was denied by the session guard again in run 124. Please close them; both were replaced and merged (#275, #277).
+- **Superseded PRs #273 and #276:** closing them (and deleting their branches) was denied by the session guard again in runs 124 and 125. Please close them; both were replaced and merged (#275, #277).
 
 ## Owner decision 2026-11-11
 
@@ -23,17 +23,33 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-1. **Close superseded PRs #273 and #276** if the session guard allows (see Waiting for owner).
-2. **M6-02 remaining:** dispatch ops `online-eval` once (about $0.03) and log the result; then decide (§8.2) whether to schedule it nightly (cost gate) and how to collect visitor thumbs up/down (public write path: check abuse limits first). Tick M6-02 after.
-3. **M6-03 remaining:** low findings in `docs/security-review.md` (scope the CloudFront invalidation grant); kill-switch game day (ops; plan it first, it denies Bedrock while active); live red-team run on the API; golden set to 100 (needs graph fixture recording).
+1. **Finish PRs #289-#294 (stacked, in order):** main `ci` + `deploy to dev` for efbff03 (run 43098377193) first. Then for each PR head re-check the guard; if its `ci` run is still stuck (jobs `in_progress`, steps done) re-run it (`.../actions/runs/{id}/rerun`). Merge by fast-forwarding `main` to the highest fully green head (#294 = a79e946 + this progress commit). Then dispatch ops `red-team` once and log it.
+2. **Kill-switch G1 step 2:** SNS-triggered handler that writes/deletes `publish/latest/kill_switch.json`, sets API concurrency 0, turns `mc-*` schedules off (scoped IAM; verify the Budgets action SNS message format in AWS docs first; docs.aws.amazon.com was not reachable in run 125). See `docs/runbooks/kill-switch-game-day.md`.
+3. **M6-03 remaining:** drill itself (G3: owner console or ops self-attach, owner's call), CloudFront invalidation grant scoping (low), golden set to 100 (needs graph fixture recording).
 4. **M5-04:** KPI-09 needs a closed-loop plan change, KPI-13 the real AWS bill (M2-04 FOCUS export).
 5. **EV-06 graph replay** (known baseline 17/27, specialists-v9): revisit later with fewer scenarios per change or a judge-based gate.
 6. **API `search_knowledge`:** the deployed graph (`MC_GRAPH`, off by default) still gets no knowledge tool; needs the index in the Lambda (check deploy impact and cost first).
-7. **Daily checks (not tasks):** ops `verify-backfill` (last 2026-11-11 00:23 UTC: `awaiting_first_export`) and the Haiku 5.5 probe (last 2026-11-11: `AccessDeniedException`). Next due 2026-11-12.
+7. **Daily checks (not tasks):** ops `verify-backfill` and the Haiku 5.5 probe, next due 2026-11-12. Weekly: `online-eval` runs Mondays 06:17 UTC once #287 is on `main` (it is).
 
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-05, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed.
 Notes: Ops eval results are in the job log; fixtures are base64 between FIXTURE-BEGIN/END lines. Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1; local replays need it too or everything drifts). Ops `ev06_graph: true` adds the graph runs (opt-in, about $0.15; the ops job ends `failure` while the graph gate is unmet, which is expected). Flaky github.com 504s during image builds: re-run the failed job. Only commit the graph fixtures from a record run; the other fixture sets change only in tool-use IDs. AG-05 prompt is at the cost-cap edge (`test_unsupported_figure_retries_then_fails_closed` sums $0.009965 of $0.01): keep it no longer than v8. Gh-created PR bodies get a footer: remove it with the GitHub MCP `update_pull_request` (gh api PATCH gets it re-added).
+
+## 2026-11-11 (autopilot run 125)
+
+- **Start:** main `ci` + `deploy to dev` green for 11ccb98. Closing #273/#276 denied again (Waiting for owner).
+- **Ops:** `online-eval` (run 43093795181, Haiku 4.5): sample gov-05, leak-02, act-06; live = recorded (`changed` empty).
+- **Task 1:** PR #287, `online-eval` runs weekly (Mon 06:17 UTC) from ops.yml.
+- **Task 2:** PR #288, `docs/runbooks/kill-switch-game-day.md` (plan, not run). Gaps: G1 no SNS kill-switch Lambda (§11.3), G2 denied model call = generic error, G3 drill can't run unattended.
+- **Task 3:** PR #289, G2 fixed: Bedrock AccessDenied -> `budget_exceeded` "unavailable right now" (`error: access_denied`).
+- **Task 4:** PR #290, `POST /api/jobs/{id}/feedback` (up/down, one per shown answer, daily counter, no text).
+- **Task 5:** PR #291, 👍/👎 buttons under answers on the dashboard.
+- **Task 6:** PR #292, ops `status` prints 7-day feedback counts; **M6-02 ticked**.
+- **Task 7:** PR #293, G1 step 1: dashboard "analyst is paused" notice from `publish/latest/kill_switch.json` (nothing writes it yet).
+- **Task 8:** PR #294, ops `red-team`: 19 critical EV-09 cases against the live `/api/ask`, stops at first 202 (not dispatched yet).
+- **Decisions (§8.2):** weekly not nightly online eval (~$0.13/month vs ~$0.90); reuse `budget_exceeded` for denied calls (new status rejected); feedback = one vote per job id, no text, no per-IP limit; red team sends only cases refused before spend.
+- **Merge:** #287 + #288 green on their heads; `main` fast-forwarded 11ccb98 -> efbff03 at 20:50 (main `ci` push run 43098377193 queued, deploy not verified). #289-#294 left open: their `ci` runs show jobs `in_progress` although every step finished at 20:21 (GitHub-side stall; cancel returns 409 "not in progress"), and later runs are queued behind them. Ended at 43 min.
+- **Cost:** about $0.03 (one online-eval run); no new resources.
 
 ## 2026-11-11 (autopilot run 124)
 
