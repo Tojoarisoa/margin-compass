@@ -50,6 +50,12 @@ class Intake:
         return self.verdict == "allow"
 
 
+def instruction_like(text: str) -> bool:
+    """Contract-borne injection check (EV-09, M6-03 step 2): retrieved text that reads like an instruction to the
+    agent (injection or authority bypass). The same rules as for questions, so they only ever tighten together."""
+    return bool(_INJECTION.search(text) or _AUTHORITY_BYPASS.search(text))
+
+
 def screen(question: object) -> Intake:
     if not isinstance(question, str) or not question.strip():
         return Intake("block", "empty")
