@@ -1026,7 +1026,7 @@ Each milestone ends with a demoable increment and exit criteria. Effort assumes 
 
 ### M6: Harden & Launch (~2 weeks)
 
-- [ ] M6-01 Telemetry lake, alarms, runbooks
+- [x] M6-01 Telemetry lake, alarms, runbooks
 - [ ] M6-02 Drift monitoring, online evaluation sampling
 - [ ] M6-03 Kill-switch game day; security review; red team (EV-09); golden set grown to 100
 - [ ] M6-04 Guided tour; case study ("How a fictional AI SaaS recovered N margin points"); demo video script; lessons learned
@@ -1228,3 +1228,4 @@ Status: all ADRs are written up in `docs/adr/` and **accepted** (ADR-017 on 2026
 | 2026-11-11 | 0.4 | M6-01 step 1 (**auto-decided under AGENTS.md §8.2**): Lambda `Errors` alarms for the pipeline (>= 1 per hour) and the agent API (>= 3 per hour) e-mail the alert topic; 3 of the 10 alarms in §14 used; runbook `docs/runbooks/alarms.md`. Options: an errors/invocations rate alarm at the 2% SLO (deferred: noisy at dev volume). Cost $0 |
 | 2026-11-12 | 0.4 | Owner fix: the M2 build now publishes `pg1.json` (plus `explore.parquet`, `pg2.json`) from the M2 marts. Before, only the M1 pipeline wrote `pg1.json`, so the live snapshot stayed the M1 one from 2026-11-03 and the dashboard hid every M2 section (Action Center, brief, explorer, leaks, health). AI revenue = `ai_addon` invoice lines, AI cost = `fct_cost_to_serve` (KPI-01) |
 | 2026-11-11 | 0.4 | M6-01 step 2 (**auto-decided under AGENTS.md §8.2**): telemetry lake check. The daily `telemetry` schedule already compacted the API `gen_ai_call` logs (`telemetry/dogfood.parquet`); the pipeline's own run logs were missing. It now also writes `telemetry/pipeline_runs.parquet` (one row per run and day: duration, status, error count). Options: a separate schedule (rejected: one more resource for the same job). The pipeline role may also `logs:FilterLogEvents` on its own log group. Cost $0 |
+| 2026-11-11 | 0.4 | M6-01 ticked (**auto-decided under AGENTS.md §8.2**): step 3 checked for a DLQ alarm; the infra has no queue or dead-letter queue (no SQS, no Lambda async DLQ), so none is added. Alarms 3 of 10 cover pipeline failure, API errors and the budget; telemetry lake = `telemetry/dogfood.parquet` + `telemetry/pipeline_runs.parquet`; runbook `docs/runbooks/alarms.md`. Options: add a DLQ to have something to alarm on (rejected: a new resource with no producer). Cost $0 |
