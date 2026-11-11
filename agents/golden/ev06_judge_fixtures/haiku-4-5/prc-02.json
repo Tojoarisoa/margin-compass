@@ -1,7 +1,7 @@
 {
   "calls": [
     {
-      "request_sha": "01bff81c737ab4a5e0a8250b96cb6f67bc510b77b9a2e1b9041e0e3c20834f45",
+      "request_sha": "51e6cafcd6470bc3360d2cb0bc3767f09e589551fad7b6d58882fe5fd5885bc7",
       "response": {
         "content": [
           {
@@ -9,12 +9,12 @@
               "input": {
                 "addresses_job": true,
                 "outcome": true,
-                "reason": "Run correctly answers the pricing question with proper evidence citation [E1].",
+                "reason": "Route correct, tools allowed, answered as expected. Answer cites evidence [E1] with margin figure and addresses job question.",
                 "route": true,
                 "tools": true
               },
               "name": "record_verdict",
-              "toolUseId": "tooluse_IA7fuBs0zkp7cLlr3A71Sw",
+              "toolUseId": "tooluse_fVBIo7VdpVyMFE4LI3xRDe",
               "type": "tool_use"
             }
           }
@@ -22,8 +22,8 @@
         "stop_reason": "tool_use",
         "usage": {
           "cacheReadInputTokens": 0,
-          "inputTokens": 1050,
-          "outputTokens": 137
+          "inputTokens": 1080,
+          "outputTokens": 148
         }
       }
     }
