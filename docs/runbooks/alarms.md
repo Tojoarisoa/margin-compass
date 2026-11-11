@@ -15,3 +15,12 @@ All alarms e-mail the `mc-shared-foundation-alerts` topic (foundation stack). PL
 2. If a deploy caused it, re-run the previous green `main` commit's `ci` workflow (one-step rollback, PLAN.md §15).
 3. Fix on a branch with a test that reproduces the failure; never silence an alarm by raising its threshold without an owner decision.
 4. Unattended runs (AGENTS.md §8): a fired alarm on the budget is a hard stop (§8.3); a pipeline or API alarm is a normal fix task.
+
+## Telemetry lake (PLAN.md §14)
+
+The daily `telemetry` schedule (`mc-<env>-data-telemetry`, 00:30 UTC, off in dev by default) compacts the previous UTC day into the lake:
+
+- `telemetry/dogfood.parquet`: the agent API's `gen_ai_call` events by day and model (tokens, cost, latency; no content).
+- `telemetry/pipeline_runs.parquet`: one row per pipeline `run_id` and day (first/last event time, duration, final status, event and error counts).
+
+Both are idempotent per day. To backfill a day by hand, invoke the pipeline function with `{"profile": "telemetry", "day": "YYYY-MM-DD"}` (via the ops workflow, AGENTS.md §8.1). Log groups keep 7 days, so a day older than that can't be rebuilt.
