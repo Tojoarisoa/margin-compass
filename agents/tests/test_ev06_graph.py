@@ -4,7 +4,7 @@ from test_specialists import PLAN, Script, use
 
 from mc_agents.ev06 import task_success
 from mc_agents.ev06_graph import default_scenarios, graph_runner, run_graph
-from mc_agents.ev06_judge import judgeable
+from mc_agents.ev06_judge import judgeable, recorded
 from mc_agents.ev_scenarios import load_scenarios
 from mc_agents.llm import LLMResponse
 
@@ -90,8 +90,17 @@ def test_capped_run_fails_closed(gold):
 def test_default_scenarios_are_the_unjudged_ones():
     every = load_scenarios()
     scs = default_scenarios()
-    assert scs and all(not judgeable(s) for s in scs)
-    assert len(scs) + sum(judgeable(s) for s in every) == len(every)
+    assert scs and all(not judgeable(s) and recorded(s) for s in scs)
+    pending = [s for s in every if not judgeable(s) and not recorded(s)]
+    assert len(scs) + len(pending) + sum(judgeable(s) for s in every) == len(every)
+    assert default_scenarios(include_unrecorded=True) == [s for s in every if not judgeable(s)]
+
+
+def test_recorded_flag_matches_the_committed_graph_fixtures():
+    from mc_agents.ev06_graph import FIXTURES
+
+    have = {p.stem for p in (FIXTURES / "haiku-4-5").glob("*.json")}
+    assert have == {s["id"] for s in default_scenarios()}
 
 
 def test_record_then_replay_roundtrip(gold, tmp_path):

@@ -25,7 +25,7 @@ _INJECTION = re.compile(
 )
 _AUTHORITY_BYPASS = re.compile(
     r"(?:skip|bypass|without|no need for|waive) (?:the )?(?:human )?(?:approval|authority|sign-?off|guardrails?)"
-    r"|approve (?:[\w-]+ ){0,4}?(?:yourself|automatically)|pre-?approved by",
+    r"|approve (?:\S+ ){0,4}?(?:yourself|automatically)|pre-?approved by",
     re.I,
 )
 _SQL_ATTACK = re.compile(r"\b(?:drop|delete|truncate|alter|insert|update)\s+(?:table|from|into)\b|;\s*--|\bunion\s+select\b", re.I)

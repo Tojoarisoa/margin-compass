@@ -60,6 +60,12 @@ def judgeable(sc: dict[str, Any]) -> bool:
     return sc["route"] == "blocked" or bool(sc.get("answer"))
 
 
+def recorded(sc: dict[str, Any]) -> bool:
+    """False for a scenario added after the last fixture recording (`"recorded": false`): replay skips it and lists
+    it under `unrecorded` until an ops `record-fixtures` run on main writes its fixture and the flag is removed."""
+    return sc.get("recorded", True) is not False
+
+
 def judge_message(sc: dict[str, Any], out: dict[str, Any]) -> str:
     expected = {"question": sc["question"], "job": sc["jtbd"], "expected_route": sc["route"],
                 "allowed_tools": sc["tools"]}
@@ -97,10 +103,11 @@ def judge_one(client: Any, model_key: str, sc: dict[str, Any], out: dict[str, An
 
 def judge(make_client: Callable[[str], Any], model_key: str = "haiku-4-5",
           run: Callable[[dict[str, Any]], dict[str, Any]] = reference_run,
-          scenarios: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+          scenarios: list[dict[str, Any]] | None = None, include_unrecorded: bool = False) -> dict[str, Any]:
     """Judge pass rate, per job, and agreement with the deterministic rubric (step 1)."""
     every = load_scenarios()
-    scs = scenarios if scenarios is not None else [s for s in every if judgeable(s)]
+    scs = scenarios if scenarios is not None else [
+        s for s in every if judgeable(s) and (include_unrecorded or recorded(s))]
     judged = {s["id"] for s in scs}
     verdicts: dict[str, dict[str, Any] | None] = {}
     rubric: dict[str, bool] = {}
@@ -125,6 +132,7 @@ def judge(make_client: Callable[[str], Any], model_key: str = "haiku-4-5",
             "failed": sorted(k for k, v in ok.items() if not v),
             "no_verdict": sorted(k for k, v in verdicts.items() if v is None), "drifted": sorted(drifted),
             "judged": len(scs), "not_judged": sorted(s["id"] for s in every if s["id"] not in judged),
+            "unrecorded": sorted(s["id"] for s in every if not recorded(s) and s["id"] not in judged),
             "reasons": {k: v["reason"] for k, v in verdicts.items() if v is not None and not ok[k]}}
 
 
@@ -147,7 +155,7 @@ def run_judge(model_key: str, mode: str = "replay", fixtures_dir: Path = FIXTURE
             return rec
         return live_client or BedrockLLM()
 
-    out = judge(make_client, model_key, scenarios=scenarios)
+    out = judge(make_client, model_key, scenarios=scenarios, include_unrecorded=mode != "replay")
     for sid, rec in recorders:
         rec.save({"scenario_id": sid, "model_id": spec.target, "prompt_version": JUDGE_PROMPT_VERSION})
     return {**out, "model": spec.target, "mode": mode}
