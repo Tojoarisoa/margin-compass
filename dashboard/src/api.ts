@@ -52,3 +52,14 @@ export async function waitForJob(jobId: string, onUpdate: (j: Job) => void, time
   }
   throw new ApiError("The agent took too long to answer.", 504);
 }
+
+/** One thumbs up/down per shown answer (M6-02). The server accepts a single vote per job; no text is sent. */
+export async function rate(jobId: string, rating: "up" | "down"): Promise<void> {
+  const body = JSON.stringify({ rating });
+  const res = await fetch(`/api/jobs/${encodeURIComponent(jobId)}/feedback`, {
+    method: "POST",
+    headers: { "content-type": "application/json", "x-amz-content-sha256": await sha256Hex(body) },
+    body,
+  });
+  if (res.status !== 201 && res.status !== 409) throw new ApiError(`Feedback failed (${res.status})`, res.status);
+}

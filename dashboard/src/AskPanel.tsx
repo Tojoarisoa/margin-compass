@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ApiError, ask, waitForJob, type Job } from "./api";
+import { ApiError, ask, rate, waitForJob, type Job } from "./api";
 
 const PERSONAS: Record<string, string[]> = {
   CFO: [
@@ -88,6 +88,29 @@ export function ApprovalBox({ approver }: { approver?: string }) {
   );
 }
 
+/** Thumbs up/down on a shown answer (M6-02 online feedback): one vote per answer, no text. */
+export function FeedbackBox({ jobId }: { jobId: string }) {
+  const [state, setState] = useState<"idle" | "sending" | "done" | "failed">("idle");
+  async function send(r: "up" | "down") {
+    setState("sending");
+    try {
+      await rate(jobId, r);
+      setState("done");
+    } catch {
+      setState("failed");
+    }
+  }
+  if (state === "done") return <p className="muted">Thanks for the feedback.</p>;
+  return (
+    <div className="feedback" role="group" aria-label="Was this answer useful?">
+      <span className="muted">Useful? </span>
+      <button type="button" className="chip" aria-label="Yes, useful" disabled={state === "sending"} onClick={() => void send("up")}>👍</button>{" "}
+      <button type="button" className="chip" aria-label="No, not useful" disabled={state === "sending"} onClick={() => void send("down")}>👎</button>
+      {state === "failed" && <span className="muted"> Couldn't send it.</span>}
+    </div>
+  );
+}
+
 export function AskPanel() {
   const [question, setQuestion] = useState("");
   const [job, setJob] = useState<Job | null>(null);
@@ -144,6 +167,8 @@ export function AskPanel() {
           <div className="answer">
             <p>{job.answer}</p>
             {job.status === "needs_approval" && <ApprovalBox key={job.job_id} approver={job.approver} />}
+            {(job.status === "answered" || job.status === "unverified" || job.status === "needs_approval") &&
+              <FeedbackBox key={`fb-${job.job_id}`} jobId={job.job_id} />}
             {job.evidence && job.evidence.length > 0 && (
               <details>
                 <summary>Evidence ({job.evidence.length})</summary>
