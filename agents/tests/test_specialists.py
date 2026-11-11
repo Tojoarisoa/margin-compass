@@ -114,6 +114,9 @@ def test_pricing_specialist_calls_tools_instead_of_asking():
     # authority documents; AG-03 (replayed by EV-05) keeps the shared rules only
     assert "Never number your points" in SPECIALISTS["efficiency"].system
     assert "never refuse it or ask for details" in SPECIALISTS["contract_policy"].system
+    # 3c-3l: AG-07 searches once (a second search pushed act-06/gov-06 over the per-question cost cap)
+    assert "top_k 8" in SPECIALISTS["contract_policy"].system
+    assert "Search exactly once, then answer." in SPECIALISTS["contract_policy"].system
     assert SPECIALISTS["cost_to_serve"].instructions == ""
     specs = {s["toolSpec"]["name"]: s["toolSpec"]["inputSchema"]["json"] for s in tool_specs(SPECIALISTS["pricing"])}
     assert SPECIALISTS["pricing"].tools == ("price_plan", "query_gold")  # churn is price_plan's churn_bps now

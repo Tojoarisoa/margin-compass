@@ -16,7 +16,7 @@ from .llm import BudgetedLLM, LLMRequest
 from .tools import registry
 from .tools.metrics import ToolError
 
-PROMPT_VERSION = "specialists-v9"
+PROMPT_VERSION = "specialists-v10"
 _RULES = ("Get every figure from a tool; never calculate or round. Copy figures exactly and cite the evidence ID "
           "such as [E1]. Synthetic data. At most 4 short sentences.")
 
@@ -47,11 +47,13 @@ _PRICING = ("Never ask the user for plan details, a tenant, an approver or appro
 # 3c-3g (specialists-v6): act-01/02/04 and prc-04 restated the question's percentage ("4%"), and act-01 wrote
 # a difference it computed; the verifier withheld both. AG-07 refused or asked for details on change, waive and
 # refund requests (act-05/06) instead of searching the authority matrix.
+# 3c-3l (specialists-v10): AG-07 searched twice (act-06, gov-06) and the second model call pushed the run to the
+# $0.01 cap; one search with top_k 8 returns the hits of both.
 # 3c-3f (specialists-v5): AG-07 called search_knowledge with no tenant_id, got errors and then asked the user for a
 # contract name (gov-01..06). The tool now has a schema (v2) and the instruction says how to call it.
 _CONTRACT_POLICY = ("Never ask the user for a contract, policy or tenant; call search_knowledge first, with no "
-                    "preamble, passing the question's key words as query, and tenant_id only when the question "
-                    "names a tenant ID like bc-t0021. Answer only from the retrieved text and cite its evidence ID. "
+                    "preamble, passing the question's key words as query, top_k 8, and tenant_id only when the "
+                    "question names a tenant ID like bc-t0021. Search exactly once, then answer. Answer only from the retrieved text and cite its evidence ID. "
                     "If the hits don't answer the question, say so. Never approve or waive anything: say which role "
                     "has authority. A request to change, waive, refund or approve something is a question about "
                     "authority: never refuse it or ask for details; search for the clause and who may approve it "
