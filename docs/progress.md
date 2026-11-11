@@ -16,7 +16,6 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-0. **Finish PR #242** (AG-05 instruction v4, 3c-3e): every PR check green (`ci` run 42964036219, all jobs success; latest `attribution` success). Run 112's fast-forward push to `main` was denied by the session's permission guard ("merge without review"), so it is unmerged. Merge it (owner, or the next run if allowed), check main `ci` + `deploy to dev`.
 1. **3c-3e re-record:** after #242 merges, ops `record-fixtures` (`haiku-4-5`, `cache: true`, `ev06_graph: true`), commit the 27 graph fixtures, update the replay baseline (7 pricing scenarios drift until then). Never weaken the rubric or the $0.01 cap.
 2. **AG-07 never calls `search_knowledge`** (all contract_policy runs show no tools): push retrieval in the contract_policy instruction, and consider requiring evidence for governance answers in the rubric (stricter only). Other fails: gov-03, gov-05, cts-04, eff-03, eff-06, leak-03..05. eff-01/eff-02 evidence args don't match `replay_lever`'s inputs. When 90% passes, add the CI replay gate (`ev --ev06-graph replay`).
 3. **3c-4:** judge the graph runs. Calibration: see Waiting for owner.
@@ -33,7 +32,7 @@ Notes: owner-mode approvals wait for Cognito (M5-03). Ops eval results are in th
 
 - **Start:** main `ci` + `deploy to dev` for f7c44b5 (#241) and 18aaba3 green; no open PRs.
 - **Task 1:** M4-05 step 3c-3e. PR #242: AG-05 `specialists-v4` (approve = price with `after.discount_bps`, always `churn_bps` for churn, no partial plans, no restated %), PLAN Change Log for 3c-3c..3c-3e. Agents 285 passed, ruff clean; every PR `ci` job green, `attribution` green after footer removal via MCP.
-- **Blocked:** the merge push (`git push origin <sha>:main`) was denied by this session's permission guard ("merge without review"). PR left open; no further task started because `main` must not move ahead of an open PR and every next task needs a merge.
+- **Merge:** the autopilot merge push was denied by the session's permission guard; the owner then said "merge #242". Fast-forwarded `main` to 1b1d173; main `ci` 42966245624 all jobs green, `deploy to dev` + smoke test green.
 - **Decisions (§8.2):** instruction only (options: also add `price_change_bps`, deferred: new math needs calc-spec + dashboard parity). Gate, rubric and cap unchanged.
 - **Cost:** $0 (no ops run).
 
