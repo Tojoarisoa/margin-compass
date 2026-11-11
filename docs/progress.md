@@ -5,6 +5,9 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 ## Waiting for owner
 
 - **Claude Haiku 5.5 access:** access requested, waiting for AWS. Converse via `us.anthropic.claude-haiku-5-5` still returns `AccessDeniedException`. Autopilot: re-probe with the ops workflow (`record-fixtures`, `haiku-5-5`) at most once a day; when it succeeds, record the M1-06 fixtures and apply the ADR-003 selection rule. Until then Haiku 4.5 stays the default.
+- **M5-03 approvals in the simulation window (choice with no recommended option):** the owner's live decisions are dated 2026-11-11, the window ends 2026-10-31, and effects start 3-14 days after approval, so any mapping that keeps "nothing before the approval date" shows no effect; a visible effect needs a backdated approval date. Options: (a) leave as is (decisions only count for windows that include them); (b) map each decision to the action's data date minus a fixed lead (for example 60 days), labeled as simulated; (c) extend the window past 2026-10-31. Which one?
+- **Intake `secrets` rule false positive:** AG-01 blocks any question with the bare word "token(s)" (for example "tokens per request for F4"), on the graph path. Narrowing it to "api/access/auth/bearer/refresh token" would loosen a guardrail, so autopilot won't. The public ask path skips that one rule for now. Narrow it?
+- **Superseded PRs #273 and #276:** closing them (and deleting their branches) was denied by the session guard again in run 124. Please close them; both were replaced and merged (#275, #277).
 
 ## Owner decision 2026-11-11
 
@@ -20,18 +23,32 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-1. **Close superseded PRs #273 and #276** (both replaced and merged as #275 / #277; closing was denied by this run's session guard). Don't "finish" them; their branches can be deleted.
-2. **M5-03 tick:** the owner's round trip is done (Owner decision 2026-11-11): tick M5-03 in PLAN.md §17 + Change Log.
-3. **M5-03 approvals in the simulation:** owner decisions are dated 2026-11-11, after the window (ends 2026-10-31), so they change nothing in a backfill. Decide (§8.2) how a live decision maps into the window (e.g. shift to the last month) before running `start-backfill` with `approvals: true`. Chunked months also don't write the realized (counterfactual) files; check M5-04 `fct_realized_margin` in the backfill path.
-4. **M6-02:** drift monitoring, online evaluation sampling.
-5. **M5-04:** KPI-09 needs a closed-loop plan change, KPI-13 the real AWS bill (M2-04 FOCUS export).
-6. **EV-06 graph replay** (known baseline 17/27, specialists-v9): revisit later with fewer scenarios per change or a judge-based gate.
-7. **API `search_knowledge`:** the deployed graph (`MC_GRAPH`, off by default) still gets no knowledge tool; needs the index in the Lambda (check deploy impact and cost first).
-8. **Daily checks (not tasks):** ops `verify-backfill` (last 2026-11-11 00:23 UTC: `awaiting_first_export`) and the Haiku 5.5 probe (last 2026-11-11: `AccessDeniedException`). Next due 2026-11-12.
+1. **Close superseded PRs #273 and #276** if the session guard allows (see Waiting for owner).
+2. **M6-02 remaining:** dispatch ops `online-eval` once (about $0.03) and log the result; then decide (§8.2) whether to schedule it nightly (cost gate) and how to collect visitor thumbs up/down (public write path: check abuse limits first). Tick M6-02 after.
+3. **M6-03 remaining:** low findings in `docs/security-review.md` (scope the CloudFront invalidation grant); kill-switch game day (ops; plan it first, it denies Bedrock while active); live red-team run on the API; golden set to 100 (needs graph fixture recording).
+4. **M5-04:** KPI-09 needs a closed-loop plan change, KPI-13 the real AWS bill (M2-04 FOCUS export).
+5. **EV-06 graph replay** (known baseline 17/27, specialists-v9): revisit later with fewer scenarios per change or a judge-based gate.
+6. **API `search_knowledge`:** the deployed graph (`MC_GRAPH`, off by default) still gets no knowledge tool; needs the index in the Lambda (check deploy impact and cost first).
+7. **Daily checks (not tasks):** ops `verify-backfill` (last 2026-11-11 00:23 UTC: `awaiting_first_export`) and the Haiku 5.5 probe (last 2026-11-11: `AccessDeniedException`). Next due 2026-11-12.
 
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-05, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed.
 Notes: Ops eval results are in the job log; fixtures are base64 between FIXTURE-BEGIN/END lines. Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1; local replays need it too or everything drifts). Ops `ev06_graph: true` adds the graph runs (opt-in, about $0.15; the ops job ends `failure` while the graph gate is unmet, which is expected). Flaky github.com 504s during image builds: re-run the failed job. Only commit the graph fixtures from a record run; the other fixture sets change only in tool-use IDs. AG-05 prompt is at the cost-cap edge (`test_unsupported_figure_retries_then_fails_closed` sums $0.009965 of $0.01): keep it no longer than v8. Gh-created PR bodies get a footer: remove it with the GitHub MCP `update_pull_request` (gh api PATCH gets it re-added).
+
+## 2026-11-11 (autopilot run 124)
+
+- **Start:** main `ci` + `deploy to dev` green for eb807e3. Closing superseded #273/#276 denied again (Waiting for owner).
+- **Task 1:** PR #279, M5-03 ticked (owner round trip done).
+- **Task 2:** PR #280, M6-02 step 1: forecaster drift checks, `gold/_quality/model_drift.json` each train run (error drift last 28 vs 112 days; realized forecasts vs champion backtest). ml 57 passed.
+- **Task 3:** PR #281, M6-02 step 2: `mc-agents online-eval`, daily sample of 3 golden graph scenarios, live vs recorded; `changed` = stale fixtures. No text in the report.
+- **Task 4:** PR #282, ops task `online-eval` (not scheduled, not run yet); ops `status` prints the drift report.
+- **Task 5:** PR #283, M6-03 step 1: EV-09 red-team set (30 cases, 22 critical), gate in the agents tests. Found and fixed one gap: "approve this price change yourself" passed intake (rule tightened).
+- **Task 6:** PR #284, M6-03 step 2: `search_knowledge` withholds instruction-like retrieved passages (contract-borne injection). Real corpus unaffected; fixtures unchanged.
+- **Task 7:** PR #285, M6-03 step 3 (security review finding): public `POST /api/ask` skipped AG-01 intake on the default path; now blocks injection, authority bypass and SQL attack before any job or spend. agents 376 passed.
+- **Task 8:** PR #286, `docs/security-review.md` first pass (code and IaC only): 3 medium findings fixed above, 3 low open (intake `token` false positive, account-wide CloudFront invalidation grant, `style-src 'unsafe-inline'`).
+- **Decisions (§8.2):** drift = 2x and +5 WAPE points (PSI rejected: level moves with growth); online sample from the 27 recorded graph scenarios only; withhold (not drop) poisoned passages; API skips the `secrets` rule (bare "token" false positive). M5-03 window mapping has no recommended option: Waiting for owner.
+- **Merge:** all 8 PRs green on their heads (every `ci` job + latest `attribution`); `main` fast-forwarded eb807e3 -> fa22329 at 19:34; main `ci` + `deploy to dev` + smoke green (run 43088389478). Ended at 39 min.
+- **Cost:** $0 (no new resources, no ops run).
 
 ## 2026-11-11 (autopilot run 123)
 
