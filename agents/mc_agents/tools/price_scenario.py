@@ -10,11 +10,15 @@ before/after/churn answer took four (price, price, churn, words). Now it takes t
   (never mix a given plan with example values).
 - `after`: the fields that change (for example `{"discount_bps": 400}`), priced on the same plan.
 - `churn_bps` (and `months`, default 12): churn-adjusted figures for before and, when given, after.
+- v3 (3c-3h): every basis-point input is echoed as an exact percent string (`after.changes_pct`, `churn.churn_pct`;
+  calc-spec "Display conversion": percent = bps / 100), so an answer may quote the question's "4%" from the ledger
+  instead of the verifier withholding it. A unit conversion of an input, not a new formula.
 Synthetic inputs only.
 """
 
 from __future__ import annotations
 
+from decimal import Decimal
 from typing import Any
 
 from mc_agents.tools.churn_adjust import churn_adjust
@@ -27,6 +31,12 @@ EXAMPLE_PLAN: dict[str, int] = {
 }
 _PLAN_KEYS = (*_FIELDS, "usage_cap_cents")
 DEFAULT_MONTHS = 12
+
+
+def bps_to_pct(bps: int) -> str:
+    """calc-spec display conversion: exact percent of a basis-point value (400 -> "4", 250 -> "2.5")."""
+    d = Decimal(int(bps)) / 100
+    return format(d.normalize() if d == d.to_integral_value() else d, "f")
 
 
 def price_scenario(inp: dict[str, Any]) -> dict[str, Any]:
@@ -49,10 +59,14 @@ def price_scenario(inp: dict[str, Any]) -> dict[str, Any]:
             raise ValueError("after must be a non-empty object of plan fields to change")
         after_plan = {**plan, **changes}
         out["after"] = {"changes": changes, **price_plan(after_plan)}
+        pct = {f"{k[:-4]}_pct": bps_to_pct(v) for k, v in changes.items() if k.endswith("_bps")}
+        if pct:
+            out["after"]["changes_pct"] = pct
         runs.append(("after", after_plan, out["after"]))
     if inp.get("churn_bps") is not None:
         months = inp.get("months", DEFAULT_MONTHS)
-        churn: dict[str, Any] = {"churn_bps": inp["churn_bps"], "months": months}
+        churn: dict[str, Any] = {"churn_bps": inp["churn_bps"], "churn_pct": bps_to_pct(inp["churn_bps"]),
+                                 "months": months}
         for key, p, res in runs:
             churn[key] = churn_adjust({"revenue_cents": res["revenue_cents"], "cost_cents": p["cost_cents"],
                                        "churn_bps": inp["churn_bps"], "months": months})

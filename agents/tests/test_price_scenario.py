@@ -1,12 +1,12 @@
-"""M4-05 step 3c-3d: price_plan v2 composes the calc-spec functions; it adds no formula of its own."""
+"""M4-05 step 3c-3d/3c-3h: price_plan v2/v3 composes the calc-spec functions; it adds no formula of its own."""
 
 import pytest
 
-from mc_agents.ledger import Ledger
+from mc_agents.ledger import Ledger, verify_answer
 from mc_agents.tools import registry
 from mc_agents.tools.churn_adjust import churn_adjust
 from mc_agents.tools.metrics import ToolError
-from mc_agents.tools.price_scenario import EXAMPLE_PLAN, price_scenario
+from mc_agents.tools.price_scenario import EXAMPLE_PLAN, bps_to_pct, price_scenario
 from mc_agents.tools.pricing import price_plan
 
 
@@ -26,9 +26,9 @@ def test_full_plan_matches_price_plan_v1():
 def test_after_and_churn_are_the_calc_spec_functions():
     out = price_scenario({"after": {"discount_bps": 400}, "churn_bps": 200})
     after = price_plan({**EXAMPLE_PLAN, "discount_bps": 400})
-    assert out["after"] == {"changes": {"discount_bps": 400}, **after}
+    assert out["after"] == {"changes": {"discount_bps": 400}, "changes_pct": {"discount_pct": "4"}, **after}
     c = out["churn"]
-    assert c["churn_bps"] == 200 and c["months"] == 12
+    assert c["churn_bps"] == 200 and c["churn_pct"] == "2" and c["months"] == 12
     assert c["before"] == churn_adjust({"revenue_cents": out["revenue_cents"], "cost_cents": 20000, "churn_bps": 200,
                                         "months": 12})
     assert c["after"] == churn_adjust({"revenue_cents": after["revenue_cents"], "cost_cents": 20000, "churn_bps": 200,
@@ -59,5 +59,25 @@ def test_ledger_holds_every_figure_the_answer_may_quote():
     led = Ledger()
     registry.call("price_plan", {"after": {"discount_bps": 400}, "churn_bps": 200}, led)
     vals = led.values()
-    assert led.entries[0].tool == "price_plan@2"
+    assert led.entries[0].tool == "price_plan@3"
     assert {5000, 20000, 400, 200, 12} <= {int(v) for v in vals}
+
+
+@pytest.mark.parametrize(("bps", "pct"), [(0, "0"), (1, "0.01"), (55, "0.55"), (250, "2.5"), (400, "4"), (1200, "12"),
+                                          (10000, "100")])
+def test_bps_echo_is_the_exact_percent(bps, pct):
+    """3c-3h (price_plan v3): calc-spec display conversion, percent = bps / 100, exact."""
+    assert bps_to_pct(bps) == pct
+
+
+def test_percent_echo_only_for_bps_changes():
+    assert "changes_pct" not in price_scenario({"after": {"seat_price_cents": 5250}})["after"]
+
+
+def test_question_percent_is_supported_only_through_the_echo():
+    """The verifier still withholds a % the tool did not echo (EV-08 unchanged)."""
+    led = Ledger()
+    registry.call("price_plan", {"after": {"discount_bps": 400}, "churn_bps": 200}, led)
+    q = "Approve a 4% discount in the pricing review"
+    assert verify_answer("For the requested 4% discount (400 bps), churn assumed at 2% [E1].", led, q).ok
+    assert not verify_answer("A 5% discount would cost more [E1].", led, q).ok

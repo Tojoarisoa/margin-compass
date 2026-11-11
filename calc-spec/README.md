@@ -58,3 +58,10 @@ churn applies at each renewal after it.
 4. `adj_margin = adj_revenue - adj_cost`
 
 Vectors: `vectors/churn_v1.json`. Python: `agents/mc_agents/tools/churn_adjust.py`. TypeScript: `dashboard/src/churnAdjust.ts`. Same `npm run parity` check.
+
+## Display conversion (percent echo)
+
+A basis-point value may be shown as a percent: `percent = bps / 100`, written as an exact decimal string with no rounding
+(`400` → `"4"`, `250` → `"2.5"`, `1` → `"0.01"`). It converts an input for display; it is not a pricing formula, so it has
+no vectors. The agent tool `price_plan` v3 echoes its basis-point inputs this way (`after.changes_pct`, `churn.churn_pct`)
+so an answer can quote "4%" from the evidence ledger. Python: `bps_to_pct` in `agents/mc_agents/tools/price_scenario.py`.

@@ -16,7 +16,7 @@ from .llm import BudgetedLLM, LLMRequest
 from .tools import registry
 from .tools.metrics import ToolError
 
-PROMPT_VERSION = "specialists-v6"
+PROMPT_VERSION = "specialists-v7"
 _RULES = ("Get every figure from a tool; never calculate or round. Copy figures exactly and cite the evidence ID "
           "such as [E1]. Synthetic data. At most 4 short sentences.")
 
@@ -32,11 +32,13 @@ _PRICING = ("Never ask the user for plan details, a tenant, an approver or appro
             "{\"discount_bps\": N*100}; a price rise is the new seat_price_cents; an outcome-based plan is after "
             "{\"outcome_price_micro\": ..., \"outcomes\": ...}. Whenever churn is asked, pass churn_bps 200 unless "
             "a rate is given, and say it is assumed. Report money in cents and rates in bps exactly as the tool "
-            "returns them; never convert to dollars or percent, never write a % sign, and never state a "
-            "difference the tool did not return. \"Approve\" a discount means price it and say approval goes to "
-            "the role with authority for it. Example: \"Approve a 4% discount\" -> price_plan {\"after\": "
-            "{\"discount_bps\": 400}}, then answer \"For the requested discount (400 bps), revenue goes from X to "
-            "Y cents [E1].\"")
+            "returns them; never convert to dollars or percent (a % only copies a _pct field), and never state a "
+            "difference the tool did not return. "
+            "\"Approve\" a discount means price it and say approval goes to the role with authority for it. "
+            "Example: \"Approve a 4% discount\" -> price_plan {\"after\": {\"discount_bps\": 400}}, then answer "
+            "\"For the requested 4% discount (400 bps), revenue goes from X to Y cents [E1].\"")
+# 3c-3h (specialists-v7): price_plan v3 echoes bps inputs as percent (changes_pct, churn_pct), so the answer may
+# restate the question's "4%" from the ledger; a % with no _pct source is still withheld by the verifier.
 # 3c-3g (specialists-v6): act-01/02/04 and prc-04 restated the question's percentage ("4%"), and act-01 wrote
 # a difference it computed; the verifier withheld both. AG-07 refused or asked for details on change, waive and
 # refund requests (act-05/06) instead of searching the authority matrix.

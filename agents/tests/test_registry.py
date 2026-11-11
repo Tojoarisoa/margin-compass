@@ -41,7 +41,7 @@ def test_pricing_tool_schemas_match_tool_inputs():
     from mc_agents.tools import pricing
 
     pp = TOOLS["price_plan"].input_schema
-    assert TOOLS["price_plan"].version == "2" and pp["required"] == []  # no plan fields: the example plan
+    assert TOOLS["price_plan"].version == "3" and pp["required"] == []  # no plan fields: the example plan
     assert set(pp["properties"]) == {*pricing._FIELDS, "usage_cap_cents", "after", "churn_bps", "months"}
     assert set(pp["properties"]["after"]["properties"]) == {*pricing._FIELDS, "usage_cap_cents"}
     ch = TOOLS["churn_adjust"].input_schema

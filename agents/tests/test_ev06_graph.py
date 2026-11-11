@@ -155,9 +155,13 @@ def test_recorded_graph_fixtures_replay(gold):
     Step 3c-3g (specialists-v6: AG-05 no restated %, AG-06 no numbered lists, AG-07 answers change/waive/refund
     requests from the authority matrix): re-recorded by ops run 42979357858, 15/27 (act-05, eff-06, leak-04 now
     pass; act-03 and gov-06 regressed).
+
+    Step 3c-3h (price_plan v3 echoes bps inputs as percent, specialists-v7 AG-05 may copy a _pct field): the 7
+    scenarios routed to AG-05 drift (scored as fails; none passed before, so still 15/27) until the next ops record
+    run. AG-03, AG-04, AG-06 and AG-07 are unchanged.
     """
     rep = run_graph(gold, "haiku-4-5", "replay")
     assert set(rep["runs"]) == {s["id"] for s in default_scenarios()}
-    assert rep["drifted"] == []
+    assert rep["drifted"] == ["act-01", "act-02", "act-03", "act-04", "prc-04", "prc-05", "prc-06"]
     assert round(rep["ev06"] * 27) == 15 and not rep["passed"]
     assert rep["runs"]["leak-02"] == {"route": "leak", "tools": ["query_gold"], "status": "answered"}
