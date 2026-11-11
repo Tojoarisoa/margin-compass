@@ -29,10 +29,35 @@ class ToolSpec:
     input_schema: dict[str, Any] | None = None  # JSON schema offered to the model (None: a bare object)
 
 
+def _int_schema(fields: dict[str, str], required: tuple[str, ...]) -> dict[str, Any]:
+    return {"type": "object", "properties": {k: {"type": "integer", "minimum": 0, "description": d}
+                                             for k, d in fields.items()}, "required": list(required)}
+
+
+# 3c-3c: explicit input schemas, so the model can call the pricing tools instead of asking for a plan.
+_PRICE_PLAN_FIELDS = {
+    "seats": "Number of seats.", "seat_price_cents": "Price per seat per month, in cents.",
+    "addon_cents": "Flat AI add-on per month, in cents (0 if none).",
+    "included_units": "Usage units included in the plan.", "usage_units": "Usage units consumed in the month.",
+    "overage_rate_micro": "Overage price per unit above the included units, in micro-dollars.",
+    "outcome_price_micro": "Price per billed outcome, in micro-dollars (0 if none).",
+    "outcomes": "Billed outcomes in the month (0 if none).",
+    "discount_bps": "Discount in basis points (500 = 5%), at most 10000.",
+    "cost_cents": "AI cost of goods for the month, in cents.",
+    "usage_cap_cents": "Optional cap on overage plus outcome charges, in cents.",
+}
+_CHURN_FIELDS = {
+    "revenue_cents": "Monthly revenue, in cents (for example price_plan's revenue_cents).",
+    "cost_cents": "Monthly cost, in cents.", "churn_bps": "Monthly churn probability in basis points, at most 10000.",
+    "months": "Horizon in months, 1 to 60.",
+}
+
 TOOLS: dict[str, ToolSpec] = {t.name: t for t in (
-    ToolSpec("price_plan", "1", "Revenue and margin of one tenant-month under a plan (integer cents).", price_plan),
+    ToolSpec("price_plan", "1", "Revenue and margin of one tenant-month under a plan (integer cents).", price_plan,
+             input_schema=_int_schema(_PRICE_PLAN_FIELDS, tuple(f for f in _PRICE_PLAN_FIELDS if f != "usage_cap_cents"))),
     ToolSpec("replay_lever", "1", "Routing and caching lever replay with quality and safety-recall guardrails.", replay_lever),
-    ToolSpec("churn_adjust", "1", "Churn-adjusted expected revenue, cost and margin over N months.", churn_adjust),
+    ToolSpec("churn_adjust", "1", "Churn-adjusted expected revenue, cost and margin over N months.", churn_adjust,
+             input_schema=_int_schema(_CHURN_FIELDS, tuple(_CHURN_FIELDS))),
     ToolSpec("roi_multiple", "1", "KPI-13 platform ROI multiple (bps) and payback months, integer arithmetic.", roi_multiple),
 )}
 

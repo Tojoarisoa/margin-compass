@@ -89,3 +89,15 @@ def test_every_specialist_tool_is_known_or_runtime_supplied():
     for sp in SPECIALISTS.values():
         assert all(t in registry.TOOLS or t in runtime for t in sp.tools)
         assert tool_specs(sp) is not None
+
+
+def test_pricing_specialist_calls_tools_instead_of_asking():
+    """3c-3c: AG-05 is told to call its tools (query_gold only for a named tenant), other specialists unchanged."""
+    from mc_agents.specialists import SPECIALISTS, tool_specs
+
+    pricing = SPECIALISTS["pricing"].system
+    assert "Never ask the user" in pricing and "query_gold" in pricing and "churn_adjust" in pricing
+    assert pricing.endswith("At most 4 short sentences.")
+    assert "Never ask the user" not in SPECIALISTS["leak"].system
+    specs = {s["toolSpec"]["name"]: s["toolSpec"]["inputSchema"]["json"] for s in tool_specs(SPECIALISTS["pricing"])}
+    assert "seats" in specs["price_plan"]["required"] and "churn_bps" in specs["churn_adjust"]["required"]

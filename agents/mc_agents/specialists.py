@@ -16,9 +16,17 @@ from .llm import BudgetedLLM, LLMRequest
 from .tools import registry
 from .tools.metrics import ToolError
 
-PROMPT_VERSION = "specialists-v1"
+PROMPT_VERSION = "specialists-v2"
 _RULES = ("Get every figure from a tool; never calculate or round. Copy figures exactly and cite the evidence ID "
           "such as [E1]. Synthetic data. At most 4 short sentences.")
+
+# 3c-3c (specialists-v2): AG-05 used to ask the user for a plan instead of calling its tools.
+_PRICING = ("Never ask the user for plan details; call the tools. When the question names a tenant ID, read its plan "
+            "and month from the gold marts with query_gold first. Otherwise run price_plan on this example plan and "
+            "say it is an example: 10 seats at 5000 cents a seat, 1000 included units, 1500 usage units, overage "
+            "20000 micro-dollars a unit, no add-on, outcomes or discount, cost 20000 cents. For a price change or "
+            "discount, run price_plan before and after. For churn, pass price_plan's revenue_cents and cost_cents "
+            "to churn_adjust; with no churn rate given, use 200 bps a month over 12 months and say it is assumed.")
 
 
 @dataclass(frozen=True)
@@ -27,16 +35,18 @@ class Specialist:
     agent_id: str
     role: str
     tools: tuple[str, ...]
+    instructions: str = ""
 
     @property
     def system(self) -> str:
-        return f"You are the {self.role} for Margin Compass. {_RULES}"
+        return " ".join(p for p in (f"You are the {self.role} for Margin Compass.", self.instructions, _RULES) if p)
 
 
 SPECIALISTS: dict[str, Specialist] = {s.node: s for s in (
     Specialist("cost_to_serve", "AG-03", "Cost-to-Serve Analyst", ("query_gold",)),
     Specialist("leak", "AG-04", "Margin-Leak Investigator", ("query_gold", "search_knowledge")),
-    Specialist("pricing", "AG-05", "Forecast and Pricing Strategist", ("price_plan", "churn_adjust", "query_gold")),
+    Specialist("pricing", "AG-05", "Forecast and Pricing Strategist", ("price_plan", "churn_adjust", "query_gold"),
+               _PRICING),
     Specialist("efficiency", "AG-06", "AI Efficiency Engineer", ("replay_lever", "roi_multiple", "query_gold")),
     Specialist("contract_policy", "AG-07", "Contract and Policy Advisor", ("search_knowledge",)),
 )}
