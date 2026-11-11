@@ -16,8 +16,8 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-1. **3c-3c: pricing scenarios (prc-04..06, act-01..04)** ask the user for plan/price instead of calling `price_plan`/`churn_adjust` (both tools are offered with no input schema). Fix: input schemas for `price_plan`/`churn_adjust` + a pricing-only instruction to read the tenant's plan with `query_gold` first; bump `PROMPT_VERSION`. This also changes EV-05 requests for pricing questions, so re-record every fixture set with ops `record-fixtures`, `cache: true`, `ev06_graph: true` in the same step. Never weaken the rubric.
-2. **3c-3d: AG-07 never calls `search_knowledge`** (all contract_policy runs show no tools, even the 4 that pass): push retrieval in the contract_policy instruction, and consider requiring evidence for governance answers in the rubric (stricter only). Other fails: gov-03, gov-05, act-05/06, cts-04, eff-03, eff-06, leak-03..05. eff-01/eff-02 evidence args don't match `replay_lever`'s inputs. When 90% passes, add the CI replay gate (`ev --ev06-graph replay`).
+1. **3c-3d: act-01..04 still ask for details and call no tool** (allowed tools: price_plan, churn_adjust only; never query_gold): make the AG-05 instruction cover "approve a N% discount" explicitly (example plan before and after the discount). **prc-04..06 now call `price_plan` but end unverified**: check why (verify step, unsupported figures such as the 5250 seat price the model computed, or tool round limit 3). Bump `PROMPT_VERSION`, re-record with ops `record-fixtures`, `cache: true`, `ev06_graph: true`. Also add the PLAN Change Log entry for 3c-3c (decisions below). Never weaken the rubric.
+2. **AG-07 never calls `search_knowledge`** (all contract_policy runs show no tools): push retrieval in the contract_policy instruction, and consider requiring evidence for governance answers in the rubric (stricter only). Other fails: gov-03, gov-05, act-05/06, cts-04, eff-03, eff-06, leak-03..05. eff-01/eff-02 evidence args don't match `replay_lever`'s inputs. When 90% passes, add the CI replay gate (`ev --ev06-graph replay`).
 3. **3c-4:** judge the graph runs. Calibration: see Waiting for owner.
 4. **API `search_knowledge`:** the deployed graph (`MC_GRAPH`, off by default) still gets no knowledge tool; needs the index in the Lambda (check deploy impact and cost first).
 5. **M5-04:** KPI-09 needs a closed-loop plan change, KPI-13 the real AWS bill (M2-04 FOCUS export). M5-03 steps 4-6: see Waiting for owner.
@@ -26,6 +26,14 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed.
 Notes: owner-mode approvals wait for Cognito (M5-03). Ops eval results are in the job log; fixtures are base64 between FIXTURE-BEGIN/END lines. Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1). Ops `ev06_graph: true` adds the graph runs (opt-in, about $0.15; the ops job ends `failure` while the graph gate is unmet, which is expected). Flaky github.com 504s during image builds: re-run the failed job.
+
+## 2026-11-11 (autopilot run 110)
+
+- **Start:** main `ci` + `deploy to dev` for a6967b0 green; no open PRs.
+- **Task 1:** M4-05 step 3c-3c. PR #238 merged (every `ci` job and `attribution` green after footer removal via MCP; main `ci` + `deploy to dev` green): `price_plan`/`churn_adjust` get integer input schemas; AG-05 instruction (`specialists-v2`): never ask for plan details, `query_gold` only for a named tenant, else a stated example plan, churn assumed 200 bps/month over 12 months when no rate is given. Agents 270 passed.
+- **Task 2:** re-record. Ops 42952528429 (haiku-4-5, cache on, graph on): M1-06 5/5, EV-10 pass ($0.0043/question), EV-05 8/8, judge 13/13, **graph runs 10/27 (37%, unchanged)**: prc-04..06 now call tools but end unverified; act-01..04 still call none. PR #239 merged (all green; main `ci` + `deploy to dev` green): fixtures + baseline, no drift.
+- **Decisions (§8.2):** example plan = the prc-01..03 golden plan, and an assumed 200 bps churn, both labelled in the answer (options: query a tenant's plan every time, rejected because act-* scenarios allow no `query_gold`; ask the user, rejected: the job is not done). Gate 90% unchanged. Change Log entry pending (Next 1).
+- **Cost:** 1 ops record run, about $0.20 of capped Haiku 4.5 calls.
 
 ## 2026-11-11 (autopilot run 109)
 
