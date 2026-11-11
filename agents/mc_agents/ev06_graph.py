@@ -12,6 +12,11 @@ answerable scenario (fail closed). A run with no route (ambiguous) reports route
 `run_graph` replays recorded fixtures ($0, CI), records them (live Bedrock through the ops workflow, one
 fixture per scenario in `golden/ev06_graph_fixtures/<model>/`) or runs live. Budget caps apply per scenario
 as in production (`QuestionBudget`); no actions are proposed, as in the deployed API.
+
+Step 3c-3b: the specialists get `search_knowledge` (AG-04 leak, AG-07 contract_policy) over a local index of
+`knowledge/` built in memory with the deterministic hashing embedder (no network, $0). A replayed run whose
+recorded requests no longer match (for example after the tool list changed) scores as a `drifted` fail
+instead of aborting the replay; re-record to clear it.
 """
 
 from __future__ import annotations
@@ -25,36 +30,54 @@ from .ev06_judge import judgeable
 from .ev_scenarios import load_scenarios
 
 FIXTURES = Path(__file__).resolve().parent.parent / "golden" / "ev06_graph_fixtures"
+KNOWLEDGE = Path(__file__).resolve().parents[2] / "knowledge"
 _ANSWERED = ("verified", "needs_approval")
 
 
-def graph_runner(make_client: Callable[[str], Any], gold_dir: Path,
-                 model_key: str = "haiku-4-5") -> Callable[[dict[str, Any]], dict[str, Any]]:
+def knowledge_tool(knowledge_dir: Path = KNOWLEDGE) -> Any:
+    """`search_knowledge` over an in-memory hashing index of `knowledge_dir` (local, deterministic)."""
+    from mc_rag import BM25Index, HashingEmbedder, LocalVectorStore, index_corpus, load_corpus
+    from mc_rag.embed import DIMENSIONS
+
+    from .tools import registry
+
+    if not Path(knowledge_dir).is_dir():
+        raise FileNotFoundError(f"knowledge corpus not found at {knowledge_dir}")
+    embedder, store = HashingEmbedder(), LocalVectorStore(DIMENSIONS)
+    index_corpus(Path(knowledge_dir), embedder, store)
+    return registry.search_knowledge_spec(embedder=embedder, store=store, bm25=BM25Index(load_corpus(Path(knowledge_dir))))
+
+
+def graph_runner(make_client: Callable[[str], Any], gold_dir: Path, model_key: str = "haiku-4-5",
+                 knowledge_dir: Path = KNOWLEDGE) -> Callable[[dict[str, Any]], dict[str, Any]]:
     from .approvals import MemoryStore
     from .budget import BudgetExceeded, QuestionBudget
     from .config import MODELS
     from .graph import GraphState
-    from .llm import BudgetedLLM
+    from .llm import BudgetedLLM, FixtureDrift
     from .run import ask
     from .tools import registry
 
     spec = MODELS[model_key]
-    extra = {"query_gold": registry.query_gold_spec(gold_dir)}
+    extra = {"query_gold": registry.query_gold_spec(gold_dir), "search_knowledge": knowledge_tool(knowledge_dir)}
 
     def run(sc: dict[str, Any]) -> dict[str, Any]:
         state = GraphState(sc["question"])
         llm = BudgetedLLM(make_client(sc["id"]), QuestionBudget(spec))
+        drifted = False
         try:
             out = ask(sc["question"], llm, spec.target, run_id=f"ev06-{sc['id']}", approval_store=MemoryStore(),
                       extra=extra, state=state)
             status = "answered" if out["status"] in _ANSWERED else out["status"]
-        except BudgetExceeded:  # capped: fails closed; fixture drift still raises
+        except BudgetExceeded:  # capped: fails closed
             status = "unverified"
+        except FixtureDrift:  # replay no longer matches the recording: fails closed, reported as drifted
+            status, drifted = "unverified", True
         if status not in ("answered", "blocked"):
             status = "unverified"
         route = "blocked" if status == "blocked" else (state.route or "unverified")
         tools = list(dict.fromkeys(e.tool.split("@")[0] for e in state.ledger.entries))  # ledger keeps name@version
-        return {"route": route, "tools": tools, "status": status,
+        return {"route": route, "tools": tools, "status": status, "drifted": drifted,
                 "answer": state.answer if status == "answered" else "", "ledger": state.ledger}
 
     return run
@@ -96,5 +119,7 @@ def run_graph(gold_dir: Path, model_key: str, mode: str = "replay", fixtures_dir
     out = ev06(keep, scs)
     for sid, rec in recorders:
         rec.save({"scenario_id": sid, "model_id": spec.target, "prompt_version": PROMPT_VERSION})
-    summary = {k: {"route": r["route"], "tools": r["tools"], "status": r["status"]} for k, r in sorted(runs.items())}
-    return {**out, "model": spec.target, "mode": mode, "runs": summary}
+    summary = {k: {"route": r["route"], "tools": r["tools"], "status": "drifted" if r["drifted"] else r["status"]}
+               for k, r in sorted(runs.items())}
+    return {**out, "model": spec.target, "mode": mode, "runs": summary,
+            "drifted": sorted(k for k, r in runs.items() if r["drifted"])}
