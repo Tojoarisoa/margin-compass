@@ -218,7 +218,9 @@ class DataStack(cdk.Stack):
         months.next(build)
         plan = sfn.Pass(self, "BackfillPlan", parameters={"months": sfn.JsonPath.array_range(0, 18, 1)})
         plan.next(months)
-        static = step("Static", invoke("BackfillStatic", {"step": "static", **run}, 14), plan)
+        # M5-03: the execution input reaches the static step, which exports the owner's approvals only when it has
+        # `"approvals": true`; month steps apply whatever the static step left in the lake.
+        static = step("Static", invoke("BackfillStatic", {"step": "static", "input": sfn.JsonPath.entire_payload, **run}, 14), plan)
         role = iam.Role(self, "BackfillRole", role_name=name("backfill"), assumed_by=iam.ServicePrincipal("states.amazonaws.com"),
                         description="M2 backfill state machine: invoke the pipeline Lambda.")
         self.backfill = sfn.StateMachine(

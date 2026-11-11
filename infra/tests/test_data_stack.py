@@ -250,3 +250,12 @@ def test_cdk_json_puts_the_pipeline_behind_the_kill_switch():
     assert {"mc-dev-data-pipeline", "mc-dev-data-nightly-scheduler"} <= set(ctx["mc:killSwitchRoleNames"])
     assert ctx["mc:nightlyEnabled"] is False  # PLAN.md §15: dev schedules off by default
 
+
+
+def test_backfill_static_step_gets_the_execution_input_for_the_approvals_flag(synth):
+    """M5-03: only the static step sees the execution input (`"approvals": true` opts in); months read the lake."""
+    _, t = synth
+    parts = _machine(t, "mc-dev-data-backfill")["DefinitionString"]["Fn::Join"][1]
+    states = json.loads("".join(p if isinstance(p, str) else "X" for p in parts))["States"]
+    with_input = [n for n, st in states.items() if "input.$" in st.get("Parameters", {})]
+    assert with_input == ["BackfillStatic"] and states["BackfillStatic"]["Parameters"]["input.$"] == "$"

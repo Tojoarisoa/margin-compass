@@ -29,8 +29,9 @@ To revoke access, remove the user from `owner` or disable the user; tokens expir
 
 ## Decisions in the simulation (backfill, opt-in)
 
-A backfill started with `{"approvals": true}` in the execution input makes the static step export the latest decision
-per action (`mc_agents.owner.export_approvals`, one Scan of the core table filtered on `APPROVAL#`) to
-`approvals/approvals.jsonl` in the lake; each month step reads that file and applies the closed-loop effects. Without the
-flag the backfill is unchanged. A month step with the flag fails with `no_approvals` if the export is missing. Effects
-start at `decided_at`, so a decision made after the simulation window (ends 2026-10-31) changes nothing.
+A backfill started with `{"approvals": true}` as its execution input (the state machine passes the input to the static
+step only) makes the static step export the latest decision per action (`mc_agents.owner.export_approvals`, one Scan of
+the core table filtered on `APPROVAL#`) to `approvals/approvals.jsonl` in the lake (not under `publish/`, so never
+served); each month step applies that file. A backfill without the flag removes the file first, so its months run
+without effects, as before. Effects start at `decided_at`, so a decision made after the simulation window (ends
+2026-10-31) changes nothing.
