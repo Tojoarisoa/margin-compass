@@ -77,7 +77,13 @@ jobs:
             for p in / /publish/latest/pg1.json /api/health; do echo "- $p → $(curl -s -o /dev/null -w '%{http_code}' "$url$p")"; done
             sm="$(aws cloudformation describe-stacks --stack-name mc-dev-data --query "Stacks[0].Outputs[?OutputKey=='NightlyStateMachine'].OutputValue" --output text)"
             echo "- nightly runs: $(aws stepfunctions list-executions --state-machine-arn "$sm" --max-results 5 --query 'executions[].[name,status]' --output text | tr '\t\n' ' ;')"
-          } >> "$GITHUB_STEP_SUMMARY"
+            # M6-02 visitor feedback, last 7 days (log retention): counts of job_feedback events by rating, no text.
+            since_ms=$(( ($(date +%s) - 7 * 86400) * 1000 ))
+            fb="$(aws logs filter-log-events --log-group-name /aws/lambda/mc-dev-web-api --start-time "$since_ms" \
+                    --filter-pattern '{ $.event = "job_feedback" }' --query 'events[].message' --output text \
+                  | grep -o '"rating": "[a-z]*"' | sort | uniq -c | tr -s ' \n' ' ' || true)"
+            echo "- answer feedback (7 days): ${fb:-none}"
+          } | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: cost-report
         if: inputs.task == 'cost-report'

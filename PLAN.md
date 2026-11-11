@@ -1027,7 +1027,7 @@ Each milestone ends with a demoable increment and exit criteria. Effort assumes 
 ### M6: Harden & Launch (~2 weeks)
 
 - [x] M6-01 Telemetry lake, alarms, runbooks
-- [ ] M6-02 Drift monitoring, online evaluation sampling
+- [x] M6-02 Drift monitoring, online evaluation sampling
 - [ ] M6-03 Kill-switch game day; security review; red team (EV-09); golden set grown to 100
 - [ ] M6-04 Guided tour; case study ("How a fictional AI SaaS recovered N margin points"); demo video script; lessons learned
 
@@ -1242,3 +1242,4 @@ Status: all ADRs are written up in `docs/adr/` and **accepted** (ADR-017 on 2026
 | 2026-11-11 | 0.4 | M6-03 step 6 (**auto-decided under AGENTS.md §8.2**), game-day gap G2: a Bedrock `AccessDeniedException` in an API job (kill switch attached, or model access missing) now ends the job as the existing `budget_exceeded` status with the plain "unavailable right now" answer (`error: access_denied`), not a generic error; other model errors stay `error`. Options: a new `paused` status (rejected: needs a dashboard and API contract change for the same visitor message). No dashboard change. Cost $0 |
 | 2026-11-11 | 0.4 | M6-02 step 4 (**auto-decided under AGENTS.md §8.2**): visitor feedback, API side. `POST /api/jobs/{id}/feedback` with `{"rating": "up"|"down"}`: one vote per job, only on a shown answer (answered, unverified, needs approval), stored on the job item and added to a daily `FEEDBACK#<day>` counter in `mc-dev-state-core` (90-day TTL); no free text, the rating is not on the public job response. Abuse limits: the 32-hex job id is the only key (known to the asker), a conditional write blocks re-votes, and jobs are already rate limited at creation. Options: a free-text comment (rejected: content in storage, rule 16 spirit), a per-IP vote limit (rejected: the one-vote-per-job condition already bounds writes by the ask limits). Dashboard buttons next. Cost $0 (provisioned capacity) |
 | 2026-11-11 | 0.4 | M6-02 step 5 (**auto-decided under AGENTS.md §8.2**): dashboard thumbs up/down under each shown answer (answered, withheld, needs approval) on the Ask panel; one vote, "Thanks for the feedback" after, no text field. Public surface unchanged otherwise (no counts shown). Cost $0 |
+| 2026-11-11 | 0.4 | M6-02 ticked (**auto-decided under AGENTS.md §8.2**): ops `status` also prints the last 7 days of visitor feedback (`job_feedback` log events counted by rating, no text). M6-02 = forecaster drift report each train run, weekly online evaluation sample (live vs recorded graph runs), visitor thumbs up/down. Options: read the `FEEDBACK#<day>` counters (rejected: the ops role has no DynamoDB read, and adding one is an IAM change for a count the logs already give). Cost $0 |
