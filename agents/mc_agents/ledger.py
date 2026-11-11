@@ -26,6 +26,7 @@ _NOT_FIGURES = [
     re.compile(r"\b(?:Haiku|Sonnet|Nova)\s+\d+(?:\.\d+)?\b"),      # model names
 ]
 _FIGURE = re.compile(r"-?\$?-?\d[\d,]*(?:\.\d+)?%?")
+_MINUS = str.maketrans({"\u2212": "-"})  # Unicode minus sign: read as a sign, so the sign is checked too
 
 
 def _norm(token: str) -> Decimal | None:
@@ -70,7 +71,7 @@ class Ledger:
         out: set[Decimal] = set()
         for e in self.entries:
             for leaf in list(_leaves(e.result)) + list(_leaves(e.args)):
-                for tok in _FIGURE.findall(str(leaf)):
+                for tok in _FIGURE.findall(str(leaf).translate(_MINUS)):
                     if (d := _norm(tok)) is not None:
                         out.add(d)
         return out
@@ -85,11 +86,11 @@ class Verification:
 
 
 def verify_answer(answer: str, ledger: Ledger, question: str) -> Verification:
-    text = answer
+    text = answer.translate(_MINUS)
     for pat in _NOT_FIGURES:
         text = pat.sub(" ", text)
     allowed = ledger.values()
-    q_ints = {d for tok in _FIGURE.findall(question) if (d := _norm(tok)) is not None}
+    q_ints = {d for tok in _FIGURE.findall(question.translate(_MINUS)) if (d := _norm(tok)) is not None}
     unsupported, checked = [], 0
     for tok in _FIGURE.findall(text):
         d = _norm(tok)

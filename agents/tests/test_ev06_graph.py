@@ -164,9 +164,11 @@ def test_recorded_graph_fixtures_replay(gold):
     drift (scored as fails, so 15/27) until the next ops record run. AG-03, AG-04, AG-06 and AG-07 are unchanged.
     Re-recorded by ops run 42997023609: 15/27. AG-05 now copies deltas but writes them with a Unicode minus
     ("−163 bps") or as a magnitude ("534 bps reduction"), and act-01 converts margin to "59.15%"; prc-05/06 capped.
+
+    Verifier reads U+2212 as a minus sign (no fixture change, no re-record): 16/27, act-03 now passes.
     """
     rep = run_graph(gold, "haiku-4-5", "replay")
     assert set(rep["runs"]) == {s["id"] for s in default_scenarios()}
     assert rep["drifted"] == []
-    assert round(rep["ev06"] * 27) == 15 and not rep["passed"]
+    assert round(rep["ev06"] * 27) == 16 and not rep["passed"]
     assert rep["runs"]["leak-02"] == {"route": "leak", "tools": ["query_gold"], "status": "answered"}

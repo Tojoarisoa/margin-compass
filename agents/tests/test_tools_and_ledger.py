@@ -71,6 +71,19 @@ def test_verifier_enforces_the_ledger_rule(answer, ok):
     assert verify_answer(answer, _ledger(), "What was bc-t0003's margin in September 2025?").ok is ok
 
 
+@pytest.mark.parametrize("answer, ok", [
+    ("Margin changes by \u2212163 bps [E1].", True),   # Unicode minus = the ledger's -163
+    ("Margin changes by -163 bps [E1].", True),
+    ("Margin changes by 163 bps [E1].", False),        # sign dropped
+    ("Churn adds \u2212200 bps [E1].", False),         # sign added: 200 is in the ledger, -200 is not
+])
+def test_verifier_checks_the_sign_of_a_unicode_minus(answer, ok):
+    """Next 2 (run 117): AG-05 writes deltas with U+2212, which used to read as a positive figure."""
+    led = Ledger()
+    led.add("price_plan", {"churn_bps": 200}, {"after": {"delta": {"margin_bps": -163}}})
+    assert verify_answer(answer, led, "Should we approve the discount?").ok is ok
+
+
 def test_bare_integer_from_the_question_is_allowed():
     led = Ledger()
     led.add("tenant_ranking", {"limit": 3}, {"ranking": [{"rank": 1, "gross_margin_pct": "98.09%"}]})
