@@ -351,3 +351,10 @@ def test_cdk_json_kill_switch_includes_the_ops_role():
 
     ctx = json.loads((_Path(__file__).resolve().parents[1] / "cdk.json").read_text())["context"]
     assert "mc-shared-foundation-github-ops" in ctx["mc:killSwitchRoleNames"]
+
+
+def test_ops_role_may_only_sync_the_kill_switch_among_web_functions(default):
+    stack, t = default
+    sync = next(s for s in _ops_statements(stack, t) if s["Sid"] == "SyncKillSwitch")
+    assert sync["Action"] == "lambda:InvokeFunction"
+    assert sync["Resource"] == "arn:aws:lambda:us-east-1:123456789012:function:mc-*-web-kill-switch"

@@ -365,6 +365,8 @@ class FoundationStack(cdk.Stack):
         )
         statements = [
             ("RunPipeline", ["lambda:InvokeFunction"], [f"arn:aws:lambda:{region}:{acct}:function:mc-*-data-pipeline"]),
+            # Lifting the kill switch (G1): re-run its reconcile after the deny policy is detached. Not denied by it.
+            ("SyncKillSwitch", ["lambda:InvokeFunction"], [f"arn:aws:lambda:{region}:{acct}:function:mc-*-web-kill-switch"]),
             ("StartNightly", ["states:StartExecution"],
              [f"arn:aws:states:{region}:{acct}:stateMachine:mc-*-data-{m}" for m in ("nightly", "backfill")]),
             ("ReadNightly", ["states:DescribeExecution", "states:ListExecutions"],

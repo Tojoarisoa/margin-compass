@@ -14,7 +14,7 @@ on:
         description: What to do
         required: true
         type: choice
-        options: [status, cost-report, run-pipeline, start-nightly, start-backfill, verify-backfill, record-fixtures, live-eval, online-eval, red-team, rag-eval, nightly-insight, realized-check]
+        options: [status, cost-report, run-pipeline, start-nightly, start-backfill, verify-backfill, record-fixtures, live-eval, online-eval, red-team, kill-switch-sync, rag-eval, nightly-insight, realized-check]
       model:
         description: Agent model for record-fixtures / live-eval / online-eval (agents/mc_agents/config.py)
         required: false
@@ -97,6 +97,16 @@ jobs:
             --payload "{\"run_id\":\"ops-${GITHUB_RUN_ID}\"}" --cli-binary-format raw-in-base64-out out.json --query FunctionError --output text
           { echo "## Pipeline run"; echo '```json'; cat out.json; echo; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
           python3 -c "import json,sys; sys.exit(0 if json.load(open('out.json')).get('status')=='success' else 1)"
+
+      - name: kill-switch-sync
+        if: inputs.task == 'kill-switch-sync'
+        run: |
+          set -euo pipefail
+          # Reconcile with the deny policy: engaged while it is attached, lifted (API concurrency, schedules, flag) once detached.
+          aws lambda invoke --function-name mc-dev-web-kill-switch --cli-read-timeout 120 --payload '{}' \
+            --cli-binary-format raw-in-base64-out ks.json --query FunctionError --output text
+          { echo "## Kill switch"; echo '```json'; cat ks.json; echo; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          python3 -c "import json,sys; sys.exit(0 if json.load(open('ks.json')).get('status') in ('idle','engaged','lifted') else 1)"
 
       - name: start-nightly
         if: inputs.task == 'start-nightly'
