@@ -16,16 +16,26 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-1. **3c-3d: act-01..04 still ask for details and call no tool** (allowed tools: price_plan, churn_adjust only; never query_gold): make the AG-05 instruction cover "approve a N% discount" explicitly (example plan before and after the discount). **prc-04..06 now call `price_plan` but end unverified**: check why (verify step, unsupported figures such as the 5250 seat price the model computed, or tool round limit 3). Bump `PROMPT_VERSION`, re-record with ops `record-fixtures`, `cache: true`, `ev06_graph: true`. Also add the PLAN Change Log entry for 3c-3c (decisions below). Never weaken the rubric.
-2. **AG-07 never calls `search_knowledge`** (all contract_policy runs show no tools): push retrieval in the contract_policy instruction, and consider requiring evidence for governance answers in the rubric (stricter only). Other fails: gov-03, gov-05, act-05/06, cts-04, eff-03, eff-06, leak-03..05. eff-01/eff-02 evidence args don't match `replay_lever`'s inputs. When 90% passes, add the CI replay gate (`ev --ev06-graph replay`).
+0. **Check main `ci` `deploy to dev` for f7c44b5 (#241)** first; it was still running when run 111 ended.
+1. **3c-3e: AG-05 instruction v4** (ops run 42958775085 replays): act-01..06 still ask for tenant/approver instead of pricing ("Approve a N% discount" must mean: price the example plan with `after {"discount_bps": N00}`; approval is routed elsewhere); add a one-line worked example. prc-04 quoted "5%" from the question and an assumed 200 it never passed (tell it: pass `churn_bps` 200 whenever churn is asked, and refer to the requested change in words, never restate its %). prc-06 sent a partial plan (rejected): outcome questions use `after {"outcome_price_micro", "outcomes"}` on the example plan. Every pricing run still ends capped after the verifier retry, so the first answer must verify. Bump `PROMPT_VERSION`, re-record (ops `record-fixtures`, `cache: true`, `ev06_graph: true`). Also the PLAN Change Log entries for 3c-3c and 3c-3d. Never weaken the rubric or the $0.01 cap.
+2. **AG-07 never calls `search_knowledge`** (all contract_policy runs show no tools): push retrieval in the contract_policy instruction, and consider requiring evidence for governance answers in the rubric (stricter only). Other fails: gov-03, gov-05, cts-04, eff-03, eff-06, leak-03..05. eff-01/eff-02 evidence args don't match `replay_lever`'s inputs. When 90% passes, add the CI replay gate (`ev --ev06-graph replay`).
 3. **3c-4:** judge the graph runs. Calibration: see Waiting for owner.
 4. **API `search_knowledge`:** the deployed graph (`MC_GRAPH`, off by default) still gets no knowledge tool; needs the index in the Lambda (check deploy impact and cost first).
 5. **M5-04:** KPI-09 needs a closed-loop plan change, KPI-13 the real AWS bill (M2-04 FOCUS export). M5-03 steps 4-6: see Waiting for owner.
 6. **Daily checks (not tasks):** ops `verify-backfill` (last 2026-11-11 00:23 UTC: `awaiting_first_export`) and the Haiku 5.5 probe (last 2026-11-11: `AccessDeniedException`). Next due 2026-11-12.
+7. **Option (not started):** a `price_change_bps` input would stop the model computing a raised seat price itself (prc-04 passed 5250); it is new math, so it needs a calc-spec entry, vectors and the dashboard parity (EV-12).
 
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed.
 Notes: owner-mode approvals wait for Cognito (M5-03). Ops eval results are in the job log; fixtures are base64 between FIXTURE-BEGIN/END lines. Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1). Ops `ev06_graph: true` adds the graph runs (opt-in, about $0.15; the ops job ends `failure` while the graph gate is unmet, which is expected). Flaky github.com 504s during image builds: re-run the failed job.
+
+## 2026-11-11 (autopilot run 111)
+
+- **Start:** main `ci` + `deploy to dev` for 9f03364 green; no open PRs.
+- **Task 1:** M4-05 step 3c-3d. Replaying run-110 fixtures showed the real cause: prc-04/05 hit the $0.01 per-question cap mid-loop (price, price, churn, words = 4 calls; the cap allows about 2), prc-06 wrote "$50" for 5000 cents, act-* wrote "4%" for 400 bps, and the verifier retry resent the bare question. PR #240 merged (every `ci` job and `attribution` green after footer removal via MCP; main `ci` + `deploy to dev` green): `price_plan` v2 (example plan when no fields, `after`, `churn_bps`; composes calc-spec functions only), AG-05 `specialists-v3`, verifier issues passed to the retry. Agents 285 passed.
+- **Task 2:** re-record. Ops 42958775085: M1-06 5/5, EV-10 pass ($0.0043/question), EV-05 8/8, judge 13/13, **graph 10/27 (unchanged)**: prc-04 now one call; act-* still ask. PR #241 merged (all PR checks green): 27 graph fixtures + baseline, no drift. Main `ci` jobs green; `deploy to dev` for f7c44b5 still running at 55 min.
+- **Decisions (§8.2):** composite tool, not new math (options: `price_change_bps` input, deferred because it needs calc-spec + dashboard parity; raise the cap, rejected: weakens a guardrail). Example plan applies only when no plan field is given (partial plans fail closed). AG-05 no longer offered `churn_adjust` (still allowed by the scenarios). Gate 90% and cap unchanged.
+- **Cost:** 1 ops record run, about $0.20 of capped Haiku 4.5 calls.
 
 ## 2026-11-11 (autopilot run 110)
 
