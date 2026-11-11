@@ -10,7 +10,7 @@
                 "sql": "\nSELECT DISTINCT tenant_id, SUM(gross_margin_usd) as total_margin_usd\nFROM fct_tenant_margin\nGROUP BY tenant_id\nHAVING SUM(gross_margin_usd) < 0\nORDER BY total_margin_usd ASC\n"
               },
               "name": "query_gold",
-              "toolUseId": "tooluse_E45su6nqPhvYSn6tMLWTM3",
+              "toolUseId": "tooluse_yhxKJP9WnzCG0q05PH6E9X",
               "type": "tool_use"
             }
           }
@@ -24,7 +24,7 @@
       }
     },
     {
-      "request_sha": "caaa3e479247ba81e09446cc4174d1cac9b15c93b5a63b0e7a8899d92353220d",
+      "request_sha": "bcc0cef01c7bba5f6cb771dcd3782c074c446035f22b009e907332744eedad8f",
       "response": {
         "content": [
           {
@@ -41,6 +41,6 @@
     }
   ],
   "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
-  "prompt_version": "specialists-v1",
+  "prompt_version": "specialists-v2",
   "scenario_id": "cts-06"
 }

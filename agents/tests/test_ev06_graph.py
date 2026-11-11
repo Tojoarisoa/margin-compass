@@ -139,11 +139,11 @@ def test_recorded_graph_fixtures_replay(gold):
     Baseline, not a gate: 10 of 27 scenarios pass the rubric (EV-06 gate 90% is not met yet; see docs/progress.md).
     Re-record when a prompt, the graph, the tools or the model changes.
 
-    Step 3c-3c (specialists-v2) changed AG-05's prompt and tool schemas: the 7 pricing-route scenarios drift
-    (each scored as a fail; all 7 failed before) until the next ops record run.
+    Step 3c-3c (specialists-v2, AG-05 tool schemas): re-recorded by ops run 42952528429. prc-04..06 now call
+    price_plan but end unverified; act-01..04 still call no tool.
     """
     rep = run_graph(gold, "haiku-4-5", "replay")
     assert set(rep["runs"]) == {s["id"] for s in default_scenarios()}
-    assert rep["drifted"] == ["act-01", "act-02", "act-03", "act-04", "prc-04", "prc-05", "prc-06"]
+    assert rep["drifted"] == []
     assert round(rep["ev06"] * 27) == 10 and not rep["passed"]
     assert rep["runs"]["eff-04"] == {"route": "efficiency", "tools": ["query_gold"], "status": "answered"}

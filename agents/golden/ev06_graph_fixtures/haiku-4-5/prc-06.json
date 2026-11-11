@@ -1,55 +1,58 @@
 {
   "calls": [
     {
-      "request_sha": "da54138a9af640a7aeb91027e0cec4dfa54600b811267f178b8788aeb5e14571",
+      "request_sha": "fa7483f798c334e7ef554a109ba8544fba76a74ba06bcacb1e3c31ef26432f51",
       "response": {
         "content": [
           {
-            "text": "I need more context to answer this question accurately. Could you please provide:\n\n1. **Which pricing models are you considering?** (e.g., per-request, per-user, per-feature, tiered, usage-based, etc.)\n2. **What specific outcome are you targeting?** (e.g., cost savings, revenue generated, efficiency gains, etc.)\n3. **Do you have tenant or plan data** you'd like me to analyze to compare margin profiles?\n\nOnce you provide these details, I can use the pricing and margin tools to evaluate which model best aligns with your outcome-based objectives."
+            "text": "I'll demonstrate an outcome-based pricing model using the example plan, modified to include outcome pricing:"
+          },
+          {
+            "toolUse": {
+              "input": {
+                "addon_cents": 0,
+                "cost_cents": 20000,
+                "discount_bps": 0,
+                "included_units": 1000,
+                "outcome_price_micro": 50000,
+                "outcomes": 200,
+                "overage_rate_micro": 20000,
+                "seat_price_cents": 5000,
+                "seats": 10,
+                "usage_units": 1500
+              },
+              "name": "price_plan",
+              "toolUseId": "tooluse_Exe1gGu0sI2HtKXIYUXbWj",
+              "type": "tool_use"
+            }
           }
         ],
-        "stop_reason": "end_turn",
+        "stop_reason": "tool_use",
         "usage": {
           "cacheReadInputTokens": 0,
-          "inputTokens": 913,
-          "outputTokens": 136
+          "inputTokens": 1686,
+          "outputTokens": 257
         }
       }
     },
     {
-      "request_sha": "da54138a9af640a7aeb91027e0cec4dfa54600b811267f178b8788aeb5e14571",
+      "request_sha": "11e46e2be5adc037e834193379b9cbda1dae540213f4e6f96ed518330337b5f4",
       "response": {
         "content": [
           {
-            "text": "I need more context to answer this question accurately. Could you please provide:\n\n1. **Which pricing models are you considering?** (e.g., per-request, per-user, per-feature, tiered, usage-based, etc.)\n2. **What specific outcome are you targeting?** (e.g., cost savings, revenue generated, efficiency gains, etc.)\n3. **Do you have tenant or plan data** you'd like me to analyze to compare margin profiles?\n\nOnce you provide these details, I can use the pricing and margin tools to evaluate which model best aligns with your outcome-based objectives."
+            "text": "An outcome-based plan charges per successful result or completion, not just usage. This example shows 10 seats at $50/month, 1000 included units, overage at $0.02/unit, plus **$0.50 per outcome** [E1]. With 200 outcomes that month, outcome charges add $10 to revenue, yielding $520 total revenue and $320 margin (61.5% margin) [E1]. This aligns incentives: you earn more when customers achieve measurable business results, not just consume resources."
           }
         ],
         "stop_reason": "end_turn",
         "usage": {
           "cacheReadInputTokens": 0,
-          "inputTokens": 913,
-          "outputTokens": 136
-        }
-      }
-    },
-    {
-      "request_sha": "da54138a9af640a7aeb91027e0cec4dfa54600b811267f178b8788aeb5e14571",
-      "response": {
-        "content": [
-          {
-            "text": "I need more context to answer this question accurately. Could you please provide:\n\n1. **Which pricing models are you considering?** (e.g., per-request, per-user, per-feature, tiered, usage-based, etc.)\n2. **What specific outcome are you targeting?** (e.g., cost savings, revenue generated, efficiency gains, etc.)\n3. **Do you have tenant or plan data** you'd like me to analyze to compare margin profiles?\n\nOnce you provide these details, I can use the pricing and margin tools to evaluate which model best aligns with your outcome-based objectives."
-          }
-        ],
-        "stop_reason": "end_turn",
-        "usage": {
-          "cacheReadInputTokens": 0,
-          "inputTokens": 913,
-          "outputTokens": 136
+          "inputTokens": 2026,
+          "outputTokens": 125
         }
       }
     }
   ],
   "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
-  "prompt_version": "specialists-v1",
+  "prompt_version": "specialists-v2",
   "scenario_id": "prc-06"
 }
