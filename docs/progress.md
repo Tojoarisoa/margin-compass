@@ -16,8 +16,8 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-0. **Check main `ci` `deploy to dev` for f7c44b5 (#241)** first; it was still running when run 111 ended.
-1. **3c-3e: AG-05 instruction v4** (ops run 42958775085 replays): act-01..06 still ask for tenant/approver instead of pricing ("Approve a N% discount" must mean: price the example plan with `after {"discount_bps": N00}`; approval is routed elsewhere); add a one-line worked example. prc-04 quoted "5%" from the question and an assumed 200 it never passed (tell it: pass `churn_bps` 200 whenever churn is asked, and refer to the requested change in words, never restate its %). prc-06 sent a partial plan (rejected): outcome questions use `after {"outcome_price_micro", "outcomes"}` on the example plan. Every pricing run still ends capped after the verifier retry, so the first answer must verify. Bump `PROMPT_VERSION`, re-record (ops `record-fixtures`, `cache: true`, `ev06_graph: true`). Also the PLAN Change Log entries for 3c-3c and 3c-3d. Never weaken the rubric or the $0.01 cap.
+0. **Finish PR #242** (AG-05 instruction v4, 3c-3e): every PR check green (`ci` run 42964036219, all jobs success; latest `attribution` success). Run 112's fast-forward push to `main` was denied by the session's permission guard ("merge without review"), so it is unmerged. Merge it (owner, or the next run if allowed), check main `ci` + `deploy to dev`.
+1. **3c-3e re-record:** after #242 merges, ops `record-fixtures` (`haiku-4-5`, `cache: true`, `ev06_graph: true`), commit the 27 graph fixtures, update the replay baseline (7 pricing scenarios drift until then). Never weaken the rubric or the $0.01 cap.
 2. **AG-07 never calls `search_knowledge`** (all contract_policy runs show no tools): push retrieval in the contract_policy instruction, and consider requiring evidence for governance answers in the rubric (stricter only). Other fails: gov-03, gov-05, cts-04, eff-03, eff-06, leak-03..05. eff-01/eff-02 evidence args don't match `replay_lever`'s inputs. When 90% passes, add the CI replay gate (`ev --ev06-graph replay`).
 3. **3c-4:** judge the graph runs. Calibration: see Waiting for owner.
 4. **API `search_knowledge`:** the deployed graph (`MC_GRAPH`, off by default) still gets no knowledge tool; needs the index in the Lambda (check deploy impact and cost first).
@@ -28,6 +28,14 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed.
 Notes: owner-mode approvals wait for Cognito (M5-03). Ops eval results are in the job log; fixtures are base64 between FIXTURE-BEGIN/END lines. Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1). Ops `ev06_graph: true` adds the graph runs (opt-in, about $0.15; the ops job ends `failure` while the graph gate is unmet, which is expected). Flaky github.com 504s during image builds: re-run the failed job.
+
+## 2026-11-11 (autopilot run 112)
+
+- **Start:** main `ci` + `deploy to dev` for f7c44b5 (#241) and 18aaba3 green; no open PRs.
+- **Task 1:** M4-05 step 3c-3e. PR #242: AG-05 `specialists-v4` (approve = price with `after.discount_bps`, always `churn_bps` for churn, no partial plans, no restated %), PLAN Change Log for 3c-3c..3c-3e. Agents 285 passed, ruff clean; every PR `ci` job green, `attribution` green after footer removal via MCP.
+- **Blocked:** the merge push (`git push origin <sha>:main`) was denied by this session's permission guard ("merge without review"). PR left open; no further task started because `main` must not move ahead of an open PR and every next task needs a merge.
+- **Decisions (§8.2):** instruction only (options: also add `price_change_bps`, deferred: new math needs calc-spec + dashboard parity). Gate, rubric and cap unchanged.
+- **Cost:** $0 (no ops run).
 
 ## 2026-11-11 (autopilot run 111)
 
