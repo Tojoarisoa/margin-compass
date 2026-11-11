@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { AskPanel } from "./AskPanel";
 import { BriefCard } from "./Brief";
+import { PausedNotice } from "./Paused";
 import { RealizedCard } from "./Realized";
 import { CogsForecast, MarginForecast, MarginTrend } from "./charts";
 import { count, money, percent } from "./format";
@@ -51,6 +52,7 @@ export function App() {
       <div className="banner" role="note">
         <strong>Synthetic data.</strong> BoonCore is a fictional company; all tenants and figures are simulated.
       </div>
+      <PausedNotice />
       <header>
         <h1>Executive Margin Overview <span className="tag">v0</span></h1>
         <p className="muted">AI cost-to-serve and gross margin, {snap.window.from} to {snap.window.to} ({snap.window.days} days).</p>
