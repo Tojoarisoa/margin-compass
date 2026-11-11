@@ -2,7 +2,7 @@
   "stacks": {
     "mc-dev-data": {
       "AWS::CDK::Metadata": 1,
-      "AWS::CloudWatch::Alarm": 1,
+      "AWS::CloudWatch::Alarm": 2,
       "AWS::IAM::Policy": 4,
       "AWS::IAM::Role": 4,
       "AWS::Lambda::Function": 1,
@@ -26,6 +26,7 @@
       "AWS::CloudFront::OriginAccessControl": 3,
       "AWS::CloudFront::OriginRequestPolicy": 1,
       "AWS::CloudFront::ResponseHeadersPolicy": 1,
+      "AWS::CloudWatch::Alarm": 1,
       "AWS::Cognito::UserPool": 1,
       "AWS::Cognito::UserPoolClient": 1,
       "AWS::Cognito::UserPoolGroup": 1,

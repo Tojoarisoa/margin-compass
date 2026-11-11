@@ -140,11 +140,16 @@ def test_telemetry_export_is_scheduled_daily_off_by_default_and_reads_only_the_a
     assert len(logs_stmt) == 1 and "mc-dev-web-api" in json.dumps(logs_stmt[0]["Resource"])
 
 
-def test_one_nightly_alarm_to_the_alert_topic(synth):
+def test_nightly_and_pipeline_alarms_to_the_alert_topic(synth):
     _, t = synth
-    t.resource_count_is("AWS::CloudWatch::Alarm", 1)
-    alarm = next(iter(t.find_resources("AWS::CloudWatch::Alarm").values()))["Properties"]
-    assert "mc-shared-foundation-alerts" in json.dumps(alarm["AlarmActions"]) and alarm["TreatMissingData"] == "notBreaching"
+    t.resource_count_is("AWS::CloudWatch::Alarm", 2)
+    alarms = {a["Properties"]["AlarmName"]: a["Properties"] for a in t.find_resources("AWS::CloudWatch::Alarm").values()}
+    assert set(alarms) == {"mc-dev-data-nightly-failed", "mc-dev-data-pipeline-errors"}
+    for alarm in alarms.values():
+        assert "mc-shared-foundation-alerts" in json.dumps(alarm["AlarmActions"]) and alarm["TreatMissingData"] == "notBreaching"
+    errors = alarms["mc-dev-data-pipeline-errors"]  # M6-01: any pipeline Lambda error in an hour
+    assert (errors["MetricName"], errors["Statistic"], errors["Period"], errors["Threshold"]) == ("Errors", "Sum", 3600, 1)
+    assert errors["Dimensions"][0]["Name"] == "FunctionName"
 
 
 def test_nightly_can_be_enabled_by_context():
