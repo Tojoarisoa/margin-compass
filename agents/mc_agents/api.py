@@ -232,6 +232,14 @@ def _answer_graph(job_id: str, question: str, table, gold_dir: Path, client) -> 
     return update
 
 
+UNAVAILABLE = "The analyst is unavailable right now. Please try again later."
+
+
+def _denied_by_kill_switch(exc: BaseException) -> bool:
+    """A Bedrock AccessDeniedException: the kill-switch deny policy is attached, or model access is missing (docs/runbooks/kill-switch-game-day.md, G2)."""
+    return (getattr(exc, "response", None) or {}).get("Error", {}).get("Code") == "AccessDeniedException"
+
+
 def run_job(job_id: str, *, table=None, gold_dir: Path = GOLD_DIR, client=None, sync=True) -> str:
     table = table or _table()
     key = {"PK": f"JOB#{job_id}", "SK": "JOB"}
@@ -259,8 +267,12 @@ def run_job(job_id: str, *, table=None, gold_dir: Path = GOLD_DIR, client=None, 
                   "verification": json.loads(json.dumps(res.verification, default=str))}
         cache.store_answer(store, "public", item["question"], version, update)
     except BudgetExceeded as exc:
-        update = {"status": "budget_exceeded", "answer": "The analyst is unavailable right now. Please try again later.", "error": str(exc)[:200]}
+        update = {"status": "budget_exceeded", "answer": UNAVAILABLE, "error": str(exc)[:200]}
     except Exception as exc:  # noqa: BLE001 - the job must end in a terminal state
+        if _denied_by_kill_switch(exc):  # PLAN §11.3: the $5 budget action denies bedrock:* to this role
+            log.warning("job_denied", extra={"fields": {"job_id": job_id, "reason": "access_denied"}})
+            update = {"status": "budget_exceeded", "answer": UNAVAILABLE, "error": "access_denied"}
+            return _finish(table, key, job_id, update)
         log.error("job_failed", extra={"fields": {"job_id": job_id, "error": type(exc).__name__}})
         update = {"status": "error", "answer": "Something went wrong while answering.", "error": type(exc).__name__}
     return _finish(table, key, job_id, update)

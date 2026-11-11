@@ -125,6 +125,31 @@ def test_worker_stops_when_the_shared_budget_runs_out(table, gold):
     assert client.requests == []  # no model call was made
 
 
+def test_kill_switch_denial_ends_the_job_as_unavailable(table, gold):
+    """G2 (kill-switch game day): a denied model call is a clean 'unavailable', not a generic error."""
+    from botocore.exceptions import ClientError
+
+    class Denied:
+        def complete(self, request):
+            raise ClientError({"Error": {"Code": "AccessDeniedException", "Message": "explicit deny"}}, "Converse")
+
+    table.put_item(Item={"PK": "JOB#" + "c" * 32, "SK": "JOB", "status": "pending", "question": Q["q1"]["question"]})
+    assert api.run_job("c" * 32, table=table, gold_dir=gold, client=Denied(), sync=False) == "budget_exceeded"
+    item = table.get_item(Key={"PK": "JOB#" + "c" * 32, "SK": "JOB"})["Item"]
+    assert item["answer"] == api.UNAVAILABLE and item["error"] == "access_denied"
+
+
+def test_other_model_errors_stay_errors(table, gold):
+    from botocore.exceptions import ClientError
+
+    class Throttled:
+        def complete(self, request):
+            raise ClientError({"Error": {"Code": "ThrottlingException", "Message": "slow down"}}, "Converse")
+
+    table.put_item(Item={"PK": "JOB#" + "d" * 32, "SK": "JOB", "status": "pending", "question": Q["q1"]["question"]})
+    assert api.run_job("d" * 32, table=table, gold_dir=gold, client=Throttled(), sync=False) == "error"
+
+
 @pytest.mark.parametrize("path", ["/api/jobs/../../etc", "/api/jobs/" + "b" * 32])
 def test_unknown_jobs_are_404(table, path):
     assert api.handle_job(path, table=table)["statusCode"] == 404

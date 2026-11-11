@@ -9,7 +9,7 @@ Plan for a drill that proves the $5 kill switch (PLAN.md §11.3, item 4) stops m
 | Deny policy `mc-shared-foundation-kill-switch-deny` | Deployed. Denies `bedrock:*` and `states:StartExecution` on `*`. |
 | Budgets action on `mc-shared-foundation-monthly-total` | Deployed. At $5 actual, `APPLY_IAM_POLICY`, `AUTOMATIC` approval, attaches the deny policy to `mc-dev-data-pipeline`, `mc-dev-web-api`, `mc-dev-data-nightly-scheduler`, `mc-shared-foundation-github-ops`; notifies the alert topic. |
 | SNS-triggered Lambda (disable schedules, API concurrency 0, dashboard banner) | **Not built.** PLAN §11.3 lists it; no code in `infra/` or `dashboard/`. Gap G1. |
-| API behaviour when Bedrock is denied | `run_job` catches the `AccessDeniedException` as a generic exception: the job ends `error` with "Something went wrong while answering." No "paused" message, and the `web-api-errors` alarm doesn't fire (handled error). Gap G2. |
+| API behaviour when Bedrock is denied | Before the G2 fix, `run_job` caught the `AccessDeniedException` as a generic exception: the job ends `error` with "Something went wrong while answering." No "paused" message, and the `web-api-errors` alarm doesn't fire (handled error). Gap G2. |
 | Who can attach the policy outside a real budget breach | Only Budgets (its execution role) or the owner in the console. The ops role has no IAM write. Gap G3. |
 
 ## Drill (one target role at a time, shortest first)
@@ -28,7 +28,7 @@ Abort: if anything outside the target role breaks, detach at once (step 5). The 
 ## Gaps and proposed fixes (one PR each, after the drill or before it)
 
 - **G1 (recommended first):** build the SNS-triggered "kill switch on" Lambda from PLAN §11.3: on the budget action notification it sets the API's reserved concurrency to 0, disables the `mc-*` schedules, and writes a `kill_switch.json` flag the dashboard shows as a banner. Lambda + SNS subscription are within the free tier; needs scoped IAM (`lambda:PutFunctionConcurrency` and `scheduler:UpdateSchedule` on `mc-*` only).
-- **G2:** map a Bedrock `AccessDeniedException` in the API to status `paused` with a plain message ("The analyst is paused for now."), with a unit test. Code only.
+- **G2 (fixed, PR after #288):** the API maps a Bedrock `AccessDeniedException` to the existing `budget_exceeded` status with the plain "unavailable right now" answer and `error: access_denied` (logged as `job_denied`, a warning), so the dashboard shows "Unavailable right now". Other model errors stay `error`. Step 4 of the drill expects this.
 - **G3:** let the drill run unattended: either the owner attaches and detaches in the console (no IAM change), or an ops task that may attach and detach **only** the deny policy (`iam:PolicyARN` condition) **only** to `mc-shared-foundation-github-ops` itself, with detach in an `always()` step. The second option is an IAM change on the ops role; it grants no `*` action and stays inside `mc-*`, so §8.2 covers it, but it is the owner's call whether the ops role should hold any IAM write at all.
 
 ## Cost
