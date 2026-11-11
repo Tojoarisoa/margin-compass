@@ -89,9 +89,10 @@ class DataStack(cdk.Stack):
         self.lake.grant_read_write(role)  # includes s3:DeleteObject* (needed for idempotent re-ingest)
 
         # Model registry items in the core table (M1-04): item-level access to this table only.
+        # Scan (M5-03): the backfill's opt-in approvals export reads the owner's APPROVAL# items; no index needed.
         role.add_to_policy(
             iam.PolicyStatement(
-                actions=["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:Query"],
+                actions=["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:Query", "dynamodb:Scan"],
                 resources=[core_table.table_arn],
             )
         )

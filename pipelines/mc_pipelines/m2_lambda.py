@@ -2,6 +2,9 @@
 
 - `{"profile": "m2", "step": "month", "month": 0..18}`: simulate one month into `landing/booncore_m2/` in S3.
 - `{"profile": "m2", "step": "static"}`: the month-independent tables (tenants, price catalog, labels, FOCUS, invoices, dimensions).
+- `"approvals": true` (opt-in, M5-03): the static step exports the owner's recorded decisions from the core table
+  (`mc_agents.owner.export_approvals`) to `approvals/approvals.jsonl` in the lake; month steps read that file and apply
+  the closed-loop effects. Without the flag nothing changes.
 - `{"profile": "m2", "step": "build"}`: pull the landing tree from S3, run the M2 dbt build with gates, and upload
   bronze/silver/gold/publish. Gates failing returns `dbt_failed` and uploads only the quality evidence.
 
@@ -20,6 +23,7 @@ log = logging.getLogger("mc_pipelines")
 WORK = Path("/tmp/mc_m2")
 LANDING_PREFIX = "landing/booncore_m2"
 UPLOAD_PREFIXES = ("silver", "gold", "publish", "models")
+APPROVALS_KEY = "approvals/approvals.jsonl"
 
 
 def _upload(s3: Any, bucket: str, root: Path, prefix: str, extra) -> int:
@@ -65,6 +69,30 @@ def fetch_focus_export(s3: Any, bucket: str, dest: Path) -> str | None:
     return f"{dest}/{FOCUS_PREFIX}/**/*.parquet" if n else None
 
 
+def export_approvals(s3: Any, bucket: str, table: Any, dest: Path) -> int:
+    """M5-03: write the owner's latest decision per action to `dest` and the lake; returns the number of decisions."""
+    from mc_agents.owner import export_approvals as scan
+    from mc_agents.owner import to_jsonl
+
+    rows = scan(table)
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_text(to_jsonl(rows))
+    if bucket:
+        s3.upload_file(str(dest), bucket, APPROVALS_KEY, ExtraArgs={"ContentType": "application/x-ndjson"})
+    return len(rows)
+
+
+def fetch_approvals(s3: Any, bucket: str, dest: Path) -> bool:
+    """Copy the exported approvals next to the month chunk; False when the static step has not exported them."""
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        s3.download_file(bucket, APPROVALS_KEY, str(dest))
+    except Exception as e:  # noqa: BLE001 - reported as a step status, not a crash
+        log.error("approvals_missing", extra={"fields": {"reason": str(e)[:200]}})
+        return False
+    return True
+
+
 RUN_HISTORY_KEY = "publish/latest/runs.json"
 RUN_HISTORY_KEEP = 30
 
@@ -101,7 +129,7 @@ def _brief(part: Any) -> Any:
     return out
 
 
-def handle(event: dict, run_id: str, s3: Any = None) -> dict:
+def handle(event: dict, run_id: str, s3: Any = None, table: Any = None) -> dict:
     from .lambda_handler import _extra_args
 
     step = event.get("step")
@@ -121,10 +149,26 @@ def handle(event: dict, run_id: str, s3: Any = None) -> dict:
         month = event.get("month")
         if step == "month" and (not isinstance(month, int) or not 0 <= month < MONTHS):
             return {"status": "bad_event", "run_id": run_id, "reason": f"month must be an int in 0..{MONTHS - 1}"}
-        manifest = run_m2(seed, landing, step, month if step == "month" else None)
+        approvals_path, decisions = None, None
+        if event.get("approvals") is True:  # M5-03 opt-in: closed-loop effects from the owner's decisions
+            approvals_path = WORK / "approvals.jsonl"
+            if step == "static":
+                if table is None:
+                    import boto3
+
+                    table = boto3.resource("dynamodb").Table(os.environ["REGISTRY_TABLE"])
+                decisions = export_approvals(s3, bucket, table, approvals_path)
+                log.info("approvals_exported", extra={"fields": {"decisions": decisions}})
+            elif bucket and not fetch_approvals(s3, bucket, approvals_path):
+                return {"status": "no_approvals", "run_id": run_id, "month": month}
+        manifest = run_m2(seed, landing, step, month if step == "month" else None,
+                          approvals_path if step == "month" else None)
         uploaded = _upload(s3, bucket, landing, LANDING_PREFIX, _extra_args) if bucket else 0
-        return {"status": "success", "run_id": run_id, "step": step, "month": month,
-                "files": len(manifest["files"]), "rows": sum(f["rows"] for f in manifest["files"]), "objects_uploaded": uploaded}
+        out = {"status": "success", "run_id": run_id, "step": step, "month": month,
+               "files": len(manifest["files"]), "rows": sum(f["rows"] for f in manifest["files"]), "objects_uploaded": uploaded}
+        if decisions is not None:
+            out["approvals"] = decisions
+        return out
 
     if step == "build":
         from .cli import run_m2_dbt
