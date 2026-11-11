@@ -6,6 +6,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 - **Claude Haiku 5.5 access:** access requested, waiting for AWS. Converse via `us.anthropic.claude-haiku-5-5` still returns `AccessDeniedException`. Autopilot: re-probe with the ops workflow (`record-fixtures`, `haiku-5-5`) at most once a day; when it succeeds, record the M1-06 fixtures and apply the ADR-003 selection rule. Until then Haiku 4.5 stays the default.
 
+- **Create the owner user (M5-03):** the pool is deployed (main e69b1e3, deploy + smoke green 2026-11-11 14:26 UTC). Follow `docs/runbooks/owner-sign-in.md`: create your user in pool `mc-dev-web-owners` (the `OwnerPoolId` output of `mc-dev-web`), add it to group `owner`, sign in on the Action Center and approve one action. Autopilot then checks the `APPROVAL#` item and ticks M5-03.
 - **Orphaned Cognito pool?** The rolled-back deploy of 7a26505 may have left a retained pool `mc-dev-web-owners` (deletion protection on) in us-east-1. Please check the Cognito console: after the fix deploys there may be two pools with that name; the live one is the `OwnerPoolId` output of `mc-dev-web`. Delete the other one, or tell autopilot to leave it (deleting a data store is a hard stop for autopilot).
 
 ## Owner decision 2026-11-11
@@ -21,8 +22,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-1. **Finish the client-fix PR** (`auto/m5-03-cognito-client-fix`, stacked on #263 and #264): when every check is green, fast-forward `main` to its head (merges #263, #264 and the fix), then check `deploy to dev` + smoke.
-1b. **Owner step after the fix deploys:** create the owner user in the Cognito console and add it to `owner` (`docs/runbooks/owner-sign-in.md`). Then approve one action in the Action Center; autopilot checks the `APPROVAL#` item and ticks M5-03.
+1. **Owner step (see Waiting for owner):** create the owner user in the Cognito console and add it to `owner` (`docs/runbooks/owner-sign-in.md`). Then approve one action in the Action Center; autopilot checks the `APPROVAL#` item and ticks M5-03.
 2. **M5-03 follow-up:** export recorded approvals to `approvals.jsonl` for the simulator (`load_approvals` format) so an approved action feeds the next backfill.
 3. **M6-01:** telemetry lake, alarms, runbooks (PLAN.md §17).
 4. **M5-04:** KPI-09 needs a closed-loop plan change, KPI-13 the real AWS bill (M2-04 FOCUS export).
@@ -42,6 +42,7 @@ Notes: Ops eval results are in the job log; fixtures are base64 between FIXTURE-
 - **Task 4:** M4-05 ticked (PR #263, all checks green, not merged: deploy blocked): judge is the EV-06 gate (owner), other gates passed in ops 43018286081; graph replay 17/27 logged as known.
 - **Decisions (§8.2):** SRP via `amazon-cognito-identity-js` 6.3.22 (options: hosted UI, rejected: domain + redirects; USER_PASSWORD_AUTH, rejected: sends the password); token check via Cognito `GetUser` (local JWT check rejected: new crypto dependency, misses revocation). Gates unchanged.
 - **Cost:** $0 (Cognito free to 10,000 MAU; cost gate worst case $1.82/month unchanged). No ops run.
+- **Fix merged:** PR #265 (stacked on #263, #264), all checks green; `main` fast-forwarded to e69b1e3; main `ci` + `deploy to dev` + smoke green (run 43036148525). #263 (M4-05 tick) and #264 (approvals export) merged with it.
 - **Owner answer (same day):** "Apply the fix". Client now uses `disable_o_auth=True` (synth: `AllowedOAuthFlowsUserPoolClient: false`, SRP + refresh only); the test asserts OAuth stays off. Infra 81 passed, synth + cost gate passed, ruff clean.
 
 ## 2026-11-11 (autopilot run 119)
