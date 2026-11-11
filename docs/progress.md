@@ -22,17 +22,26 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-1. **Owner step (see Waiting for owner):** create the owner user in the Cognito console and add it to `owner` (`docs/runbooks/owner-sign-in.md`). Then approve one action in the Action Center; autopilot checks the `APPROVAL#` item and ticks M5-03.
-2. **M5-03 follow-up:** export recorded approvals to `approvals.jsonl` for the simulator (`load_approvals` format) so an approved action feeds the next backfill.
-3. **M6-01:** telemetry lake, alarms, runbooks (PLAN.md §17).
-4. **M5-04:** KPI-09 needs a closed-loop plan change, KPI-13 the real AWS bill (M2-04 FOCUS export).
-5. **EV-06 graph replay** (known baseline 17/27, specialists-v9): revisit later with fewer scenarios per change or a judge-based gate; open AG-05/06/07 items wait.
-6. **API `search_knowledge`:** the deployed graph (`MC_GRAPH`, off by default) still gets no knowledge tool; needs the index in the Lambda (check deploy impact and cost first).
-7. **Daily checks (not tasks):** ops `verify-backfill` (last 2026-11-11 00:23 UTC: `awaiting_first_export`) and the Haiku 5.5 probe (last 2026-11-11: `AccessDeniedException`). Next due 2026-11-12. The next `start-backfill` should publish a brief with no tenant listed twice.
+1. **Finish the M6-01 step 1 PR** (`auto/m6-01-lambda-alarms-r2`, replaces #266) if still open: all checks green, fast-forward `main`, check `deploy to dev` + smoke.
+2. **M6-01 step 2:** telemetry lake check: confirm the nightly compaction writes agent/pipeline logs to `telemetry/` as Parquet (PLAN.md §14); fill the gap if not. Then step 3: remaining §14 alarms (DLQ depth if a DLQ exists; at most 10 in total).
+3. **M5-03 follow-up step 2:** run `owner.export_approvals` before a backfill (needs `dynamodb:Scan` on `mc-dev-state-core` for the runner role; scoped to that table).
+4. **M5-03 tick:** after the owner creates the user and one approval round-trips (Waiting for owner).
+5. **M5-04:** KPI-09 needs a closed-loop plan change, KPI-13 the real AWS bill (M2-04 FOCUS export).
+6. **EV-06 graph replay** (known baseline 17/27, specialists-v9): revisit later with fewer scenarios per change or a judge-based gate.
+7. **API `search_knowledge`:** the deployed graph (`MC_GRAPH`, off by default) still gets no knowledge tool; needs the index in the Lambda (check deploy impact and cost first).
+8. **Daily checks (not tasks):** ops `verify-backfill` (last 2026-11-11 00:23 UTC: `awaiting_first_export`) and the Haiku 5.5 probe (last 2026-11-11: `AccessDeniedException`). Next due 2026-11-12.
 
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-05, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed.
 Notes: Ops eval results are in the job log; fixtures are base64 between FIXTURE-BEGIN/END lines. Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1; local replays need it too or everything drifts). Ops `ev06_graph: true` adds the graph runs (opt-in, about $0.15; the ops job ends `failure` while the graph gate is unmet, which is expected). Flaky github.com 504s during image builds: re-run the failed job. Only commit the graph fixtures from a record run; the other fixture sets change only in tool-use IDs. AG-05 prompt is at the cost-cap edge (`test_unsupported_figure_retries_then_fails_closed` sums $0.009965 of $0.01): keep it no longer than v8. Gh-created PR bodies get a footer: remove it with the GitHub MCP `update_pull_request` (gh api PATCH gets it re-added).
+
+## 2026-11-11 (autopilot run 121)
+
+- **Start:** #263/#264/#265 already on `main` (e69b1e3); main `ci` + `deploy to dev` green (Cognito fix live).
+- **Task 1:** M6-01 step 1. PR #266: Lambda `Errors` alarms `mc-dev-data-pipeline-errors` (>= 1/h) and `mc-dev-web-api-errors` (>= 3/h) to the alert topic, shared `alarms.py`, `docs/runbooks/alarms.md`. Infra 82 passed, local synth + cost gate passed (alarms 3/10), ruff clean.
+- **Overlap:** another session pushed 3e58d5e (progress only) to `main` at 14:27 while #266 was open, so #266 conflicted; replaced by `auto/m6-01-lambda-alarms-r2` (cherry-picked, no force-push). Two runs were active at once: check the schedule/session overlap.
+- **Decisions (§8.2):** Lambda `Errors` metric, not an error-rate expression (options: errors/invocations >= 2% per §14 SLO, deferred: noisy at dev volume). API threshold 3/h so one timeout doesn't page. No IAM change.
+- **Cost:** $0 (alarms within the free 10; no ops run).
 
 ## 2026-11-11 (autopilot run 120)
 
