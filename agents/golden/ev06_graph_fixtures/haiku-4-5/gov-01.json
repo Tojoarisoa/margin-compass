@@ -10,7 +10,7 @@
                 "query": "BAA data residency"
               },
               "name": "search_knowledge",
-              "toolUseId": "tooluse_gbmk5vKIaUQWruSdexGlnC",
+              "toolUseId": "tooluse_5i29egz7qHnBMmZ3eY8HZ2",
               "type": "tool_use"
             }
           }
@@ -24,7 +24,7 @@
       }
     },
     {
-      "request_sha": "256f8e616686cfc250a7efdba490149163028e11f467c2f8e851848ca677505b",
+      "request_sha": "06a684934ca7860dd768a5b542675f9bcd72187a40567900b41a13e13ee6ca5e",
       "response": {
         "content": [
           {

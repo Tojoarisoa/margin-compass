@@ -13,7 +13,7 @@
                 "query": "support feature cost leak root cause"
               },
               "name": "search_knowledge",
-              "toolUseId": "tooluse_UhjVxppqNPD3UcHhrVUWug",
+              "toolUseId": "tooluse_rhyuabJahRideFDKlndrmn",
               "type": "tool_use"
             }
           }
@@ -27,7 +27,7 @@
       }
     },
     {
-      "request_sha": "3f073901651136b8fb2744d0ea1e2331b724fa2319185e40573afb17a7e5ad3d",
+      "request_sha": "66bbd7ca692576535df105d5f99e36317d081628d5c11ceba0905e1c82238fdc",
       "response": {
         "content": [
           {
@@ -39,7 +39,7 @@
                 "sql": "SELECT margin_date, tenant_id, feature_id, ai_revenue_usd, llm_cost_usd, cost_to_serve_usd, gross_margin_usd, gross_margin_pct, request_count FROM fct_tenant_margin WHERE feature_id LIKE '%support%' OR feature_id LIKE '%F%' ORDER BY margin_date DESC, gross_margin_pct ASC LIMIT 50"
               },
               "name": "query_gold",
-              "toolUseId": "tooluse_CDUdTCQ49KGx9LgaZ0Evrr",
+              "toolUseId": "tooluse_vhq83E8JUFgtu9773AONWC",
               "type": "tool_use"
             }
           }

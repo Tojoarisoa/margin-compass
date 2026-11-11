@@ -13,7 +13,7 @@
                 "sql": "\nSELECT \n  tenant_id,\n  SUM(llm_cost_usd + cost_to_serve_usd) AS total_cost_usd,\n  SUM(request_count) AS total_requests,\n  ROUND(SUM(llm_cost_usd + cost_to_serve_usd) / NULLIF(SUM(request_count), 0), 6) AS cost_per_request\nFROM fct_tenant_margin\nGROUP BY tenant_id\nORDER BY total_cost_usd DESC\nLIMIT 10\n"
               },
               "name": "query_gold",
-              "toolUseId": "tooluse_fqlo8TzpcYTjj2kJVQCk8F",
+              "toolUseId": "tooluse_7Qq6EfX9jaw1Zl56PruFlc",
               "type": "tool_use"
             }
           }
@@ -27,7 +27,7 @@
       }
     },
     {
-      "request_sha": "6f76eb10cb56225edf360cebc7b7bdb2339e23f451752834f69064e35c3337b2",
+      "request_sha": "29c4a75512f06a18e889269e866aa37706e5466bd21c7d5f3b522fa82e10f34b",
       "response": {
         "content": [
           {

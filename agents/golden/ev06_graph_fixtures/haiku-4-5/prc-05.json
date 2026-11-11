@@ -13,7 +13,7 @@
                 "sql": "SELECT * FROM fct_tenant_margin WHERE tenant_id = 'bc-t0021' LIMIT 1"
               },
               "name": "query_gold",
-              "toolUseId": "tooluse_NHYp44aZP3dPKbZtikSErK",
+              "toolUseId": "tooluse_r69B8FGhNW55bqpbYveqtK",
               "type": "tool_use"
             }
           }
@@ -27,7 +27,7 @@
       }
     },
     {
-      "request_sha": "2b99b0b44348f3c20b488c9d1227b17f35835604841459002b2d618692811f29",
+      "request_sha": "6e448b39cfe6663d36a972db366b62fd1c767714e691f80afddedd389d2c62fb",
       "response": {
         "content": [
           {

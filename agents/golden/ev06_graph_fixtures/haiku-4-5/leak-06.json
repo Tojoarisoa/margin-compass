@@ -13,7 +13,7 @@
                 "sql": "\nSELECT \n  margin_date,\n  tenant_id,\n  ai_revenue_usd,\n  llm_cost_usd,\n  cost_to_serve_usd,\n  gross_margin_usd,\n  gross_margin_pct,\n  request_count\nFROM fct_tenant_margin\nWHERE tenant_id = 'bc-t0113'\nORDER BY margin_date DESC\nLIMIT 12\n"
               },
               "name": "query_gold",
-              "toolUseId": "tooluse_jpI7JOGhCBuFbfEvGiwkqb",
+              "toolUseId": "tooluse_8GxBESwkVzt09JK1J1DpA1",
               "type": "tool_use"
             }
           }
@@ -27,7 +27,7 @@
       }
     },
     {
-      "request_sha": "1fd8b0fbdacd2ca77bc8a3bb1e2c507dc285be937df82fcab245556765d617cd",
+      "request_sha": "0b76871c9cf0fd8d6e33580bdf9db8267cbb33394e316e47d7e396b5dc515f65",
       "response": {
         "content": [
           {

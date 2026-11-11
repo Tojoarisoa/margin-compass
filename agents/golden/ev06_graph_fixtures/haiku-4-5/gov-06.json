@@ -11,7 +11,7 @@
                 "tenant_id": "bc-t0050"
               },
               "name": "search_knowledge",
-              "toolUseId": "tooluse_BhLW972q8DZWmbNRkMAH0p",
+              "toolUseId": "tooluse_PwPejhb4DYM61nO9Sz0dsC",
               "type": "tool_use"
             }
           }
@@ -25,7 +25,7 @@
       }
     },
     {
-      "request_sha": "806430a1412a076b18469440e20b50823333d726cfb7362148f41e4dc0dcbb6d",
+      "request_sha": "76f450671405736c2fa0676d14345744efec0c984ff822b10e6118abaed58f7c",
       "response": {
         "content": [
           {
@@ -38,7 +38,7 @@
                 "tenant_id": "bc-t0050"
               },
               "name": "search_knowledge",
-              "toolUseId": "tooluse_GEaUnqoo2l6whgNDtNLdMm",
+              "toolUseId": "tooluse_b4UHm5ejahg0topc7IXMua",
               "type": "tool_use"
             }
           }

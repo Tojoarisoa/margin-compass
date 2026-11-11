@@ -13,7 +13,7 @@
                 "sql": "\nSELECT \n  margin_date,\n  tenant_id,\n  SUM(llm_cost_usd) as total_llm_cost,\n  SUM(cost_to_serve_usd) as total_cost_to_serve,\n  SUM(llm_cost_usd) + SUM(cost_to_serve_usd) as total_spend\nFROM fct_tenant_margin\nWHERE tenant_id = 'bc-t0042'\nGROUP BY margin_date, tenant_id\nORDER BY margin_date DESC\nLIMIT 200\n"
               },
               "name": "query_gold",
-              "toolUseId": "tooluse_0MCR00EfJVwXd5rD7m5hSq",
+              "toolUseId": "tooluse_1GjVuia2ErEdWlcqkVNq1i",
               "type": "tool_use"
             }
           }
@@ -27,7 +27,7 @@
       }
     },
     {
-      "request_sha": "eda0e119d3577cd4f213468b02bf10875b3b0d833a326fcc2da8d9c8d20f0bf0",
+      "request_sha": "72530437e4730eacd5105e637cebc48612f9fbb33fbc02dfebdde1d29c88fbda",
       "response": {
         "content": [
           {

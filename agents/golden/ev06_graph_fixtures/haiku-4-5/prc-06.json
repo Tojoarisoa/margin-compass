@@ -14,7 +14,7 @@
                 "outcomes": 1000
               },
               "name": "price_plan",
-              "toolUseId": "tooluse_fKdHv3fr94DZr1NQxlFkSt",
+              "toolUseId": "tooluse_FvAIq7rUx1PPaFy2XLaWA1",
               "type": "tool_use"
             }
           }
@@ -28,17 +28,22 @@
       }
     },
     {
-      "request_sha": "5a6961024fa5580867d6eae71bc2e1c2dbeb0a63782f4efd561ab8129e1ef946",
+      "request_sha": "a13dc67e25cbfed485fb39b2c60d1e2e50006d5801d4a4ab9e8601e02701e0a4",
       "response": {
         "content": [
           {
-            "text": "Let me use the example plan instead:"
+            "text": "Let me use the example plan with outcome-based parameters:"
           },
           {
             "toolUse": {
-              "input": {},
+              "input": {
+                "after": {
+                  "outcome_price_micro": 500000,
+                  "outcomes": 1000
+                }
+              },
               "name": "price_plan",
-              "toolUseId": "tooluse_VN3NaUDsl8emICdwxYubWS",
+              "toolUseId": "tooluse_2CDngWX3mgsrRqwDb3XnUr",
               "type": "tool_use"
             }
           }
@@ -46,8 +51,8 @@
         "stop_reason": "tool_use",
         "usage": {
           "cacheReadInputTokens": 0,
-          "inputTokens": 2278,
-          "outputTokens": 45
+          "inputTokens": 2287,
+          "outputTokens": 82
         }
       }
     }

@@ -10,7 +10,7 @@
                 "query": "price caps contract policy"
               },
               "name": "search_knowledge",
-              "toolUseId": "tooluse_gfK7RnJwYNP0rOKCR80aoQ",
+              "toolUseId": "tooluse_9PMQQtbcuhsybllLrYOlXs",
               "type": "tool_use"
             }
           }
@@ -24,7 +24,7 @@
       }
     },
     {
-      "request_sha": "918ea231a3158c170e879262f0e2451c610b0245100fbcc0246766b53eae1f78",
+      "request_sha": "9140db26b4ed2658ad3e764d267f1218ad2f90f26a231a5187c41ab6e8c707f6",
       "response": {
         "content": [
           {

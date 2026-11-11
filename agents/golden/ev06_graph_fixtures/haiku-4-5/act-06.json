@@ -13,7 +13,7 @@
                 "query": "refund approval authority"
               },
               "name": "search_knowledge",
-              "toolUseId": "tooluse_MAJT4tpFsOmFVzdqIINam9",
+              "toolUseId": "tooluse_m8n8sfRS7BmUniUmd1cKrt",
               "type": "tool_use"
             }
           }
@@ -27,7 +27,7 @@
       }
     },
     {
-      "request_sha": "13047c4bdafb4539fb9dfd8ee2ac200792468f144a0c2aed2b0efc29b52fd2a3",
+      "request_sha": "045a6f52c504c2caab97f5386903a469bdc20d4ee0f124f23bf1c99a72fb8dbb",
       "response": {
         "content": [
           {
@@ -39,7 +39,7 @@
                 "query": "refund customer policy"
               },
               "name": "search_knowledge",
-              "toolUseId": "tooluse_PfHRKEuEmkNEcDiGc9kirV",
+              "toolUseId": "tooluse_ix0VEaGPYL1ylVv6h5w1lr",
               "type": "tool_use"
             }
           }
