@@ -32,6 +32,7 @@ from .approvals import DynamoStore
 from .budget import BudgetExceeded
 from .config import DEFAULT_ANALYST_MODEL, MAX_USD_PER_QUESTION, MODELS
 from .guard import RateLimited, RateLimiter, SpendGuard
+from .intake import screen
 from .llm import BedrockLLM
 
 log = logging.getLogger("mc_agents")
@@ -98,6 +99,9 @@ def _m2_files() -> tuple[str, ...]:
     return tuple(sorted({f"{m['source']}.parquet" for m in registry.load().values()}))
 
 
+API_BLOCKED = ("injection", "authority_bypass", "sql_attack")
+
+
 def _parse_body(event: dict[str, Any]) -> dict[str, Any]:
     raw = event.get("body") or ""
     if event.get("isBase64Encoded"):
@@ -132,6 +136,13 @@ def handle_ask(event: dict[str, Any], context: Any, *, table=None, invoke=None) 
         question = _clean_question(_parse_body(event).get("question"))
     except (ValueError, json.JSONDecodeError) as exc:
         return _resp(400, {"error": str(exc)})
+    # M6-03 (EV-09): AG-01 intake rules before any job, spend or model call, also on the one-node analyst path.
+    # "secrets" is left to the analyst here: it matches the bare word "token", a core cost unit on this page.
+    intake = screen(question)
+    if intake.verdict == "block" and intake.category in API_BLOCKED:
+        log.info("ask_blocked", extra={"fields": {"category": intake.category}})
+        return _resp(400, {"error": "This question can't be answered here. Ask about margin, cost, pricing or plans.",
+                           "code": "blocked"})
     table = table or _table()
     spend = SpendGuard(table)
     if not spend.headroom(MAX_USD_PER_QUESTION):
