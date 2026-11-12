@@ -7,7 +7,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 - **Claude Haiku 5.5 access:** access requested, waiting for AWS. Converse via `us.anthropic.claude-haiku-5-5` still returns `AccessDeniedException`. Autopilot: re-probe with the ops workflow (`record-fixtures`, `haiku-5-5`) at most once a day; when it succeeds, record the M1-06 fixtures and apply the ADR-003 selection rule. Until then Haiku 4.5 stays the default.
 - **M5-03 approvals in the simulation window (choice with no recommended option):** the owner's live decisions are dated 2026-11-11, the window ends 2026-10-31, and effects start 3-14 days after approval, so any mapping that keeps "nothing before the approval date" shows no effect; a visible effect needs a backdated approval date. Options: (a) leave as is (decisions only count for windows that include them); (b) map each decision to the action's data date minus a fixed lead (for example 60 days), labeled as simulated; (c) extend the window past 2026-10-31. Which one?
 - **Intake `secrets` rule false positive:** AG-01 blocks any question with the bare word "token(s)" (for example "tokens per request for F4"), on the graph path. Narrowing it to "api/access/auth/bearer/refresh token" would loosen a guardrail, so autopilot won't. The public ask path skips that one rule for now. Narrow it?
-- **Superseded PRs #273 and #276:** closing them (and deleting their branches) was denied by the session guard again in runs 124 and 125. Please close them; both were replaced and merged (#275, #277).
+- **Kill-switch drill (M6-03 G3):** who attaches the deny policy for the game day: you in the console, or an ops IAM grant (an IAM change, so autopilot won't add it unasked)? M6-03 is ticked after the drill.
 
 ## Owner decision 2026-11-11
 
@@ -23,19 +23,29 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-1. **Check main `ci` + `deploy to dev` for b600cb9 (#317)** and this progress commit.
-2. **Re-record leak-14 and prc-12 judge fixtures (M6-03):** after #317 is on main, dispatch ops `record-fixtures` (`haiku-4-5`, `cache: true`, no graph needed). Commit only `ev06_judge_fixtures/haiku-4-5/{leak-14,prc-12}.json`, drop their `recorded: false`. Judge must stay >= 90% (now 92.7% on 55 without them).
-3. **Kill-switch drill (G3):** waits for the owner to say who attaches the deny policy (console, or an ops IAM grant). Then tick M6-03 (golden set at 100 with fixtures is done).
-4. **M6-04 remaining:** the case study needs the realized-margin result (M5-04 KPI-09: a closed-loop plan change); then tick M6-04.
-5. **M6-03 low:** CloudFront invalidation grant scoping. docs.aws.amazon.com is unreachable from the cloud session (runs 127, 128), so tag-condition support for `CreateInvalidation` can't be verified.
-6. **M5-04:** KPI-09 needs a closed-loop plan change; KPI-13 needs the real AWS bill (M2-04 FOCUS export).
-7. **EV-06 graph replay** (baseline now 28/45: old 27 at 17, new 18 at 11; cts-18, gov-07..10, leak-10, leak-12 fail): revisit later with fewer scenarios per change or a judge-based gate.
-8. **API `search_knowledge`:** the deployed graph still gets no knowledge tool; needs the index in the Lambda (check deploy impact and cost first).
-9. **Daily checks (not tasks):** ops `verify-backfill` and the Haiku 5.5 probe, due 2026-11-13. Weekly: `online-eval` Mondays 06:17 UTC.
+1. **Finish PR #321** (contains #320: leak-14/prc-12 judge fixtures, then security review row 7 + Change Log). Check main `ci` + `deploy to dev` for 68fbc95 (#319), then fast-forward `main` to #321's head when every check is green; close #320 as merged by it if GitHub doesn't.
+2. **Kill-switch drill (G3):** waiting for owner (see above). Then tick M6-03.
+3. **M6-04 remaining:** case study needs the realized-margin result (M5-04 KPI-09: a closed-loop plan change); then tick M6-04.
+4. **M6-03 low:** CloudFront invalidation grant scoping (security review #5); AWS docs unreachable from the cloud session, so tag-condition support can't be verified.
+5. **M5-04:** KPI-09 needs a closed-loop plan change; KPI-13 needs the real AWS bill (M2-04 FOCUS export).
+6. **EV-06 graph replay** (baseline 28/45): revisit later with fewer scenarios per change or a judge-based gate. Note: AG-08 now rejects citations to missing evidence (#319); a graph re-record may shift the baseline.
+7. **API graph path:** has `search_knowledge` now (#318). Turning `MC_GRAPH` on for the public API is a separate decision (cost per question, graph gate unmet).
+8. **Daily checks (not tasks):** ops `verify-backfill` and the Haiku 5.5 probe, due 2026-11-13. Weekly: `online-eval` Mondays 06:17 UTC.
 
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-05, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed.
 Notes: Ops eval results are in the job log; fixtures are base64 between FIXTURE-BEGIN/END lines. Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1; local replays need it too or everything drifts). Ops `ev06_graph: true` adds the graph runs (opt-in, about $0.15; the ops job ends `failure` while the graph gate is unmet, which is expected). Flaky github.com 504s during image builds: re-run the failed job. Only commit the graph fixtures from a record run; the other fixture sets change only in tool-use IDs. AG-05 prompt is at the cost-cap edge (`test_unsupported_figure_retries_then_fails_closed` sums $0.009965 of $0.01): keep it no longer than v8. Gh-created PR bodies get a footer: remove it with the GitHub MCP `update_pull_request` (gh api PATCH gets it re-added).
+
+## 2026-11-12 (autopilot run 129)
+
+- **Start:** main `ci` + `deploy to dev` green for b600cb9 and 1d81c3f; no open PRs (#273/#276 closed by owner).
+- **Ops:** `record-fixtures` (43133173116, haiku-4-5, cache, no graph): judge 96.4% on 55 (gate 90%); leak-14 and prc-12 now pass, leak-07/11 still fail.
+- **Task 1:** PR #318, API graph path offers `search_knowledge` over `knowledge/` shipped in the image (in-memory, once per container). `MC_GRAPH` stays off live. Merged; `main` 229adde, `ci` + `deploy to dev` green.
+- **Task 2:** PR #319, AG-08 fails answers citing evidence IDs not in the ledger (found testing #318: "[E1]" with nothing retrieved was verified). Merged; `main` 68fbc95, deploy running at run end.
+- **Task 3:** PR #320, leak-14/prc-12 judge fixtures, flags dropped. Green, open.
+- **Task 4:** PR #321 (on #320), security review #7 + Change Log + this entry. Open.
+- **Decisions (§8.2):** ship the corpus in the image (rejected: S3/OpenSearch index, new resource); stricter citation check (guardrail only tightened).
+- **Cost:** about $0.05 (one judge record run); no new resources.
 
 ## 2026-11-12 (autopilot run 128)
 
