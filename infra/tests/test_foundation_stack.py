@@ -252,6 +252,7 @@ def test_github_deploy_role_may_only_assume_cdk_bootstrap_roles_and_upload_the_d
             "Action": "cloudfront:CreateInvalidation",
             "Effect": "Allow",
             "Resource": f"arn:aws:cloudfront::{ACCOUNT}:distribution/*",
+            "Condition": {"StringEquals": {"aws:ResourceTag/project": "margin-compass"}},
         },
     ]
 

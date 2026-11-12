@@ -332,9 +332,13 @@ class FoundationStack(cdk.Stack):
         role.add_to_policy(
             iam.PolicyStatement(sid="WriteDashboardPrefix", actions=["s3:PutObject", "s3:DeleteObject"], resources=[f"{lake}/site/*"])
         )
+        # The distribution ID lives in the web stack, which deploys before this one, so the grant is scoped by
+        # the mandatory project tag instead (security review #5). CreateInvalidation on `distribution` supports
+        # aws:ResourceTag/${TagKey} (Service Authorization Reference, checked 2026-11-12).
         role.add_to_policy(
             iam.PolicyStatement(sid="InvalidateDashboard", actions=["cloudfront:CreateInvalidation"],
-                                resources=[f"arn:aws:cloudfront::{self.account}:distribution/*"])
+                                resources=[f"arn:aws:cloudfront::{self.account}:distribution/*"],
+                                conditions={"StringEquals": {"aws:ResourceTag/project": self.config.project}})
         )
         cdk.CfnOutput(self, "GitHubDeployRoleArn", value=role.role_arn)
         return role
