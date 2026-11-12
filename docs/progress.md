@@ -23,18 +23,28 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-1. **Finish PR #321** (contains #320: leak-14/prc-12 judge fixtures, then security review row 7 + Change Log). Fast-forward `main` to #321's head when every check is green; close #320 as merged by it if GitHub doesn't.
-2. **Kill-switch drill (G3):** waiting for owner (see above). Then tick M6-03.
+1. **Check main `ci` + `deploy to dev` for eebb8b2 (#324)** and this progress commit.
+2. **Kill-switch drill (G3):** waiting for owner (see above). Then tick M6-03 (golden set, security review, red team done).
 3. **M6-04 remaining:** case study needs the realized-margin result (M5-04 KPI-09: a closed-loop plan change); then tick M6-04.
-4. **M6-03 low:** CloudFront invalidation grant scoping (security review #5); AWS docs unreachable from the cloud session, so tag-condition support can't be verified.
+4. **M6-03 low, CSP (security review #6):** check whether `style-src 'unsafe-inline'` can go (React style props use CSSOM and are allowed; check ECharts and the build for `<style>`/style attributes). Needs a deploy to verify; start early in a run.
 5. **M5-04:** KPI-09 needs a closed-loop plan change; KPI-13 needs the real AWS bill (M2-04 FOCUS export).
-6. **EV-06 graph replay** (baseline 28/45): revisit later with fewer scenarios per change or a judge-based gate. Note: AG-08 now rejects citations to missing evidence (#319); a graph re-record may shift the baseline.
-7. **API graph path:** has `search_knowledge` now (#318). Turning `MC_GRAPH` on for the public API is a separate decision (cost per question, graph gate unmet).
+6. **EV-06 graph replay** (baseline 28/45): revisit later with fewer scenarios per change or a judge-based gate. AG-08 now rejects citations to missing evidence (#319); a graph re-record may shift the baseline.
+7. **API graph path:** has `search_knowledge` (#318). Turning `MC_GRAPH` on for the public API is a separate decision (cost per question, graph gate unmet).
 8. **Daily checks (not tasks):** ops `verify-backfill` and the Haiku 5.5 probe, due 2026-11-13. Weekly: `online-eval` Mondays 06:17 UTC.
 
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-05, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed.
 Notes: Ops eval results are in the job log; fixtures are base64 between FIXTURE-BEGIN/END lines. Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1; local replays need it too or everything drifts). Ops `ev06_graph: true` adds the graph runs (opt-in, about $0.15; the ops job ends `failure` while the graph gate is unmet, which is expected). Flaky github.com 504s during image builds: re-run the failed job. Only commit the graph fixtures from a record run; the other fixture sets change only in tool-use IDs. AG-05 prompt is at the cost-cap edge (`test_unsupported_figure_retries_then_fails_closed` sums $0.009965 of $0.01): keep it no longer than v8. Gh-created PR bodies get a footer: remove it with the GitHub MCP `update_pull_request` (gh api PATCH gets it re-added).
+
+## 2026-11-12 (autopilot run 130)
+
+- **Start:** main `ci` + `deploy to dev` green for 68fbc95. #321 (contains #320) fully green -> `main` c178c11; `ci` + `deploy to dev` green. #320/#321 show merged.
+- **Task 1:** PR #322, deploy role's `cloudfront:CreateInvalidation` now requires `aws:ResourceTag/project` = `margin-compass` (security review #5). Support checked in an iam-dataset copy of the Service Authorization Reference (AWS docs blocked). Infra 93 passed.
+- **Task 2:** PR #323, security review: git history secret scan (pattern scan, 560 commits, no match), `ReadCosts` `*` confirmed needed. gitleaks download denied by the session guard.
+- **Merge:** #323 head (contains #322) -> `main` 5af0650; `ci` + `deploy to dev` green, so the dashboard invalidation works with the tag condition.
+- **Task 3:** PR #324, VER-14: Harness/ICONIQ figures checked against the publishers' pages (via search; hosts blocked). ICONIQ 52% is "AI product" margin, not "AI-native"; reworded. Merged -> `main` eebb8b2 (`ci` + deploy running at run end).
+- **Decisions (§8.2):** scope by project tag (rejected: distribution ARN, the web stack deploys first; leave as is). Cite the January 2026 ICONIQ snapshot, newer Q2 figures noted.
+- **Cost:** $0; no new resources, no ops run.
 
 ## 2026-11-12 (autopilot run 129)
 
