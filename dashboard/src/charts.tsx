@@ -37,16 +37,22 @@ export const zoom = (slider: boolean) => [
   ...(slider ? [{ type: "slider", xAxisIndex: 0, height: 18, bottom: 4, brushSelect: false }] : []),
 ];
 
-type Row = { label: string; value: string; color?: string };
-const tipHtml = (date: string, rows: Row[]) =>
-  `<div style="font-weight:600;margin-bottom:4px">${date}</div>` +
-  rows.map((r) => `<div style="display:flex;gap:12px;justify-content:space-between"><span>${r.color ? `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${r.color};margin-right:6px"></span>` : ""}${r.label}</span><b>${r.value}</b></div>`).join("");
+// No inline style attributes in tooltip HTML: the CSP has no style-src 'unsafe-inline' (security review #6), so
+// layout and the colour dots come from classes in styles.css. `dot` names a series colour class.
+type Row = { label: string; value: string; dot?: "accent" | "muted" };
+export const tipHtml = (date: string, rows: Row[]) =>
+  `<div class="tt-head">${date}</div>` +
+  rows.map((r) => `<div class="tt-row"><span>${r.dot ? `<span class="tt-dot tt-dot-${r.dot}"></span>` : ""}${r.label}</span><b>${r.value}</b></div>`).join("");
+type AxisParam = { axisValueLabel?: string; name?: string; seriesName?: string; value?: unknown };
+// Axis tooltip for single-series lines (replaces ECharts' default markup, which uses style attributes).
+export const axisTip = (fmt: (v: unknown) => string) => (ps: AxisParam[]) =>
+  tipHtml(ps[0]?.axisValueLabel ?? ps[0]?.name ?? "", ps.map((p) => ({ label: p.seriesName ?? "", value: fmt(p.value), dot: "accent" as const })));
 
 const axisMoney = { type: "value" as const, axisLabel: { formatter: (v: number) => `$${v.toLocaleString("en-US")}` } };
 
 export const MarginTrend = memo(function MarginTrend({ snap }: { snap: Snapshot }) {
   const option: EChartsCoreOption = {
-    tooltip: { trigger: "axis", axisPointer: { type: "cross", label: { show: false } }, valueFormatter: pctFmt },
+    tooltip: { trigger: "axis", axisPointer: { type: "cross", label: { show: false } }, formatter: axisTip(pctFmt) },
     grid: { left: 8, right: 16, top: 24, bottom: 36, containLabel: true },
     dataZoom: zoom(true),
     xAxis: { type: "category", data: snap.trend.map((d) => d.date) },
@@ -69,10 +75,10 @@ export const CogsForecast = memo(function CogsForecast({ snap }: { snap: Snapsho
       trigger: "axis",
       formatter: (ps: { dataIndex: number }[]) => {
         const i = ps[0]?.dataIndex ?? 0;
-        if (i < recent.length) return tipHtml(dates[i], [{ label: "Actual AI cost to serve", value: tipMoney(recent[i].ai_cost_to_serve_usd), color: MUTED_LINE }]);
+        if (i < recent.length) return tipHtml(dates[i], [{ label: "Actual AI cost to serve", value: tipMoney(recent[i].ai_cost_to_serve_usd), dot: "muted" }]);
         const p = pts[i - recent.length];
         return tipHtml(dates[i], [
-          { label: "Forecast P50", value: tipMoney(p.p50), color: ACCENT },
+          { label: "Forecast P50", value: tipMoney(p.p50), dot: "accent" },
           { label: "P10", value: tipMoney(p.p10) },
           { label: "P90", value: tipMoney(p.p90) },
         ]);
@@ -110,10 +116,10 @@ export const MarginForecast = memo(function MarginForecast({ snap }: { snap: Sna
       trigger: "axis",
       formatter: (ps: { dataIndex: number }[]) => {
         const i = ps[0]?.dataIndex ?? 0;
-        if (i < recent.length) return tipHtml(dates[i], [{ label: "Actual margin", value: pctFmt(pct(recent[i].ai_gross_margin_pct)), color: MUTED_LINE }]);
+        if (i < recent.length) return tipHtml(dates[i], [{ label: "Actual margin", value: pctFmt(pct(recent[i].ai_gross_margin_pct)), dot: "muted" }]);
         const p = pts[i - recent.length];
         return tipHtml(dates[i], [
-          { label: "Forecast margin", value: pctFmt(pct(p.mid)), color: ACCENT },
+          { label: "Forecast margin", value: pctFmt(pct(p.mid)), dot: "accent" },
           { label: "Low", value: pctFmt(pct(p.low)) },
           { label: "High", value: pctFmt(pct(p.high)) },
         ]);

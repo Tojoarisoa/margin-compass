@@ -106,6 +106,7 @@ def test_security_headers(synth):
     cfg = next(iter(t.find_resources("AWS::CloudFront::ResponseHeadersPolicy").values()))["Properties"]["ResponseHeadersPolicyConfig"]
     csp = cfg["SecurityHeadersConfig"]["ContentSecurityPolicy"]["ContentSecurityPolicy"]
     assert "script-src 'self'" in csp and "frame-ancestors 'none'" in csp and "unsafe-eval" not in csp
+    assert "style-src 'self';" in csp and "unsafe-inline" not in csp  # security review #6
     connect = next(d for d in csp.split(";") if d.strip().startswith("connect-src")).split()[1:]
     assert connect == ["'self'", "https://cognito-idp.us-east-1.amazonaws.com"]  # owner sign-in only, no wildcard
     assert cfg["SecurityHeadersConfig"]["FrameOptions"]["FrameOption"] == "DENY"

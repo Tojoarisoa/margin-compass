@@ -193,3 +193,10 @@ section[id] { scroll-margin-top: 64px; }
 .sectionnav { align-items: center; }
 .sectionnav button { flex: none; margin-left: auto; white-space: nowrap; padding: 4px 12px; font-size: .74rem; box-shadow: none; }
 @media (max-width: 560px) { .sectionnav button { margin-left: 4px; padding: 4px 10px; font-size: .68rem; } }
+
+/* Chart tooltips (charts.tsx tipHtml): classes, not style attributes, so the CSP needs no style-src 'unsafe-inline'. */
+.tt-head { font-weight: 600; margin-bottom: 4px; }
+.tt-row { display: flex; gap: 12px; justify-content: space-between; }
+.tt-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+.tt-dot-accent { background: #22d3ee; } /* theme.ts ACCENT */
+.tt-dot-muted { background: #8b9bb4; } /* theme.ts MUTED_LINE */

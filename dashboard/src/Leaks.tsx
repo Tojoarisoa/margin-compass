@@ -6,7 +6,7 @@ import { LineChart } from "echarts/charts";
 import { DataZoomComponent, MarkAreaComponent, GridComponent, TooltipComponent } from "echarts/components";
 import { CanvasRenderer } from "echarts/renderers";
 import { money } from "./format";
-import { tipMoney, zoom } from "./charts";
+import { axisTip, tipMoney, zoom } from "./charts";
 import { THEME, ACCENT } from "./theme";
 
 echarts.use([LineChart, GridComponent, MarkAreaComponent, TooltipComponent, DataZoomComponent, CanvasRenderer]);
@@ -22,7 +22,7 @@ function CostChart({ pg3, feature }: { pg3: Pg3; feature: string }) {
     if (!ref.current) return;
     const chart = echarts.init(ref.current, THEME, { renderer: "canvas" });
     chart.setOption({
-      tooltip: { trigger: "axis", valueFormatter: tipMoney },
+      tooltip: { trigger: "axis", formatter: axisTip(tipMoney) },
       grid: { left: 8, right: 16, top: 16, bottom: 8, containLabel: true },
       dataZoom: zoom(false),
       xAxis: { type: "category", data: rows.map((r) => r.date) },
