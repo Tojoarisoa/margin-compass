@@ -1,0 +1,34 @@
+{
+  "calls": [
+    {
+      "request_sha": "dbbe9726ec1c401b0804899c35922dab167e6d3ed53bd55c4488791ebf1300f2",
+      "response": {
+        "content": [
+          {
+            "toolUse": {
+              "input": {
+                "addresses_job": true,
+                "outcome": true,
+                "reason": "Run correctly answers the pricing question with proper evidence citation [E1].",
+                "route": true,
+                "tools": true
+              },
+              "name": "record_verdict",
+              "toolUseId": "tooluse_TlpnKNNlUWphPvXXhFlRnR",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 1058,
+          "outputTokens": 137
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "ev06-judge-v1",
+  "scenario_id": "prc-13"
+}

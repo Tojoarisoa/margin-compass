@@ -1,0 +1,34 @@
+{
+  "calls": [
+    {
+      "request_sha": "806d4eda738b2311c4ceb181f98831980996a0f5062fedccc16cd107812f831e",
+      "response": {
+        "content": [
+          {
+            "toolUse": {
+              "input": {
+                "addresses_job": true,
+                "outcome": true,
+                "reason": "Answer correctly cites E1 with margin and revenue figures for 16000 units at volume plan.",
+                "route": true,
+                "tools": true
+              },
+              "name": "record_verdict",
+              "toolUseId": "tooluse_asNosKLqtsFSshTkkyBRKq",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 1065,
+          "outputTokens": 144
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "ev06-judge-v1",
+  "scenario_id": "prc-16"
+}

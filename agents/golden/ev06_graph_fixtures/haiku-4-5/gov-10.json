@@ -1,0 +1,71 @@
+{
+  "calls": [
+    {
+      "request_sha": "1751605cd2fec51f6bfda2b1ecbec4aae598019cfc2c0527f25a4831367335fa",
+      "response": {
+        "content": [
+          {
+            "toolUse": {
+              "input": {
+                "query": "price cap",
+                "tenant_id": "bc-t0007"
+              },
+              "name": "search_knowledge",
+              "toolUseId": "tooluse_r1bMTYVdvhNnGVgJ8niDpJ",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 967,
+          "outputTokens": 78
+        }
+      }
+    },
+    {
+      "request_sha": "a8716a6e6434fc3d4c67638215496a20acf8e231f6fff61e513f440d837b81f7",
+      "response": {
+        "content": [
+          {
+            "text": "The search did not return a specific price cap clause for bc-t0007. The results show discount authority and cost-optimization policies, but no dedicated price cap clause. To confirm whether a price cap exists in bc-t0007's contract, I would need to search with different terms or you could check the contract directly."
+          }
+        ],
+        "stop_reason": "end_turn",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 1863,
+          "outputTokens": 70
+        }
+      }
+    },
+    {
+      "request_sha": "d7333e1bea99d8f67ae1cc6c13da9e6de9e2c34389b59c7a8e97f4eb7db05207",
+      "response": {
+        "content": [
+          {
+            "toolUse": {
+              "input": {
+                "query": "price cap",
+                "tenant_id": "bc-t0007"
+              },
+              "name": "search_knowledge",
+              "toolUseId": "tooluse_3lvDVEemULbsGXVOfzH50U",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 978,
+          "outputTokens": 78
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "specialists-v9",
+  "scenario_id": "gov-10"
+}

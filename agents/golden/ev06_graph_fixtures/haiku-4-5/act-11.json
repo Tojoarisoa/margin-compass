@@ -1,0 +1,51 @@
+{
+  "calls": [
+    {
+      "request_sha": "ff644381cc1094f7c50af3a95bbef8e9d45fd5d2757db91d1379198a8ed9dea9",
+      "response": {
+        "content": [
+          {
+            "text": "I'll price the plan with a 0% discount to confirm the current pricing."
+          },
+          {
+            "toolUse": {
+              "input": {
+                "after": {
+                  "discount_bps": 0
+                }
+              },
+              "name": "price_plan",
+              "toolUseId": "tooluse_51oSjv4YxdqmHFgg9PU3HH",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 2084,
+          "outputTokens": 78
+        }
+      }
+    },
+    {
+      "request_sha": "83fa43b2611371f413542a0d827bf6e2763d32534e5bf7d78bf7608fcd6b22e5",
+      "response": {
+        "content": [
+          {
+            "text": "For the requested 0% discount (0 bps), revenue remains at 51,000 cents with no change, maintaining a gross margin of 31,000 cents and a margin of 6078 bps (60.78%) [E1]. This pricing is approved with no discount applied to the example plan."
+          }
+        ],
+        "stop_reason": "end_turn",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 2462,
+          "outputTokens": 72
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "specialists-v9",
+  "scenario_id": "act-11"
+}

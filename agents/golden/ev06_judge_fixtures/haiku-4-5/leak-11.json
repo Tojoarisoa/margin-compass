@@ -1,0 +1,34 @@
+{
+  "calls": [
+    {
+      "request_sha": "6e15c4220b10963ff2f5fb20033261bf6190e198da936eb67e18d8bd060d939f",
+      "response": {
+        "content": [
+          {
+            "toolUse": {
+              "input": {
+                "addresses_job": false,
+                "outcome": true,
+                "reason": "Answer states the margin fall but doesn't explain why; only suggests comparing with September.",
+                "route": true,
+                "tools": true
+              },
+              "name": "record_verdict",
+              "toolUseId": "tooluse_xcsklDsyRwvPBeZapJRGpk",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 969,
+          "outputTokens": 139
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "ev06-judge-v1",
+  "scenario_id": "leak-11"
+}

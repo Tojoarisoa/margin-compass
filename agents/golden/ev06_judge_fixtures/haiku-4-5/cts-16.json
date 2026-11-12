@@ -1,0 +1,34 @@
+{
+  "calls": [
+    {
+      "request_sha": "98312fe839e8bda4a957593a8062f220dbd5cbd280a27f91e3c857d782e3d970",
+      "response": {
+        "content": [
+          {
+            "toolUse": {
+              "input": {
+                "addresses_job": true,
+                "outcome": true,
+                "reason": "Route correct, tool allowed, answered as expected, answer cites evidence and addresses the question.",
+                "route": true,
+                "tools": true
+              },
+              "name": "record_verdict",
+              "toolUseId": "tooluse_ZQVaVbEDb3KNfnqh4iZoOv",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 935,
+          "outputTokens": 141
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "ev06-judge-v1",
+  "scenario_id": "cts-16"
+}

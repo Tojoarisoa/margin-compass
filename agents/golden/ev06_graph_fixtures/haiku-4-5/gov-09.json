@@ -1,0 +1,73 @@
+{
+  "calls": [
+    {
+      "request_sha": "f823f8407b9026d2d9a1153724f33235532886ee30be4fbd474fc4176428fd89",
+      "response": {
+        "content": [
+          {
+            "text": "I'll search for information about data retention in the contract."
+          },
+          {
+            "toolUse": {
+              "input": {
+                "query": "data retention"
+              },
+              "name": "search_knowledge",
+              "toolUseId": "tooluse_ZjVLYHS1oebjwP6asWbjmp",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 963,
+          "outputTokens": 67
+        }
+      }
+    },
+    {
+      "request_sha": "2d08504c8852bfc5d7cadfd27295dfa4b758c749b7d87a3be324000fc766b614",
+      "response": {
+        "content": [
+          {
+            "text": "The search results don't contain specific information about data retention periods or policies. The hits address patient data handling, data residency, and compliance constraints, but not data retention duration or allowances. Could you clarify whether you're asking about a specific tenant's contract, or provide more context about what aspect of data retention you need to know about?"
+          }
+        ],
+        "stop_reason": "end_turn",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 1730,
+          "outputTokens": 73
+        }
+      }
+    },
+    {
+      "request_sha": "94edd91af7190077e2e359f8c6fa9df3d3ccdcc3b575c2f819ad0a3ed7cd17c6",
+      "response": {
+        "content": [
+          {
+            "toolUse": {
+              "input": {
+                "query": "data retention",
+                "top_k": 5
+              },
+              "name": "search_knowledge",
+              "toolUseId": "tooluse_hZc0FdIjJrMri5GN8E0rht",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 974,
+          "outputTokens": 74
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "specialists-v9",
+  "scenario_id": "gov-09"
+}

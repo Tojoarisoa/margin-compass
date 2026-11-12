@@ -1,0 +1,34 @@
+{
+  "calls": [
+    {
+      "request_sha": "6b62c6ca4006697678c93dbf5923c841fe9d8da2497e1b6d44fdff876f9a5299",
+      "response": {
+        "content": [
+          {
+            "toolUse": {
+              "input": {
+                "addresses_job": true,
+                "outcome": true,
+                "reason": "Run correctly answers the optimization question with proper evidence citation and safety analysis.",
+                "route": true,
+                "tools": true
+              },
+              "name": "record_verdict",
+              "toolUseId": "tooluse_ccYNhum8563IzARK4dOkDC",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 986,
+          "outputTokens": 136
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "ev06-judge-v1",
+  "scenario_id": "eff-12"
+}

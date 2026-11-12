@@ -1,0 +1,34 @@
+{
+  "calls": [
+    {
+      "request_sha": "20e2532125c4e2d320f4b7af50a983cef627f6b708b6a4d1876c6272abceccaa",
+      "response": {
+        "content": [
+          {
+            "toolUse": {
+              "input": {
+                "addresses_job": true,
+                "outcome": true,
+                "reason": "Answer correctly cites E1 with margin and revenue figures for 400 outcomes.",
+                "route": true,
+                "tools": true
+              },
+              "name": "record_verdict",
+              "toolUseId": "tooluse_eXxAMTLf13zZ1rzizucvu9",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 1058,
+          "outputTokens": 140
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "ev06-judge-v1",
+  "scenario_id": "prc-09"
+}

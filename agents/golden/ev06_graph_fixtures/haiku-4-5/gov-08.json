@@ -1,0 +1,58 @@
+{
+  "calls": [
+    {
+      "request_sha": "d9d60b342643578477b8fbff91fddacc1b70678787ff09499d192cd0d8594154",
+      "response": {
+        "content": [
+          {
+            "toolUse": {
+              "input": {
+                "query": "renewal notice period",
+                "tenant_id": "bc-t0113"
+              },
+              "name": "search_knowledge",
+              "toolUseId": "tooluse_VcnuLkwAOk3NqPDeMAdozB",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 966,
+          "outputTokens": 79
+        }
+      }
+    },
+    {
+      "request_sha": "7710898ee71eda201a59b8e98dd316ce2d1c5cd6ae5704700401ce4b5c93b3ef",
+      "response": {
+        "content": [
+          {
+            "text": "The search results do not contain a specific renewal notice period for bc-t0113. The only notice period mentioned is 60 days for changes to the AI Fair-Use Policy [E1], but that is not a renewal notice period. I need to search more specifically for renewal terms or contract renewal provisions for this tenant."
+          },
+          {
+            "toolUse": {
+              "input": {
+                "query": "renewal term notice days contract",
+                "tenant_id": "bc-t0113"
+              },
+              "name": "search_knowledge",
+              "toolUseId": "tooluse_jqG0WJlp7gYhtC47UWK06I",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 1924,
+          "outputTokens": 148
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "specialists-v9",
+  "scenario_id": "gov-08"
+}

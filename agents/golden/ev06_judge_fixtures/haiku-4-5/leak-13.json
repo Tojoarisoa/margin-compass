@@ -1,0 +1,34 @@
+{
+  "calls": [
+    {
+      "request_sha": "ef48ba5ba1881bc15f2e41a50d25b7d6bf49b3bbb6d2ac14d5986fb2883078bd",
+      "response": {
+        "content": [
+          {
+            "toolUse": {
+              "input": {
+                "addresses_job": true,
+                "outcome": true,
+                "reason": "Correctly routed to leak. Identified spike magnitude with evidence citation. Acknowledged missing root cause explanation.",
+                "route": true,
+                "tools": true
+              },
+              "name": "record_verdict",
+              "toolUseId": "tooluse_BKlh3xCyBVNgxwyxtMwdTK",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 958,
+          "outputTokens": 144
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "ev06-judge-v1",
+  "scenario_id": "leak-13"
+}

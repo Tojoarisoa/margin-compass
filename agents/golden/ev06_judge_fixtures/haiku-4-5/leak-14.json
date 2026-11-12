@@ -1,0 +1,34 @@
+{
+  "calls": [
+    {
+      "request_sha": "aed62d1c2ded10360d7a110a675e15377d94bea32f40f8b9a89864f61f00c645",
+      "response": {
+        "content": [
+          {
+            "toolUse": {
+              "input": {
+                "addresses_job": false,
+                "outcome": true,
+                "reason": "Answer states count but not which leaks; question asks which leaks specifically.",
+                "route": true,
+                "tools": true
+              },
+              "name": "record_verdict",
+              "toolUseId": "tooluse_7xrHjuBM0fAAdG74fBe7se",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 914,
+          "outputTokens": 138
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "ev06-judge-v1",
+  "scenario_id": "leak-14"
+}

@@ -1,0 +1,34 @@
+{
+  "calls": [
+    {
+      "request_sha": "2b8112f510f6069b945d45c7a78b791b617ece7008cf7a8160c2f67dbdca4150",
+      "response": {
+        "content": [
+          {
+            "toolUse": {
+              "input": {
+                "addresses_job": true,
+                "outcome": true,
+                "reason": "Correct route and tools. Answer identifies prompt_cache as highest savings within guardrail, properly cited [E1].",
+                "route": true,
+                "tools": true
+              },
+              "name": "record_verdict",
+              "toolUseId": "tooluse_JIZokX49ZnkEEOrWyHIp2m",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 983,
+          "outputTokens": 148
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "ev06-judge-v1",
+  "scenario_id": "eff-11"
+}

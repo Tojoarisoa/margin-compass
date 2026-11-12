@@ -1,0 +1,77 @@
+{
+  "calls": [
+    {
+      "request_sha": "41b3446398fb23c2b17db6d9a9a6ef9480141033f70a14785b49172098d2d95a",
+      "response": {
+        "content": [
+          {
+            "text": "I need to retrieve the ROI and payback information for the routing lever on F2."
+          },
+          {
+            "toolUse": {
+              "input": {
+                "feature_id": "F2",
+                "lever": "routing"
+              },
+              "name": "roi_multiple",
+              "toolUseId": "tooluse_VOvv94WJFcvjff6jic19gs",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 953,
+          "outputTokens": 93
+        }
+      }
+    },
+    {
+      "request_sha": "b0a6ee27384ca6ff7794fbce78bafed339c3a224ec9e3ec7c8c45e2f52988a11",
+      "response": {
+        "content": [
+          {
+            "text": "Let me try with the replay_lever function to get the routing lever details for F2."
+          },
+          {
+            "toolUse": {
+              "input": {
+                "feature_id": "F2",
+                "lever": "routing"
+              },
+              "name": "replay_lever",
+              "toolUseId": "tooluse_T5Nf90hSBCBNezzKMLx9jQ",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 1083,
+          "outputTokens": 93
+        }
+      }
+    },
+    {
+      "request_sha": "aace466e5f6e0685368303c428761002ce52cdcbb0cc42cd95e249a17bae5535",
+      "response": {
+        "content": [
+          {
+            "text": "I apologize, but I'm unable to retrieve the payback information for the routing lever on F2 due to errors in the available tools. The data does not answer your question with the current function parameters."
+          }
+        ],
+        "stop_reason": "end_turn",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 1211,
+          "outputTokens": 46
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "specialists-v9",
+  "scenario_id": "eff-09"
+}

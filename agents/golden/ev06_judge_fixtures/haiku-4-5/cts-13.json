@@ -1,0 +1,34 @@
+{
+  "calls": [
+    {
+      "request_sha": "ae949ee50495095716b248b0a1657ced9efb5ef98837d5abb34dcdc9777311cb",
+      "response": {
+        "content": [
+          {
+            "toolUse": {
+              "input": {
+                "addresses_job": true,
+                "outcome": true,
+                "reason": "Run correctly answered the imaging feature margin question with proper evidence citation.",
+                "route": true,
+                "tools": true
+              },
+              "name": "record_verdict",
+              "toolUseId": "tooluse_LpjAyV4TkcZHTZKw4s0Z9m",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 941,
+          "outputTokens": 135
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "ev06-judge-v1",
+  "scenario_id": "cts-13"
+}

@@ -1,0 +1,34 @@
+{
+  "calls": [
+    {
+      "request_sha": "087b0019b48240f4b995f1c246a80d5069f3056d902f456a5ef0548d59c0d876",
+      "response": {
+        "content": [
+          {
+            "toolUse": {
+              "input": {
+                "addresses_job": true,
+                "outcome": true,
+                "reason": "Route, tools, and outcome correct. Answer cites evidence [E1] with gross margin figure.",
+                "route": true,
+                "tools": true
+              },
+              "name": "record_verdict",
+              "toolUseId": "tooluse_HaiP1i87V1jed8PYiA1D9F",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 951,
+          "outputTokens": 143
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "ev06-judge-v1",
+  "scenario_id": "cts-09"
+}

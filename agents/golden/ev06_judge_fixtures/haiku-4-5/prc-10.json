@@ -1,0 +1,34 @@
+{
+  "calls": [
+    {
+      "request_sha": "6a35d861ae7cd72b1d2b115a876034074c691b82f384f4d503cff136fb2b9ee4",
+      "response": {
+        "content": [
+          {
+            "toolUse": {
+              "input": {
+                "addresses_job": true,
+                "outcome": true,
+                "reason": "Answer correctly cites E1 with margin figure and addresses the job question about margin under included units.",
+                "route": true,
+                "tools": true
+              },
+              "name": "record_verdict",
+              "toolUseId": "tooluse_omw0NdCOzDyGEQ5vkORGtB",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 1065,
+          "outputTokens": 143
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "ev06-judge-v1",
+  "scenario_id": "prc-10"
+}

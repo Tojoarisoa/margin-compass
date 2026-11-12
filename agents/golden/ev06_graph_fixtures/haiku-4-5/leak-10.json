@@ -1,0 +1,33 @@
+{
+  "calls": [
+    {
+      "request_sha": "1dd3621c2c6aa446eeb4daf6186a48811e671e4db6437b327f419486c30d3a12",
+      "response": {
+        "content": [
+          {
+            "text": "I'll investigate the September spend spike for bc-t0007 by checking the margin data."
+          },
+          {
+            "toolUse": {
+              "input": {
+                "sql": "\nSELECT \n  margin_date,\n  tenant_id,\n  ai_revenue_usd,\n  llm_cost_usd,\n  cost_to_serve_usd,\n  gross_margin_usd,\n  gross_margin_pct,\n  request_count\nFROM fct_tenant_margin\nWHERE tenant_id = 'bc-t0007'\n  AND CAST(date_trunc('month', margin_date) AS DATE) >= '2024-09-01'\nORDER BY margin_date DESC\nLIMIT 200\n"
+              },
+              "name": "query_gold",
+              "toolUseId": "tooluse_LQMdxWpgS0avLMxV4svGeO",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 1072,
+          "outputTokens": 205
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "specialists-v9",
+  "scenario_id": "leak-10"
+}

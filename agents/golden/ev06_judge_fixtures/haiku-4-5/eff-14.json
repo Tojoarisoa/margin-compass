@@ -1,0 +1,34 @@
+{
+  "calls": [
+    {
+      "request_sha": "7b55191b5b5547794587ed52db0ad96fad8382713d1ca018ee617d5b49aef0a0",
+      "response": {
+        "content": [
+          {
+            "toolUse": {
+              "input": {
+                "addresses_job": true,
+                "outcome": true,
+                "reason": "Run correctly applied cache lever to F4, cited evidence [E1], and answered the efficiency question.",
+                "route": true,
+                "tools": true
+              },
+              "name": "record_verdict",
+              "toolUseId": "tooluse_NRmMcH0qMUd3FmFULRQpek",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 955,
+          "outputTokens": 143
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "ev06-judge-v1",
+  "scenario_id": "eff-14"
+}

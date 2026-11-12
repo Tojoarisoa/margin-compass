@@ -1,0 +1,51 @@
+{
+  "calls": [
+    {
+      "request_sha": "22a32e3e6d9fe7208a7985a55591d8ddc52c6e133fcab923362fd6f437c8adc7",
+      "response": {
+        "content": [
+          {
+            "text": "I need to price the example plan with a 15% discount to show the impact. Let me calculate that for you."
+          },
+          {
+            "toolUse": {
+              "input": {
+                "after": {
+                  "discount_bps": 1500
+                }
+              },
+              "name": "price_plan",
+              "toolUseId": "tooluse_NlX3vZDzJA4bnNOqYG0JEP",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 2084,
+          "outputTokens": 87
+        }
+      }
+    },
+    {
+      "request_sha": "7b8749d5ee0f091206ddea4e27a3c174671198f3308c47aa9df03bc89eaf3f16",
+      "response": {
+        "content": [
+          {
+            "text": "For the requested 15% discount (1500 bps), revenue declines from 51,000 cents to 43,350 cents, a change of -7,650 cents [E1]. Margin falls from 31,000 cents to 23,350 cents (-7,650 cents), and margin percentage drops from 60.78% to 53.86% (-692 bps) [E1]. **Approval authority:** This pricing decision requires sign-off from the VP of Sales or Chief Revenue Officer, as it materially impacts margin and revenue per tenant-month."
+          }
+        ],
+        "stop_reason": "end_turn",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 2478,
+          "outputTokens": 133
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "specialists-v9",
+  "scenario_id": "act-09"
+}

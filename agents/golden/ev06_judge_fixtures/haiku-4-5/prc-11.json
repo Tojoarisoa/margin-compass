@@ -1,0 +1,34 @@
+{
+  "calls": [
+    {
+      "request_sha": "2af775a7ab75d79813e687841b2c27de4fa0917e23ca6ecb8edb7c42ad41f4d3",
+      "response": {
+        "content": [
+          {
+            "toolUse": {
+              "input": {
+                "addresses_job": true,
+                "outcome": true,
+                "reason": "Run correctly routes to pricing, uses allowed tools, answers the discount impact question with proper evidence citation.",
+                "route": true,
+                "tools": true
+              },
+              "name": "record_verdict",
+              "toolUseId": "tooluse_hvvMmqhfazpivyqdp74Cl3",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 1065,
+          "outputTokens": 142
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "ev06-judge-v1",
+  "scenario_id": "prc-11"
+}

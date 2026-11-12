@@ -1,0 +1,59 @@
+{
+  "calls": [
+    {
+      "request_sha": "7a0178a080249e8e9e7a8fdd4345f5eaeb01f445b93eeb76cf7ba20f6d9ebead",
+      "response": {
+        "content": [
+          {
+            "text": "I'll search for information about shared infrastructure costs and any policies related to cost allocation."
+          },
+          {
+            "toolUse": {
+              "input": {
+                "query": "shared infrastructure cost allocation"
+              },
+              "name": "search_knowledge",
+              "toolUseId": "tooluse_EpPje1MeTMc6dqFQHFAU6c",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 1067,
+          "outputTokens": 74
+        }
+      }
+    },
+    {
+      "request_sha": "d942dee9673b2da2610a034203b5db00784b2da5864432e2a08c90d804255898",
+      "response": {
+        "content": [
+          {
+            "text": "Now let me query the margin data to check for any anomalies in cost-to-serve that might indicate a shared infrastructure cost leak."
+          },
+          {
+            "toolUse": {
+              "input": {
+                "sql": "\nSELECT \n  margin_date,\n  tenant_id,\n  feature_id,\n  ai_revenue_usd,\n  llm_cost_usd,\n  cost_to_serve_usd,\n  gross_margin_usd,\n  gross_margin_pct,\n  request_count\nFROM fct_tenant_margin\nORDER BY margin_date DESC, cost_to_serve_usd DESC\nLIMIT 50\n"
+              },
+              "name": "query_gold",
+              "toolUseId": "tooluse_Ubz4BC50f3NVE676toWFHl",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 1890,
+          "outputTokens": 187
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "specialists-v9",
+  "scenario_id": "leak-12"
+}

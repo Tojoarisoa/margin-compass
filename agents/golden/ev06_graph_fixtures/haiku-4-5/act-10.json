@@ -1,0 +1,51 @@
+{
+  "calls": [
+    {
+      "request_sha": "f8c024d9634d7a9716abef2b63948addcedca9f032655523f5b13f7f718bb994",
+      "response": {
+        "content": [
+          {
+            "text": "I need to price the example plan with a 26% discount to show the impact. Let me calculate that for you."
+          },
+          {
+            "toolUse": {
+              "input": {
+                "after": {
+                  "discount_bps": 2600
+                }
+              },
+              "name": "price_plan",
+              "toolUseId": "tooluse_wFuU8hpzvKlDG09dXAervy",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 2084,
+          "outputTokens": 87
+        }
+      }
+    },
+    {
+      "request_sha": "3d6ea635f49e3a9ef96e9dcabfa2ae871d1fc137a5bae89d99e40e959ecf9fee",
+      "response": {
+        "content": [
+          {
+            "text": "For the requested 26% discount (2600 bps), revenue declines from 51,000 cents to 37,740 cents, a change of -13,260 cents [E1]. Gross margin falls from 31,000 cents (6078 bps) to 17,740 cents (4701 bps), a margin impact of -1377 bps [E1]. This discount requires approval from the VP of Sales or Chief Revenue Officer, as it materially impacts unit economics. The pricing review should confirm this aligns with strategic retention or expansion goals."
+          }
+        ],
+        "stop_reason": "end_turn",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 2479,
+          "outputTokens": 131
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "specialists-v9",
+  "scenario_id": "act-10"
+}

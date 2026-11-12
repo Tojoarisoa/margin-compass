@@ -1,0 +1,51 @@
+{
+  "calls": [
+    {
+      "request_sha": "60e53d950986a7a37767cc1f97b15c8ec7b354082c276e3a7404005d70473f22",
+      "response": {
+        "content": [
+          {
+            "text": "I need to price the example plan with a 25% discount to show the impact."
+          },
+          {
+            "toolUse": {
+              "input": {
+                "after": {
+                  "discount_bps": 2500
+                }
+              },
+              "name": "price_plan",
+              "toolUseId": "tooluse_YNGFXxSCQX1canYRFkH9AX",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 2084,
+          "outputTokens": 80
+        }
+      }
+    },
+    {
+      "request_sha": "201ab01ad3adaeb39e82ab6feb32bc971dc23d557f65d1bcbed36a28cd87685e",
+      "response": {
+        "content": [
+          {
+            "text": "For the requested 25% discount (2500 bps), revenue declines from 51,000 cents to 38,250 cents, a change of -12,750 cents [E1]. Margin falls from 6078 bps to 4771 bps, a decline of -1307 bps [E1]. This discount requires approval from the VP of Sales or Chief Revenue Officer, as it materially impacts both revenue and profitability on the example plan."
+          }
+        ],
+        "stop_reason": "end_turn",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 2472,
+          "outputTokens": 109
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "specialists-v9",
+  "scenario_id": "act-08"
+}

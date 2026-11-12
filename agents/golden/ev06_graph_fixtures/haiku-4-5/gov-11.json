@@ -1,0 +1,46 @@
+{
+  "calls": [
+    {
+      "request_sha": "06deba2849eb1dcb3b1eace76863a0fc85d71db2efa33506c49f929e402beab8",
+      "response": {
+        "content": [
+          {
+            "toolUse": {
+              "input": {
+                "query": "usage overage notices policy"
+              },
+              "name": "search_knowledge",
+              "toolUseId": "tooluse_n0gsxsSLgRT96lh5Z5cjRt",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 964,
+          "outputTokens": 58
+        }
+      }
+    },
+    {
+      "request_sha": "2f4f46e2efdb65eae3d977abac60a3309128411d9b8c072e561ed60e9ba4accb",
+      "response": {
+        "content": [
+          {
+            "text": "According to the BoonCore AI Fair-Use Policy, if a tenant uses more than 150% of its monthly allowance for two consecutive months, BoonCore opens a usage review with the tenant's account team [E1]. The policy does not charge overage fees; any overage or per-resolution pricing requires a signed amendment to the tenant's order form [E1]."
+          }
+        ],
+        "stop_reason": "end_turn",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 1792,
+          "outputTokens": 82
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "specialists-v9",
+  "scenario_id": "gov-11"
+}

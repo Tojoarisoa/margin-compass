@@ -1,0 +1,34 @@
+{
+  "calls": [
+    {
+      "request_sha": "047492a42640c9cc21411118ddd3e1d7aa844232bfca398c20ec66ce39d25f35",
+      "response": {
+        "content": [
+          {
+            "toolUse": {
+              "input": {
+                "addresses_job": true,
+                "outcome": true,
+                "reason": "Route, tools, and outcome correct. Answer identifies highest spender with proper citation.",
+                "route": true,
+                "tools": true
+              },
+              "name": "record_verdict",
+              "toolUseId": "tooluse_RO8KrB78ulj2g9AT7P8bXj",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 945,
+          "outputTokens": 139
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "ev06-judge-v1",
+  "scenario_id": "cts-12"
+}

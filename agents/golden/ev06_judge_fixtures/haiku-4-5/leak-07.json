@@ -1,0 +1,34 @@
+{
+  "calls": [
+    {
+      "request_sha": "10f21dd40c91b634976b3bfe03509dc2e674f893aad2adf87421e9e3eaef88b3",
+      "response": {
+        "content": [
+          {
+            "toolUse": {
+              "input": {
+                "addresses_job": false,
+                "outcome": true,
+                "reason": "Answer identifies the jump magnitude but declines to explain cause, contradicting the job requirement to explain why.",
+                "route": true,
+                "tools": true
+              },
+              "name": "record_verdict",
+              "toolUseId": "tooluse_sIGVMi5c5lHr4O7tvqD1S1",
+              "type": "tool_use"
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "usage": {
+          "cacheReadInputTokens": 0,
+          "inputTokens": 976,
+          "outputTokens": 143
+        }
+      }
+    }
+  ],
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "prompt_version": "ev06-judge-v1",
+  "scenario_id": "leak-07"
+}

@@ -95,10 +95,17 @@ def test_changed_request_scores_as_drifted_fail(tmp_path):
     assert rep["judge"] == 0.5 and not rep["passed"]
 
 
-def test_replay_skips_unrecorded_scenarios_and_record_includes_them(tmp_path):
-    every = load_scenarios()
+def test_replay_skips_unrecorded_scenarios_and_record_includes_them(tmp_path, monkeypatch):
+    """A scenario added after the last recording (`recorded: false`) is skipped by replay and included by record.
+    Every committed scenario is recorded (M6-03, ops run 43125182083), so this adds a flagged copy of one."""
+    import mc_agents.ev06_judge as ej
+
+    base = load_scenarios()
+    src = next(s for s in base if judgeable(s))
+    every = [*base, {**src, "id": "new-01", "recorded": False}]
+    monkeypatch.setattr(ej, "load_scenarios", lambda: every)
     new = [s for s in every if judgeable(s) and not recorded(s)]
-    assert new, "golden set growth (M6-03) adds scenarios marked recorded: false until ops records them"
+    assert [s["id"] for s in new] == ["new-01"]
     r = judge(lambda sid: Judge())
     assert set(r["unrecorded"]) >= {s["id"] for s in new} and not set(r["unrecorded"]) & {s["id"] for s in every
                                                                                           if recorded(s) and judgeable(s)}
