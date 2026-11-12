@@ -16,8 +16,10 @@ COPY agents /build/agents
 COPY pipelines /build/pipelines
 COPY rag /build/rag
 COPY metrics ${LAMBDA_TASK_ROOT}/metrics
+COPY knowledge ${LAMBDA_TASK_ROOT}/knowledge
 RUN uv pip install --system --no-cache --no-deps /build/agents /build/pipelines /build/rag && rm -rf /build /usr/local/bin/uv
 
 ENV MC_METRICS_DIR=${LAMBDA_TASK_ROOT}/metrics \
+    MC_KNOWLEDGE_DIR=${LAMBDA_TASK_ROOT}/knowledge \
     HOME=/tmp
 CMD ["mc_agents.api.handler"]

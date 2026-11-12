@@ -180,6 +180,37 @@ def test_graph_flag_serves_the_job_through_the_graph(table, gold, monkeypatch):
     assert stored["cost_line"].startswith("Cost of this answer") and stored["llm_calls"] == 2
 
 
+def _policy_job(table, gold, monkeypatch, knowledge_dir):
+    from test_specialists import Script, use
+
+    monkeypatch.setenv("MC_GRAPH", "1")
+    monkeypatch.setattr(api, "KNOWLEDGE_DIR", knowledge_dir)
+    monkeypatch.setattr(api, "_KNOWLEDGE", {})
+    r = api.handle_ask(_event({"question": "What does the data residency policy say for tenant bc-t0001?"}), None,
+                       table=table, invoke=lambda *a: None)
+    job_id = json.loads(r["body"])["job_id"]
+    client = Script(use("search_knowledge", {"query": "data residency policy", "tenant_id": "bc-t0001"}),
+                    [{"text": "The policy is quoted in [E1]."}])
+    api.run_job(job_id, table=table, gold_dir=gold, client=client, sync=False)
+    return client, json.loads(api.handle_job(f"/api/jobs/{job_id}", table=table)["body"])
+
+
+def test_graph_job_offers_search_knowledge_over_the_shipped_corpus(table, gold, monkeypatch):
+    """AG-07 on the API graph path searches the knowledge corpus shipped in the image (in memory, $0)."""
+    from mc_agents.ev06_graph import KNOWLEDGE
+
+    client, body = _policy_job(table, gold, monkeypatch, KNOWLEDGE)
+    assert [t["toolSpec"]["name"] for t in client.requests[0].tools] == ["search_knowledge"]
+    assert [e["tool"] for e in body["evidence"]] == ["search_knowledge"] and body["status"] == "answered"
+    assert list(api._KNOWLEDGE) == [KNOWLEDGE]  # built once per container
+
+
+def test_graph_job_without_corpus_does_not_offer_search_knowledge(table, gold, monkeypatch, tmp_path):
+    client, body = _policy_job(table, gold, monkeypatch, tmp_path / "missing")
+    assert all(t["toolSpec"]["name"] != "search_knowledge" for r in client.requests for t in (r.tools or []))
+    assert body["status"] != "answered" and body["evidence"] == []
+
+
 def test_public_job_shows_the_approver_role_only(table):
     table.put_item(Item={"PK": "JOB#" + "a" * 32, "SK": "JOB", "status": "needs_approval", "question": "q", "answer": "a",
                          "approver": "cfo", "cost_usd": "0.01", "model": "m"})

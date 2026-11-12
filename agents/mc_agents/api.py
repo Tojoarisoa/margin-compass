@@ -38,6 +38,9 @@ from .llm import BedrockLLM
 log = logging.getLogger("mc_agents")
 GOLD_DIR = Path("/tmp/gold")
 GOLD_FILES = ("fct_tenant_margin.parquet",)
+# Knowledge corpus shipped in the image (agents/Dockerfile); the graph's AG-04/AG-07 search it in memory ($0).
+KNOWLEDGE_DIR = Path(os.environ.get("MC_KNOWLEDGE_DIR", "/var/task/knowledge"))
+_KNOWLEDGE: dict[Path, Any] = {}
 MAX_QUESTION_CHARS = 300
 MAX_BODY_BYTES = 2_048
 CACHE_TTL_S = 3_600
@@ -206,6 +209,19 @@ def _graph_enabled() -> bool:
     return os.environ.get("MC_GRAPH", "") == "1"  # default off: the one-node analyst serves the API
 
 
+def _knowledge_tool(knowledge_dir: Path) -> Any | None:
+    """`search_knowledge` over an in-memory hashing index of the shipped corpus, built once per container.
+    No corpus: the tool is not offered (the specialist answers without it or fails closed), never an error."""
+    if knowledge_dir not in _KNOWLEDGE:
+        from .ev06_graph import knowledge_tool
+        try:
+            _KNOWLEDGE[knowledge_dir] = knowledge_tool(knowledge_dir)
+        except FileNotFoundError:
+            log.warning("knowledge_missing", extra={"fields": {"dir": str(knowledge_dir)}})
+            _KNOWLEDGE[knowledge_dir] = None
+    return _KNOWLEDGE[knowledge_dir]
+
+
 def _answer_graph(job_id: str, question: str, table, gold_dir: Path, client) -> dict[str, Any]:
     """Serves one question through the M4-03 graph (`run.ask`); fail-closed statuses map to job statuses."""
     from . import run as graph_run
@@ -219,6 +235,8 @@ def _answer_graph(job_id: str, question: str, table, gold_dir: Path, client) -> 
     llm = BudgetedLLM(client, budget, SpendGuard(table))
     store = DynamoStore(table, 86_400)
     extra = {"query_gold": registry.query_gold_spec(gold_dir)}
+    if (knowledge := _knowledge_tool(KNOWLEDGE_DIR)) is not None:
+        extra["search_knowledge"] = knowledge
     out = graph_run.ask(question, llm, spec.target, run_id=job_id, approval_store=store, checkpoints=store, extra=extra)
     trail = (store.get(f"run#{job_id}") or {}).get("trail", [])
     evidence = [{"id": e["id"], "tool": e["tool"], "version": e["version"], "args": e["args"]} for e in out["evidence"]]
