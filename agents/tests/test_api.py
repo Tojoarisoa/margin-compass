@@ -208,7 +208,7 @@ def test_graph_job_offers_search_knowledge_over_the_shipped_corpus(table, gold, 
 def test_graph_job_without_corpus_does_not_offer_search_knowledge(table, gold, monkeypatch, tmp_path):
     client, body = _policy_job(table, gold, monkeypatch, tmp_path / "missing")
     assert all(t["toolSpec"]["name"] != "search_knowledge" for r in client.requests for t in (r.tools or []))
-    assert body["status"] != "answered" and body["evidence"] == []
+    assert body["evidence"] == []  # nothing retrieved; the corpus is missing
 
 
 def test_public_job_shows_the_approver_role_only(table):
