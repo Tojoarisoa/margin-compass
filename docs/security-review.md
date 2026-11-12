@@ -17,11 +17,20 @@ here was probed on the live stack; the kill-switch game day and a live red-team 
 
 ## What was checked
 
+- **Git history secret scan (2026-11-12, full history of `main` and all fetched branches, 560 commits on `main`):**
+  every diff searched for AWS access key IDs (`AKIA`/`ASIA`), private key blocks, GitHub tokens (`ghp_`,
+  `github_pat_`, ...), Slack tokens, Anthropic/OpenAI-style keys, Google API keys, inline AWS secret keys and
+  quoted password/secret assignments; also 12-digit account IDs, e-mail addresses and committed `.env`/`.pem`/key
+  files. No match: the only account IDs are the test placeholders (`123456789012`), every commit identity is the
+  GitHub noreply address. Pattern scan only (no entropy scoring; gitleaks could not be fetched in the cloud session).
+
 - **IAM (infra/margin_compass_infra):** allow statements name `mc-*` resources or single ARNs: lake prefixes,
   the core table, the agent and embedding model ARNs, the function's own ARN, the `mc-*` log groups and state
   machines. Two `*` resources: the kill switch's **deny** (`bedrock:*`, `states:StartExecution`), and the ops role's
-  read-only `ReadCosts` (`ce:GetCostAndUsage`, `bcm-data-exports:List*`). Whether those cost actions accept a
-  narrower resource was not verified in this pass. Service principals writing to the lake, the billing bucket and the
+  read-only `ReadCosts` (`ce:GetCostAndUsage`, `bcm-data-exports:ListExports`, `ListExecutions`). Checked
+  2026-11-12 (Service Authorization Reference, iam-dataset copy): `ListExports` has no resource type and
+  `GetCostAndUsage` only an optional billing view, so both need `*`; `ListExecutions` takes an `export` ARN, whose
+  ID AWS generates, so it stays in the same statement (list only, no data). Service principals writing to the lake, the billing bucket and the
   alert topic are pinned to this account (`aws:SourceAccount` / `aws:SourceArn`). The budget action may attach and
   detach only the kill-switch policy, only on `mc-*` roles. The deploy role assumes the CDK bootstrap roles (standard).
 - **OIDC trust:** GitHub deploy and ops roles require `aud = sts.amazonaws.com` and an exact `sub` (StringEquals).
