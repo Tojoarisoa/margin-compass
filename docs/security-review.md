@@ -13,6 +13,7 @@ here was probed on the live stack; the kill-switch game day and a live red-team 
 | 4 | Intake | The `secrets` rule matches the bare word "token(s)", so graph-path questions about token usage are blocked. | Low (availability) | Open, Waiting for owner (narrowing it loosens a guardrail). The public ask path skips this one rule. |
 | 5 | Deploy role | `cloudfront:CreateInvalidation` on `distribution/*` (all distributions in the account), not only the dashboard's. | Low | Open (not checked which other distributions the account has). Scope it to the dashboard distribution ARN when that output is available to the foundation stack. |
 | 6 | CSP | `style-src 'self' 'unsafe-inline'`. Scripts stay `'self'` only, so this does not allow script injection. | Low | Accepted for now (inline styles in the dashboard build). |
+| 7 | Verifier (AG-08) | An answer citing an evidence ID that is not in the ledger (for example "[E1]" with nothing retrieved) was verified; only figures and the presence of one real citation were checked. | Medium | Fixed in PR #319: unknown `[E<n>]` citations fail verification (analyst revises, graph retries, then fails closed). Found in run 129 while testing #318. |
 
 ## What was checked
 
