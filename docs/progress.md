@@ -23,7 +23,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-1. **Finish PR #321** (contains #320: leak-14/prc-12 judge fixtures, then security review row 7 + Change Log). Check main `ci` + `deploy to dev` for 68fbc95 (#319), then fast-forward `main` to #321's head when every check is green; close #320 as merged by it if GitHub doesn't.
+1. **Finish PR #321** (contains #320: leak-14/prc-12 judge fixtures, then security review row 7 + Change Log). Fast-forward `main` to #321's head when every check is green; close #320 as merged by it if GitHub doesn't.
 2. **Kill-switch drill (G3):** waiting for owner (see above). Then tick M6-03.
 3. **M6-04 remaining:** case study needs the realized-margin result (M5-04 KPI-09: a closed-loop plan change); then tick M6-04.
 4. **M6-03 low:** CloudFront invalidation grant scoping (security review #5); AWS docs unreachable from the cloud session, so tag-condition support can't be verified.
@@ -41,7 +41,7 @@ Notes: Ops eval results are in the job log; fixtures are base64 between FIXTURE-
 - **Start:** main `ci` + `deploy to dev` green for b600cb9 and 1d81c3f; no open PRs (#273/#276 closed by owner).
 - **Ops:** `record-fixtures` (43133173116, haiku-4-5, cache, no graph): judge 96.4% on 55 (gate 90%); leak-14 and prc-12 now pass, leak-07/11 still fail.
 - **Task 1:** PR #318, API graph path offers `search_knowledge` over `knowledge/` shipped in the image (in-memory, once per container). `MC_GRAPH` stays off live. Merged; `main` 229adde, `ci` + `deploy to dev` green.
-- **Task 2:** PR #319, AG-08 fails answers citing evidence IDs not in the ledger (found testing #318: "[E1]" with nothing retrieved was verified). Merged; `main` 68fbc95, deploy running at run end.
+- **Task 2:** PR #319, AG-08 fails answers citing evidence IDs not in the ledger (found testing #318: "[E1]" with nothing retrieved was verified). Merged; `main` 68fbc95, `ci` + `deploy to dev` green.
 - **Task 3:** PR #320, leak-14/prc-12 judge fixtures, flags dropped. Green, open.
 - **Task 4:** PR #321 (on #320), security review #7 + Change Log + this entry. Open.
 - **Decisions (§8.2):** ship the corpus in the image (rejected: S3/OpenSearch index, new resource); stricter citation check (guardrail only tightened).
