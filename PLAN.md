@@ -1102,7 +1102,7 @@ Status: all ADRs are written up in `docs/adr/` and **accepted** (ADR-017 on 2026
 | VER-11 | DuckDB-WASM bundle size; Parquet range reads over CloudFront — **Partly done**: supply-chain controls added; bundle size and range reads open (spike in M1-07) (2026-11-02) |
 | VER-12 | dbt-duckdb + S3 access from Lambda; container image size — **Done** (2026-11-02) |
 | VER-13 | Current OpenTelemetry GenAI semantic conventions (attribute names, stability status) — **Done** (2026-11-02) |
-| VER-14 | Primary sources for the industry statistics in §1 and §20.2 (State of FinOps 2026, ICONIQ State of AI) — **Done for State of FinOps; ICONIQ and Harness secondary until M6-04** (2026-11-02) |
+| VER-14 | Primary sources for the industry statistics in §1 and §20.2 (State of FinOps 2026, ICONIQ State of AI) — **Done for State of FinOps (2026-11-02); Harness and ICONIQ checked against the publishers' pages 2026-11-12** (`docs/verification/2026-11-12-ver-14.md`; full PDFs not opened) |
 | VER-15 | **Done 2026-11-02, see ADR-017 (four items still open there).** BoonCore vertical (§2.2): medical device complaint-handling and vigilance rules, HIPAA BAA requirements for model providers, DICOM de-identification, scope of regulated medical-device software; plus market claims (medtech/imaging profitability, imaging downtime cost, remote monitoring practice) |
 
 ### 19.4 Open questions (owner decides in M0-04)
@@ -1133,17 +1133,17 @@ Status: all ADRs are written up in `docs/adr/` and **accepted** (ADR-017 on 2026
 - **Counterfactual baseline:** forecasted outcome had an action not been taken.
 - **Walking skeleton; HITL; evidence ledger; replay evaluation; champion/challenger; MTTD; WAPE:** as commonly defined (see v0.2).
 
-### 20.2 Sources (industry context; secondary summaries, to be verified per VER-14)
+### 20.2 Sources (industry context; Harness and ICONIQ checked against the publishers' pages, VER-14)
 
 - FinOps Foundation, *State of FinOps 2026*, as summarized by [nOps](https://www.nops.io/blog/state-of-finops-2026/), [CloudKeeper](https://www.cloudkeeper.com/insights/blog/state-finops-2026-report-key-trends-insights-and-what-comes-next), [Virtasant](https://virtasant.com/blog/state-of-finops-2026), and [iStart](https://istart.com.au/?p=43660):
   - AI cost management is the top future priority, with near-universal adoption (31% in 2024 → 63% in 2025 → 98% in 2026).
   - Scope is expanding to SaaS and licensing.
   - The easy infrastructure waste is largely captured already.
-- Harness, *State of AI in FinOps 2026*, as reported by [IT Brief UK](https://itbrief.co.uk/story/harness-finds-ai-costs-outpace-governance-in-firms): 52% of respondents say there is no clear owner for AI costs.
-- ICONIQ, *State of AI* (2026), as summarized by [SaaStr](https://www.saastr.com/iconiqs-latest-state-of-ai-report-the-10-most-important-data-points-for-saas-founders) and [Monetizely](https://www.getmonetizely.com/articles/the-economics-of-ai-first-b2b-saas-in-2026-margins-pricing-models-and-profitability):
-  - AI-native gross margins around 52%, vs 75–85% for traditional SaaS.
+- Harness, [*State of AI in FinOps 2026*](https://www.harness.io/state-of-ai-in-finops-2026) (700 engineering and FinOps leaders, July 2026; also reported by [IT Brief UK](https://itbrief.co.uk/story/harness-finds-ai-costs-outpace-governance-in-firms)): 52% of respondents say there is no clear, dedicated owner for AI costs.
+- ICONIQ, [*2026 State of AI: Bi-Annual Snapshot*](https://iconiq.com/growth/insights/state-of-ai-bi-annual-snapshot) (January 2026), also summarized by [SaaStr](https://www.saastr.com/iconiqs-latest-state-of-ai-report-the-10-most-important-data-points-for-saas-founders) and [Monetizely](https://www.getmonetizely.com/articles/the-economics-of-ai-first-b2b-saas-in-2026-margins-pricing-models-and-profitability):
+  - Average AI product gross margin 52% in 2026 (45% in 2025, 41% in 2024), vs the 75–85% commonly cited for traditional SaaS (general benchmark, not from ICONIQ).
   - Inference is a material and persistent share of **total spend** (≈ 20% pre-launch, ≈ 23% when scaling). Some summaries call it a share of revenue; SaaStr's breakdown indicates spend (VER-14).
-  - Consumption-based pricing rose from 19% to 35%; outcome-based pricing from 2% to 18%.
+  - Consumption-based pricing rose from 19% to 35%; outcome-based pricing from 2% to 18% (January 2026; the Q2 2026 *Builder's Economy* report has 42% and 23%).
 - [SoftwareSeni](https://www.softwareseni.com/why-ai-gross-margins-are-so-much-lower-than-saas-and-what-that-means-for-your-business/) on AI vs SaaS gross margins.
 
 ### 20.3 Change Log
@@ -1258,3 +1258,4 @@ Status: all ADRs are written up in `docs/adr/` and **accepted** (ADR-017 on 2026
 | 2026-11-12 | 0.4 | M6-03 golden set step 3 (**auto-decided under AGENTS.md §8.2**): 29 more golden scenarios (71 -> 100), all `recorded: false`, adding a below-cost plan, exact-included usage, a hybrid seats-plus-outcomes plan, the 1500 bps and 2600 bps authority edges, two lever refusals and 9 open-ended graph cases. The set reaches the 100 that M6-03 asks for; their judge and graph fixtures are recorded next (ops `record-fixtures`, then the flags come off). Gates unchanged. Cost $0 |
 | 2026-11-12 | 0.4 | Owner request: PLAN.md tidy. Header status and date brought up to M6 (was still M0, 2026-10-23); the *(current)* marker moves from M1 to M6; change-log rows put back in date order (same-day order kept). No scope change |
 | 2026-11-12 | 0.4 | M6-03 (**auto-decided under AGENTS.md §8.2**): the API graph path offers `search_knowledge` over the knowledge corpus shipped in the agent image (in-memory hashing index, built once per container; not offered if the corpus is missing). The deployed API keeps `MC_GRAPH` off, so live answers do not change. Options: ship the corpus in the image (chosen: $0, 64 KB); a vector index in S3 or OpenSearch (rejected: new resource, cost). AG-08 now fails answers that cite evidence IDs not in the ledger (stricter guardrail, security review #7). Judge fixtures for leak-14 and prc-12 recorded (judge 96.4% on 55). Cost $0 |
+| 2026-11-12 | 0.4 | VER-14 follow-up (**auto-decided under AGENTS.md §8.2**): Harness and ICONIQ figures in §20.2 checked against the publishers' pages (`docs/verification/2026-11-12-ver-14.md`). 52% no AI cost owner confirmed; ICONIQ's 52% is average AI product gross margin across companies building AI products (was worded "AI-native"); 75–85% SaaS margin no longer attributed to ICONIQ; inference share and pricing-model shifts confirmed for the January 2026 snapshot. No KPI or target changes. Options: cite the newer Q2 2026 report instead (rejected: §1 and the case study were written against the January figures; both are listed). Cost $0 |
