@@ -584,8 +584,7 @@
      ]
     }
    },
-   "answer": "Two leaks are still open: F2 (retry_loop) and F4 (prompt_bloat) [E1].",
-   "recorded": false
+   "answer": "Two leaks are still open: F2 (retry_loop) and F4 (prompt_bloat) [E1]."
   },
   {
    "id": "prc-01",
@@ -919,8 +918,7 @@
      "margin_cents": -6000
     }
    },
-   "answer": "At 3500 units against 500 included, the starter plan earns 9000 cents of overage revenue, out of 15000 cents total [E1].",
-   "recorded": false
+   "answer": "At 3500 units against 500 included, the starter plan earns 9000 cents of overage revenue, out of 15000 cents total [E1]."
   },
   {
    "id": "prc-13",
