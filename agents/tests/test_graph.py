@@ -51,6 +51,11 @@ def test_missing_citation_fails():
     assert verify(s) == "supervisor" and s.issues == ["no evidence citation"]
 
 
+def test_citation_to_missing_evidence_fails():
+    s = GraphState("margin?", ledger=_ledger(allowed=True), answer="See [E1] and [E7].")
+    assert verify(s) == "supervisor" and s.issues == ["cites evidence that does not exist: [E7]"]
+
+
 def test_discount_routes_to_approver():
     s = GraphState("q", answer="ok", actions=[{"type": "discount", "discount_bps": 1200}, {"type": "discount", "discount_bps": 300}])
     assert verify(s) == "hitl" and s.approver == "revops_lead" and s.status == "needs_approval"

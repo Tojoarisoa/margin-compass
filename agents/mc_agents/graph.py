@@ -73,6 +73,8 @@ def verify(state: GraphState) -> str:
         issues.append(f"unsupported figures: {', '.join(v.unsupported)}")
     if state.ledger.entries and not v.cited:
         issues.append("no evidence citation")
+    if v.unknown_refs:
+        issues.append(f"cites evidence that does not exist: {', '.join(v.unknown_refs)}")
     approver = None
     for a in state.actions:
         kind = a.get("type")

@@ -121,6 +121,8 @@ def build_graph(llm: BudgetedLLM, tools: MetricTools, ledger: Ledger, model_id: 
                 problems.append("these figures are not in any tool result: " + ", ".join(v.unsupported))
             if not v.cited:
                 problems.append("cite evidence IDs like [E1]")
+            if v.unknown_refs:
+                problems.append("these evidence IDs do not exist: " + ", ".join(v.unknown_refs))
             feedback = "Verifier: " + "; ".join(problems) + ". Rewrite the answer using only tool figures, copied exactly."
             return {"status": "revise", "verification": report, "revisions": state.get("revisions", 0) + 1,
                     "messages": state["messages"] + [{"role": "user", "content": [{"text": feedback}]}]}

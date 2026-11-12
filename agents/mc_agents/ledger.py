@@ -83,6 +83,10 @@ class Verification:
     unsupported: list[str]
     checked: int
     cited: bool
+    unknown_refs: list[str] = field(default_factory=list)  # [E<n>] citations with no ledger entry (AG-08)
+
+
+_EVIDENCE_REF = re.compile(r"\[E\d+\]")
 
 
 def verify_answer(answer: str, ledger: Ledger, question: str) -> Verification:
@@ -102,5 +106,7 @@ def verify_answer(answer: str, ledger: Ledger, question: str) -> Verification:
             continue
         unsupported.append(tok)
     cited = any(f"[{e.id}]" in answer for e in ledger.entries)
-    return Verification(ok=not unsupported and (cited or not ledger.entries), unsupported=unsupported,
-                        checked=checked, cited=cited)
+    ids = {e.id for e in ledger.entries}
+    unknown = sorted({r for r in _EVIDENCE_REF.findall(answer) if r[1:-1] not in ids})
+    return Verification(ok=not unsupported and not unknown and (cited or not ledger.entries), unsupported=unsupported,
+                        checked=checked, cited=cited, unknown_refs=unknown)

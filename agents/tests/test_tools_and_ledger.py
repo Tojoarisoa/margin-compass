@@ -66,6 +66,7 @@ def _ledger():
     ("bc-t0003 earned $3,800 [E1].", False),                 # invented
     ("bc-t0003 earned $3,795.76 (98.07%).", False),          # no citation
     ("Margin rose 12 points [E1].", False),                  # bare integer not in ledger or question
+    ("bc-t0003 earned $3,795.76 [E1], see also [E2].", False),  # E2 does not exist (AG-08)
 ])
 def test_verifier_enforces_the_ledger_rule(answer, ok):
     assert verify_answer(answer, _ledger(), "What was bc-t0003's margin in September 2025?").ok is ok
@@ -88,3 +89,10 @@ def test_bare_integer_from_the_question_is_allowed():
     led = Ledger()
     led.add("tenant_ranking", {"limit": 3}, {"ranking": [{"rank": 1, "gross_margin_pct": "98.09%"}]})
     assert verify_answer("The top 3: bc-t0003 at 98.09% [E1].", led, "Which three tenants... top 3?").ok
+
+
+def test_citation_with_no_evidence_is_rejected():
+    """AG-08: an [E<n>] that is not in the ledger fails, including when nothing was retrieved at all."""
+    v = verify_answer("The policy is quoted in [E1].", Ledger(), "What does the policy say?")
+    assert not v.ok and v.unknown_refs == ["[E1]"]
+    assert verify_answer("No policy text was found.", Ledger(), "What does the policy say?").ok

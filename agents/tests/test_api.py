@@ -180,7 +180,7 @@ def test_graph_flag_serves_the_job_through_the_graph(table, gold, monkeypatch):
     assert stored["cost_line"].startswith("Cost of this answer") and stored["llm_calls"] == 2
 
 
-def _policy_job(table, gold, monkeypatch, knowledge_dir):
+def _policy_job(table, gold, monkeypatch, knowledge_dir, *more):
     from test_specialists import Script, use
 
     monkeypatch.setenv("MC_GRAPH", "1")
@@ -190,7 +190,7 @@ def _policy_job(table, gold, monkeypatch, knowledge_dir):
                        table=table, invoke=lambda *a: None)
     job_id = json.loads(r["body"])["job_id"]
     client = Script(use("search_knowledge", {"query": "data residency policy", "tenant_id": "bc-t0001"}),
-                    [{"text": "The policy is quoted in [E1]."}])
+                    [{"text": "The policy is quoted in [E1]."}], *more)
     api.run_job(job_id, table=table, gold_dir=gold, client=client, sync=False)
     return client, json.loads(api.handle_job(f"/api/jobs/{job_id}", table=table)["body"])
 
@@ -206,9 +206,10 @@ def test_graph_job_offers_search_knowledge_over_the_shipped_corpus(table, gold, 
 
 
 def test_graph_job_without_corpus_does_not_offer_search_knowledge(table, gold, monkeypatch, tmp_path):
-    client, body = _policy_job(table, gold, monkeypatch, tmp_path / "missing")
+    client, body = _policy_job(table, gold, monkeypatch, tmp_path / "missing", [{"text": "No policy text was found."}])
     assert all(t["toolSpec"]["name"] != "search_knowledge" for r in client.requests for t in (r.tools or []))
-    assert body["evidence"] == []  # nothing retrieved; the corpus is missing
+    # AG-08 rejects the first answer (it cites [E1], which does not exist); the retry answers without evidence.
+    assert body["answer"] == "No policy text was found." and body["evidence"] == []
 
 
 def test_public_job_shows_the_approver_role_only(table):
