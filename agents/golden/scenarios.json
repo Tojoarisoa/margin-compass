@@ -574,12 +574,18 @@
     "result": {
      "rows": [
       [
-       4
+       "F2",
+       "retry_loop"
+      ],
+      [
+       "F4",
+       "prompt_bloat"
       ]
      ]
     }
    },
-   "answer": "4 leaks are still open [E1]."
+   "answer": "Two leaks are still open: F2 (retry_loop) and F4 (prompt_bloat) [E1].",
+   "recorded": false
   },
   {
    "id": "prc-01",
@@ -908,11 +914,13 @@
      "cost_cents": 21000
     },
     "result": {
+     "overage_cents": 9000,
      "revenue_cents": 15000,
      "margin_cents": -6000
     }
    },
-   "answer": "At 3500 units against 500 included, the starter plan brings 15000 cents revenue and -6000 cents margin [E1]."
+   "answer": "At 3500 units against 500 included, the starter plan earns 9000 cents of overage revenue, out of 15000 cents total [E1].",
+   "recorded": false
   },
   {
    "id": "prc-13",

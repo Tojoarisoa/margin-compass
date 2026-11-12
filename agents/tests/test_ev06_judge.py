@@ -105,7 +105,7 @@ def test_replay_skips_unrecorded_scenarios_and_record_includes_them(tmp_path, mo
     every = [*base, {**src, "id": "new-01", "recorded": False}]
     monkeypatch.setattr(ej, "load_scenarios", lambda: every)
     new = [s for s in every if judgeable(s) and not recorded(s)]
-    assert [s["id"] for s in new] == ["new-01"]
+    assert "new-01" in {s["id"] for s in new}
     r = judge(lambda sid: Judge())
     assert set(r["unrecorded"]) >= {s["id"] for s in new} and not set(r["unrecorded"]) & {s["id"] for s in every
                                                                                           if recorded(s) and judgeable(s)}
