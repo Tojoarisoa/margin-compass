@@ -1,7 +1,8 @@
 # Security review (M6-03)
 
 First pass, autopilot run 124 (2026-11-11). Scope: what the code and IaC on `main` say, read in this pass. Nothing
-here was probed on the live stack; the kill-switch game day and a live red-team run are still to do.
+here was probed on the live stack; the live red team ran in run 127 (ops `red-team`: 19/19 critical cases refused); the kill-switch game day
+is still to do (Waiting for owner, G3).
 
 ## Findings
 
