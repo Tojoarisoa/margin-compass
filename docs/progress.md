@@ -23,19 +23,28 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-1. **Finish PR #314** (golden set 71 -> 100, `auto/m6-03-golden-set-step3-r2`, carries this progress entry): re-check the guard on its head, wait for any `main` push run, fast-forward `main`, check `deploy to dev`. If `main` moved, make `-r3`.
-2. **Golden set fixtures (M6-03):** after #314, dispatch ops `record-fixtures` (`haiku-4-5`, `cache: true`, `ev06_graph: true`, about $0.20). Commit only the new scenarios' judge and graph fixtures and drop their `recorded: false` flags (the test pins flags to fixture files). If the judge fails some new scenarios, fix the scenario or answer; never lower the 90% gate. Then tick M6-03 if the drill is answered (item 3).
-3. **Kill-switch drill (G3):** `kill-switch-sync` ran clean (ops 43117657447, no function error). The drill itself waits for the owner to say who attaches the deny policy (console, or an ops IAM grant).
+1. **Check main `ci` + `deploy to dev` for b600cb9 (#317)** and this progress commit.
+2. **Re-record leak-14 and prc-12 judge fixtures (M6-03):** after #317 is on main, dispatch ops `record-fixtures` (`haiku-4-5`, `cache: true`, no graph needed). Commit only `ev06_judge_fixtures/haiku-4-5/{leak-14,prc-12}.json`, drop their `recorded: false`. Judge must stay >= 90% (now 92.7% on 55 without them).
+3. **Kill-switch drill (G3):** waits for the owner to say who attaches the deny policy (console, or an ops IAM grant). Then tick M6-03 (golden set at 100 with fixtures is done).
 4. **M6-04 remaining:** the case study needs the realized-margin result (M5-04 KPI-09: a closed-loop plan change); then tick M6-04.
-5. **M6-03 low:** CloudFront invalidation grant scoping. Docs were unreachable in run 127, so tag-condition support for `CreateInvalidation` couldn't be verified; an SSM lookup would break first-time setup.
+5. **M6-03 low:** CloudFront invalidation grant scoping. docs.aws.amazon.com is unreachable from the cloud session (runs 127, 128), so tag-condition support for `CreateInvalidation` can't be verified.
 6. **M5-04:** KPI-09 needs a closed-loop plan change; KPI-13 needs the real AWS bill (M2-04 FOCUS export).
-7. **EV-06 graph replay** (known baseline 17/27, specialists-v9): revisit later with fewer scenarios per change or a judge-based gate.
+7. **EV-06 graph replay** (baseline now 28/45: old 27 at 17, new 18 at 11; cts-18, gov-07..10, leak-10, leak-12 fail): revisit later with fewer scenarios per change or a judge-based gate.
 8. **API `search_knowledge`:** the deployed graph still gets no knowledge tool; needs the index in the Lambda (check deploy impact and cost first).
-9. **Daily checks (not tasks):** ops `verify-backfill` and the Haiku 5.5 probe, due 2026-11-12. Weekly: `online-eval` Mondays 06:17 UTC.
+9. **Daily checks (not tasks):** ops `verify-backfill` and the Haiku 5.5 probe, due 2026-11-13. Weekly: `online-eval` Mondays 06:17 UTC.
 
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-05, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed.
 Notes: Ops eval results are in the job log; fixtures are base64 between FIXTURE-BEGIN/END lines. Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1; local replays need it too or everything drifts). Ops `ev06_graph: true` adds the graph runs (opt-in, about $0.15; the ops job ends `failure` while the graph gate is unmet, which is expected). Flaky github.com 504s during image builds: re-run the failed job. Only commit the graph fixtures from a record run; the other fixture sets change only in tool-use IDs. AG-05 prompt is at the cost-cap edge (`test_unsupported_figure_retries_then_fails_closed` sums $0.009965 of $0.01): keep it no longer than v8. Gh-created PR bodies get a footer: remove it with the GitHub MCP `update_pull_request` (gh api PATCH gets it re-added).
+
+## 2026-11-12 (autopilot run 128)
+
+- **Start:** #314 already merged; main `ci` + `deploy to dev` green for 5ce865e and 39697d0 (owner).
+- **Ops:** `record-fixtures` (43125182083, haiku-4-5, cache, graph): judge 92.7% on 55 (gate 90% met; leak-07, leak-11, leak-14, prc-12 fail), graph 28/45 (ends `failure` on the graph gate, expected). `verify-backfill` (43127651547) OK. Haiku 5.5 probe (43127660194): still AccessDenied.
+- **Task 1:** PR #316, judge (42) + graph (18) fixtures for the 60 new scenarios, flags dropped; graph replay test pins 28/45. Merged; `main` 0023bf6.
+- **Task 2:** PR #317, leak-14 and prc-12 reference answers now answer the question (which leaks; overage 9000 cents); flagged until re-recorded. Merged at 00:48 (`main` b600cb9, `ci` + `deploy to dev` still running at run end). leak-07/11 kept (same pattern passes on leak-01/09/13: judge variance).
+- **Decisions (§8.2):** commit only the new scenarios' fixtures (old ones unchanged, baseline stays comparable); fix weak references instead of accepting judge fails (gate unchanged).
+- **Cost:** about $0.22 (one full record run + probe); no new resources.
 
 ## 2026-11-11 (autopilot run 127)
 
