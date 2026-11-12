@@ -23,7 +23,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-1. **Check main `ci` + `deploy to dev`** for this progress commit (b6c8286, #325, already green).
+1. **Check main `ci` + `deploy to dev`** for this progress commit (5c11397 already green).
 2. **Kill-switch drill (G3):** waiting for owner (see above). Then tick M6-03 (golden set, security review, red team, CSP done).
 3. **M6-04 remaining:** case study needs the realized-margin result (M5-04 KPI-09: a closed-loop plan change); then tick M6-04.
 4. **M5-04:** KPI-09 needs a closed-loop plan change (tied to the M5-03 window question above); KPI-13 needs the real AWS bill (M2-04 FOCUS export).
@@ -34,6 +34,12 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-05, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed.
 Notes: Ops eval results are in the job log; fixtures are base64 between FIXTURE-BEGIN/END lines. Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1; local replays need it too or everything drifts). Ops `ev06_graph: true` adds the graph runs (opt-in, about $0.15; the ops job ends `failure` while the graph gate is unmet, which is expected). Flaky github.com 504s during image builds: re-run the failed job. Only commit the graph fixtures from a record run; the other fixture sets change only in tool-use IDs. AG-05 prompt is at the cost-cap edge (`test_unsupported_figure_retries_then_fails_closed` sums $0.009965 of $0.01): keep it no longer than v8. Gh-created PR bodies get a footer: remove it with the GitHub MCP `update_pull_request` (gh api PATCH gets it re-added).
+
+## 2026-11-12 (autopilot run 132)
+
+- **Start:** main `ci` + `deploy to dev` green for 5c11397; no open PRs.
+- **Task:** none. Every open item is blocked: kill-switch drill, M5-03 window question, intake `secrets` rule (Waiting for owner); M5-04 KPI-09/13 and the M6-04 case study (need those answers and the FOCUS export); M2-04 (FOCUS export). EV-06 graph gate and API `MC_GRAPH` stay separate decisions. Daily checks are due 2026-11-13.
+- **Cost:** $0; no ops run.
 
 ## 2026-11-12 (autopilot run 131)
 
