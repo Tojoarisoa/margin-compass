@@ -137,7 +137,7 @@ export default function ActionCenter() {
         <div className="tile"><div className="tile-label">Approved (your sandbox)</div><div className="tile-value">{money(w.approved)}</div></div>
         <div className="tile"><div className="tile-label">Rejected</div><div className="tile-value">{money(w.rejected)}</div></div>
         <div className="tile"><div className="tile-label">Still pending</div><div className="tile-value">{money(w.pending)}</div></div>
-        <div className="tile"><div className="tile-label">Realized</div><div className="tile-value">n/a</div><div className="tile-note">needs the closed loop (M5-04)</div></div>
+        <div className="tile"><div className="tile-label">Realized</div><div className="tile-value">n/a</div><div className="tile-note">needs the closed loop</div></div>
       </section>
       {renewals.length > 0 && (
         <section aria-label="Renewal calendar">

@@ -69,21 +69,25 @@ def write_parquet(rows: list[dict], path: Path, schema: pa.Schema = _SCHEMA) -> 
 
 
 def summary(rows: list[dict], run_id: str) -> dict:
-    """PG-8 block: calls, tokens, cost and mean latency by model. Status `awaiting_first_events` while empty."""
-    base = {"schema_version": "dogfood.v0", "run_id": run_id, "data_label": "real", "tenant_id": TENANT}
+    """PG-8 block: the platform's own model spend by month, tokens and mean latency. `awaiting_first_events` while empty.
+
+    `dogfood.json` is public (dashboard), so it carries no model names, call counts or per-answer cost (AGENTS.md §6
+    public surfaces). Those stay in the internal `telemetry/dogfood.parquet`.
+    """
+    base = {"schema_version": "dogfood.v1", "run_id": run_id, "data_label": "real", "tenant_id": TENANT}
     if not rows:
-        return {**base, "status": "awaiting_first_events", "by_model": [], "total_calls": 0, "total_cost_usd": 0.0}
+        return {**base, "status": "awaiting_first_events", "by_month": [], "total_cost_usd": 0.0}
     by: dict[str, dict] = {}
     for r in rows:
-        m = by.setdefault(r["model_id"], {"calls": 0, "cost": Decimal(0), "lat": 0, "in": 0, "out": 0})
-        m["calls"] += r["calls"]; m["cost"] += r["cost_usd"]; m["lat"] += r["latency_ms_total"]  # noqa: E702
-        m["in"] += r["input_tokens"]; m["out"] += r["output_tokens"]  # noqa: E702
-    models = [{"model_id": k, "calls": v["calls"], "input_tokens": v["in"], "output_tokens": v["out"],
-               "cost_usd": float(round(v["cost"], 6)), "mean_latency_ms": round(v["lat"] / v["calls"])}
+        m = by.setdefault(r["date"][:7], {"cost": Decimal(0), "in": 0, "out": 0})
+        m["cost"] += r["cost_usd"]; m["in"] += r["input_tokens"]; m["out"] += r["output_tokens"]  # noqa: E702
+    months = [{"month": k, "cost_usd": float(round(v["cost"], 6)), "input_tokens": v["in"], "output_tokens": v["out"]}
               for k, v in sorted(by.items())]
-    return {**base, "status": "ok", "by_model": models, "first_date": min(r["date"] for r in rows),
-            "last_date": max(r["date"] for r in rows), "total_calls": sum(m["calls"] for m in models),
-            "total_cost_usd": float(round(sum(v["cost"] for v in by.values()), 6))}
+    calls = sum(r["calls"] for r in rows)
+    return {**base, "status": "ok", "by_month": months, "first_date": min(r["date"] for r in rows),
+            "last_date": max(r["date"] for r in rows),
+            "total_cost_usd": float(round(sum((v["cost"] for v in by.values()), Decimal(0)), 6)),
+            "mean_latency_ms": round(sum(r["latency_ms_total"] for r in rows) / calls) if calls else 0}
 
 
 def read_summary(path: Path, run_id: str) -> dict:

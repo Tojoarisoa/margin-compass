@@ -38,22 +38,22 @@ function Finops() {
   );
 }
 
-interface Dog { status: string; first_date?: string; last_date?: string; total_calls: number; total_cost_usd: number; by_model: { model_id: string; calls: number; input_tokens: number; output_tokens: number; cost_usd: number; mean_latency_ms: number }[] }
+interface Dog { status: string; first_date?: string; last_date?: string; total_cost_usd: number; mean_latency_ms?: number; by_month: { month: string; cost_usd: number; input_tokens: number; output_tokens: number }[] }
 
 function Dogfood() {
   const [d, setD] = useState<Dog | null>(null);
   useEffect(() => { get<Dog>("dogfood.json").then(setD).catch(() => setD(null)); }, []);
-  if (!d) return null;
+  if (!d || !Array.isArray(d.by_month)) return null;
   return (
     <div>
-      <h3>Platform's own model calls (dogfood)</h3>
-      {d.status !== "ok" ? <p className="muted">Awaiting first model calls.</p> : (
+      <h3>Platform's own AI usage (dogfood)</h3>
+      {d.status !== "ok" ? <p className="muted">Awaiting first usage.</p> : (
         <>
-          <p className="muted small">{d.total_calls} calls, ${d.total_cost_usd.toFixed(4)}, {d.first_date} to {d.last_date}. Real usage by the demo tenant, kept apart from BoonCore's margin. No prompt or answer content is stored.</p>
+          <p className="muted small">${d.total_cost_usd.toFixed(4)}, {d.first_date} to {d.last_date}{d.mean_latency_ms ? `, mean latency ${d.mean_latency_ms} ms` : ""}. Real usage by the demo tenant, kept apart from BoonCore's margin. No prompt or answer content is stored.</p>
           <div className="table-wrap">
             <table>
-              <thead><tr><th scope="col">Model</th><th scope="col" className="num">Calls</th><th scope="col" className="num">Cost</th><th scope="col" className="num">Mean latency (ms)</th></tr></thead>
-              <tbody>{d.by_model.map((m) => <tr key={m.model_id}><td>{m.model_id}</td><td className="num">{m.calls}</td><td className="num">${m.cost_usd.toFixed(4)}</td><td className="num">{m.mean_latency_ms}</td></tr>)}</tbody>
+              <thead><tr><th scope="col">Month</th><th scope="col" className="num">Cost</th><th scope="col" className="num">Input tokens</th><th scope="col" className="num">Output tokens</th></tr></thead>
+              <tbody>{d.by_month.map((m) => <tr key={m.month}><td>{m.month}</td><td className="num">${m.cost_usd.toFixed(4)}</td><td className="num">{m.input_tokens}</td><td className="num">{m.output_tokens}</td></tr>)}</tbody>
             </table>
           </div>
         </>
@@ -63,7 +63,7 @@ function Dogfood() {
 }
 
 interface Quality { gates: Record<string, Record<string, unknown>> }
-const GATE_NAMES: Record<string, string> = { ev03: "EV-03 margin-leak detection", ev11: "EV-11 churn model" };
+const GATE_NAMES: Record<string, string> = { ev03: "Margin-leak detection", ev11: "Churn model" };
 const SHOWN = ["precision", "recall", "mttd_days", "alerts", "labels", "auc", "brier", "test_n", "scored"];
 
 function AiQuality() {

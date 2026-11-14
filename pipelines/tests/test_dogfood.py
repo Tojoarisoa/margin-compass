@@ -29,8 +29,16 @@ def test_compact_summary_and_parquet(tmp_path):
     assert pq.read_table(p).num_rows == 2
     assert dogfood.read_summary(p, "r1") == dogfood.summary(rows, "r1")
     s = dogfood.summary(rows, "r1")
-    assert s["status"] == "ok" and s["total_calls"] == 3 and s["total_cost_usd"] == 0.0035
-    assert s["by_model"][0]["mean_latency_ms"] == 200
+    assert s["status"] == "ok" and s["total_cost_usd"] == 0.0035 and s["mean_latency_ms"] == 167
+    assert s["by_month"] == [{"month": "2026-11", "cost_usd": 0.0035, "input_tokens": 160, "output_tokens": 35}]
+
+
+def test_public_summary_has_no_model_names_or_call_counts():
+    """dogfood.json is public: no model names, call counts or per-answer cost (AGENTS.md §6)."""
+    s = dogfood.summary(dogfood.compact(dogfood.parse_events(LINES)), "r1")
+    text = json.dumps(s).lower()
+    assert "haiku" not in text and "sonnet" not in text and "model" not in text and "calls" not in text
+    assert "per_question" not in text and "per_answer" not in text
 
 
 def test_empty_summary():
@@ -75,4 +83,4 @@ def test_export_day_is_idempotent_and_replaces_only_that_day(tmp_path):
     assert again["rows"] == 1
     dogfood.export_day(FakeLogs([{"events": [{"message": _api("sonnet", "0.01")}]}]), s3, "b", "grp", "2026-11-07", tmp_path / "w")
     s = dogfood.read_summary(tmp_path / "s3" / "b" / "telemetry" / "dogfood.parquet", "r")
-    assert s["total_calls"] == 3 and s["first_date"] == "2026-11-06" and s["last_date"] == "2026-11-07"
+    assert s["total_cost_usd"] == 0.013 and s["first_date"] == "2026-11-06" and s["last_date"] == "2026-11-07"
