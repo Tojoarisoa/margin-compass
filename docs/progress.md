@@ -26,16 +26,25 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-1. **Paid ops runs:** allowed under the temporary $4.50 limit (cost-report first, AGENTS.md §8.3). The before-credits month to date is now $4.48, so no paid run fits this month unless the owner changes the limit; the Haiku 5.5 probe waits.
-2. **M2-04:** check what's left besides PG-8 finops (stage tags wait for owner); tick M2-04 in PLAN.md §17 if nothing else is open.
+1. **M2-04 last step (agents):** grow the replay set from 5 to about 8 questions and re-record fixtures on Haiku 4.5 (about $0.05). Needs a paid ops run: month to date before credits is $4.48, so it doesn't fit the $4.50 limit this month unless the owner raises it. M2-04 is ticked after this step (PG-8 stage tags wait for owner; budget burn-down and public cost per question were dropped by the public-surface rule, Change Log 2026-11-09 and 2026-11-14).
+2. **Paid ops runs** (Haiku 5.5 probe, EV-06 graph replay, API `MC_GRAPH`): same limit; wait.
 3. **Kill-switch drill (G3):** waiting for owner. Then tick M6-03.
 4. **M6-04 case study / M5-04 KPI-09, KPI-13:** blocked (M5-03 window question).
-5. **EV-06 graph replay** (baseline 28/45) and API `MC_GRAPH`: separate decisions; both need paid runs.
+5. **Optional:** the live `dogfood.json` is still v0 until the next M2 build (`start-backfill`); the PG-8 card stays hidden until then.
 6. **On or after 2026-12-01:** delete the temporary spend-limit paragraph in AGENTS.md §8.3 (back to $3).
 
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-05, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed.
 Notes: Ops eval results are in the job log; fixtures are base64 between FIXTURE-BEGIN/END lines. Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1; local replays need it too or everything drifts). Ops `ev06_graph: true` adds the graph runs (opt-in, about $0.15; the ops job ends `failure` while the graph gate is unmet, which is expected). Flaky github.com 504s during image builds: re-run the failed job. Only commit the graph fixtures from a record run; the other fixture sets change only in tool-use IDs. AG-05 prompt is at the cost-cap edge (`test_unsupported_figure_retries_then_fails_closed` sums $0.009965 of $0.01): keep it no longer than v8. Gh-created PR bodies get a footer: remove it with the GitHub MCP `update_pull_request` (gh api PATCH gets it re-added).
+
+## 2026-11-14 (autopilot run 142)
+
+- **Start:** main `ci` green for 1df8a0e, no open PR.
+- **Found:** the public PG-8 dogfood card and `dogfood.json` showed model names and call counts, and two dashboard labels showed scope codes (`EV-03`/`EV-11`, `M5-04`). All of these break the public-surface rule (AGENTS.md §6).
+- **Task:** M2-04 PR #331: `dogfood.json` v1 has monthly spend, tokens and mean latency only (model detail stays in `telemetry/dogfood.parquet`). The card is hidden until a v1 file is published, and the codes are gone from the labels. Pipelines 93 passed, ruff clean, dashboard build clean. Every `ci` job green (`attribution` green after removing the footer through MCP). `main` -> f5c43b9, `deploy to dev` green (43585018426).
+- **Decision (§8.2):** monthly totals only. The other options were keeping the per-model table or showing cost per question publicly, and both break §6. Logged in the PLAN Change Log.
+- **Blocked:** M2-04 replay set 5 -> 8 needs a paid fixture recording, and $4.48 + $0.05 > $4.50 (§8.3). M2-04 is not ticked.
+- **Cost:** $0. No ops run.
 
 ## 2026-11-14 (autopilot run 141)
 
