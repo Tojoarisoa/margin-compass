@@ -24,8 +24,8 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-1. **Ops `verify-backfill`** (about $0): see why `finops.json` stays `awaiting_first_export` although the FOCUS export has 28 successful deliveries (new output from #326).
-2. **Paid ops runs:** allowed again under the temporary $4.50 limit (cost-report first, AGENTS.md §8.3); about $0.56 of room this month, so only the most useful run (for example the daily Haiku 5.5 probe).
+1. **Check PG-8 finops (about $0):** ops `start-backfill` (no approvals, like 11-11), then `verify-backfill`: `finops.json` should be `status: ok` after #329. If `export_unreadable`, read the `focus_export_unreadable` warning (Tags type or column names).
+2. **Paid ops runs:** allowed under the temporary $4.50 limit (cost-report first, AGENTS.md §8.3); about $0.56 of room this month, so only the most useful run (for example the daily Haiku 5.5 probe).
 3. **Kill-switch drill (G3):** waiting for owner. Then tick M6-03.
 4. **M6-04 case study / M5-04 KPI-09, KPI-13:** blocked (M5-03 window question, FOCUS export).
 5. **EV-06 graph replay** (baseline 28/45) and API `MC_GRAPH`: separate decisions; both need paid runs.
@@ -34,6 +34,15 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-05, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed.
 Notes: Ops eval results are in the job log; fixtures are base64 between FIXTURE-BEGIN/END lines. Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1; local replays need it too or everything drifts). Ops `ev06_graph: true` adds the graph runs (opt-in, about $0.15; the ops job ends `failure` while the graph gate is unmet, which is expected). Flaky github.com 504s during image builds: re-run the failed job. Only commit the graph fixtures from a record run; the other fixture sets change only in tool-use IDs. AG-05 prompt is at the cost-cap edge (`test_unsupported_figure_retries_then_fails_closed` sums $0.009965 of $0.01): keep it no longer than v8. Gh-created PR bodies get a footer: remove it with the GitHub MCP `update_pull_request` (gh api PATCH gets it re-added).
+
+## 2026-11-14 (autopilot run 140)
+
+- **Start:** #326 merged by owner, main `ci` + `deploy to dev` green for 290a849. Owner PR #327 (spend limit) merged during the run (836e299).
+- **Found:** ops `verify-backfill` (43574432906): export file is in the bucket (`.../data/billing_period=2026-11/...00001.snappy.parquet`), no `focus_export_unavailable` warning. Fresh `start-backfill` (43574602234) succeeded, `finops.json` still `awaiting_first_export` (verify 43575186827). Cause (from the code): `build_finops` used `glob.glob` without `recursive=True`, so `**` skipped the nested file.
+- **Task:** M2-04 S7 fix. PR #328 fell behind main after #327, replaced by #329 (cherry-pick). `recursive=True`; Tags read as MAP or JSON (`stage`, then `user:stage`); unreadable export -> `export_unreadable` + warning, the build doesn't fail. Pipelines 38 passed, ruff clean; every `ci` job green; `main` -> 2860153, main `ci` + `deploy to dev` green (43577179502).
+- **Decisions (§8.2):** handle both Tags types (real type not seen yet); never fail the M2 build on the optional export.
+- **Note:** the proxy blocks branch deletion; old `auto/*` branches stay.
+- **Cost:** about $0.01 (one backfill, Lambda in the free allowance).
 
 ## 2026-11-14 (owner session)
 
