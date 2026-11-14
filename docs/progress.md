@@ -10,6 +10,8 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 - **Intake `secrets` rule false positive:** AG-01 blocks any question with the bare word "token(s)" (for example "tokens per request for F4"), on the graph path. Narrowing it to "api/access/auth/bearer/refresh token" would loosen a guardrail, so autopilot won't. The public ask path skips that one rule for now. Narrow it?
 - **Kill-switch drill (M6-03 G3):** who attaches the deny policy for the game day: you in the console, or an ops IAM grant (an IAM change, so autopilot won't add it unasked)? M6-03 is ticked after the drill.
 
+- **PG-8 stage tags (billing console):** every FOCUS line is `untagged`, so the finops card has one stage. Activating `stage` (and `env`) as cost allocation tags in Billing is an owner-only console step. Activate them? (Also FYI: the export shows Credit -$4.48 against Usage $4.48 this month, so the net bill is $0 so far.)
+
 ## Owner decision 2026-11-11
 
 - **Owner session 2026-11-11 (16:00-16:10 UTC):** owner user created in pool `us-east-1_gADVLRI9T` (group `owner`, confirmed), signed in on the dashboard, and recorded two decisions through `POST /api/approvals`: `APPROVAL#act-c858000e311f` approved (bc-t0011/margin-trend) and `APPROVAL#act-86d88d11c1bf` rejected (bc-t0025/margin-trend), both read back from `mc-dev-state-core`. The M5-03 round trip is done: tick M5-03. The orphaned pool `us-east-1_WbzJydKus` (empty, from the rolled-back deploy) was deleted; only the live pool is left. Also live: the M2 build publishes `pg1.json` (the M2 sections are visible again) and the dashboard has the mission-control theme.
@@ -24,16 +26,25 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-1. **Check PG-8 finops (about $0):** ops `start-backfill` (no approvals, like 11-11), then `verify-backfill`: `finops.json` should be `status: ok` after #329. If `export_unreadable`, read the `focus_export_unreadable` warning (Tags type or column names).
-2. **Paid ops runs:** allowed under the temporary $4.50 limit (cost-report first, AGENTS.md §8.3); about $0.56 of room this month, so only the most useful run (for example the daily Haiku 5.5 probe).
+1. **Paid ops runs:** allowed under the temporary $4.50 limit (cost-report first, AGENTS.md §8.3). The before-credits month to date is now $4.48, so no paid run fits this month unless the owner changes the limit; the Haiku 5.5 probe waits.
+2. **M2-04:** check what's left besides PG-8 finops (stage tags wait for owner); tick M2-04 in PLAN.md §17 if nothing else is open.
 3. **Kill-switch drill (G3):** waiting for owner. Then tick M6-03.
-4. **M6-04 case study / M5-04 KPI-09, KPI-13:** blocked (M5-03 window question, FOCUS export).
+4. **M6-04 case study / M5-04 KPI-09, KPI-13:** blocked (M5-03 window question).
 5. **EV-06 graph replay** (baseline 28/45) and API `MC_GRAPH`: separate decisions; both need paid runs.
 6. **On or after 2026-12-01:** delete the temporary spend-limit paragraph in AGENTS.md §8.3 (back to $3).
 
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-05, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed.
 Notes: Ops eval results are in the job log; fixtures are base64 between FIXTURE-BEGIN/END lines. Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1; local replays need it too or everything drifts). Ops `ev06_graph: true` adds the graph runs (opt-in, about $0.15; the ops job ends `failure` while the graph gate is unmet, which is expected). Flaky github.com 504s during image builds: re-run the failed job. Only commit the graph fixtures from a record run; the other fixture sets change only in tool-use IDs. AG-05 prompt is at the cost-cap edge (`test_unsupported_figure_retries_then_fails_closed` sums $0.009965 of $0.01): keep it no longer than v8. Gh-created PR bodies get a footer: remove it with the GitHub MCP `update_pull_request` (gh api PATCH gets it re-added).
+
+## 2026-11-14 (autopilot run 141)
+
+- **Start:** main `ci` green for f6b0214, no open PR.
+- **Found:** ops `start-backfill` 43579124404 + `verify-backfill` 43579623200: `finops.json` `status: ok` after #329, but every amount $0.00.
+- **Task:** M2-04 S7 PR #330: leave out `ChargeCategory = Credit` (same basis as ops cost-report), add `cost_basis: "before credits"`, log `focus_export_summary`; dashboard label. Pipelines 92 passed, ruff clean; every `ci` job green; `main` -> f2a33fb, `deploy to dev` green (43580841821).
+- **Confirmed live** (backfill 43581694172, verify 43582102833): Credit -$4.48, Usage $4.48; finops.json now $4.48 (Haiku 4.5 $3.48, ECR $0.87, S3 $0.12). All lines `untagged` (owner question added).
+- **Decision (§8.2):** show cost before credits (net BilledCost reads $0 with credits; before credits matches cost-report and the budget basis).
+- **Cost:** about $0.02 (two backfills, Lambda in the free allowance).
 
 ## 2026-11-14 (autopilot run 140)
 
