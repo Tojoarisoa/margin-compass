@@ -119,6 +119,8 @@ Plan items that change what the dashboard, its snapshot (`publish/`), or the pub
 For each of these, end the task, write the question to `docs/progress.md` under **Waiting for owner**, and don't continue that task. Other independent tasks may continue.
 
 - The cost gate's worst case would exceed $3.00/month, a budget or anomaly alert fired, or the kill switch is active.
+
+**Temporary spend limit (owner, 2026-11-14; ends 2026-11-30).** Until 2026-11-30 the $3 actual-spend budget alert alone is not a hard stop. Instead: before each paid ops run (`record-fixtures`, `live-eval`, `online-eval`, `red-team`, `rag-eval`, `nightly-insight`, the Haiku probe), run ops `cost-report` and add the estimated cost of paid ops runs started since that report's data (Cost Explorer lags). If month-to-date spend plus the new run's estimate would exceed **$4.50**, don't start it: that is a hard stop. The $5 budget alerts, anomaly alerts, the kill switch, and the cost gate's $3.00 worst-case limit (§8.2) still apply unchanged. From **2026-12-01** this paragraph no longer applies (delete it in the first run on or after that date) and the $3 rules above apply again.
 - Making the repository public, the M6 launch, or publishing anything beyond what the dashboard already shows and what plan items approved under §8.2 add.
 - Deleting or replacing a data store (S3 bucket, DynamoDB table, vector index) or anything with `RemovalPolicy.RETAIN`.
 - IAM changes that grant `*` actions, cross-account access, or access outside `mc-*` resources; any change to OIDC trust conditions.

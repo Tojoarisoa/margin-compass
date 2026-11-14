@@ -4,8 +4,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Waiting for owner
 
-- **AWS spend over $3 (2026-11-14, ops cost-report 43539936059):** month to date $4.44. Bedrock Haiku 4.5 $3.48 (autopilot ops record/eval runs; the cost gate only counts the $1.50 online cap), ECR $0.82 (CDK asset images pile up in the bootstrap repo; the gate assumes 2 images x $0.04), S3 $0.12. The $5 budget still showed $0 actual. Autopilot paused paid ops runs (record-fixtures, live-eval, online-eval, red-team, Haiku probe). Decide: (a) expire old CDK asset images (`cdk gc` or a lifecycle rule on the bootstrap repo; outside `mc-*`, so yours); (b) a monthly cap for ops model runs; (c) when paid ops runs may resume.
-- **PR #326 merge:** all CI green, but the session's permission check denied the fast-forward push to `main`. Merge it (or re-allow autopilot merges).
+- **AWS spend over $3 (2026-11-14, ops cost-report 43539936059):** month to date $4.44 (Bedrock Haiku 4.5 $3.48, ECR $0.82, S3 $0.12). Owner set a temporary $4.50 limit until 2026-11-30 (AGENTS.md §8.3); still open: (a) expire old CDK asset images (owner runs `cdk gc` with own credentials, or approves a scoped ECR grant for ops); (b) a monthly cap for ops model runs.
 - **Claude Haiku 5.5 access:** access requested, waiting for AWS. Converse via `us.anthropic.claude-haiku-5-5` still returns `AccessDeniedException`. Autopilot: re-probe with the ops workflow (`record-fixtures`, `haiku-5-5`) at most once a day; when it succeeds, record the M1-06 fixtures and apply the ADR-003 selection rule. Until then Haiku 4.5 stays the default.
 - **M5-03 approvals in the simulation window (choice with no recommended option):** the owner's live decisions are dated 2026-11-11, the window ends 2026-10-31, and effects start 3-14 days after approval, so any mapping that keeps "nothing before the approval date" shows no effect; a visible effect needs a backdated approval date. Options: (a) leave as is (decisions only count for windows that include them); (b) map each decision to the action's data date minus a fixed lead (for example 60 days), labeled as simulated; (c) extend the window past 2026-10-31. Which one?
 - **Intake `secrets` rule false positive:** AG-01 blocks any question with the bare word "token(s)" (for example "tokens per request for F4"), on the graph path. Narrowing it to "api/access/auth/bearer/refresh token" would loosen a guardrail, so autopilot won't. The public ask path skips that one rule for now. Narrow it?
@@ -25,16 +24,22 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-1. **Finish PR #326** (ops `verify-backfill` shows FOCUS export objects and `focus_export_unavailable` warnings): all checks green, merge was denied (see Waiting for owner). After merge: `ci` + `deploy to dev`, then ops `verify-backfill` to see why `finops.json` stays `awaiting_first_export` although the export has 28 successful deliveries.
-2. **Cost over $3:** no paid ops runs (model evals, Haiku probe) until the owner answers. `verify-backfill`, `status`, `cost-report` are about $0.
+1. **Ops `verify-backfill`** (about $0): see why `finops.json` stays `awaiting_first_export` although the FOCUS export has 28 successful deliveries (new output from #326).
+2. **Paid ops runs:** allowed again under the temporary $4.50 limit (cost-report first, AGENTS.md §8.3); about $0.56 of room this month, so only the most useful run (for example the daily Haiku 5.5 probe).
 3. **Kill-switch drill (G3):** waiting for owner. Then tick M6-03.
 4. **M6-04 case study / M5-04 KPI-09, KPI-13:** blocked (M5-03 window question, FOCUS export).
 5. **EV-06 graph replay** (baseline 28/45) and API `MC_GRAPH`: separate decisions; both need paid runs.
-6. **Daily checks:** `verify-backfill` daily; Haiku 5.5 probe paused (cost).
+6. **On or after 2026-12-01:** delete the temporary spend-limit paragraph in AGENTS.md §8.3 (back to $3).
 
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-05, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed.
 Notes: Ops eval results are in the job log; fixtures are base64 between FIXTURE-BEGIN/END lines. Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1; local replays need it too or everything drifts). Ops `ev06_graph: true` adds the graph runs (opt-in, about $0.15; the ops job ends `failure` while the graph gate is unmet, which is expected). Flaky github.com 504s during image builds: re-run the failed job. Only commit the graph fixtures from a record run; the other fixture sets change only in tool-use IDs. AG-05 prompt is at the cost-cap edge (`test_unsupported_figure_retries_then_fails_closed` sums $0.009965 of $0.01): keep it no longer than v8. Gh-created PR bodies get a footer: remove it with the GitHub MCP `update_pull_request` (gh api PATCH gets it re-added).
+
+## 2026-11-14 (owner session)
+
+- **PR #326** merged by fast-forward at the owner's request (`main` 290a849); `ci` + `deploy to dev` green. Ops `verify-backfill` dispatch was denied by the session's permission check; run it next.
+- **ECR cleanup:** not done. Ops role has no ECR rights; a grant would be IAM outside `mc-*`. Saving is small (under about $1.50/month). Owner option: `cdk gc` with own credentials.
+- **Spend limit (owner):** autopilot may start paid ops runs while month-to-date spend plus the run's estimate stays at or below **$4.50**, until 2026-11-30; back to $3 on 2026-12-01. $5 kill switch, alerts and the $3.00 cost gate unchanged (AGENTS.md §8.3, PLAN.md Change Log).
 
 ## 2026-11-14 (autopilot run 139)
 
