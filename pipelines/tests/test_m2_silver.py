@@ -650,3 +650,30 @@ def test_m2_build_publishes_pg1_with_m2_sections(tmp_path):
         assert all(p["p10"] <= p["p50"] <= p["p90"] for p in snap["forecast"]["points"])
     # internal codes stay off public surfaces (AGENTS.md §6)
     assert "M1" not in snap["feature_scope"] and "F1" not in snap["feature_scope"]
+
+
+def test_finops_reads_the_nested_aws_export_with_map_tags(tmp_path):
+    """The AWS export nests files under <export>/data/billing_period=YYYY-MM/ and writes Tags as a MAP."""
+    import duckdb
+
+    from mc_pipelines.publish import build_finops
+
+    part = tmp_path / "focus-1-2" / "mc-export" / "data" / "billing_period=2026-11"
+    part.mkdir(parents=True)
+    duckdb.sql(f"""COPY (SELECT * FROM (VALUES
+        (TIMESTAMP '2026-11-01', 'AWS Lambda', 0.10, MAP {{'stage': 'dev'}}),
+        (TIMESTAMP '2026-11-02', 'Amazon S3', 0.05, MAP {{'user:stage': 'dev'}}),
+        (TIMESTAMP '2026-11-02', 'Amazon S3', 0.30, MAP {{'other': 'x'}}))
+        t(ChargePeriodStart, ServiceName, BilledCost, Tags)) TO '{part}/a.snappy.parquet' (FORMAT PARQUET)""")
+    out = build_finops(f"{tmp_path}/focus-1-2/**/*.parquet", "r1")
+    assert out["status"] == "ok"
+    assert {r["key"]: r["cost_usd"] for r in out["by_stage"]} == {"untagged": 0.3, "dev": 0.15}
+
+
+def test_finops_unreadable_export_does_not_fail_the_build(tmp_path):
+    from mc_pipelines.publish import build_finops
+
+    (tmp_path / "f").mkdir()
+    (tmp_path / "f" / "bad.parquet").write_bytes(b"not parquet")
+    out = build_finops(f"{tmp_path}/f/**/*.parquet", "r1")
+    assert out["status"] == "export_unreadable" and out["by_stage"] == [] and out["schema_version"] == "finops.v0"

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import glob
 import json
+import logging
 import os
 from datetime import UTC, datetime, timedelta
 from decimal import ROUND_HALF_UP, Decimal
@@ -314,12 +315,27 @@ def build_finops(focus_glob: str | None, run_id: str) -> dict:
     With no files yet (the export is still empty) the status is `awaiting_first_export`.
     """
     base = {"schema_version": "finops.v0", "run_id": run_id, "data_label": "real"}
-    if not focus_glob or not glob.glob(focus_glob):
+    # recursive=True: the export nests files as <export>/data/billing_period=YYYY-MM/*.parquet under the `**`.
+    if not focus_glob or not glob.glob(focus_glob, recursive=True):
         return {**base, "status": "awaiting_first_export", "by_stage": [], "by_service": [], "by_month": []}
     con = duckdb.connect()
+    try:
+        return {**base, **_finops_views(con, focus_glob)}
+    except duckdb.Error as e:  # the export is optional: an unreadable file must not fail the build
+        logging.getLogger("mc_pipelines").warning("focus_export_unreadable", extra={"fields": {"reason": str(e)[:200]}})
+        return {**base, "status": "export_unreadable", "by_stage": [], "by_service": [], "by_month": []}
+
+
+def _finops_views(con: duckdb.DuckDBPyConnection, focus_glob: str) -> dict:
+    files = f"read_parquet('{focus_glob}')"
+    tags_type = {r[0]: r[1] for r in con.execute(f"DESCRIBE SELECT Tags FROM {files}").fetchall()}["Tags"]
+    if tags_type.upper().startswith("MAP"):  # the AWS export writes Tags as MAP(VARCHAR, VARCHAR)
+        stage = "coalesce(list_extract(map_extract(Tags, 'stage'), 1), list_extract(map_extract(Tags, 'user:stage'), 1))"
+    else:  # JSON text
+        stage = ("coalesce(json_extract_string(CAST(Tags AS VARCHAR), '$.stage'), "
+                 "json_extract_string(CAST(Tags AS VARCHAR), '$.\"user:stage\"'))")
     src = (f"(SELECT CAST(ChargePeriodStart AS DATE) AS d, ServiceName AS service, CAST(BilledCost AS DECIMAL(18,6)) AS cost, "
-           f"coalesce(nullif(json_extract_string(CAST(Tags AS VARCHAR), '$.stage'), ''), 'untagged') AS stage "
-           f"FROM read_parquet('{focus_glob}'))")
+           f"coalesce(nullif({stage}, ''), 'untagged') AS stage FROM {files})")
 
     def view(sel: str) -> list[dict]:
         return [{"key": r[0].isoformat() if hasattr(r[0], "isoformat") else r[0], "cost_usd": _money(r[1])}
@@ -327,7 +343,7 @@ def build_finops(focus_glob: str | None, run_id: str) -> dict:
 
     by_month = sorted(view("date_trunc('month', d)::DATE"), key=lambda r: r["key"])
     latest = by_month[-1] if by_month else {"key": None, "cost_usd": 0.0}
-    return {**base, "status": "ok", "by_stage": view("stage"), "by_service": view("service"), "by_month": by_month,
+    return {"status": "ok", "by_stage": view("stage"), "by_service": view("service"), "by_month": by_month,
             "latest_month": latest["key"], "latest_month_usd": latest["cost_usd"]}
 
 
