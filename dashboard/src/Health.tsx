@@ -8,7 +8,7 @@ interface Lineage { run_id: string; models: Record<string, string[]>; metrics_by
 const get = <T,>(name: string): Promise<T> =>
   fetch(`/publish/latest/${name}`, { cache: "no-cache" }).then((r) => (r.ok ? (r.json() as Promise<T>) : Promise.reject(new Error(`${name} ${r.status}`))));
 
-interface Fin { status: string; by_stage: { key: string; cost_usd: number }[]; by_service: { key: string; cost_usd: number }[]; latest_month?: string; latest_month_usd?: number }
+interface Fin { status: string; by_stage: { key: string; cost_usd: number }[]; by_service: { key: string; cost_usd: number }[]; latest_month?: string; latest_month_usd?: number; cost_basis?: string }
 
 function Finops() {
   const [fin, setFin] = useState<Fin | null>(null);
@@ -19,7 +19,7 @@ function Finops() {
       <h3>Platform FinOps</h3>
       {fin.status !== "ok" ? <p className="muted">Awaiting first export of the platform's AWS bill.</p> : (
         <>
-          <p className="muted small">Month {fin.latest_month?.slice(0, 7)}: ${fin.latest_month_usd?.toFixed(2)} (real AWS cost, not synthetic).</p>
+          <p className="muted small">Month {fin.latest_month?.slice(0, 7)}: ${fin.latest_month_usd?.toFixed(2)} (real AWS cost{fin.cost_basis ? ` ${fin.cost_basis}` : ""}, not synthetic).</p>
           <div className="table-wrap">
             <table>
               <thead><tr><th scope="col">Lifecycle stage</th><th scope="col" className="num">Cost</th></tr></thead>

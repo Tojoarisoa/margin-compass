@@ -334,8 +334,16 @@ def _finops_views(con: duckdb.DuckDBPyConnection, focus_glob: str) -> dict:
     else:  # JSON text
         stage = ("coalesce(json_extract_string(CAST(Tags AS VARCHAR), '$.stage'), "
                  "json_extract_string(CAST(Tags AS VARCHAR), '$.\"user:stage\"'))")
+    cols = {r[0] for r in con.execute(f"DESCRIBE SELECT * FROM {files}").fetchall()}
+    # Same basis as the ops cost report (Cost Explorer without Credit/Refund records): credit lines offset usage in
+    # BilledCost, so with promotional credits the net bill reads $0. Summed by category in the log (amounts only).
+    keep = "WHERE ChargeCategory IS DISTINCT FROM 'Credit'" if "ChargeCategory" in cols else ""
+    if "ChargeCategory" in cols:
+        summary = {str(r[0]): _money(r[1]) for r in con.execute(
+            f"SELECT coalesce(CAST(ChargeCategory AS VARCHAR), 'null'), sum(CAST(BilledCost AS DECIMAL(18,6))) FROM {files} GROUP BY 1 ORDER BY 1").fetchall()}
+        logging.getLogger("mc_pipelines").info("focus_export_summary", extra={"fields": {"billed_cost_by_charge_category": summary}})
     src = (f"(SELECT CAST(ChargePeriodStart AS DATE) AS d, ServiceName AS service, CAST(BilledCost AS DECIMAL(18,6)) AS cost, "
-           f"coalesce(nullif({stage}, ''), 'untagged') AS stage FROM {files})")
+           f"coalesce(nullif({stage}, ''), 'untagged') AS stage FROM {files} {keep})")
 
     def view(sel: str) -> list[dict]:
         return [{"key": r[0].isoformat() if hasattr(r[0], "isoformat") else r[0], "cost_usd": _money(r[1])}
@@ -343,7 +351,7 @@ def _finops_views(con: duckdb.DuckDBPyConnection, focus_glob: str) -> dict:
 
     by_month = sorted(view("date_trunc('month', d)::DATE"), key=lambda r: r["key"])
     latest = by_month[-1] if by_month else {"key": None, "cost_usd": 0.0}
-    return {"status": "ok", "by_stage": view("stage"), "by_service": view("service"), "by_month": by_month,
+    return {"status": "ok", "cost_basis": "before credits", "by_stage": view("stage"), "by_service": view("service"), "by_month": by_month,
             "latest_month": latest["key"], "latest_month_usd": latest["cost_usd"]}
 
 

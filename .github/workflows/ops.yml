@@ -182,6 +182,10 @@ jobs:
             echo "focus_export_unavailable warnings since $(python3 -c "import json; print(json.load(open('exec.json'))['start'])"):"; echo '```'
             aws logs filter-log-events --log-group-name /aws/lambda/mc-dev-data-pipeline --start-time "$start_ms" \
               --filter-pattern '"focus_export_unavailable"' --query 'events[].message' --output text 2>&1 | sed "s/$acct/<account>/g" | head -c 1500 || true
+            echo; echo '```'
+            echo "focus_export_summary (BilledCost by ChargeCategory, amounts only):"; echo '```'
+            aws logs filter-log-events --log-group-name /aws/lambda/mc-dev-data-pipeline --start-time "$start_ms" \
+              --filter-pattern '"focus_export_summary"' --query 'events[-1:].message' --output text 2>&1 | sed "s/$acct/<account>/g" | head -c 1500 || true
             echo; echo '```'; } | tee -a "$GITHUB_STEP_SUMMARY"
           { echo "## Published margin brief (M5-01, margin_brief.json)"; echo '```json'; curl -s "$url/publish/latest/margin_brief.json" | head -c 3000; echo; echo '```'; } | tee -a "$GITHUB_STEP_SUMMARY"
           exit "$st"

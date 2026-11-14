@@ -670,6 +670,26 @@ def test_finops_reads_the_nested_aws_export_with_map_tags(tmp_path):
     assert {r["key"]: r["cost_usd"] for r in out["by_stage"]} == {"untagged": 0.3, "dev": 0.15}
 
 
+def test_finops_leaves_out_credits_like_the_cost_report(tmp_path):
+    """Credits offset usage in BilledCost; PG-8 shows cost before credits (same basis as ops cost-report)."""
+    import duckdb
+
+    from mc_pipelines.publish import build_finops
+
+    (tmp_path / "f").mkdir()
+    duckdb.sql(f"""COPY (SELECT * FROM (VALUES
+        (TIMESTAMP '2026-11-01', 'Amazon Bedrock', 3.48, 'Usage', MAP {{'stage': 'dev'}}),
+        (TIMESTAMP '2026-11-01', 'Amazon Bedrock', -3.48, 'Credit', MAP {{'stage': 'dev'}}),
+        (TIMESTAMP '2026-11-02', 'Amazon S3', 0.12, 'Usage', MAP {{'other': 'x'}}),
+        (TIMESTAMP '2026-11-02', 'Amazon S3', -0.12, 'Credit', MAP {{'other': 'x'}}),
+        (TIMESTAMP '2026-11-02', 'Tax', 0.02, 'Tax', MAP {{'other': 'x'}}))
+        t(ChargePeriodStart, ServiceName, BilledCost, ChargeCategory, Tags)) TO '{tmp_path}/f/a.parquet' (FORMAT PARQUET)""")
+    out = build_finops(f"{tmp_path}/f/**/*.parquet", "r1")
+    assert out["status"] == "ok" and out["cost_basis"] == "before credits"
+    assert {r["key"]: r["cost_usd"] for r in out["by_service"]} == {"Amazon Bedrock": 3.48, "Amazon S3": 0.12, "Tax": 0.02}
+    assert out["latest_month_usd"] == 3.62
+
+
 def test_finops_unreadable_export_does_not_fail_the_build(tmp_path):
     from mc_pipelines.publish import build_finops
 
