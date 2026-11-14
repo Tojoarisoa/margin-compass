@@ -171,6 +171,18 @@ jobs:
             echo '```'; } | tee -a "$GITHUB_STEP_SUMMARY"
           { echo "## Forecaster drift (M6-02, gold/_quality/model_drift.json)"; echo '```json'; head -c 2000 lake/gold/_quality/model_drift.json 2>/dev/null || echo "none yet"; echo; echo '```'; } | tee -a "$GITHUB_STEP_SUMMARY"
           { echo "## Published FinOps (PG-8, finops.json)"; echo '```json'; curl -s "$url/publish/latest/finops.json" | head -c 2000; echo; echo '```'; } | tee -a "$GITHUB_STEP_SUMMARY"
+          # M2-04 S7: why finops.json may stay awaiting_first_export. Object keys under focus-1-2/ (names and sizes only)
+          # and the pipeline's focus_export_unavailable warnings since the last successful backfill started.
+          acct="$(aws sts get-caller-identity --query Account --output text)"
+          start_ms="$(python3 -c "import json,datetime as d; print(int(d.datetime.fromisoformat(json.load(open('exec.json'))['start']).timestamp()*1000))")"
+          { echo "## FOCUS export objects (billing bucket, focus-1-2/)"; echo '```'
+            aws s3api list-objects-v2 --bucket "mc-shared-foundation-billing-$acct" --prefix focus-1-2/ \
+              --query 'Contents[].[LastModified,Size,Key]' --output text 2>&1 | sed "s/$acct/<account>/g" | sort | tail -15 || true
+            echo '```'
+            echo "focus_export_unavailable warnings since $(python3 -c "import json; print(json.load(open('exec.json'))['start'])"):"; echo '```'
+            aws logs filter-log-events --log-group-name /aws/lambda/mc-dev-data-pipeline --start-time "$start_ms" \
+              --filter-pattern '"focus_export_unavailable"' --query 'events[].message' --output text 2>&1 | sed "s/$acct/<account>/g" | head -c 1500 || true
+            echo; echo '```'; } | tee -a "$GITHUB_STEP_SUMMARY"
           { echo "## Published margin brief (M5-01, margin_brief.json)"; echo '```json'; curl -s "$url/publish/latest/margin_brief.json" | head -c 3000; echo; echo '```'; } | tee -a "$GITHUB_STEP_SUMMARY"
           exit "$st"
 
