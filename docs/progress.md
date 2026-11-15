@@ -26,6 +26,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
+0. **Finish PR #334** (run 156 progress; CI green, merge push denied by the session permission check).
 1. **M2-04 last step (agents):** grow the replay set from 5 to about 8 questions and re-record fixtures on Haiku 4.5 (about $0.05). Needs a paid ops run: month to date before credits is $4.48, so it doesn't fit the $4.50 limit this month unless the owner raises it. M2-04 is ticked after this step (PG-8 stage tags wait for owner; budget burn-down and public cost per question were dropped by the public-surface rule, Change Log 2026-11-09 and 2026-11-14).
 2. **Paid ops runs** (Haiku 5.5 probe, EV-06 graph replay, API `MC_GRAPH`): same limit; wait (the daily probe too, a `record-fixtures` run).
 3. **Kill-switch drill (G3):** waiting for owner. Then tick M6-03.
