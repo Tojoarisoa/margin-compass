@@ -4,7 +4,8 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Waiting for owner
 
-- **AWS spend over $3 (2026-11-14, ops cost-report 43539936059):** month to date $4.44 (Bedrock Haiku 4.5 $3.48, ECR $0.82, S3 $0.12). Owner set a temporary $4.50 limit until 2026-11-30 (AGENTS.md §8.3); still open: (a) expire old CDK asset images (owner runs `cdk gc` with own credentials, or approves a scoped ECR grant for ops); (b) a monthly cap for ops model runs.
+- **Merge push denied (runs 156-158):** the session permission check refuses `git push origin <sha>:main` (§8.1 step 5), so PR #334 (progress only, all CI green) can't be merged and every run stalls on it. Merge #334, or allow that fast-forward push for scheduled runs.
+- **AWS spend over $3 (2026-11-14, ops cost-report 43539936059):** month to date $4.44 (Bedrock Haiku 4.5 $3.48, ECR $0.82, S3 $0.12). Owner set a temporary limit until 2026-11-30, raised from $4.50 to $4.75 on 2026-11-15 (AGENTS.md §8.3); still open: (a) expire old CDK asset images (owner runs `cdk gc` with own credentials, or approves a scoped ECR grant for ops); (b) a monthly cap for ops model runs.
 - **Claude Haiku 5.5 access:** access requested, waiting for AWS. Converse via `us.anthropic.claude-haiku-5-5` still returns `AccessDeniedException`. Autopilot: re-probe with the ops workflow (`record-fixtures`, `haiku-5-5`) at most once a day; when it succeeds, record the M1-06 fixtures and apply the ADR-003 selection rule. Until then Haiku 4.5 stays the default.
 - **M5-03 approvals in the simulation window (choice with no recommended option):** the owner's live decisions are dated 2026-11-11, the window ends 2026-10-31, and effects start 3-14 days after approval, so any mapping that keeps "nothing before the approval date" shows no effect; a visible effect needs a backdated approval date. Options: (a) leave as is (decisions only count for windows that include them); (b) map each decision to the action's data date minus a fixed lead (for example 60 days), labeled as simulated; (c) extend the window past 2026-10-31. Which one?
 - **Intake `secrets` rule false positive:** AG-01 blocks any question with the bare word "token(s)" (for example "tokens per request for F4"), on the graph path. Narrowing it to "api/access/auth/bearer/refresh token" would loosen a guardrail, so autopilot won't. The public ask path skips that one rule for now. Narrow it?
@@ -26,8 +27,9 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-1. **M2-04 last step (agents):** grow the replay set from 5 to about 8 questions and re-record fixtures on Haiku 4.5 (about $0.05). Needs a paid ops run: month to date before credits is $4.48, so it doesn't fit the $4.50 limit this month unless the owner raises it. M2-04 is ticked after this step (PG-8 stage tags wait for owner; budget burn-down and public cost per question were dropped by the public-surface rule, Change Log 2026-11-09 and 2026-11-14).
-2. **Paid ops runs** (Haiku 5.5 probe, EV-06 graph replay, API `MC_GRAPH`): same limit; wait (the daily probe too, a `record-fixtures` run).
+0. **Finish PR #334** (runs 156-158 progress; CI green, merge push denied in runs 156-158; see Waiting for owner).
+1. **M2-04 last step (agents):** grow the replay set from 5 to about 8 questions and re-record fixtures on Haiku 4.5 (about $0.05). Needs a paid ops run; fits the $4.75 limit (owner, 2026-11-15) if `cost-report` still shows month to date at or below $4.70. M2-04 is ticked after this step (PG-8 stage tags wait for owner; budget burn-down and public cost per question were dropped by the public-surface rule, Change Log 2026-11-09 and 2026-11-14).
+2. **Paid ops runs** (Haiku 5.5 probe, EV-06 graph replay, API `MC_GRAPH`): only while month to date plus the estimate stays at or below $4.75; M2-04 first.
 3. **Kill-switch drill (G3):** waiting for owner. Then tick M6-03.
 4. **M6-04 case study / M5-04 KPI-09, KPI-13:** blocked (M5-03 window question).
 5. **Optional:** the live `dogfood.json` is still v0 until the next M2 build (`start-backfill`); the PG-8 card stays hidden until then.
@@ -36,6 +38,32 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-05, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed.
 Notes: Ops eval results are in the job log; fixtures are base64 between FIXTURE-BEGIN/END lines. Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1; local replays need it too or everything drifts). Ops `ev06_graph: true` adds the graph runs (opt-in, about $0.15; the ops job ends `failure` while the graph gate is unmet, which is expected). Flaky github.com 504s during image builds: re-run the failed job. Only commit the graph fixtures from a record run; the other fixture sets change only in tool-use IDs. AG-05 prompt is at the cost-cap edge (`test_unsupported_figure_retries_then_fails_closed` sums $0.009965 of $0.01): keep it no longer than v8. Gh-created PR bodies get a footer: remove it with the GitHub MCP `update_pull_request` (gh api PATCH gets it re-added).
+
+## 2026-11-15 (owner session)
+
+- **Spend limit raised:** $4.50 -> **$4.75** until 2026-11-30 (AGENTS.md §8.3, PLAN.md Change Log). Room for the remaining paid runs (M2-04 recording about $0.05, drill checks up to $0.06, Haiku 5.5 probe about $0.05); $0.25 left under the $5 kill switch. Note: ECR storage keeps adding to month to date daily, so the headroom shrinks; do M2-04 first.
+
+## 2026-11-15 (autopilot run 158)
+
+- **Start:** main `ci` green for 67854c6, no run in progress. PR #334 open, every check and `ci` job (run 43675475275) green on 84ff38e.
+- **Merge denied:** the permission check refused `git push origin 84ff38e:main` a third time; not worked around. Moved to Waiting for owner. This entry goes on #334's branch.
+- **Task:** none. Same blocked items as run 157; Haiku 5.5 probe skipped (spend limit).
+- **Cost:** $0. No ops run.
+
+## 2026-11-15 (autopilot run 157)
+
+- **Start:** main `ci` green for 67854c6, no run in progress. PR #334 open, every check and `ci` job (run 43671544985) green on bd275aa.
+- **Merge denied:** the permission check refused `git push origin bd275aa:main` again; not worked around. This entry goes on #334's branch.
+- **Task:** none. Still blocked: M2-04 replay set (paid recording over the $4.50 limit), kill-switch drill (M6-03), M5-03 window (M5-04 KPI-09/13, M6-04 case study), intake `secrets` rule, PG-8 stage tags. Haiku 5.5 probe skipped (spend limit).
+- **Cost:** $0. No ops run.
+
+## 2026-11-15 (autopilot run 156)
+
+- **Start:** main `ci` green for 67854c6, no open PR, no run in progress.
+- **Task:** none. No owner answer since run 155; still blocked: M2-04 replay set (paid recording, $4.48 + $0.05 > $4.50, §8.3), kill-switch drill (M6-03), M5-03 window (M5-04 KPI-09/13, M6-04 case study), intake `secrets` rule, PG-8 stage tags. Haiku 5.5 probe skipped (spend limit).
+- **Progress push:** the direct push to `main` was denied by the session permission check, so this entry goes through PR #334.
+- **Merge denied:** every check and `ci` job green on 4ec6a41 (run 43671006456), but the permission check refused `git push origin 4ec6a41:main` (as in run 154); not worked around. #334 stays open; the next run finishes it.
+- **Cost:** $0. No ops run.
 
 ## 2026-11-15 (autopilot run 155)
 
