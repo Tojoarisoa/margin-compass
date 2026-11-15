@@ -27,7 +27,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-0. **Dogfood card:** producer fixed (#339 ops `export-telemetry`, #340 cost rounding). Next: dispatch ops `export-telemetry` (free), then `start-backfill` and `verify-backfill`; expect `dogfood.json` HTTP 200. Cause was confirmed: the daily telemetry schedule is off in dev (`mc:nightlyEnabled: false`), and days with API traffic failed to write (costs > 6 decimals). Re-run `export-telemetry` after new API traffic until a schedule exists.
+0. **Dogfood card:** live since run 163 (`dogfood.json` HTTP 200, 2026-11-12 data). No telemetry schedule in dev (PLAN.md §15), so after new API traffic re-run ops `export-telemetry`, `start-backfill`, `verify-backfill` (free, about 8 min).
 0b. **PR #335:** waiting for owner (see Waiting for owner). Don't merge it, don't rebase it.
 1. **M2-04 last step (agents):** grow the replay set from 5 to about 8 questions and re-record fixtures on Haiku 4.5 (about $0.05). Needs a paid ops run: month to date before credits is $4.48, so it doesn't fit the $4.50 limit this month unless the owner raises it. M2-04 is ticked after this step (PG-8 stage tags wait for owner; budget burn-down and public cost per question were dropped by the public-surface rule, Change Log 2026-11-09 and 2026-11-14).
 2. **Paid ops runs** (Haiku 5.5 probe, EV-06 graph replay, API `MC_GRAPH`): same limit; wait (the daily probe too, a `record-fixtures` run).
@@ -38,6 +38,13 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-05, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed.
 Notes: Ops eval results are in the job log; fixtures are base64 between FIXTURE-BEGIN/END lines. Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1; local replays need it too or everything drifts). Ops `ev06_graph: true` adds the graph runs (opt-in, about $0.15; the ops job ends `failure` while the graph gate is unmet, which is expected). Flaky github.com 504s during image builds: re-run the failed job. Only commit the graph fixtures from a record run; the other fixture sets change only in tool-use IDs. AG-05 prompt is at the cost-cap edge (`test_unsupported_figure_retries_then_fails_closed` sums $0.009965 of $0.01): keep it no longer than v8. Gh-created PR bodies get a footer: remove it with the GitHub MCP `update_pull_request` (gh api PATCH gets it re-added).
+
+## 2026-11-15 (autopilot run 163)
+
+- **Start:** main `ci` 43701122674 green for a891316, none in progress. Only open PR is #335 (waiting for owner).
+- **Dogfood card done:** ops `export-telemetry` 43702663891 succeeded for all 14 days (11-12: 2 events, 1 row). `start-backfill` 43702761896 succeeded (35 objects, EV-02/03/11 pass). `verify-backfill` 43703273441: `dogfood.json` HTTP 200, label `real`, $0.004272, 3,134 in / 150 out tokens.
+- **No other task:** M2-04 replay set and all paid ops runs blocked by the $4.50 limit; kill-switch drill, M5-03 window, intake rule, PG-8 tags wait for owner. Ended at about 12 min.
+- **Cost:** about $0.01 (Lambda). No paid ops run.
 
 ## 2026-11-15 (autopilot run 162)
 
