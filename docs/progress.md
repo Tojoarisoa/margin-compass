@@ -27,7 +27,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-0. **Dogfood card check:** ops `verify-backfill` now prints `dogfood.json` (PR #338). If it is 404 or v0, check that `telemetry/dogfood.parquet` exists in the lake (the daily `telemetry` schedule writes it; no API calls means no file) and fix; if v1, the PG-8 dogfood card shows.
+0. **Dogfood card still missing:** ops `verify-backfill` 43695662996: `publish/latest/dogfood.json` returns 403 (S3 AccessDenied, i.e. no object). Likely `telemetry/dogfood.parquet` isn't in the lake yet. Next: check that object and the daily `telemetry` schedule's runs (an ops check that lists `telemetry/` would help), then fix the producer.
 0b. **PR #335:** waiting for owner (see Waiting for owner). Don't merge it, don't rebase it.
 1. **M2-04 last step (agents):** grow the replay set from 5 to about 8 questions and re-record fixtures on Haiku 4.5 (about $0.05). Needs a paid ops run: month to date before credits is $4.48, so it doesn't fit the $4.50 limit this month unless the owner raises it. M2-04 is ticked after this step (PG-8 stage tags wait for owner; budget burn-down and public cost per question were dropped by the public-surface rule, Change Log 2026-11-09 and 2026-11-14).
 2. **Paid ops runs** (Haiku 5.5 probe, EV-06 graph replay, API `MC_GRAPH`): same limit; wait (the daily probe too, a `record-fixtures` run).
@@ -45,6 +45,9 @@ Notes: Ops eval results are in the job log; fixtures are base64 between FIXTURE-
 - **Merged #337:** fast-forward push allowed; main `ci` 43693134728 green, `deploy to dev` and smoke test green.
 - **Backfill:** ops `start-backfill` 43694264873 succeeded (EV-02/03/11 pass), 34 objects uploaded, same as before #337, so `dogfood.json` may still be missing (unverified: likely no `telemetry/dogfood.parquet` in the lake yet).
 - **Task:** M2-04 PR #338: ops `verify-backfill` also prints `publish/latest/dogfood.json` and its HTTP code. No test covers ops.yml; YAML parses, ruff clean.
+- **Merged #338:** every check green (`attribution` green after footer removal via MCP); main `ci` 43695637306 and `deploy to dev` green.
+- **Verify:** ops `verify-backfill` 43695662996: `dogfood.json` HTTP 403 (no object). The card stays hidden; cause not confirmed (see Next 0).
+- **End:** 41 min, past the 35-min mark; no new task.
 - **Cost:** about $0.01 (one backfill, Lambda). No paid ops run.
 
 ## 2026-11-15 (autopilot run 160)
