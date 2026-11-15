@@ -20,6 +20,16 @@ def test_parse_skips_bad_lines():
     assert len(dogfood.parse_events(LINES)) == 3
 
 
+def test_costs_beyond_six_decimals_round_to_the_column_scale(tmp_path):
+    """2026-11-12 in dev: API costs like 0.0012345678 made Arrow reject the row, so the parquet was never written."""
+    lines = [_ev("2026-11-12T10:00:00Z", "haiku", 100, 20, "0.0012345678"), _ev("2026-11-12T11:00:00Z", "haiku", 1, 1, "0.0000004")]
+    rows = dogfood.compact(dogfood.parse_events(lines))
+    assert str(rows[0]["cost_usd"]) == "0.001235"
+    p = tmp_path / "dogfood.parquet"
+    dogfood.write_parquet(rows, p)
+    assert str(pq.read_table(p).to_pylist()[0]["cost_usd"]) == "0.001235"
+
+
 def test_compact_summary_and_parquet(tmp_path):
     rows = dogfood.compact(dogfood.parse_events(LINES))
     assert [(r["date"], r["model_id"], r["calls"]) for r in rows] == [("2026-11-06", "haiku", 2), ("2026-11-07", "sonnet", 1)]

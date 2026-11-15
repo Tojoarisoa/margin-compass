@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterable
-from decimal import Decimal
+from decimal import ROUND_HALF_EVEN, Decimal
 from pathlib import Path
 
 import pyarrow as pa
@@ -20,6 +20,7 @@ _SCHEMA = pa.schema([
     ("input_tokens", pa.int64()), ("output_tokens", pa.int64()), ("cost_usd", pa.decimal128(18, 6)),
     ("latency_ms_total", pa.int64()),
 ])
+_COST_QUANTUM = Decimal("0.000001")  # the Parquet column's scale (decimal128(18, 6))
 
 
 def parse_events(lines: Iterable[str], date: str | None = None) -> list[dict]:
@@ -58,7 +59,11 @@ def compact(events: list[dict]) -> list[dict]:
         r["output_tokens"] += e["output_tokens"]
         r["cost_usd"] += e["cost_usd"]
         r["latency_ms_total"] += e["latency_ms"]
-    return [{"tenant_id": TENANT, "date": d, "model_id": m, **v} for (d, m), v in sorted(agg.items())]
+    # The API logs costs with more than 6 decimals; round each day's sum once to the column's scale, or Arrow
+    # rejects the row ("Rescaling Decimal value would cause data loss") and the day is never stored.
+    return [{"tenant_id": TENANT, "date": d, "model_id": m,
+             **{**v, "cost_usd": v["cost_usd"].quantize(_COST_QUANTUM, rounding=ROUND_HALF_EVEN)}}
+            for (d, m), v in sorted(agg.items())]
 
 
 def write_parquet(rows: list[dict], path: Path, schema: pa.Schema = _SCHEMA) -> None:
