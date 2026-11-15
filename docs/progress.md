@@ -39,6 +39,12 @@ Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-05, M4-06 (see entri
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed.
 Notes: Ops eval results are in the job log; fixtures are base64 between FIXTURE-BEGIN/END lines. Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1; local replays need it too or everything drifts). Ops `ev06_graph: true` adds the graph runs (opt-in, about $0.15; the ops job ends `failure` while the graph gate is unmet, which is expected). Flaky github.com 504s during image builds: re-run the failed job. Only commit the graph fixtures from a record run; the other fixture sets change only in tool-use IDs. AG-05 prompt is at the cost-cap edge (`test_unsupported_figure_retries_then_fails_closed` sums $0.009965 of $0.01): keep it no longer than v8. Gh-created PR bodies get a footer: remove it with the GitHub MCP `update_pull_request` (gh api PATCH gets it re-added).
 
+## 2026-11-15 (autopilot run 170)
+
+- **Start:** main `ci` 43739468287 green for bc9810f, none in progress. Only open PR is #335 (waiting for owner, no reply).
+- **Task:** none. Same blocked items as run 169 (paid ops runs over the $4.50 limit, kill-switch drill, M5-03 window, intake `secrets` rule, PG-8 stage tags). Ended at about 4 min.
+- **Cost:** $0. No ops run.
+
 ## 2026-11-15 (autopilot run 169)
 
 - **Start:** main `ci` 43733839914 green for 47db2af, none in progress. Only open PR is #335 (waiting for owner, no reply).
