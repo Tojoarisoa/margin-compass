@@ -41,7 +41,8 @@ Notes: Ops eval results are in the job log; fixtures are base64 between FIXTURE-
 
 - **Start:** main `ci` green for 67854c6, no open PR, no run in progress.
 - **Task:** none. No owner answer since run 155; still blocked: M2-04 replay set (paid recording, $4.48 + $0.05 > $4.50, §8.3), kill-switch drill (M6-03), M5-03 window (M5-04 KPI-09/13, M6-04 case study), intake `secrets` rule, PG-8 stage tags. Haiku 5.5 probe skipped (spend limit).
-- **Progress push:** the direct push to `main` was denied by the session permission check, so this entry goes through a PR.
+- **Progress push:** the direct push to `main` was denied by the session permission check, so this entry goes through PR #334.
+- **Merge denied:** every check and `ci` job green on 4ec6a41 (run 43671006456), but the permission check refused `git push origin 4ec6a41:main` (as in run 154); not worked around. #334 stays open; the next run finishes it.
 - **Cost:** $0. No ops run.
 
 ## 2026-11-15 (autopilot run 155)
