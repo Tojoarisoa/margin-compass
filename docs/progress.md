@@ -27,18 +27,25 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-0. **Finish PR #337** (dogfood.json from the M2 build): all green on 51d19cf, but the merge push was denied in run 160. Merge it (fast-forward), check `deploy to dev`, then run ops `start-backfill` and confirm the dogfood card shows.
+0. **Dogfood card check:** ops `verify-backfill` now prints `dogfood.json` (PR #338). If it is 404 or v0, check that `telemetry/dogfood.parquet` exists in the lake (the daily `telemetry` schedule writes it; no API calls means no file) and fix; if v1, the PG-8 dogfood card shows.
 0b. **PR #335:** waiting for owner (see Waiting for owner). Don't merge it, don't rebase it.
 1. **M2-04 last step (agents):** grow the replay set from 5 to about 8 questions and re-record fixtures on Haiku 4.5 (about $0.05). Needs a paid ops run: month to date before credits is $4.48, so it doesn't fit the $4.50 limit this month unless the owner raises it. M2-04 is ticked after this step (PG-8 stage tags wait for owner; budget burn-down and public cost per question were dropped by the public-surface rule, Change Log 2026-11-09 and 2026-11-14).
 2. **Paid ops runs** (Haiku 5.5 probe, EV-06 graph replay, API `MC_GRAPH`): same limit; wait (the daily probe too, a `record-fixtures` run).
 3. **Kill-switch drill (G3):** waiting for owner. Then tick M6-03.
 4. **M6-04 case study / M5-04 KPI-09, KPI-13:** blocked (M5-03 window question).
-5. **After #337:** a `start-backfill` publishes `dogfood.json` v1 and the PG-8 dogfood card shows.
-6. **On or after 2026-12-01:** delete the temporary spend-limit paragraph in AGENTS.md §8.3 (back to $3).
+5. **On or after 2026-12-01:** delete the temporary spend-limit paragraph in AGENTS.md §8.3 (back to $3).
 
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-05, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed.
 Notes: Ops eval results are in the job log; fixtures are base64 between FIXTURE-BEGIN/END lines. Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1; local replays need it too or everything drifts). Ops `ev06_graph: true` adds the graph runs (opt-in, about $0.15; the ops job ends `failure` while the graph gate is unmet, which is expected). Flaky github.com 504s during image builds: re-run the failed job. Only commit the graph fixtures from a record run; the other fixture sets change only in tool-use IDs. AG-05 prompt is at the cost-cap edge (`test_unsupported_figure_retries_then_fails_closed` sums $0.009965 of $0.01): keep it no longer than v8. Gh-created PR bodies get a footer: remove it with the GitHub MCP `update_pull_request` (gh api PATCH gets it re-added).
+
+## 2026-11-15 (autopilot run 161)
+
+- **Start:** main `ci` green for 76a9928. #337 (run 160) open, every check and `ci` job green on c3bc28a.
+- **Merged #337:** fast-forward push allowed; main `ci` 43693134728 green, `deploy to dev` and smoke test green.
+- **Backfill:** ops `start-backfill` 43694264873 succeeded (EV-02/03/11 pass), 34 objects uploaded, same as before #337, so `dogfood.json` may still be missing (unverified: likely no `telemetry/dogfood.parquet` in the lake yet).
+- **Task:** M2-04 PR #338: ops `verify-backfill` also prints `publish/latest/dogfood.json` and its HTTP code. No test covers ops.yml; YAML parses, ruff clean.
+- **Cost:** about $0.01 (one backfill, Lambda). No paid ops run.
 
 ## 2026-11-15 (autopilot run 160)
 

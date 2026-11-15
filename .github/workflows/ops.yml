@@ -143,11 +143,13 @@ jobs:
             --filter-pattern '"Max Memory Used"' --query 'events[].message' --output text > report.txt || true
           url="$(aws cloudformation describe-stacks --stack-name mc-dev-web --query "Stacks[0].Outputs[?OutputKey=='Url'].OutputValue" --output text)"
           curl -s "$url/publish/latest/runs.json" > runs.json || true
+          dog_code="$(curl -s -o dogfood.json -w '%{http_code}' "$url/publish/latest/dogfood.json" || true)"  # M2-04 S7: PG-8 dogfood card
           {
             echo "## Backfill check"
             echo '```json'; cat exec.json; echo; echo '```'
             echo "Lambda REPORT lines (memory size / max used):"; echo '```'; grep -o 'Memory Size: [0-9]* MB.*Max Memory Used: [0-9]* MB' report.txt | sort | uniq -c || true; echo '```'
             echo "runs.json:"; echo '```json'; head -c 1500 runs.json; echo; echo '```'
+            echo "dogfood.json (HTTP $dog_code):"; echo '```json'; head -c 1000 dogfood.json || true; echo; echo '```'
           } | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: verify-backfill (row counts)
