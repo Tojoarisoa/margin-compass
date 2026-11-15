@@ -84,3 +84,15 @@ def test_export_day_is_idempotent_and_replaces_only_that_day(tmp_path):
     dogfood.export_day(FakeLogs([{"events": [{"message": _api("sonnet", "0.01")}]}]), s3, "b", "grp", "2026-11-07", tmp_path / "w")
     s = dogfood.read_summary(tmp_path / "s3" / "b" / "telemetry" / "dogfood.parquet", "r")
     assert s["total_cost_usd"] == 0.013 and s["first_date"] == "2026-11-06" and s["last_date"] == "2026-11-07"
+
+
+def test_publish_dogfood_writes_public_summary_only_when_telemetry_exists(tmp_path):
+    from mc_pipelines.publish import publish_dogfood
+
+    assert publish_dogfood(tmp_path, "r1") == []
+    assert not (tmp_path / "publish" / "latest" / "dogfood.json").exists()
+    rows = dogfood.compact(dogfood.parse_events(LINES))
+    dogfood.write_parquet(rows, tmp_path / "telemetry" / "dogfood.parquet")
+    assert publish_dogfood(tmp_path, "r1") == ["publish/latest/dogfood.json"]
+    body = json.loads((tmp_path / "publish" / "latest" / "dogfood.json").read_text())
+    assert body == dogfood.summary(rows, "r1") and body["schema_version"] == "dogfood.v1"

@@ -151,3 +151,16 @@ def test_without_the_flag_approvals_are_neither_exported_nor_applied(tmp_path, m
         out = m2_lambda.handle({"profile": "m2", **event}, "r1", s3, table=object())
         assert out["status"] == "success" and "approvals_exported" not in out
     assert calls == [None, None, None] and not (tmp_path / "s3" / "lake" / m2_lambda.APPROVALS_KEY).exists()
+
+
+def test_dogfood_telemetry_is_fetched_and_missing_object_is_not_an_error(tmp_path):
+    """M2-04 S7: the build copies telemetry/dogfood.parquet from the lake so it can publish dogfood.json."""
+    s3 = FakeS3(tmp_path / "s3")
+    data = tmp_path / "data"
+    assert m2_lambda.fetch_dogfood(s3, "lake", data) is False  # nothing compacted yet
+    assert not (data / "telemetry" / "dogfood.parquet").exists()
+    src = tmp_path / "s3" / "lake" / "telemetry" / "dogfood.parquet"
+    src.parent.mkdir(parents=True)
+    src.write_bytes(b"x")
+    assert m2_lambda.fetch_dogfood(s3, "lake", data) is True
+    assert (data / "telemetry" / "dogfood.parquet").read_bytes() == b"x"

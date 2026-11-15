@@ -70,6 +70,23 @@ def fetch_focus_export(s3: Any, bucket: str, dest: Path) -> str | None:
     return f"{dest}/{FOCUS_PREFIX}/**/*.parquet" if n else None
 
 
+DOGFOOD_KEY = "telemetry/dogfood.parquet"
+
+
+def fetch_dogfood(s3: Any, bucket: str, data: Path) -> bool:
+    """M2-04 S7: copy the daily-compacted dogfood telemetry into the build's data root so the build publishes PG-8's
+    `dogfood.json`. A missing object is not an error (no API calls yet): the card stays hidden."""
+    target = data / DOGFOOD_KEY
+    try:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        s3.download_file(bucket, DOGFOOD_KEY, str(target))
+    except Exception as e:  # noqa: BLE001 - optional input; never fail the build for it
+        target.unlink(missing_ok=True)
+        log.info("dogfood_unavailable", extra={"fields": {"reason": str(e)[:200]}})
+        return False
+    return True
+
+
 def export_approvals(s3: Any, bucket: str, table: Any, dest: Path) -> int:
     """M5-03: write the owner's latest decision per action to `dest` and the lake; returns the number of decisions."""
     from mc_agents.owner import export_approvals as scan
@@ -182,6 +199,7 @@ def handle(event: dict, run_id: str, s3: Any = None, table: Any = None) -> dict:
             fetched = _download(s3, bucket, LANDING_PREFIX, landing)
             if not fetched:
                 return {"status": "no_landing", "run_id": run_id}
+            fetch_dogfood(s3, bucket, data)
         billing = os.environ.get("MC_BILLING_BUCKET")
         if billing and s3 is not None:
             focus = fetch_focus_export(s3, billing, WORK / "billing")

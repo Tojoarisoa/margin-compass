@@ -458,6 +458,19 @@ def publish_finops(data_root: Path, run_id: str) -> list[str]:
     return ["publish/latest/finops.json"]
 
 
+def publish_dogfood(data_root: Path, run_id: str) -> list[str]:
+    """Write publish/latest/dogfood.json (PG-8 dogfood card) from telemetry/dogfood.parquet, when it exists."""
+    dog = Path(data_root) / "telemetry" / "dogfood.parquet"
+    if not dog.exists():
+        return []
+    from mc_pipelines import dogfood
+
+    out = Path(data_root) / "publish" / "latest" / "dogfood.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(dogfood.read_summary(dog, run_id), separators=(",", ":"), allow_nan=False))
+    return ["publish/latest/dogfood.json"]
+
+
 def publish(data_root: Path, run_id: str, ingest_date: str) -> dict:
     root = Path(data_root)
     snapshot = build_pg1(root / "gold", run_id, ingest_date)
@@ -475,11 +488,8 @@ def publish(data_root: Path, run_id: str, ingest_date: str) -> dict:
     if explore is not None:
         fin = json.dumps(build_finops(os.environ.get("MC_FINOPS_FOCUS_GLOB"), run_id), separators=(",", ":"), allow_nan=False)
         (root / "publish" / "latest" / "finops.json").write_text(fin)
-    dog = root / "telemetry" / "dogfood.parquet"
-    if explore is not None and dog.exists():
-        from mc_pipelines import dogfood
-        (root / "publish" / "latest" / "dogfood.json").write_text(
-            json.dumps(dogfood.read_summary(dog, run_id), separators=(",", ":"), allow_nan=False))
+    if explore is not None:
+        publish_dogfood(root, run_id)
     paths = [root / "publish" / "latest" / "pg1.json", root / "publish" / "history" / ingest_date / "pg1.json"]
     for p in paths:
         p.parent.mkdir(parents=True, exist_ok=True)
