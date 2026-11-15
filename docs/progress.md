@@ -12,6 +12,8 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 - **PG-8 stage tags (billing console):** every FOCUS line is `untagged`, so the finops card has one stage. Activating `stage` (and `env`) as cost allocation tags in Billing is an owner-only console step. Activate them? (Also FYI: the export shows Credit -$4.48 against Usage $4.48 this month, so the net bill is $0 so far.)
 
+- **Merges blocked by the session permission check (2026-11-15):** the cloud session's auto-mode check denies `git push origin <sha>:main`, both the progress-only push (run 153) and the fast-forward merge of a green PR (run 154). PR #332 (progress only, every `ci` job green on 394edae) is waiting. Fix: allow `git push origin *:main` for scheduled runs again, or merge #332 yourself.
+
 ## Owner decision 2026-11-11
 
 - **Owner session 2026-11-11 (16:00-16:10 UTC):** owner user created in pool `us-east-1_gADVLRI9T` (group `owner`, confirmed), signed in on the dashboard, and recorded two decisions through `POST /api/approvals`: `APPROVAL#act-c858000e311f` approved (bc-t0011/margin-trend) and `APPROVAL#act-86d88d11c1bf` rejected (bc-t0025/margin-trend), both read back from `mc-dev-state-core`. The M5-03 round trip is done: tick M5-03. The orphaned pool `us-east-1_WbzJydKus` (empty, from the rolled-back deploy) was deleted; only the live pool is left. Also live: the M2 build publishes `pg1.json` (the M2 sections are visible again) and the dashboard has the mission-control theme.
@@ -26,6 +28,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
+0. **Finish PR #332** (fast-forward `main` to its head once the push to `main` is allowed again; see Waiting for owner).
 1. **M2-04 last step (agents):** grow the replay set from 5 to about 8 questions and re-record fixtures on Haiku 4.5 (about $0.05). Needs a paid ops run: month to date before credits is $4.48, so it doesn't fit the $4.50 limit this month unless the owner raises it. M2-04 is ticked after this step (PG-8 stage tags wait for owner; budget burn-down and public cost per question were dropped by the public-surface rule, Change Log 2026-11-09 and 2026-11-14).
 2. **Paid ops runs** (Haiku 5.5 probe, EV-06 graph replay, API `MC_GRAPH`): same limit; wait (the daily probe too, a `record-fixtures` run).
 3. **Kill-switch drill (G3):** waiting for owner. Then tick M6-03.
@@ -36,6 +39,13 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-05, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed.
 Notes: Ops eval results are in the job log; fixtures are base64 between FIXTURE-BEGIN/END lines. Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1; local replays need it too or everything drifts). Ops `ev06_graph: true` adds the graph runs (opt-in, about $0.15; the ops job ends `failure` while the graph gate is unmet, which is expected). Flaky github.com 504s during image builds: re-run the failed job. Only commit the graph fixtures from a record run; the other fixture sets change only in tool-use IDs. AG-05 prompt is at the cost-cap edge (`test_unsupported_figure_retries_then_fails_closed` sums $0.009965 of $0.01): keep it no longer than v8. Gh-created PR bodies get a footer: remove it with the GitHub MCP `update_pull_request` (gh api PATCH gets it re-added).
+
+## 2026-11-15 (autopilot run 154)
+
+- **Start:** main `ci` green for e7f99cf, no run in progress. PR #332 (run 153 progress) open, every check and `ci` job green on 394edae.
+- **Merge denied:** the session's permission check refused `git push origin 394edae:main`; not worked around. #332 stays open; this entry goes on its branch (§8.1 step 7). Owner question added.
+- **Task:** none. Same blocked items as run 153; Haiku 5.5 probe skipped (spend limit).
+- **Cost:** $0. No ops run.
 
 ## 2026-11-15 (autopilot run 153)
 
