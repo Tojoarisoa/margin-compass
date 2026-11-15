@@ -27,7 +27,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 ## Next
 
 1. **M2-04 last step (agents):** grow the replay set from 5 to about 8 questions and re-record fixtures on Haiku 4.5 (about $0.05). Needs a paid ops run: month to date before credits is $4.48, so it doesn't fit the $4.50 limit this month unless the owner raises it. M2-04 is ticked after this step (PG-8 stage tags wait for owner; budget burn-down and public cost per question were dropped by the public-surface rule, Change Log 2026-11-09 and 2026-11-14).
-2. **Paid ops runs** (Haiku 5.5 probe, EV-06 graph replay, API `MC_GRAPH`): same limit; wait.
+2. **Paid ops runs** (Haiku 5.5 probe, EV-06 graph replay, API `MC_GRAPH`): same limit; wait (the daily probe too, a `record-fixtures` run).
 3. **Kill-switch drill (G3):** waiting for owner. Then tick M6-03.
 4. **M6-04 case study / M5-04 KPI-09, KPI-13:** blocked (M5-03 window question).
 5. **Optional:** the live `dogfood.json` is still v0 until the next M2 build (`start-backfill`); the PG-8 card stays hidden until then.
@@ -36,6 +36,14 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-05, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed.
 Notes: Ops eval results are in the job log; fixtures are base64 between FIXTURE-BEGIN/END lines. Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1; local replays need it too or everything drifts). Ops `ev06_graph: true` adds the graph runs (opt-in, about $0.15; the ops job ends `failure` while the graph gate is unmet, which is expected). Flaky github.com 504s during image builds: re-run the failed job. Only commit the graph fixtures from a record run; the other fixture sets change only in tool-use IDs. AG-05 prompt is at the cost-cap edge (`test_unsupported_figure_retries_then_fails_closed` sums $0.009965 of $0.01): keep it no longer than v8. Gh-created PR bodies get a footer: remove it with the GitHub MCP `update_pull_request` (gh api PATCH gets it re-added).
+
+## 2026-11-15 (autopilot run 153)
+
+- **Start:** main `ci` green for e7f99cf, no open PR, no run in progress.
+- **Task:** none. No owner answer since run 152; still blocked: M2-04 replay set (paid recording), kill-switch drill (M6-03), M5-03 window (M5-04 KPI-09/13, M6-04 case study), intake `secrets` rule, PG-8 stage tags.
+- **Haiku 5.5 daily probe skipped:** it is a `record-fixtures` run (about $0.05 if access works); month to date is at least $4.48, so it would pass the $4.50 limit (§8.3).
+- **Note:** the session's permission check denied the direct progress push to `main`, so this entry goes through a PR.
+- **Cost:** $0. No ops run.
 
 ## 2026-11-14 (autopilot run 152)
 
