@@ -33,16 +33,22 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-1. **M5-04: `realized.json` is not live.** Ops `verify-backfill` (45714161520) after the approvals backfill (ops-45701583408) got **HTTP 403** for `publish/latest/realized.json` (missing object), so the dashboard card has no data. Find why the backfill didn't publish it (`publish.py` writes nothing for runs without approvals: check that the backfill's publish step sees the approvals), fix, re-run `start-backfill` with `approvals: true`, then `verify-backfill`. Then KPI-09/KPI-13 and the M6-04 case study.
+1. **M5-04: KPI-09 / KPI-13 and the M6-04 case study**, now that `realized.json` is live (run 180: 1 action realized, $1,713.91 saved, synthetic, simulated approval dates). Check what M5-04 still needs in PLAN.md §17 and docs/plans, then tick it.
 2. **M2-04 step 5c:** one Haiku 4.5 recording of the 8-question set (about $0.05), commit q6-q8 fixtures, drop `pending_fixture`, CI test 5 -> 8; then tick M2-04. **Blocked by spend** until 2026-12-01; then cost-report first ($3 rules).
 3. **Haiku 5.5 probe:** paused (spend) until 2026-12-01.
-4. **Dogfood card:** after new API traffic re-run ops `export-telemetry`, `start-backfill`, `verify-backfill` (free).
+4. **Dogfood card:** after new API traffic re-run ops `export-telemetry`, `start-backfill` (`approvals: true`, so realized.json stays), `verify-backfill` (free).
 5. **On or after 2026-12-01:** delete the temporary spend-limit paragraph in AGENTS.md §8.3 (back to $3).
 
-Done recently: analyst `cost_breakdown` tool (#353), replay set 8 questions (#354), verify-backfill shows realized.json (#355), kill-switch drill and M6-03 (#346, #348, #349), ECR clean-up task (#347), intake `secrets` rule (#343), paid-run cap (#344), M5-03 window mapping (#345).
+Done recently: realized effect in backfill month chunks (#356), analyst `cost_breakdown` tool (#353), replay set 8 questions (#354), verify-backfill shows realized.json (#355), kill-switch drill and M6-03 (#346, #348, #349), ECR clean-up task (#347).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed.
 Notes: Ops eval results are in the job log; fixtures are base64 between FIXTURE-BEGIN/END lines. Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1; local replays need it too or everything drifts). Ops `ev06_graph: true` adds the graph runs (opt-in, about $0.15; the ops job ends `failure` while the graph gate is unmet, which is expected). Flaky github.com 504s during image builds: re-run the failed job. Only commit the graph fixtures from a record run; the other fixture sets change only in tool-use IDs. AG-05 prompt is at the cost-cap edge (`test_unsupported_figure_retries_then_fails_closed` sums $0.009965 of $0.01): keep it no longer than v8. Gh-created PR bodies get a footer: remove it with the GitHub MCP `update_pull_request` (gh api PATCH gets it re-added).
 
+## 2026-11-25 (autopilot run 180)
+
+- **Start:** main `ci` 45715572718 (fb9404b) green; no open PR.
+- **Task:** M5-04 `realized.json` missing. Cause: the realized landing was written only by simulator mode `all`; the backfill runs `month` chunks, so `fct_realized_margin` never built. Fix: each month chunk with approvals writes `s5_realized/month=<YYYY-MM>/`. PR #356, all checks green, merged; main `ci` 45721372451 incl. `deploy to dev` green (aacaf4a).
+- **Ops (free):** `start-backfill` approvals (45722779994) SUCCEEDED; `verify-backfill` (45723648741): `realized.json` HTTP 200, 1 action realized, saved $1,713.91, approval dates labeled simulated.
+- **Cost:** $0 model spend (no paid ops runs).
 
 ## 2026-11-25 (autopilot run 179)
 
