@@ -4,6 +4,8 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Waiting for owner
 
+- **Merge denied (run 178):** the session's permission check refused `git push <sha>:main` (fast-forward merge, §8.1 step 5). Not worked around. PR #350 (all checks green on bb4f48a) and #351 (stacked on it) are open. Please merge (fast-forward #351 merges both), or allow the push for autopilot.
+- **AWS spend over the limit:** ops `cost-report` (45702478562): month to date **$6.52** (Haiku 4.5 $3.50, ECR $2.87, S3 $0.14), above the $4.75 limit and the $5 kill-switch level. Budgets still shows "$0.0 of $5.0", so the $5 kill switch has not fired. ECR storage (127.67 GB of old asset images) grows about $0.40/day until `cdk gc` runs (or reply OK for ops `ecr-cleanup` with `apply: true`). No paid ops runs until next month (§8.3).
 - **`cdk gc` (owner, 2026-11-26):** owner runs it once with own credentials. Run 177 dry run: 361 of 391 asset images (127.67 GB) can go. Alternative: reply OK and autopilot runs ops `ecr-cleanup` with `apply: true` (keeps images in use, the 4 newest, and anything under 14 days).
 - **Cost allocation tags: activated 2026-11-26** (resource tags `stage` and `env` Active; `iamPrincipal/*` left inactive). They apply to new billing data only. Autopilot: from 2026-11-27, check that new FOCUS lines carry `stage`, then that the PG-8 finops card shows more than one stage; then drop this item.
 - **Claude Haiku 5.5 access:** still waiting for AWS. Autopilot: re-probe at most once a day (ops `record-fixtures`, `haiku-5-5`, inside the spend limit); when it succeeds, record the M1-06 fixtures and apply the ADR-003 selection rule. Until then Haiku 4.5 stays the default.
@@ -32,18 +34,27 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-0. **Finish PR #349** (M6-03 tick + this entry) if still open: CI, merge, deploy.
-1. **M5-04 (realized margin):** ops `start-backfill` with `approvals: true` (free), then `verify-backfill`; check `realized.json` shows "approval dates: simulated". Then KPI-09/KPI-13 and the M6-04 case study. Run 177's dispatch was refused by the session's permission check; try again.
-2. **M2-04 last step (agents), split:** (a) AG-03 tools read fully loaded cost (`fct_cost_to_serve`); CI agent gold is still the M1 profile, so plan this step first; (b) grow the M1-06 replay set (`evals/m1_06`) from 5 to 8 questions; (c) one fixture recording on Haiku 4.5 (about $0.05; cost-report first, $4.75 limit; counts toward the 12/month paid-run cap). Tick M2-04 after it.
-3. **ECR clean-up:** after the owner's one-time `cdk gc` (or an owner OK to run ops `ecr-cleanup` with `apply: true`), run the dry run again to confirm.
-4. **Haiku 5.5 probe:** at most once a day, inside the limit and the paid-run cap.
+0. **Finish PR #350 and #351** (merge was denied in run 178): check CI on #351's head, then fast-forward `main` to it and check `deploy to dev`.
+1. **M5-04 (realized margin):** backfill with approvals done (run 178, SUCCEEDED). Check `realized.json` shows "approval dates: simulated" (ops `verify-backfill` doesn't print it yet: add it, or read it from the dashboard). Then KPI-09/KPI-13 and the M6-04 case study.
+2. **M2-04 step 5c:** one Haiku 4.5 recording of the 8-question set (about $0.05), commit q6-q8 fixtures, drop `pending_fixture`, CI test 5 -> 8; then tick M2-04. **Blocked by spend** (MTD $6.52 > $4.75) until 2026-12-01, then $3 rules apply: likely blocked until ECR clean-up lowers spend.
+3. **ECR clean-up:** after the owner's `cdk gc` (or an OK for ops `ecr-cleanup` `apply: true`), run the dry run again.
+4. **Haiku 5.5 probe:** paused (spend).
 5. **Dogfood card:** after new API traffic re-run ops `export-telemetry`, `start-backfill`, `verify-backfill` (free).
 6. **On or after 2026-12-01:** delete the temporary spend-limit paragraph in AGENTS.md §8.3 (back to $3).
 
-Done recently: kill-switch drill and M6-03 (#346, #348), ECR clean-up task (#347), intake `secrets` rule (#343), paid-run cap (#344), M5-03 window mapping (#345).
+Done recently: kill-switch drill and M6-03 (#346, #348, #349), ECR clean-up task (#347), intake `secrets` rule (#343), paid-run cap (#344), M5-03 window mapping (#345).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed.
 Notes: Ops eval results are in the job log; fixtures are base64 between FIXTURE-BEGIN/END lines. Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1; local replays need it too or everything drifts). Ops `ev06_graph: true` adds the graph runs (opt-in, about $0.15; the ops job ends `failure` while the graph gate is unmet, which is expected). Flaky github.com 504s during image builds: re-run the failed job. Only commit the graph fixtures from a record run; the other fixture sets change only in tool-use IDs. AG-05 prompt is at the cost-cap edge (`test_unsupported_figure_retries_then_fails_closed` sums $0.009965 of $0.01): keep it no longer than v8. Gh-created PR bodies get a footer: remove it with the GitHub MCP `update_pull_request` (gh api PATCH gets it re-added).
 
+
+## 2026-11-25 (autopilot run 178)
+
+- **Start:** main `ci` 45699954490 (566b265) green incl. `deploy to dev`. No open PR.
+- **Ops:** `start-backfill` with `approvals: true` (45701583408): SUCCEEDED; EV-02, EV-03, EV-11 passed. `cost-report` (45702478562): MTD **$6.52** (see Waiting for owner).
+- **Task 1:** M2-04 step 5a: analyst `cost_breakdown` tool over `fct_cost_to_serve` (fully loaded cost by component, shares, cost per request); added only on M2 gold, so M1 replay is unchanged. PR #350: every check green (`attribution` green after footer removal). **Merge denied** by the session's permission check.
+- **Task 2:** M2-04 step 5b: replay set 5 -> 8 questions (q6-q8 `pending_fixture`, skipped in replay until recorded). PR #351, stacked on #350. Local: agents 412 passed, ruff clean.
+- **Decisions (auto-decided under §8.2):** stage new questions with a `pending_fixture` flag (options: flag; questions and fixtures in one PR, impossible since ops records from `main`). Not weaker: a lost fixture for a non-pending question still fails.
+- **Cost:** $0 this run (backfill and reports only).
 
 ## 2026-11-25 (autopilot run 177)
 
