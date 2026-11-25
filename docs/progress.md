@@ -34,7 +34,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 0. **Finish PR #349** (M6-03 tick + this entry) if still open: CI, merge, deploy.
 1. **M5-04 (realized margin):** ops `start-backfill` with `approvals: true` (free), then `verify-backfill`; check `realized.json` shows "approval dates: simulated". Then KPI-09/KPI-13 and the M6-04 case study. Run 177's dispatch was refused by the session's permission check; try again.
 2. **M2-04 last step (agents), split:** (a) AG-03 tools read fully loaded cost (`fct_cost_to_serve`); CI agent gold is still the M1 profile, so plan this step first; (b) grow the M1-06 replay set (`evals/m1_06`) from 5 to 8 questions; (c) one fixture recording on Haiku 4.5 (about $0.05; cost-report first, $4.75 limit; counts toward the 12/month paid-run cap). Tick M2-04 after it.
-3. **ECR clean-up: done 2026-11-25** (owner OK; ops `ecr-cleanup` with `apply: true`, run 45703623526): 361 images deleted, 30 left (about 10.7 GB), both Lambda images kept, functions Active. Owner `cdk gc` no longer needed. Re-run the dry run monthly; apply only with an owner OK.
+3. **ECR clean-up: done 2026-11-25** (owner OK; ops `ecr-cleanup` with `apply: true`, run 45703623526): 361 images deleted, 30 left (about 10.7 GB), both Lambda images kept, functions Active. Owner `cdk gc` no longer needed.
 4. **Haiku 5.5 probe:** at most once a day, inside the limit and the paid-run cap.
 5. **Dogfood card:** after new API traffic re-run ops `export-telemetry`, `start-backfill`, `verify-backfill` (free).
 6. **On or after 2026-12-01:** delete the temporary spend-limit paragraph in AGENTS.md §8.3 (back to $3).
