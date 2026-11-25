@@ -102,7 +102,7 @@ def _m2_files() -> tuple[str, ...]:
     return tuple(sorted({f"{m['source']}.parquet" for m in registry.load().values()}))
 
 
-API_BLOCKED = ("injection", "authority_bypass", "sql_attack")
+API_BLOCKED = ("injection", "authority_bypass", "sql_attack", "secrets")
 
 
 def _parse_body(event: dict[str, Any]) -> dict[str, Any]:
@@ -140,7 +140,7 @@ def handle_ask(event: dict[str, Any], context: Any, *, table=None, invoke=None) 
     except (ValueError, json.JSONDecodeError) as exc:
         return _resp(400, {"error": str(exc)})
     # M6-03 (EV-09): AG-01 intake rules before any job, spend or model call, also on the one-node analyst path.
-    # "secrets" is left to the analyst here: it matches the bare word "token", a core cost unit on this page.
+    # "secrets" matches credential phrases only (owner 2026-11-26), so "tokens per request" still gets through.
     intake = screen(question)
     if intake.verdict == "block" and intake.category in API_BLOCKED:
         log.info("ask_blocked", extra={"fields": {"category": intake.category}})

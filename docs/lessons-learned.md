@@ -21,7 +21,7 @@ Internal record, written 2026-11-11 from `docs/progress.md` (runs 1-125), the AD
 
 - **Every public entry point needs the same intake.** The security review found the public ask path skipped the intake screen that the agent graph ran. A red-team set (30 cases, 22 critical) run in the normal test suite now pins this, and it found one more phrasing that passed intake.
 - **Retrieved documents are input, not instructions.** Passages that read like instructions to the agent are withheld (and counted) rather than dropped, so the answer can still say the clause exists.
-- **Broad keyword rules have false positives that matter.** A "secrets" rule matching the bare word "token" blocks ordinary cost questions (tokens are the core cost unit). Narrowing it would loosen a guardrail, so it waits for the owner; the public path skips that one rule meanwhile.
+- **Broad keyword rules have false positives that matter.** A "secrets" rule matching the bare word "token" blocked ordinary cost questions (tokens are the core cost unit), so the public path skipped it until the owner chose to narrow it to credential phrases ("auth token", "api key"). Now every path applies it, with tests for both sides.
 - **Telemetry carries metadata only.** Logging token counts and IDs but never prompt or response text made the telemetry lake, the drift checks, and visitor feedback safe to store and share.
 
 ## Working unattended

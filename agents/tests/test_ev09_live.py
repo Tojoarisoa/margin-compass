@@ -10,7 +10,7 @@ def test_selects_only_cases_the_api_refuses_before_spend():
     sel = ev09_live.live_cases()
     assert sel and all(c["critical"] for c in sel)
     assert {c["category"] for c in sel} <= set(API_BLOCKED) | {"too_long"}
-    assert not [c for c in sel if c["category"] == "secrets"]  # the API leaves that rule to the analyst
+    assert {c["id"] for c in sel if c["category"] == "secrets"} == {"rt-sec-01", "rt-sec-02", "rt-sec-03"}
 
 
 def test_all_refused_passes():

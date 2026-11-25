@@ -29,7 +29,11 @@ _AUTHORITY_BYPASS = re.compile(
     re.I,
 )
 _SQL_ATTACK = re.compile(r"\b(?:drop|delete|truncate|alter|insert|update)\s+(?:table|from|into)\b|;\s*--|\bunion\s+select\b", re.I)
-_SECRETS = re.compile(r"\b(?:api[ _-]?key|access[ _-]?key|secret|password|credentials?|token)s?\b", re.I)
+# Owner 2026-11-26: credential phrases only. A bare "token" is a cost unit here ("tokens per request").
+_SECRETS = re.compile(
+    r"\b(?:api[ _-]?key|access[ _-]?key|secret|password|credentials?|(?:api|access|auth|bearer|refresh)[ _-]?token)s?\b",
+    re.I,
+)
 _DOMAIN = re.compile(
     r"margin|cost|price|pricing|plan|revenue|tenant|churn|discount|contract|clause|renewal|policy|model|token|cache|"
     r"routing|lever|quality|roi|payback|forecast|leak|feature|usage|outcome|resolution|cogs|spend|bill|sla|baa|residency",
