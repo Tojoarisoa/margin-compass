@@ -4,6 +4,8 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Waiting for owner
 
+- **AWS spend over the limit (run 178):** ops `cost-report` (45702478562): month to date **$6.52** (Haiku 4.5 $3.50, ECR $2.87, S3 $0.14), above the $4.75 limit; Budgets showed "$0.0 of $5.0", so the kill switch had not fired. ECR clean-up is done, so ECR stops growing. No paid ops runs until 2026-12-01 (§8.3); M2-04 step 5c waits for that.
+- **Old branches left (run 179):** deleting `auto/m2-04-cost-breakdown-tool` and `auto/m2-04-replay-set-8` (PRs #350, #351 closed, replaced) was refused by the session's permission check. Delete them when convenient.
 - **Cost allocation tags: activated 2026-11-26** (resource tags `stage` and `env` Active; `iamPrincipal/*` left inactive). They apply to new billing data only. Autopilot: from 2026-11-27, check that new FOCUS lines carry `stage`, then that the PG-8 finops card shows more than one stage; then drop this item.
 - **Claude Haiku 5.5 access:** still waiting for AWS. Autopilot: re-probe at most once a day (ops `record-fixtures`, `haiku-5-5`, inside the spend limit); when it succeeds, record the M1-06 fixtures and apply the ADR-003 selection rule. Until then Haiku 4.5 stays the default.
 
@@ -31,18 +33,24 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-0. **Finish PR #349** (M6-03 tick + this entry) if still open: CI, merge, deploy.
-1. **M5-04 (realized margin):** ops `start-backfill` with `approvals: true` (free), then `verify-backfill`; check `realized.json` shows "approval dates: simulated". Then KPI-09/KPI-13 and the M6-04 case study. Run 177's dispatch was refused by the session's permission check; try again.
-2. **M2-04 last step (agents), split:** (a) AG-03 tools read fully loaded cost (`fct_cost_to_serve`); CI agent gold is still the M1 profile, so plan this step first; (b) grow the M1-06 replay set (`evals/m1_06`) from 5 to 8 questions; (c) one fixture recording on Haiku 4.5 (about $0.05; cost-report first, $4.75 limit; counts toward the 12/month paid-run cap). Tick M2-04 after it.
-3. **ECR clean-up: done 2026-11-25** (owner OK; ops `ecr-cleanup` with `apply: true`, run 45703623526): 361 images deleted, 30 left (about 10.7 GB), both Lambda images kept, functions Active. Owner `cdk gc` no longer needed.
-4. **Haiku 5.5 probe:** at most once a day, inside the limit and the paid-run cap.
-5. **Dogfood card:** after new API traffic re-run ops `export-telemetry`, `start-backfill`, `verify-backfill` (free).
-6. **On or after 2026-12-01:** delete the temporary spend-limit paragraph in AGENTS.md §8.3 (back to $3).
+1. **M5-04: `realized.json` is not live.** Ops `verify-backfill` (45714161520) after the approvals backfill (ops-45701583408) got **HTTP 403** for `publish/latest/realized.json` (missing object), so the dashboard card has no data. Find why the backfill didn't publish it (`publish.py` writes nothing for runs without approvals: check that the backfill's publish step sees the approvals), fix, re-run `start-backfill` with `approvals: true`, then `verify-backfill`. Then KPI-09/KPI-13 and the M6-04 case study.
+2. **M2-04 step 5c:** one Haiku 4.5 recording of the 8-question set (about $0.05), commit q6-q8 fixtures, drop `pending_fixture`, CI test 5 -> 8; then tick M2-04. **Blocked by spend** until 2026-12-01; then cost-report first ($3 rules).
+3. **Haiku 5.5 probe:** paused (spend) until 2026-12-01.
+4. **Dogfood card:** after new API traffic re-run ops `export-telemetry`, `start-backfill`, `verify-backfill` (free).
+5. **On or after 2026-12-01:** delete the temporary spend-limit paragraph in AGENTS.md §8.3 (back to $3).
 
-Done recently: kill-switch drill and M6-03 (#346, #348), ECR clean-up task (#347), intake `secrets` rule (#343), paid-run cap (#344), M5-03 window mapping (#345).
+Done recently: analyst `cost_breakdown` tool (#353), replay set 8 questions (#354), verify-backfill shows realized.json (#355), kill-switch drill and M6-03 (#346, #348, #349), ECR clean-up task (#347), intake `secrets` rule (#343), paid-run cap (#344), M5-03 window mapping (#345).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed.
 Notes: Ops eval results are in the job log; fixtures are base64 between FIXTURE-BEGIN/END lines. Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1; local replays need it too or everything drifts). Ops `ev06_graph: true` adds the graph runs (opt-in, about $0.15; the ops job ends `failure` while the graph gate is unmet, which is expected). Flaky github.com 504s during image builds: re-run the failed job. Only commit the graph fixtures from a record run; the other fixture sets change only in tool-use IDs. AG-05 prompt is at the cost-cap edge (`test_unsupported_figure_retries_then_fails_closed` sums $0.009965 of $0.01): keep it no longer than v8. Gh-created PR bodies get a footer: remove it with the GitHub MCP `update_pull_request` (gh api PATCH gets it re-added).
 
+
+## 2026-11-25 (autopilot run 179)
+
+- **Start:** main `ci` 45704975861 (3b0f6fa) green. Open PRs #350, #351 (run 178; merge was denied then) were behind main: rebuilt as #353, #354 (cherry-picked), old PRs closed with a link.
+- **Merged:** #353 (M2-04 5a, `cost_breakdown` tool) and #354 (M2-04 5b, replay set 5 -> 8, q6-q8 `pending_fixture`): all checks green, main `ci` 45711951546 incl. `deploy to dev` green (59082f3).
+- **Task:** M5-04 check: ops `verify-backfill` now prints `realized.json` and its `approval_dates`. PR #355 green, merged; main `ci` 45714119896 incl. `deploy to dev` green (680e434). Ops `verify-backfill` (45714161520, free): `realized.json` HTTP 403, not published (Next 1).
+- **Run 178 (carried over, its entry was on the closed branch):** ops `start-backfill` with approvals SUCCEEDED (45701583408; EV-02, EV-03, EV-11 passed); `cost-report` MTD $6.52. Decision (auto-decided under §8.2): new replay questions carry a `pending_fixture` flag until recorded; a non-pending question with no fixture still fails.
+- **Cost:** $0 this run (no ops model runs).
 
 ## 2026-11-25 (autopilot run 177)
 
