@@ -4,14 +4,19 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Waiting for owner
 
-- **PR #335 (spend limit $4.50 -> $4.75), please merge it yourself:** it says "owner decision 2026-11-15" but was opened on an `auto/*` branch with the shared commit identity, so autopilot can't tell it came from you. It raises autopilot's own hard-stop threshold, so autopilot won't merge it or use $4.75. Merge #335 in GitHub (it now needs a merge commit or an `-r2`, since main moved for the run 159 progress entry), or close it. Until then the limit stays $4.50.
-- **AWS spend over $3 (2026-11-14, ops cost-report 43539936059):** month to date $4.44 (Bedrock Haiku 4.5 $3.48, ECR $0.82, S3 $0.12). Owner set a temporary $4.50 limit until 2026-11-30 (AGENTS.md §8.3); still open: (a) expire old CDK asset images (owner runs `cdk gc` with own credentials, or approves a scoped ECR grant for ops); (b) a monthly cap for ops model runs.
-- **Claude Haiku 5.5 access:** access requested, waiting for AWS. Converse via `us.anthropic.claude-haiku-5-5` still returns `AccessDeniedException`. Autopilot: re-probe with the ops workflow (`record-fixtures`, `haiku-5-5`) at most once a day; when it succeeds, record the M1-06 fixtures and apply the ADR-003 selection rule. Until then Haiku 4.5 stays the default.
-- **M5-03 approvals in the simulation window (choice with no recommended option):** the owner's live decisions are dated 2026-11-11, the window ends 2026-10-31, and effects start 3-14 days after approval, so any mapping that keeps "nothing before the approval date" shows no effect; a visible effect needs a backdated approval date. Options: (a) leave as is (decisions only count for windows that include them); (b) map each decision to the action's data date minus a fixed lead (for example 60 days), labeled as simulated; (c) extend the window past 2026-10-31. Which one?
-- **Intake `secrets` rule false positive:** AG-01 blocks any question with the bare word "token(s)" (for example "tokens per request for F4"), on the graph path. Narrowing it to "api/access/auth/bearer/refresh token" would loosen a guardrail, so autopilot won't. The public ask path skips that one rule for now. Narrow it?
-- **Kill-switch drill (M6-03 G3):** who attaches the deny policy for the game day: you in the console, or an ops IAM grant (an IAM change, so autopilot won't add it unasked)? M6-03 is ticked after the drill.
+- **`cdk gc` (owner, 2026-11-26):** owner runs it once with own credentials to expire old CDK asset images. Autopilot: nothing to do; the scoped ops grant (Next 5) covers later clean-ups.
+- **Cost allocation tags (owner, 2026-11-26):** owner activates `stage` and `env` in Billing. Autopilot: after a day, check that FOCUS lines carry the tags and the PG-8 finops card shows more than one stage.
+- **Claude Haiku 5.5 access:** still waiting for AWS. Autopilot: re-probe at most once a day (ops `record-fixtures`, `haiku-5-5`, inside the spend limit); when it succeeds, record the M1-06 fixtures and apply the ADR-003 selection rule. Until then Haiku 4.5 stays the default.
 
-- **PG-8 stage tags (billing console):** every FOCUS line is `untagged`, so the finops card has one stage. Activating `stage` (and `env`) as cost allocation tags in Billing is an owner-only console step. Activate them? (Also FYI: the export shows Credit -$4.48 against Usage $4.48 this month, so the net bill is $0 so far.)
+## Owner decision 2026-11-26
+
+- **PR #335: merge.** Replaced by `auto/spend-limit-475-r2` (rebuilt on main, merged): temporary limit **$4.75** until 2026-11-30 (AGENTS.md §8.3).
+- **AWS spend fixes: all three yes.** (a) owner runs `cdk gc` once; (a) also a scoped ECR grant for ops (IaC) so ops can expire old CDK asset images; (b) a monthly cap on paid ops model runs (`record-fixtures`, `live-eval`, `online-eval`, `red-team`, `rag-eval`, `nightly-insight`), enforced in `ops.yml`.
+- **Kill-switch drill (M6-03 G3): ops IAM grant.** Add it as IaC, scoped to attaching and detaching the kill-switch deny policy on the drill target only; then run the game day and tick M6-03.
+- **M5-03 approvals in the window: option (b).** Map each owner decision to the action's data date minus a fixed 60-day lead, labeled as simulated wherever it shows. Unblocks M5-04 (KPI-09, KPI-13) and the M6-04 case study.
+- **Intake `secrets` rule: narrow it**: in `intake._SECRETS` replace the bare `token` with api / access / auth / bearer / refresh token (api key, access key, secret, password, credentials stay). Tests for both: "tokens per request for F4" passes, credential questions stay blocked. Then the public ask path uses the rule again.
+- **Cost tags: yes**, owner activates them (see Waiting for owner).
+- **Haiku 5.5: keep the daily probe.**
 
 ## Owner decision 2026-11-11
 
@@ -27,13 +32,15 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-0. **Dogfood card:** live since run 163 (`dogfood.json` HTTP 200, 2026-11-12 data). No telemetry schedule in dev (PLAN.md §15), so after new API traffic re-run ops `export-telemetry`, `start-backfill`, `verify-backfill` (free, about 8 min).
-0b. **PR #335:** waiting for owner (see Waiting for owner). Don't merge it, don't rebase it.
-1. **M2-04 last step (agents):** grow the replay set from 5 to about 8 questions and re-record fixtures on Haiku 4.5 (about $0.05). Needs a paid ops run: month to date before credits is $4.48, so it doesn't fit the $4.50 limit this month unless the owner raises it. M2-04 is ticked after this step (PG-8 stage tags wait for owner; budget burn-down and public cost per question were dropped by the public-surface rule, Change Log 2026-11-09 and 2026-11-14).
-2. **Paid ops runs** (Haiku 5.5 probe, EV-06 graph replay, API `MC_GRAPH`): same limit; wait (the daily probe too, a `record-fixtures` run).
-3. **Kill-switch drill (G3):** waiting for owner. Then tick M6-03.
-4. **M6-04 case study / M5-04 KPI-09, KPI-13:** blocked (M5-03 window question).
-5. **On or after 2026-12-01:** delete the temporary spend-limit paragraph in AGENTS.md §8.3 (back to $3).
+0. **Dogfood card:** live since run 163. After new API traffic re-run ops `export-telemetry`, `start-backfill`, `verify-backfill` (free, about 8 min).
+1. **M2-04 last step (agents):** grow the replay set from 5 to about 8 questions and re-record fixtures on Haiku 4.5 (about $0.05). Fits the $4.75 limit if month to date plus the estimate stays at or below $4.75. Tick M2-04 after it.
+2. **Intake `secrets` rule** (owner 2026-11-26): narrow to credential phrases, with tests; re-enable it on the public ask path. Free.
+3. **M5-03 window mapping (b)** (owner 2026-11-26): 60-day lead, labeled simulated; then M5-04 `fct_realized_margin` KPIs and the M6-04 case study.
+4. **Kill-switch drill** (owner 2026-11-26): scoped ops IAM grant as IaC, then the game day; tick M6-03.
+5. **ECR clean-up grant** (owner 2026-11-26): scoped ops grant (IaC) plus an ops task that expires old CDK asset images.
+6. **Monthly cap on paid ops model runs** (owner 2026-11-26), in `ops.yml`.
+7. **Haiku 5.5 probe:** at most once a day, inside the limit.
+8. **On or after 2026-12-01:** delete the temporary spend-limit paragraph in AGENTS.md §8.3 (back to $3).
 
 Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-05, M4-06 (see entries below).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed.
