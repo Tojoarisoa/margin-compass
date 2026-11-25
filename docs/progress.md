@@ -32,19 +32,28 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-0. **Dogfood card:** live since run 163. After new API traffic re-run ops `export-telemetry`, `start-backfill`, `verify-backfill` (free, about 8 min).
-1. **M2-04 last step (agents):** grow the replay set from 5 to about 8 questions and re-record fixtures on Haiku 4.5 (about $0.05). Fits the $4.75 limit if month to date plus the estimate stays at or below $4.75. Tick M2-04 after it.
-2. **Intake `secrets` rule** (owner 2026-11-26): narrow to credential phrases, with tests; re-enable it on the public ask path. Free.
-3. **M5-03 window mapping (b)** (owner 2026-11-26): 60-day lead, labeled simulated; then M5-04 `fct_realized_margin` KPIs and the M6-04 case study.
-4. **Kill-switch drill** (owner 2026-11-26): scoped ops IAM grant as IaC, then the game day; tick M6-03.
-5. **ECR clean-up grant** (owner 2026-11-26): scoped ops grant (IaC) plus an ops task that expires old CDK asset images.
-6. **Monthly cap on paid ops model runs** (owner 2026-11-26), in `ops.yml`.
-7. **Haiku 5.5 probe:** at most once a day, inside the limit.
-8. **On or after 2026-12-01:** delete the temporary spend-limit paragraph in AGENTS.md §8.3 (back to $3).
+0. **Check main `ci` 45688824181 (2a9beb1, #345)**: `deploy to dev` was still running when run 176 ended. If it failed, fix it first.
+1. **M5-04 (realized margin):** ops `start-backfill` with `approvals: true` (free), then `verify-backfill`; check `realized.json` shows actions with "approval dates: simulated". Then KPI-09/KPI-13 and the M6-04 case study.
+2. **M2-04 last step (agents), split:** (a) AG-03 tools read fully loaded cost (`fct_cost_to_serve`); CI agent gold is still the M1 profile, so plan this step first; (b) grow the M1-06 replay set (`evals/m1_06`) from 5 to 8 questions; (c) one fixture recording on Haiku 4.5 (about $0.05; cost-report first, $4.75 limit; counts toward the new 12/month paid-run cap). Tick M2-04 after it.
+3. **Kill-switch drill** (owner 2026-11-26): scoped ops IAM grant as IaC, then the game day; tick M6-03.
+4. **ECR clean-up grant** (owner 2026-11-26): scoped ops grant (IaC) plus an ops task that expires old CDK asset images.
+5. **Haiku 5.5 probe:** at most once a day, inside the limit and the paid-run cap.
+6. **Dogfood card:** after new API traffic re-run ops `export-telemetry`, `start-backfill`, `verify-backfill` (free).
+7. **On or after 2026-12-01:** delete the temporary spend-limit paragraph in AGENTS.md §8.3 (back to $3).
 
-Done recently: M2-01, M3-01, M3-02, M3-03, M4-01, M4-04, M4-05, M4-06 (see entries below).
+Done recently: intake `secrets` rule (#343), paid-run cap (#344), M5-03 window mapping (#345); M2-01, M3-01..03, M4-01, M4-04..06.
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed.
 Notes: Ops eval results are in the job log; fixtures are base64 between FIXTURE-BEGIN/END lines. Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1; local replays need it too or everything drifts). Ops `ev06_graph: true` adds the graph runs (opt-in, about $0.15; the ops job ends `failure` while the graph gate is unmet, which is expected). Flaky github.com 504s during image builds: re-run the failed job. Only commit the graph fixtures from a record run; the other fixture sets change only in tool-use IDs. AG-05 prompt is at the cost-cap edge (`test_unsupported_figure_retries_then_fails_closed` sums $0.009965 of $0.01): keep it no longer than v8. Gh-created PR bodies get a footer: remove it with the GitHub MCP `update_pull_request` (gh api PATCH gets it re-added).
+
+
+## 2026-11-25 (autopilot run 176)
+
+- **Start:** main `ci` 45681018427 (adf0ad5) in progress, waited: green incl. `deploy to dev`. No open PR. Owner decisions 2026-11-26 unblocked most items.
+- **Task 1:** intake `secrets` rule narrowed to credential phrases (api/access/auth/bearer/refresh token; bare "token" allowed) and applied on public `/api/ask`. PR #343 merged (all checks green); main deploy green (93bf11b).
+- **Task 2:** monthly cap on paid ops model runs in `ops.yml`: 12 per UTC month, scheduled runs included, checked before AWS. Runs now titled `ops <task>`. PR #344 merged; main deploy green (45e0a9b).
+- **Task 3:** M5-03 window mapping (b): approvals take effect 60 days before the data date (2026-09-01), labeled simulated in `fct_realized_margin`, `realized.json` and the dashboard card. PR #345 merged (all checks green); main deploy still running at 52 min (Next 0).
+- **Decisions (auto-decided under §8.2):** cap = 12 (options 8 / 12 / 20; 8 leaves too few after 4-5 weekly online-evals, 20 too loose). M2-04 split: tools on fully loaded cost before the paid recording.
+- **Cost:** $0. No ops run.
 
 ## 2026-11-16 (autopilot run 175)
 
