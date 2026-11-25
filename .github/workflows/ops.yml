@@ -16,7 +16,7 @@ on:
         description: What to do
         required: true
         type: choice
-        options: [status, cost-report, run-pipeline, start-nightly, start-backfill, verify-backfill, export-telemetry, record-fixtures, live-eval, online-eval, red-team, kill-switch-sync, rag-eval, nightly-insight, realized-check]
+        options: [status, cost-report, run-pipeline, start-nightly, start-backfill, verify-backfill, export-telemetry, record-fixtures, live-eval, online-eval, red-team, kill-switch-sync, kill-switch-drill, rag-eval, nightly-insight, realized-check]
       model:
         description: Agent model for record-fixtures / live-eval / online-eval (agents/mc_agents/config.py)
         required: false
@@ -134,6 +134,38 @@ jobs:
             --cli-binary-format raw-in-base64-out ks.json --query FunctionError --output text
           { echo "## Kill switch"; echo '```json'; cat ks.json; echo; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
           python3 -c "import json,sys; sys.exit(0 if json.load(open('ks.json')).get('status') in ('idle','engaged','lifted') else 1)"
+
+      # M6-03 game day on the ops role itself (owner 2026-11-26; docs/runbooks/kill-switch-game-day.md). Zero spend:
+      # every probe is rejected before any model or pipeline work (AccessDenied while attached, a validation error after).
+      - name: kill-switch-drill (attach, probe, detach)
+        if: inputs.task == 'kill-switch-drill'
+        run: |
+          set -uo pipefail
+          policy="arn:aws:iam::$(aws sts get-caller-identity --query Account --output text):policy/mc-shared-foundation-kill-switch-deny"
+          role=mc-shared-foundation-github-ops
+          sm="$(aws cloudformation describe-stacks --stack-name mc-dev-data --query "Stacks[0].Outputs[?OutputKey=='NightlyStateMachine'].OutputValue" --output text)"
+          probe() {  # prints "bedrock=<error code> states=<error code>"; invalid inputs, so nothing runs even when allowed
+            b="$(aws bedrock-runtime invoke-model --model-id us.anthropic.claude-haiku-4-5-20251001-v1:0 --body '{}' \
+              --cli-binary-format raw-in-base64-out /dev/null 2>&1 | grep -o '([A-Za-z]*Exception)' | head -1)"
+            s="$(aws stepfunctions start-execution --state-machine-arn "$sm" --input '{' 2>&1 | grep -o '([A-Za-z]*)' | head -1)"
+            echo "bedrock=${b:-none} states=${s:-none}"
+          }
+          ok=0
+          before="$(probe)"; echo "before: $before"
+          date -u +"attached at %H:%M:%SZ"
+          aws iam attach-role-policy --role-name "$role" --policy-arn "$policy" || exit 1
+          trap 'aws iam detach-role-policy --role-name "$role" --policy-arn "$policy" 2>/dev/null || true' EXIT
+          sleep 60
+          during="$(probe)"; echo "during: $during"
+          aws iam detach-role-policy --role-name "$role" --policy-arn "$policy"; date -u +"detached at %H:%M:%SZ"
+          sleep 60
+          after="$(probe)"; echo "after: $after"
+          attached="$(aws iam list-attached-role-policies --role-name "$role" --query "AttachedPolicies[?PolicyArn=='$policy'] | length(@)" --output text)"
+          echo "still attached: $attached"
+          [[ "$during" == "bedrock=(AccessDeniedException) states=(AccessDeniedException)" ]] || ok=1
+          [[ "$after" != *AccessDenied* && "$attached" == 0 ]] || ok=1
+          { echo "## Kill-switch drill (ops role)"; echo '```'; echo "before: $before"; echo "during: $during"; echo "after: $after"; echo "still attached: $attached"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          exit "$ok"
 
       - name: start-nightly
         if: inputs.task == 'start-nightly'

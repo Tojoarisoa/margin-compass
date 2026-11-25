@@ -350,7 +350,8 @@ class FoundationStack(cdk.Stack):
         Same trust as the deploy role (this repository's main branch only). It may run the pipeline,
         start the nightly state machine, call the agent's Bedrock models (fixture recording and live
         evals, capped in code), and read costs, budgets, stack outputs, and logs. It is a kill-switch
-        target. It cannot deploy or change infrastructure.
+        target. It cannot deploy or change infrastructure; its only IAM
+        write is attaching and detaching the kill-switch deny policy on itself (the M6-03 drill).
         """
         acct, region = self.account, self.region
         role = iam.Role(
@@ -392,6 +393,18 @@ class FoundationStack(cdk.Stack):
         ]
         for sid, actions, resources in statements:
             role.add_to_policy(iam.PolicyStatement(sid=sid, actions=actions, resources=resources))
+        # Kill-switch drill (M6-03 G3, owner 2026-11-26): attach and detach only the deny policy, only on this
+        # role itself. The deny policy blocks bedrock and StartExecution, not IAM, so the role can always detach.
+        role.add_to_policy(iam.PolicyStatement(
+            sid="KillSwitchDrill",
+            actions=["iam:AttachRolePolicy", "iam:DetachRolePolicy"],
+            resources=[f"arn:aws:iam::{acct}:role/{name('github-ops')}"],
+            conditions={"ArnEquals": {"iam:PolicyARN": self.kill_switch_policy.managed_policy_arn}},
+        ))
+        role.add_to_policy(iam.PolicyStatement(
+            sid="KillSwitchDrillRead", actions=["iam:ListAttachedRolePolicies"],
+            resources=[f"arn:aws:iam::{acct}:role/{name('github-ops')}"],
+        ))
         if self.kill_switch_action is not None:  # the budget action names this role; create the role first
             self.kill_switch_action.node.add_dependency(role)
         cdk.CfnOutput(self, "GitHubOpsRoleArn", value=role.role_arn)

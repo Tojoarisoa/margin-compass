@@ -325,8 +325,12 @@ def test_ops_role_trusts_only_main_and_cannot_deploy(default):
         "lambda:InvokeFunction", "states:StartExecution", "states:DescribeExecution", "states:ListExecutions",
         "bedrock:InvokeModel", "ce:GetCostAndUsage", "bcm-data-exports:ListExports", "bcm-data-exports:ListExecutions",
         "budgets:ViewBudget", "s3:ListBucket", "s3:GetObject", "cloudformation:DescribeStacks", "logs:FilterLogEvents",
+        "iam:AttachRolePolicy", "iam:DetachRolePolicy", "iam:ListAttachedRolePolicies",
     }
-    assert not any(a.startswith(("iam:", "sts:", "cloudformation:Create", "cloudformation:Update", "s3:Put", "s3:Delete")) for a in actions)
+    iam_sids = {s["Sid"] for s in _ops_statements(stack, t)
+                if any(a.startswith("iam:") for a in (s["Action"] if isinstance(s["Action"], list) else [s["Action"]]))}
+    assert iam_sids == {"KillSwitchDrill", "KillSwitchDrillRead"}  # the drill grant is the only IAM access
+    assert not any(a.startswith(("sts:", "cloudformation:Create", "cloudformation:Update", "s3:Put", "s3:Delete")) for a in actions)
 
 
 def test_ops_role_resources_are_scoped(default):
@@ -359,3 +363,16 @@ def test_ops_role_may_only_sync_the_kill_switch_among_web_functions(default):
     sync = next(s for s in _ops_statements(stack, t) if s["Sid"] == "SyncKillSwitch")
     assert sync["Action"] == "lambda:InvokeFunction"
     assert sync["Resource"] == "arn:aws:lambda:us-east-1:123456789012:function:mc-*-web-kill-switch"
+
+
+def test_ops_role_may_only_attach_the_deny_policy_to_itself(default):
+    stack, t = default
+    stmts = {s["Sid"]: s for s in _ops_statements(stack, t)}
+    drill = stmts["KillSwitchDrill"]
+    assert sorted(drill["Action"]) == ["iam:AttachRolePolicy", "iam:DetachRolePolicy"]
+    assert drill["Resource"] == "arn:aws:iam::123456789012:role/mc-shared-foundation-github-ops"
+    policy_id = stack.get_logical_id(stack.kill_switch_policy.node.default_child)
+    assert drill["Condition"] == {"ArnEquals": {"iam:PolicyARN": {"Ref": policy_id}}}
+    read = stmts["KillSwitchDrillRead"]
+    assert read["Action"] == "iam:ListAttachedRolePolicies"
+    assert read["Resource"] == drill["Resource"]
