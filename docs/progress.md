@@ -4,14 +4,13 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Waiting for owner
 
-- **`cdk gc` (owner, 2026-11-26):** owner runs it once with own credentials. Run 177 dry run: 361 of 391 asset images (127.67 GB) can go. Alternative: reply OK and autopilot runs ops `ecr-cleanup` with `apply: true` (keeps images in use, the 4 newest, and anything under 14 days).
 - **Cost allocation tags: activated 2026-11-26** (resource tags `stage` and `env` Active; `iamPrincipal/*` left inactive). They apply to new billing data only. Autopilot: from 2026-11-27, check that new FOCUS lines carry `stage`, then that the PG-8 finops card shows more than one stage; then drop this item.
 - **Claude Haiku 5.5 access:** still waiting for AWS. Autopilot: re-probe at most once a day (ops `record-fixtures`, `haiku-5-5`, inside the spend limit); when it succeeds, record the M1-06 fixtures and apply the ADR-003 selection rule. Until then Haiku 4.5 stays the default.
 
 ## Owner decision 2026-11-26
 
 - **PR #335: merge.** Replaced by `auto/spend-limit-475-r2` (rebuilt on main, merged): temporary limit **$4.75** until 2026-11-30 (AGENTS.md §8.3).
-- **AWS spend fixes: all three yes.** (a) owner runs `cdk gc` once; (a) also a scoped ECR grant for ops (IaC) so ops can expire old CDK asset images; (b) a monthly cap on paid ops model runs (`record-fixtures`, `live-eval`, `online-eval`, `red-team`, `rag-eval`, `nightly-insight`), enforced in `ops.yml`.
+- **AWS spend fixes: all three yes.** (a) owner runs `cdk gc` once (replaced the same day: owner chose ops `ecr-cleanup` with `apply: true`, done); (a) also a scoped ECR grant for ops (IaC) so ops can expire old CDK asset images; (b) a monthly cap on paid ops model runs (`record-fixtures`, `live-eval`, `online-eval`, `red-team`, `rag-eval`, `nightly-insight`), enforced in `ops.yml`.
 - **Kill-switch drill (M6-03 G3): ops IAM grant.** Add it as IaC, scoped to attaching and detaching the kill-switch deny policy on the drill target only; then run the game day and tick M6-03.
 - **M5-03 approvals in the window: option (b).** Map each owner decision to the action's data date minus a fixed 60-day lead, labeled as simulated wherever it shows. Unblocks M5-04 (KPI-09, KPI-13) and the M6-04 case study.
 - **Intake `secrets` rule: narrow it**: in `intake._SECRETS` replace the bare `token` with api / access / auth / bearer / refresh token (api key, access key, secret, password, credentials stay). Tests for both: "tokens per request for F4" passes, credential questions stay blocked. Then the public ask path uses the rule again.
@@ -35,7 +34,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 0. **Finish PR #349** (M6-03 tick + this entry) if still open: CI, merge, deploy.
 1. **M5-04 (realized margin):** ops `start-backfill` with `approvals: true` (free), then `verify-backfill`; check `realized.json` shows "approval dates: simulated". Then KPI-09/KPI-13 and the M6-04 case study. Run 177's dispatch was refused by the session's permission check; try again.
 2. **M2-04 last step (agents), split:** (a) AG-03 tools read fully loaded cost (`fct_cost_to_serve`); CI agent gold is still the M1 profile, so plan this step first; (b) grow the M1-06 replay set (`evals/m1_06`) from 5 to 8 questions; (c) one fixture recording on Haiku 4.5 (about $0.05; cost-report first, $4.75 limit; counts toward the 12/month paid-run cap). Tick M2-04 after it.
-3. **ECR clean-up:** after the owner's one-time `cdk gc` (or an owner OK to run ops `ecr-cleanup` with `apply: true`), run the dry run again to confirm.
+3. **ECR clean-up: done 2026-11-25** (owner OK; ops `ecr-cleanup` with `apply: true`, run 45703623526): 361 images deleted, 30 left (about 10.7 GB), both Lambda images kept, functions Active. Owner `cdk gc` no longer needed. Re-run the dry run monthly; apply only with an owner OK.
 4. **Haiku 5.5 probe:** at most once a day, inside the limit and the paid-run cap.
 5. **Dogfood card:** after new API traffic re-run ops `export-telemetry`, `start-backfill`, `verify-backfill` (free).
 6. **On or after 2026-12-01:** delete the temporary spend-limit paragraph in AGENTS.md §8.3 (back to $3).
