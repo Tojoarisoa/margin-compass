@@ -125,10 +125,27 @@ def test_eval_runner_scores_the_scripted_model(gold, tmp_path):
             qid = next(k for k, q in Q.items() if q["question"] == text)
             return good_answer(Q, qid).complete(req)
 
+    n = len(Q)
     report = run_eval(gold, "haiku-5-5", mode="record", eval_dir=eval_dir, live_client=Router())
-    assert report["passed"] == 5, [q for q in report["questions"] if not q["passed"]]
+    assert report["passed"] == report["total"] == n, [q for q in report["questions"] if not q["passed"]]
     replayed = run_eval(gold, "haiku-5-5", mode="replay", eval_dir=eval_dir)
-    assert replayed["passed"] == 5 and replayed["cost_usd_total"] == report["cost_usd_total"]
+    assert replayed["passed"] == n and replayed["cost_usd_total"] == report["cost_usd_total"]
+    assert replayed["pending_fixture"] == []
+
+
+def test_replay_skips_only_pending_questions_without_a_fixture(gold, tmp_path):
+    """M2-04 step 5b: new questions wait for their first recording; a recorded or non-pending one is never skipped."""
+    import shutil
+
+    eval_dir = tmp_path / "m1_06"
+    shutil.copytree(EVAL_DIR, eval_dir)
+    pending = [q["id"] for q in Q.values() if q.get("pending_fixture")]
+    report = run_eval(gold, "haiku-4-5", mode="replay", eval_dir=eval_dir)
+    assert report["pending_fixture"] == [p for p in pending if not (eval_dir / "fixtures/haiku-4-5" / f"{p}.json").exists()]
+    assert report["total"] + len(report["pending_fixture"]) == len(Q)
+    (eval_dir / "fixtures/haiku-4-5/q1.json").unlink()  # q1 is not pending: a lost fixture still fails
+    with pytest.raises(FixtureDrift, match="no fixture"):
+        run_eval(gold, "haiku-4-5", mode="replay", eval_dir=eval_dir)
 
 
 @pytest.mark.parametrize("model_key", sorted(p.name for p in (EVAL_DIR / "fixtures").iterdir() if p.is_dir()))

@@ -126,7 +126,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.out:
         args.out.parent.mkdir(parents=True, exist_ok=True)
         args.out.write_text(text + "\n")
-    print(json.dumps({k: report[k] for k in ("model", "mode", "passed", "total", "rates", "cost_usd_per_question", "max_llm_calls")}))
+    print(json.dumps({k: report[k] for k in ("model", "mode", "passed", "total", "pending_fixture", "rates", "cost_usd_per_question", "max_llm_calls")}))
     return 0 if report["passed"] == report["total"] else 1
 
 
