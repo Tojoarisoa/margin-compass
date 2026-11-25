@@ -390,6 +390,12 @@ class FoundationStack(cdk.Stack):
              [f"arn:aws:s3:::mc-*-data-lake-{acct}/{p}/*" for p in ("gold", "silver", "publish", "models")]),
             ("ReadStacks", ["cloudformation:DescribeStacks"], [f"arn:aws:cloudformation:{region}:{acct}:stack/mc-*/*"]),
             ("ReadLogs", ["logs:FilterLogEvents"], [f"arn:aws:logs:{region}:{acct}:log-group:/aws/lambda/mc-*:*"]),
+            # ECR clean-up (owner 2026-11-26, spend fix (a)): expire old CDK asset images in the bootstrap repository
+            # only; images used by a Lambda function are kept (infra/scripts/ops/ecr_cleanup.py).
+            ("ExpireCdkAssetImages", ["ecr:DescribeImages", "ecr:BatchDeleteImage"],
+             [f"arn:aws:ecr:{region}:{acct}:repository/cdk-hnb659fds-container-assets-{acct}-{region}"]),
+            ("ListFunctions", ["lambda:ListFunctions"], ["*"]),  # no resource-level scoping for List
+            ("ReadImageFunctions", ["lambda:GetFunction"], [f"arn:aws:lambda:{region}:{acct}:function:mc-*"]),
         ]
         for sid, actions, resources in statements:
             role.add_to_policy(iam.PolicyStatement(sid=sid, actions=actions, resources=resources))

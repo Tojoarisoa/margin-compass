@@ -16,7 +16,7 @@ on:
         description: What to do
         required: true
         type: choice
-        options: [status, cost-report, run-pipeline, start-nightly, start-backfill, verify-backfill, export-telemetry, record-fixtures, live-eval, online-eval, red-team, kill-switch-sync, kill-switch-drill, rag-eval, nightly-insight, realized-check]
+        options: [status, cost-report, run-pipeline, start-nightly, start-backfill, verify-backfill, export-telemetry, record-fixtures, live-eval, online-eval, red-team, kill-switch-sync, kill-switch-drill, ecr-cleanup, rag-eval, nightly-insight, realized-check]
       model:
         description: Agent model for record-fixtures / live-eval / online-eval (agents/mc_agents/config.py)
         required: false
@@ -35,6 +35,11 @@ on:
         type: boolean
       approvals:
         description: start-backfill only - export the owner's approvals and apply them in the simulation (M5-03)
+        required: false
+        default: false
+        type: boolean
+      apply:
+        description: ecr-cleanup only - delete the selected images (default is a dry run)
         required: false
         default: false
         type: boolean
@@ -166,6 +171,17 @@ jobs:
           [[ "$after" != *AccessDenied* && "$attached" == 0 ]] || ok=1
           { echo "## Kill-switch drill (ops role)"; echo '```'; echo "before: $before"; echo "during: $during"; echo "after: $after"; echo "still attached: $attached"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
           exit "$ok"
+
+      # Owner 2026-11-26 (spend fix (a)): expire old CDK asset images; dry run unless `apply` is set.
+      - name: ecr-cleanup
+        if: inputs.task == 'ecr-cleanup'
+        env:
+          APPLY: ${{ inputs.apply }}
+        run: |
+          set -euo pipefail
+          acct="$(aws sts get-caller-identity --query Account --output text)"
+          args=(--repository "cdk-hnb659fds-container-assets-${acct}-${AWS_REGION}"); [[ "$APPLY" == true ]] && args+=(--apply)
+          python3 infra/scripts/ops/ecr_cleanup.py "${args[@]}" | tee -a "$GITHUB_STEP_SUMMARY"; exit "${PIPESTATUS[0]}"
 
       - name: start-nightly
         if: inputs.task == 'start-nightly'

@@ -326,6 +326,7 @@ def test_ops_role_trusts_only_main_and_cannot_deploy(default):
         "bedrock:InvokeModel", "ce:GetCostAndUsage", "bcm-data-exports:ListExports", "bcm-data-exports:ListExecutions",
         "budgets:ViewBudget", "s3:ListBucket", "s3:GetObject", "cloudformation:DescribeStacks", "logs:FilterLogEvents",
         "iam:AttachRolePolicy", "iam:DetachRolePolicy", "iam:ListAttachedRolePolicies",
+        "ecr:DescribeImages", "ecr:BatchDeleteImage", "lambda:ListFunctions", "lambda:GetFunction",
     }
     iam_sids = {s["Sid"] for s in _ops_statements(stack, t)
                 if any(a.startswith("iam:") for a in (s["Action"] if isinstance(s["Action"], list) else [s["Action"]]))}
@@ -337,8 +338,11 @@ def test_ops_role_resources_are_scoped(default):
     stack, t = default
     for s in _ops_statements(stack, t):
         res = s["Resource"] if isinstance(s["Resource"], list) else [s["Resource"]]
-        if s["Sid"] == "ReadCosts":  # Cost Explorer and Data Exports reads have no resource-level scoping
+        if s["Sid"] in ("ReadCosts", "ListFunctions"):  # list/read APIs with no resource-level scoping
             assert res == ["*"]
+            continue
+        if s["Sid"] == "ExpireCdkAssetImages":  # the CDK bootstrap asset repository, exactly (owner 2026-11-26)
+            assert res == ["arn:aws:ecr:us-east-1:123456789012:repository/cdk-hnb659fds-container-assets-123456789012-us-east-1"]
             continue
         assert all("*" not in json.dumps(r) or "mc-" in json.dumps(r) or "claude-haiku" in json.dumps(r) for r in res), s["Sid"]
     bedrock = next(s for s in _ops_statements(stack, t) if s["Sid"] == "InvokeAgentModels")
@@ -376,3 +380,12 @@ def test_ops_role_may_only_attach_the_deny_policy_to_itself(default):
     read = stmts["KillSwitchDrillRead"]
     assert read["Action"] == "iam:ListAttachedRolePolicies"
     assert read["Resource"] == drill["Resource"]
+def test_ops_role_ecr_cleanup_is_scoped(default):
+    stack, t = default
+    stmts = {s["Sid"]: s for s in _ops_statements(stack, t)}
+    assert sorted(stmts["ExpireCdkAssetImages"]["Action"]) == ["ecr:BatchDeleteImage", "ecr:DescribeImages"]
+    assert stmts["ListFunctions"]["Action"] == "lambda:ListFunctions"
+    assert stmts["ReadImageFunctions"]["Resource"] == "arn:aws:lambda:us-east-1:123456789012:function:mc-*"
+    ecr_actions = {a for s in stmts.values() for a in (s["Action"] if isinstance(s["Action"], list) else [s["Action"]])
+                   if a.startswith("ecr:")}
+    assert ecr_actions == {"ecr:DescribeImages", "ecr:BatchDeleteImage"}  # no push, no repository changes
