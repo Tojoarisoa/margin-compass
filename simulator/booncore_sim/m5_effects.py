@@ -19,6 +19,9 @@ from .m2_telemetry import TelemetryRow
 LAG_MIN_DAYS, LAG_MAX_DAYS = 3, 14  # adoption lag before the effect starts (assumption)
 RAMP_DAYS = 14  # days from first effect to the realized share (assumption)
 REALIZATION_MIN, REALIZATION_MAX = 0.60, 0.95  # partial realization of the intended change (assumption)
+# Owner decision 2026-11-26, option (b): real owner decisions come after the simulation window ends, so each one is
+# placed a fixed lead before the action's data date (the last day of data behind it). The date is labeled simulated.
+DECISION_LEAD_DAYS = 60
 
 
 @dataclass(frozen=True)
@@ -26,7 +29,8 @@ class Approval:
     action_id: str
     action_type: str  # ACT-1 | ACT-2 | ACT-3
     target: str  # for ACT-1: "<feature_id>/<metric>", for example "F4/cost"
-    approved_on: date
+    approved_on: date  # the day effects can start from (simulated when `simulated_date`)
+    simulated_date: bool = False  # True: approved_on = data date - DECISION_LEAD_DAYS, not the owner's decision date
 
 
 def _unit(*parts: object) -> float:
@@ -120,10 +124,11 @@ def apply_effects(rows: list[TelemetryRow], approvals: list[Approval], seed: int
     return apply_act2_act3(apply_act1(rows, approvals, seed), approvals, seed)
 
 
-def load_approvals(path: Path | str) -> list[Approval]:
+def load_approvals(path: Path | str, data_date: date | None = None) -> list[Approval]:
     """Read approvals.jsonl (action_id, action_type, target, decision, decided_at, ...). A missing file means no
     approvals. Only `approved` decisions with a known action type and a target produce effects; other lines are
-    skipped. The latest line per action_id wins."""
+    skipped. The latest line per action_id wins. With `data_date` (the last day of data the actions were proposed
+    from), each approval takes effect from `data_date - DECISION_LEAD_DAYS` and is marked `simulated_date`."""
     p = Path(path)
     if not p.exists():
         return []
@@ -132,8 +137,9 @@ def load_approvals(path: Path | str) -> list[Approval]:
         if line.strip():
             d = json.loads(line)
             latest[d["action_id"]] = d
+    on = None if data_date is None else data_date - timedelta(days=DECISION_LEAD_DAYS)
     return [
-        Approval(d["action_id"], d["action_type"], d["target"], date.fromisoformat(d["decided_at"][:10]))
+        Approval(d["action_id"], d["action_type"], d["target"], on or date.fromisoformat(d["decided_at"][:10]), on is not None)
         for d in latest.values()
         if d.get("decision") == "approved" and d.get("action_type") in ("ACT-1", "ACT-2", "ACT-3") and d.get("target")
     ]

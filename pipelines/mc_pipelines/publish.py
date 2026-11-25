@@ -426,6 +426,7 @@ def publish_realized(data_root: Path, run_id: str) -> list[str]:
     mart = root / "gold" / "fct_realized_margin.parquet"
     if not mart.exists():
         return []
+    simulated = duckdb.sql(f"select coalesce(bool_or(approval_date_simulated), false) from read_parquet('{mart}')").fetchall()[0][0]
     rows = duckdb.sql(
         "select status, count(*), count(distinct action_id), coalesce(sum(saved_usd), 0)::varchar, "
         f"coalesce(sum(revenue_delta_usd), 0)::varchar, coalesce(sum(realized_margin_usd), 0)::varchar from read_parquet('{mart}') group by 1"
@@ -442,6 +443,8 @@ def publish_realized(data_root: Path, run_id: str) -> list[str]:
         "pending_saved_usd": str(Decimal(pend[3]).quantize(CENT) if pend else Decimal("0.00")),
         "realization_rate": str((Decimal(n_done) / Decimal(n_done + n_pend)).quantize(RATIO)) if n_done + n_pend else None,
         "method": "counterfactual run minus approved run, per action and day; rows count as realized 14 days after approval",
+        "approval_dates": ("simulated: each decision is placed 60 days before the last day of data" if simulated
+                           else "decision dates"),
     }
     out = root / "publish" / "latest" / "realized.json"
     out.parent.mkdir(parents=True, exist_ok=True)

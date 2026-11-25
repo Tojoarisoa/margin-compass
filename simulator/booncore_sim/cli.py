@@ -66,12 +66,13 @@ def run_m2(
     """M2 profile. `month` writes one chunk, `static` the month-independent tables, `all` everything."""
     from . import m2_writer
     from .m2_run import generate_patterned
-    from .m2_tenants import MONTHS, generate_m2_tenants
+    from .m2_tenants import MONTHS, WINDOW_END, generate_m2_tenants
     from .m5_effects import load_approvals
 
     seed = 42 if seed is None else seed
     # Counterfactual = the same seed without --approvals; the approved run adds the closed-loop effects (M5-03).
-    approvals = load_approvals(approvals_path) if approvals_path else []
+    # Owner decisions are dated after the window: each is placed 60 days before its data date (labeled simulated).
+    approvals = load_approvals(approvals_path, data_date=WINDOW_END) if approvals_path else []
     log.info("simulation_started", extra={"fields": {"profile": "m2", "seed": seed, "mode": mode, "out": str(out_dir)}})
     files: list[dict] = []
     manifest_dir = out_dir

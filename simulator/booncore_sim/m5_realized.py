@@ -29,6 +29,7 @@ class RealizedRow:
     saved_usd: float
     revenue_delta_usd: float  # <= 0: revenue lost to churn; 0 when no tenants are given
     status: str  # realized | pending_verification
+    approval_date_simulated: bool = False  # the approval date was placed before the data date (owner 2026-11-26, (b))
 
 
 def _daily_cost(rows: list[TelemetryRow]) -> dict[date, float]:
@@ -62,5 +63,6 @@ def realized_by_action(
             if abs(cf - ac) < 1e-9 and rev == 0.0:
                 continue
             status = "realized" if day >= cutoff else "pending_verification"
-            out.append(RealizedRow(a.action_id, day, round(cf, 6), round(ac, 6), round(cf - ac, 6), rev, status))
+            out.append(RealizedRow(a.action_id, day, round(cf, 6), round(ac, 6), round(cf - ac, 6), rev, status,
+                                   a.simulated_date))
     return out

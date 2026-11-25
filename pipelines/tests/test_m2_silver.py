@@ -576,7 +576,7 @@ def test_fct_realized_margin_counts_only_verified_rows(tmp_path):
 
     rows = [RealizedRow("a", date(2026, 3, 1), 10.0, 8.0, 2.0, 0.0, "pending_verification"),
             RealizedRow("a", date(2026, 3, 20), 10.0, 7.0, 3.0, 0.0, "realized"),
-            RealizedRow("b", date(2026, 3, 21), 10.0, 0.0, 10.0, -4.0, "realized")]
+            RealizedRow("b", date(2026, 3, 21), 10.0, 0.0, 10.0, -4.0, "realized", True)]
     _write(landing, "s5_realized/realized_cost.parquet", rows, 42, "realized cost")
     os.environ["MC_DUCKDB_PATH"] = str(tmp_path / "o.duckdb")
     variables = {"m2_landing_path": str(landing), "m2_realized": True, "silver_path": "x", "bronze_path": "x",
@@ -596,13 +596,15 @@ def test_publish_realized_totals(tmp_path):
     gold = tmp_path / "gold"
     gold.mkdir()
     duckdb.sql(
-        "copy (select * from (values ('a', 'realized', 3.0, 0.0, 3.0), ('b', 'realized', 10.0, -4.0, 6.0), "
-        "('b', 'pending_verification', 2.0, 0.0, 0.0)) t(action_id, status, saved_usd, revenue_delta_usd, realized_margin_usd)) "
+        "copy (select * from (values ('a', 'realized', 3.0, 0.0, 3.0, true), ('b', 'realized', 10.0, -4.0, 6.0, true), "
+        "('b', 'pending_verification', 2.0, 0.0, 0.0, true)) "
+        "t(action_id, status, saved_usd, revenue_delta_usd, realized_margin_usd, approval_date_simulated)) "
         f"to '{gold / 'fct_realized_margin.parquet'}' (format parquet)")
     assert publish_realized(tmp_path, "r1") == ["publish/latest/realized.json"]
     body = json.loads((tmp_path / "publish" / "latest" / "realized.json").read_text())
     assert (body["realized_margin_usd"], body["saved_usd"], body["revenue_delta_usd"]) == ("9.00", "13.00", "-4.00")
     assert (body["actions_realized"], body["actions_pending"], body["realization_rate"]) == (2, 1, "0.666667")
+    assert body["approval_dates"].startswith("simulated: ")  # owner 2026-11-26 (b): labeled wherever it shows
     assert publish_realized(tmp_path / "none", "r1") == []
 
 

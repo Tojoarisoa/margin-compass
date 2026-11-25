@@ -1,3 +1,4 @@
+import json
 from dataclasses import replace
 from datetime import date, datetime, timedelta
 
@@ -88,3 +89,18 @@ def test_load_approvals(tmp_path):
         '{"action_id":"a3","action_type":"ACT-1","target":"F1/cost","decision":"rejected","decided_at":"2026-03-05"}\n'
     )
     assert load_approvals(f) == [Approval("a1", "ACT-1", "F4/cost", date(2026, 3, 1))]
+
+
+def test_window_mapping_places_decisions_60_days_before_the_data_date(tmp_path):
+    """Owner 2026-11-26, option (b): decisions made after the window take effect from data date - 60 days, labeled."""
+    from booncore_sim.m2_tenants import WINDOW_END
+    from booncore_sim.m5_effects import DECISION_LEAD_DAYS, load_approvals
+
+    f = tmp_path / "approvals.jsonl"
+    f.write_text(json.dumps({"action_id": "act-1", "action_type": "ACT-3", "target": "bc-t0011/cap",
+                             "decision": "approved", "decided_at": "2026-11-11T16:05:00Z"}) + "\n")
+    [real] = load_approvals(f)
+    assert real.approved_on == date(2026, 11, 11) and not real.simulated_date
+    [mapped] = load_approvals(f, data_date=WINDOW_END)
+    assert DECISION_LEAD_DAYS == 60 and mapped.approved_on == date(2026, 9, 1) and mapped.simulated_date
+    assert mapped.approved_on > WINDOW_END - timedelta(days=90)  # inside the window, with room to realize

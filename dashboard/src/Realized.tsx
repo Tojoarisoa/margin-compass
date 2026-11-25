@@ -6,6 +6,7 @@ import { money } from "./format";
 interface Realized {
   actions_realized: number; actions_pending: number; saved_usd: string; revenue_delta_usd: string;
   realized_margin_usd: string; pending_saved_usd: string; realization_rate: string | null; method?: string; data_label?: string;
+  approval_dates?: string;
 }
 
 // Public surface: no internal codes, caps or platform cost here (AGENTS.md public-surface rule).
@@ -41,7 +42,10 @@ export function RealizedCard({ grossMarginUsd, grossMarginPct }: { grossMarginUs
           </tbody>
         </table>
       </div>
-      <p className="muted small">{r.method ?? ""} Effect sizes are synthetic assumptions. Synthetic data.</p>
+      <p className="muted small">
+        {r.method ?? ""}{r.approval_dates ? `; approval dates: ${r.approval_dates}.` : ""} Effect sizes are synthetic
+        assumptions. Synthetic data.
+      </p>
     </section>
   );
 }
