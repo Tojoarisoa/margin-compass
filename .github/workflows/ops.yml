@@ -221,12 +221,15 @@ jobs:
           url="$(aws cloudformation describe-stacks --stack-name mc-dev-web --query "Stacks[0].Outputs[?OutputKey=='Url'].OutputValue" --output text)"
           curl -s "$url/publish/latest/runs.json" > runs.json || true
           dog_code="$(curl -s -o dogfood.json -w '%{http_code}' "$url/publish/latest/dogfood.json" || true)"  # M2-04 S7: PG-8 dogfood card
+          real_code="$(curl -s -o realized.json -w '%{http_code}' "$url/publish/latest/realized.json" || true)"  # M5-04: realized margin card (approval dates label)
           {
             echo "## Backfill check"
             echo '```json'; cat exec.json; echo; echo '```'
             echo "Lambda REPORT lines (memory size / max used):"; echo '```'; grep -o 'Memory Size: [0-9]* MB.*Max Memory Used: [0-9]* MB' report.txt | sort | uniq -c || true; echo '```'
             echo "runs.json:"; echo '```json'; head -c 1500 runs.json; echo; echo '```'
             echo "dogfood.json (HTTP $dog_code):"; echo '```json'; head -c 1000 dogfood.json || true; echo; echo '```'
+            echo "realized.json (HTTP $real_code):"; echo '```json'; head -c 1500 realized.json || true; echo; echo '```'
+            echo "approval_dates: $(python3 -c "import json; print(json.load(open('realized.json')).get('approval_dates', 'missing'))" 2>/dev/null || echo unreadable)"
           } | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: verify-backfill (row counts)
