@@ -5,7 +5,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 ## Waiting for owner
 
 - **`cdk gc` (owner, 2026-11-26):** owner runs it once with own credentials to expire old CDK asset images. Autopilot: nothing to do; the scoped ops grant (Next 5) covers later clean-ups.
-- **Cost allocation tags (owner, 2026-11-26):** owner activates `stage` and `env` in Billing. Autopilot: after a day, check that FOCUS lines carry the tags and the PG-8 finops card shows more than one stage.
+- **Cost allocation tags: activated 2026-11-26** (resource tags `stage` and `env` Active; `iamPrincipal/*` left inactive). They apply to new billing data only. Autopilot: from 2026-11-27, check that new FOCUS lines carry `stage`, then that the PG-8 finops card shows more than one stage; then drop this item.
 - **Claude Haiku 5.5 access:** still waiting for AWS. Autopilot: re-probe at most once a day (ops `record-fixtures`, `haiku-5-5`, inside the spend limit); when it succeeds, record the M1-06 fixtures and apply the ADR-003 selection rule. Until then Haiku 4.5 stays the default.
 
 ## Owner decision 2026-11-26
@@ -15,7 +15,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 - **Kill-switch drill (M6-03 G3): ops IAM grant.** Add it as IaC, scoped to attaching and detaching the kill-switch deny policy on the drill target only; then run the game day and tick M6-03.
 - **M5-03 approvals in the window: option (b).** Map each owner decision to the action's data date minus a fixed 60-day lead, labeled as simulated wherever it shows. Unblocks M5-04 (KPI-09, KPI-13) and the M6-04 case study.
 - **Intake `secrets` rule: narrow it**: in `intake._SECRETS` replace the bare `token` with api / access / auth / bearer / refresh token (api key, access key, secret, password, credentials stay). Tests for both: "tokens per request for F4" passes, credential questions stay blocked. Then the public ask path uses the rule again.
-- **Cost tags: yes**, owner activates them (see Waiting for owner).
+- **Cost tags: yes**, owner activated `stage` and `env` (resource) the same day.
 - **Haiku 5.5: keep the daily probe.**
 
 ## Owner decision 2026-11-11
