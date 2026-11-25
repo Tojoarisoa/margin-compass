@@ -39,11 +39,13 @@ def good_answer(questions: dict, qid: str) -> ScriptedLLM:
     def write(r: dict[str, Any]) -> str:
         ev = r["evidence_id"]
         if "ranking" in r:
-            parts = [f"{x['tenant_id']} at {x['gross_margin_pct']} margin, {x['cost_to_serve_usd']} cost to serve [{ev}]"
+            parts = [f"{x['tenant_id']} at {x['gross_margin_pct']} margin ({x['gross_margin_usd']}), {x['cost_to_serve_usd']} "
+                     f"cost to serve, {x['ai_revenue_usd']} AI revenue [{ev}]"
                      for x in r["ranking"]]
             return "Ranking (F1 only, synthetic): " + "; ".join(parts) + "."
         if "ai_gross_margin_pct" in r:
-            return f"Portfolio AI gross margin was {r['ai_gross_margin_pct']} on {r['ai_revenue_usd']} AI revenue [{ev}]. F1 only."
+            return (f"Portfolio AI gross margin was {r['ai_gross_margin_pct']} ({r['gross_margin_usd']}) on {r['ai_revenue_usd']} "
+                    f"AI revenue, with {r['unprofitable_tenants']} unprofitable tenants [{ev}]. F1 only.")
         return (f"{r['tenant_id']} had AI revenue of {r['ai_revenue_usd']}, cost to serve of {r['cost_to_serve_usd']}, "
                 f"and gross margin of {r['gross_margin_usd']} ({r['gross_margin_pct']}) from {r['covered_from']} "
                 f"to {r['covered_to']} [{ev}]. F1 only.")

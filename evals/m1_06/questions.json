@@ -1,6 +1,6 @@
 {
   "set": "m1-06",
-  "description": "M1-06 replay evaluation for AG-03 (Cost-to-Serve Analyst). Synthetic data: simulator profile m1, seed 42.",
+  "description": "M1-06 replay evaluation for AG-03 (Cost-to-Serve Analyst). Synthetic data: simulator profile m1, seed 42. Questions with pending_fixture=true are skipped in replay until recorded (M2-04 step 5b).",
   "questions": [
     {
       "id": "q1",
@@ -31,6 +31,27 @@
       "question": "Which tenant had the highest AI cost to serve in September 2025, and how much was it?",
       "expected_tool": {"name": "tenant_ranking", "args": {"metric": "cost_to_serve_usd", "order": "desc", "limit": 1, "start_date": "2025-09-01", "end_date": "2025-09-30"}},
       "expected_figures": ["ranking[].tenant_id", "ranking[].cost_to_serve_usd"]
+    },
+    {
+      "id": "q6",
+      "question": "Which two tenants earned the most AI revenue in October 2025?",
+      "pending_fixture": true,
+      "expected_tool": {"name": "tenant_ranking", "args": {"metric": "ai_revenue_usd", "order": "desc", "limit": 2, "start_date": "2025-10-01", "end_date": "2025-10-31"}},
+      "expected_figures": ["ranking[].tenant_id", "ranking[].ai_revenue_usd"]
+    },
+    {
+      "id": "q7",
+      "question": "How many tenants were unprofitable across the portfolio in September 2025, and what was the portfolio AI gross margin in dollars?",
+      "pending_fixture": true,
+      "expected_tool": {"name": "portfolio_margin", "args": {"start_date": "2025-09-01", "end_date": "2025-09-30"}},
+      "expected_figures": ["unprofitable_tenants", "gross_margin_usd"]
+    },
+    {
+      "id": "q8",
+      "question": "Which tenant had the highest AI gross margin in dollars from August 1 to September 30, 2025, and how much was it?",
+      "pending_fixture": true,
+      "expected_tool": {"name": "tenant_ranking", "args": {"metric": "gross_margin_usd", "order": "desc", "limit": 1, "start_date": "2025-08-01", "end_date": "2025-09-30"}},
+      "expected_figures": ["ranking[].tenant_id", "ranking[].gross_margin_usd"]
     }
   ]
 }

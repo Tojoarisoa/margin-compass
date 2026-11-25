@@ -40,9 +40,13 @@ def run_eval(gold_dir: Path, model_key: str, mode: str = "replay", eval_dir: Pat
     spec = MODELS[model_key]
     qs = json.loads((eval_dir / "questions.json").read_text())["questions"]
     tools = MetricTools(gold_dir)
-    rows = []
+    rows, pending = [], []
     for q in qs:
         fixture = eval_dir / "fixtures" / model_key / f"{q['id']}.json"
+        # M2-04 step 5b: a new question waits for its first recording; replay skips it only while it has no fixture.
+        if mode == "replay" and q.get("pending_fixture") and not fixture.exists():
+            pending.append(q["id"])
+            continue
         if mode == "replay":
             client = ReplayLLM(fixture)
         elif mode == "record":
@@ -75,7 +79,7 @@ def run_eval(gold_dir: Path, model_key: str, mode: str = "replay", eval_dir: Pat
     return {
         "ev10": ev10.score([(float(r["cost_usd"]), r["latency_s"]) for r in rows]),
         "set": "m1-06", "model": spec.target, "mode": mode, "prompt_version": PROMPT_VERSION,
-        "passed": sum(r["passed"] for r in rows), "total": len(rows),
+        "passed": sum(r["passed"] for r in rows), "total": len(rows), "pending_fixture": pending,
         "rates": {k: sum(r["checks"][k] for r in rows) / len(rows) for k in ("tool", "grounded", "correct", "budget")},
         "cost_usd_total": str(total), "cost_usd_per_question": str((total / len(rows)).quantize(Decimal("0.000001"))),
         "max_llm_calls": max(r["llm_calls"] for r in rows), "questions": rows,
