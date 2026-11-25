@@ -4,7 +4,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Waiting for owner
 
-- **`cdk gc` (owner, 2026-11-26):** owner runs it once with own credentials to expire old CDK asset images. Autopilot: nothing to do; the scoped ops grant (Next 5) covers later clean-ups.
+- **`cdk gc` (owner, 2026-11-26):** owner runs it once with own credentials. Run 177 dry run: 361 of 391 asset images (127.67 GB) can go. Alternative: reply OK and autopilot runs ops `ecr-cleanup` with `apply: true` (keeps images in use, the 4 newest, and anything under 14 days).
 - **Cost allocation tags: activated 2026-11-26** (resource tags `stage` and `env` Active; `iamPrincipal/*` left inactive). They apply to new billing data only. Autopilot: from 2026-11-27, check that new FOCUS lines carry `stage`, then that the PG-8 finops card shows more than one stage; then drop this item.
 - **Claude Haiku 5.5 access:** still waiting for AWS. Autopilot: re-probe at most once a day (ops `record-fixtures`, `haiku-5-5`, inside the spend limit); when it succeeds, record the M1-06 fixtures and apply the ADR-003 selection rule. Until then Haiku 4.5 stays the default.
 
@@ -32,19 +32,29 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-0. **Check main `ci` 45688824181 (2a9beb1, #345)**: `deploy to dev` was still running when run 176 ended. If it failed, fix it first.
-1. **M5-04 (realized margin):** ops `start-backfill` with `approvals: true` (free), then `verify-backfill`; check `realized.json` shows actions with "approval dates: simulated". Then KPI-09/KPI-13 and the M6-04 case study.
-2. **M2-04 last step (agents), split:** (a) AG-03 tools read fully loaded cost (`fct_cost_to_serve`); CI agent gold is still the M1 profile, so plan this step first; (b) grow the M1-06 replay set (`evals/m1_06`) from 5 to 8 questions; (c) one fixture recording on Haiku 4.5 (about $0.05; cost-report first, $4.75 limit; counts toward the new 12/month paid-run cap). Tick M2-04 after it.
-3. **Kill-switch drill** (owner 2026-11-26): scoped ops IAM grant as IaC, then the game day; tick M6-03.
-4. **ECR clean-up grant** (owner 2026-11-26): scoped ops grant (IaC) plus an ops task that expires old CDK asset images.
-5. **Haiku 5.5 probe:** at most once a day, inside the limit and the paid-run cap.
-6. **Dogfood card:** after new API traffic re-run ops `export-telemetry`, `start-backfill`, `verify-backfill` (free).
-7. **On or after 2026-12-01:** delete the temporary spend-limit paragraph in AGENTS.md §8.3 (back to $3).
+0. **Finish PR #349** (M6-03 tick + this entry) if still open: CI, merge, deploy.
+1. **M5-04 (realized margin):** ops `start-backfill` with `approvals: true` (free), then `verify-backfill`; check `realized.json` shows "approval dates: simulated". Then KPI-09/KPI-13 and the M6-04 case study. Run 177's dispatch was refused by the session's permission check; try again.
+2. **M2-04 last step (agents), split:** (a) AG-03 tools read fully loaded cost (`fct_cost_to_serve`); CI agent gold is still the M1 profile, so plan this step first; (b) grow the M1-06 replay set (`evals/m1_06`) from 5 to 8 questions; (c) one fixture recording on Haiku 4.5 (about $0.05; cost-report first, $4.75 limit; counts toward the 12/month paid-run cap). Tick M2-04 after it.
+3. **ECR clean-up:** after the owner's one-time `cdk gc` (or an owner OK to run ops `ecr-cleanup` with `apply: true`), run the dry run again to confirm.
+4. **Haiku 5.5 probe:** at most once a day, inside the limit and the paid-run cap.
+5. **Dogfood card:** after new API traffic re-run ops `export-telemetry`, `start-backfill`, `verify-backfill` (free).
+6. **On or after 2026-12-01:** delete the temporary spend-limit paragraph in AGENTS.md §8.3 (back to $3).
 
-Done recently: intake `secrets` rule (#343), paid-run cap (#344), M5-03 window mapping (#345); M2-01, M3-01..03, M4-01, M4-04..06.
+Done recently: kill-switch drill and M6-03 (#346, #348), ECR clean-up task (#347), intake `secrets` rule (#343), paid-run cap (#344), M5-03 window mapping (#345).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed.
 Notes: Ops eval results are in the job log; fixtures are base64 between FIXTURE-BEGIN/END lines. Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1; local replays need it too or everything drifts). Ops `ev06_graph: true` adds the graph runs (opt-in, about $0.15; the ops job ends `failure` while the graph gate is unmet, which is expected). Flaky github.com 504s during image builds: re-run the failed job. Only commit the graph fixtures from a record run; the other fixture sets change only in tool-use IDs. AG-05 prompt is at the cost-cap edge (`test_unsupported_figure_retries_then_fails_closed` sums $0.009965 of $0.01): keep it no longer than v8. Gh-created PR bodies get a footer: remove it with the GitHub MCP `update_pull_request` (gh api PATCH gets it re-added).
 
+
+## 2026-11-25 (autopilot run 177)
+
+- **Start:** main `ci` 45688824181 (2a9beb1) green incl. `deploy to dev`; waited for 45690534709 (progress commit): green. No open PR.
+- **Task 1:** M6-03 drill grant: ops role may attach/detach only the deny policy, only on itself, and list its own policies; ops task `kill-switch-drill`. PR #346 merged; deploy green.
+- **Drill 1** (ops 45694946776): Bedrock denied while attached, restored after; `StartExecution` probe useless (Step Functions validates input before authorization). Fix PR #348 merged; deploy green.
+- **Drill 2** (ops 45698384245, 20:48-20:50 UTC): while attached Bedrock and `StartExecution` both `AccessDenied`; after detach both allowed; 0 attached. **M6-03 ticked** (PR #349). API-role step left to the owner.
+- **Task 2:** ECR clean-up grant (repository `cdk-hnb659fds-container-assets-*` only, `lambda:ListFunctions`, `GetFunction` on `mc-*`) + ops `ecr-cleanup`, dry run by default. PR #347 merged; deploy green. Dry run (ops 45696737862): **391 images, 2 in use, 361 deletable = 127.67 GB** (ECR storage is about $0.10/GB-month, so roughly $12/month if all billed). Not applied: the owner said they would do the first clean-up (`cdk gc`).
+- **Not done:** M5-04 `start-backfill` dispatch was refused by this session's permission check (not an AWS error). Retry next run.
+- **Decisions (auto-decided under §8.2):** drill target = ops role only (owner: "drill target only"); ECR rule keeps images in use, the 4 newest, and anything under 14 days; stops if an image function is not `mc-*`.
+- **Cost:** $0. No paid ops run (drill probes rejected before any model work).
 
 ## 2026-11-25 (autopilot run 176)
 

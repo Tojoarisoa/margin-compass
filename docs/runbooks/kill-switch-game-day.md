@@ -1,6 +1,6 @@
 # Kill-switch game day (M6-03)
 
-Plan for a drill that proves the $5 kill switch (PLAN.md §11.3, item 4) stops model spend and pipeline starts, that the static dashboard stays up, and that lifting it restores service. Written 2026-11-11 by autopilot; **not run yet**.
+Plan for a drill that proves the $5 kill switch (PLAN.md §11.3, item 4) stops model spend and pipeline starts, that the static dashboard stays up, and that lifting it restores service. Written 2026-11-11 by autopilot. **Ops-role drill run 2026-11-25** (ops `kill-switch-drill`, run 45698384245): attached 20:48:21Z, Bedrock and `StartExecution` both `AccessDenied` after 60 s, detached 20:49:24Z, both allowed again after 60 s, policy not attached at the end. API-role step not run (owner, manual).
 
 ## What exists today (read from `infra/`, 2026-11-11)
 
