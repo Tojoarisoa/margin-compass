@@ -2,6 +2,8 @@
 # no AWS credentials. Dispatched on main only; the OIDC ops role can run and observe, not deploy.
 # Live model calls are capped in code (8 calls and $0.01 per question; the cost gate covers infra).
 name: ops
+# The title names the task, so the monthly paid-run cap can count runs (infra/scripts/ops/paid_run_cap.py).
+run-name: ops ${{ github.event_name == 'schedule' && 'online-eval' || inputs.task }}
 
 on:
   # M6-02 online evaluation sample, weekly (auto-decided under AGENTS.md §8.2): at most 3 capped
@@ -40,6 +42,7 @@ on:
 permissions:
   contents: read
   id-token: write
+  actions: read  # paid-run cap: list this month's ops runs
 
 concurrency:
   group: ops
@@ -49,6 +52,9 @@ env:
   UV_VERSION: "0.11.16"
   PYTHON_VERSION: "3.13"
   AWS_REGION: us-east-1
+  # Owner decision 2026-11-26: at most this many paid model runs (record-fixtures, live-eval, online-eval,
+  # red-team, rag-eval, nightly-insight) per UTC month, scheduled ones included (auto-decided under AGENTS.md §8.2).
+  MC_PAID_RUNS_PER_MONTH: "12"
 
 jobs:
   ops:
@@ -57,6 +63,11 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: paid-run cap (before any AWS call)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TASK: ${{ github.event_name == 'schedule' && 'online-eval' || inputs.task }}
+        run: python3 infra/scripts/ops/paid_run_cap.py | tee -a "$GITHUB_STEP_SUMMARY"; exit "${PIPESTATUS[0]}"
       - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
         with:
           role-to-assume: ${{ secrets.AWS_OPS_ROLE_ARN }}
