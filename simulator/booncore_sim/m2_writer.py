@@ -22,6 +22,7 @@ from .m2_catalog import FEATURES, PRICE_CATALOG_V2
 from .m2_run import PatternedRun, patterned_month
 from .m2_telemetry import month_days
 from .m2_tenants import WINDOW_END, WINDOW_START, M2Tenant, TenantVersion
+from .m5_effects import apply_effects
 
 
 def _table(rows: list, seed: int, kind: str) -> pa.Table:
@@ -46,16 +47,20 @@ def _write(out_dir: Path, rel: str, rows: list, seed: int, kind: str) -> dict:
 def write_month(
     out_dir: Path, seed: int, tenants: list[M2Tenant], month_index: int, approvals: list | None = None
 ) -> list[dict]:
-    """One backfill chunk: patterned telemetry, 1% raw sample and outcomes for the month. Returns manifest entries."""
+    """One backfill chunk: patterned telemetry, 1% raw sample and outcomes for the month. Returns manifest entries.
+
+    With approvals (M5-03) the telemetry carries their effects, and the month's realized effect (M5-04) is written to
+    `s5_realized/month=<key>/` from the same month's baseline rows, so a chunked backfill lands it too."""
     key = month_days(month_index)[0].strftime("%Y-%m")
-    rows, raw = patterned_month(seed, tenants, month_index, approvals)
+    base, raw = patterned_month(seed, tenants, month_index)
+    rows = apply_effects(base, approvals, seed) if approvals else base
     daily, tickets = m2_outcomes.generate_month(seed, tenants, month_index)
     return [
         _write(out_dir, f"s1_llm_telemetry/month={key}/telemetry.parquet", rows, seed, "telemetry"),
         _write(out_dir, f"s1_llm_telemetry/month={key}/raw_requests.parquet", raw, seed, "raw requests"),
         _write(out_dir, f"s4_outcomes/month={key}/daily.parquet", daily, seed, "daily outcomes"),
         _write(out_dir, f"s4_outcomes/month={key}/tickets.parquet", tickets, seed, "ticket outcomes"),
-    ]
+    ] + (write_realized(out_dir, seed, base, approvals, tenants, key) if approvals else [])
 
 
 def write_static(out_dir: Path, seed: int, run: PatternedRun) -> list[dict]:
@@ -101,11 +106,14 @@ def write_manifest(out_dir: Path, seed: int, files: list[dict]) -> dict:
 __all__ = ["write_month", "write_static", "write_focus", "write_revenue", "write_manifest"]
 
 
-def write_realized(out_dir: Path, seed: int, telemetry: list, approvals: list, tenants: list | None = None) -> list[dict]:
-    """M5-04: realized cost effect per approved action and day (`m5_realized`). No approvals writes nothing."""
+def write_realized(
+    out_dir: Path, seed: int, telemetry: list, approvals: list, tenants: list | None, month_key: str
+) -> list[dict]:
+    """M5-04: realized cost effect per approved action and day (`m5_realized`) for one month's baseline `telemetry`.
+    No approvals, or no difference in that month, writes nothing."""
     from .m5_realized import realized_by_action
 
     rows = realized_by_action(telemetry, approvals, seed, tenants)
     if not rows:
         return []
-    return [_write(out_dir, "s5_realized/realized_cost.parquet", rows, seed, "realized cost")]
+    return [_write(out_dir, f"s5_realized/month={month_key}/realized_cost.parquet", rows, seed, "realized cost")]

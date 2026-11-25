@@ -95,9 +95,7 @@ def run_m2(
         run_all = generate_patterned(seed)
         files += m2_writer.write_static(out_dir, seed, run_all) + whole_window(run_all.tenants)
         for i in range(MONTHS):
-            files += m2_writer.write_month(out_dir, seed, run_all.tenants, i, approvals)
-        if approvals:  # M5-04: run_all.telemetry is the baseline (no approvals), so the difference is the realized effect
-            files += m2_writer.write_realized(out_dir, seed, run_all.telemetry, approvals, run_all.tenants)
+            files += m2_writer.write_month(out_dir, seed, run_all.tenants, i, approvals)  # M5-04: also the realized effect
     manifest = m2_writer.write_manifest(manifest_dir, seed, files)
     for f in manifest["files"]:
         log.info("file_written", extra={"fields": {"path": f["path"], "rows": f["rows"]}})

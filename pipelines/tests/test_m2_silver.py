@@ -576,8 +576,9 @@ def test_fct_realized_margin_counts_only_verified_rows(tmp_path):
 
     rows = [RealizedRow("a", date(2026, 3, 1), 10.0, 8.0, 2.0, 0.0, "pending_verification"),
             RealizedRow("a", date(2026, 3, 20), 10.0, 7.0, 3.0, 0.0, "realized"),
-            RealizedRow("b", date(2026, 3, 21), 10.0, 0.0, 10.0, -4.0, "realized", True)]
-    _write(landing, "s5_realized/realized_cost.parquet", rows, 42, "realized cost")
+            RealizedRow("b", date(2026, 4, 2), 10.0, 0.0, 10.0, -4.0, "realized", True)]
+    _write(landing, "s5_realized/month=2026-03/realized_cost.parquet", rows[:2], 42, "realized cost")
+    _write(landing, "s5_realized/month=2026-04/realized_cost.parquet", rows[2:], 42, "realized cost")
     os.environ["MC_DUCKDB_PATH"] = str(tmp_path / "o.duckdb")
     variables = {"m2_landing_path": str(landing), "m2_realized": True, "silver_path": "x", "bronze_path": "x",
                  "gold_path": str(tmp_path)}

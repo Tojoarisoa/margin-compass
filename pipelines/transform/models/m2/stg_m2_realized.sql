@@ -3,4 +3,4 @@
 select
     action_id, cast(day as date) as day, counterfactual_cost_usd, actual_cost_usd, saved_usd, revenue_delta_usd, status,
     approval_date_simulated
-from read_parquet('{{ var("m2_landing_path") }}/s5_realized/realized_cost.parquet')
+from read_parquet('{{ var("m2_landing_path") }}/s5_realized/month=*/realized_cost.parquet')

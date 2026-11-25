@@ -36,32 +36,32 @@ def test_write_realized(tmp_path):
 
     from booncore_sim.m2_writer import write_realized
 
-    assert write_realized(tmp_path, 42, _rows(), []) == []
-    files = write_realized(tmp_path, 42, _rows(), [A])
+    assert write_realized(tmp_path, 42, _rows(), [], None, "2026-02") == []
+    files = write_realized(tmp_path, 42, _rows(), [A], None, "2026-02")
+    assert files[0]["path"] == "s5_realized/month=2026-02/realized_cost.parquet"
     t = pq.read_table(tmp_path / files[0]["path"])
     assert t.num_rows == files[0]["rows"] > 0 and {"action_id", "saved_usd", "status"} <= set(t.column_names)
 
 
-def test_run_m2_all_writes_realized_only_with_approvals(tmp_path, monkeypatch):
-    """`run_m2` mode `all` passes the baseline telemetry to `write_realized`, and only when approvals exist."""
-    from types import SimpleNamespace
+def test_write_month_lands_realized_only_with_approvals(tmp_path, monkeypatch):
+    """M5-04: a backfill month chunk (mode `month`) writes the month's realized effect from its baseline rows, and
+    the telemetry it writes carries the approvals. Without approvals there is no realized file."""
+    import pyarrow.parquet as pq
 
-    from booncore_sim import cli, m2_run, m2_writer
+    from booncore_sim import m2_outcomes, m2_writer
 
-    calls = []
-    run = SimpleNamespace(tenants=[], telemetry=_rows())
-    monkeypatch.setattr(m2_run, "generate_patterned", lambda seed, approvals=None: run)
-    for name in ("write_static", "write_focus", "write_revenue", "write_dimensions", "write_month"):
-        monkeypatch.setattr(m2_writer, name, lambda *a, **k: [])
-    monkeypatch.setattr(m2_writer, "write_manifest", lambda out, seed, files: {"files": []})
-    monkeypatch.setattr(m2_writer, "write_realized", lambda out, seed, tel, appr, tenants=None: calls.append((tel, appr)) or [])
-    cli.run_m2(42, tmp_path, "all", None)
-    assert calls == []
-    path = tmp_path / "approvals.jsonl"
-    path.write_text('{"action_id": "A", "action_type": "ACT-1", "target": "F4/cost", "decision": "approved", "approver": "o", "rationale": "r", '
-                    '"decided_at": "2026-01-01T00:00:00+00:00"}\n')
-    cli.run_m2(42, tmp_path, "all", None, path)
-    assert len(calls) == 1 and calls[0][0] is run.telemetry
+    monkeypatch.setattr(m2_writer, "patterned_month", lambda seed, tenants, month, approvals=None: (_rows(), _rows()[:1]))
+    monkeypatch.setattr(m2_outcomes, "generate_month", lambda seed, tenants, month: (_rows()[:1], _rows()[:1]))
+    plain = m2_writer.write_month(tmp_path / "plain", 42, [], 11)
+    assert not any(f["path"].startswith("s5_realized/") for f in plain)
+    files = m2_writer.write_month(tmp_path / "approved", 42, [], 11, [A])
+    real = [f for f in files if f["path"].startswith("s5_realized/")]
+    assert len(real) == 1 and real[0]["path"].startswith("s5_realized/month=")
+    t = pq.read_table(tmp_path / "approved" / real[0]["path"]).to_pylist()
+    assert [(r["action_id"], r["saved_usd"]) for r in t] == [
+        (r.action_id, r.saved_usd) for r in realized_by_action(_rows(), [A], 42)]
+    tel = tmp_path / "approved" / next(f["path"] for f in files if f["path"].endswith("/telemetry.parquet"))
+    assert sum(pq.read_table(tel).column("is_batch").to_pylist()) > 0  # ACT-1 shifted rows to batch
 
 
 def test_churn_loses_revenue_only_from_churn_day():
