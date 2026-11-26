@@ -55,3 +55,14 @@ def test_empty_plan_and_bad_tenant_rejected():
         tenant_plan({"tenant_id": "x", "arr_cents": 10, "addon_arr_cents": 20, "discount_bps": 0})
     with pytest.raises(ValueError):
         tenant_plan({"tenant_id": "x", "arr_cents": 10})
+
+
+def test_error_bps_and_report():
+    from mc_agents.kpi09 import error_bps, kpi09_report
+    assert error_bps(110, 100) == 1000 and error_bps(90, -100) == 19000 and error_bps(5, 0) is None
+    pred = {"revenue_delta_cents": 1000, "margin_delta_cents": 1000}
+    ok = kpi09_report(pred, 950, 1050)
+    assert ok["revenue_error_bps"] == 526 and ok["margin_error_bps"] == 476 and ok["passed"] is True
+    bad = kpi09_report(pred, 950, 1300)
+    assert bad["margin_error_bps"] == 2308 and bad["passed"] is False
+    assert kpi09_report(pred, 0, 1000)["passed"] is False

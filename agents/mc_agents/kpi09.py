@@ -64,3 +64,29 @@ def predict_plan_change(
         "months": months, "monthly_revenue_delta_cents": monthly_rev, "monthly_margin_delta_cents": monthly_margin,
         "revenue_delta_cents": sum(monthly_rev), "margin_delta_cents": sum(monthly_margin), "synthetic": True,
     }
+
+
+# M5-04 step 4c-4: KPI-09 compares the prediction above with the observed counterfactual difference.
+KPI09_TARGET_BPS = 1000  # error at most 10% (PLAN.md KPI-09)
+
+
+def error_bps(predicted: int, observed: int) -> int | None:
+    """|predicted - observed| / |observed| in basis points (round half up); None when nothing was observed."""
+    if observed == 0:
+        return None
+    return round_div(abs(predicted - observed) * 10000, abs(observed))
+
+
+def kpi09_report(prediction: dict[str, Any], observed_revenue_cents: int, observed_margin_cents: int) -> dict[str, Any]:
+    """KPI-09 for one ACT-2: revenue and margin error against the 10% target. `passed` needs both within target."""
+    rev = error_bps(prediction["revenue_delta_cents"], observed_revenue_cents)
+    mar = error_bps(prediction["margin_delta_cents"], observed_margin_cents)
+    return {
+        "kpi": "KPI-09", "target_bps": KPI09_TARGET_BPS,
+        "predicted_revenue_cents": prediction["revenue_delta_cents"], "observed_revenue_cents": observed_revenue_cents,
+        "revenue_error_bps": rev,
+        "predicted_margin_cents": prediction["margin_delta_cents"], "observed_margin_cents": observed_margin_cents,
+        "margin_error_bps": mar,
+        "passed": rev is not None and mar is not None and rev <= KPI09_TARGET_BPS and mar <= KPI09_TARGET_BPS,
+        "synthetic": True,
+    }
