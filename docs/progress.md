@@ -33,17 +33,24 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-1. **KPI-09 margin error 16.2% (revenue now 1.3%, passes; synthetic).** The observed margin includes the demand cut's cost saving ($9,072); the calc-spec prediction has no demand response. Options: add a demand-response assumption to the prediction (calc-spec change, parity tests), or score margin net of the cost side. Don't use the simulator's own parameters (circular).
-2. **Case study refresh:** `docs/case-study.md` still says +1.98 pts and "no ACT-2 revenue". Ops `realized-check` 45756180373 now gives **+3.56 pts** last 30 days (54.42% vs 57.98%), AI revenue moves ($677,417.53 vs $702,820.61).
-3. **ACT-3 churn vs invoices:** a churned ACT-3 tenant keeps being invoiced (realized rows count the loss). Stop its invoices from the churn day, like #368.
-4. **KPI-13:** after the next backfill, ops `verify-backfill` (free) shows `roi.json`.
-5. **M2-04 step 5c:** one Haiku 4.5 recording (about $0.05). **Blocked by spend** until 2026-12-01; then cost-report first ($3 rules).
-6. **Haiku 5.5 probe:** paused (spend) until 2026-12-01.
-7. **On or after 2026-12-01:** delete the temporary spend-limit paragraph in AGENTS.md §8.3 (back to $3).
+1. **Refresh KPI-01 and the case study:** ops `realized-check` (free) on main 273c578 (churned ACT-3 no longer invoiced, so KPI-01 moves), then update `docs/case-study.md` (still says +1.98 pts and "no ACT-2 revenue"; last run said +3.56 pts) and add KPI-09 1.3% / 5.5%.
+2. **KPI-13:** after the next backfill, ops `verify-backfill` (free) shows `roi.json`.
+3. **M2-04 step 5c:** one Haiku 4.5 recording (about $0.05). **Blocked by spend** until 2026-12-01; then cost-report first ($3 rules).
+4. **Haiku 5.5 probe:** paused (spend) until 2026-12-01.
+5. **On or after 2026-12-01:** delete the temporary spend-limit paragraph in AGENTS.md §8.3 (back to $3).
 
-Done recently: invoices carry ACT-2 uplift (#368), ACT-2 effective date (#367), M6-04 ticked (case study), KPI-01 counterfactual (#365), KPI-01 summary (#364), M5-04 ticked (#363).
+Done recently: ACT-3 churn ends invoices (#370), KPI-09 demand response (#369), invoices carry ACT-2 uplift (#368), ACT-2 effective date (#367), M6-04 ticked.
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed.
 Notes: Ops eval results are in the job log; fixtures are base64 between FIXTURE-BEGIN/END lines. Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1; local replays need it too or everything drifts). Ops `ev06_graph: true` adds the graph runs (opt-in, about $0.15; the ops job ends `failure` while the graph gate is unmet, which is expected). Flaky github.com 504s during image builds: re-run the failed job. Only commit the graph fixtures from a record run; the other fixture sets change only in tool-use IDs. AG-05 prompt is at the cost-cap edge (`test_unsupported_figure_retries_then_fails_closed` sums $0.009965 of $0.01): keep it no longer than v8. Gh-created PR bodies get a footer: remove it with the GitHub MCP `update_pull_request` (gh api PATCH gets it re-added).
+
+## 2026-11-26 (autopilot run 186)
+
+- **Start:** main `ci` 45757307266 (4e1e012) green; no open PR.
+- **Task 1:** KPI-09 margin side. Prediction takes a declared usage drop (1000 bps, unit elasticity, assumption) on each growth tenant's pre-period LLM cost. Local realized-check: revenue error **1.3%**, margin **5.5%** (was 16.2%), **KPI-09 passes** (synthetic). PR #369 merged (dc92dd7); main `ci` 45762032193 incl. `deploy to dev` green.
+- **Task 2:** churned ACT-3 tenant not invoiced from its churn day (churn month prorated). PR #370 merged (273c578); main `ci` 45763701154 incl. `deploy to dev` green.
+- **Ended at 51 min** (time budget); next is Next 1.
+- **Decisions (auto-decided under §8.2):** rejected scoring margin net of cost (weakens KPI-09) and the simulator's own 12%/lag (circular); proration of the churn month (matches the realized rows' daily loss).
+- **Cost:** $0 (no paid ops runs).
 
 ## 2026-11-26 (autopilot run 185)
 
