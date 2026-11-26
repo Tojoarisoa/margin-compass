@@ -4,7 +4,6 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Waiting for owner
 
-- **Merge refused (run 183):** the fast-forward push of PR #364 to `main` (`git push origin 44d2412:main`, every check green) was refused by the session's permission check, so nothing merged this run. Please merge #364 (fast-forward), or allow the push for autopilot runs. Branch `auto/m6-04-kpi01-counterfactual` (0ecbac3, on top of #364) is pushed with no PR yet.
 - **AWS spend over the limit (run 178):** ops `cost-report` (45702478562): month to date **$6.52** (Haiku 4.5 $3.50, ECR $2.87, S3 $0.14), above the $4.75 limit; Budgets showed "$0.0 of $5.0", so the kill switch had not fired. ECR clean-up is done, so ECR stops growing. No paid ops runs until 2026-12-01 (§8.3); M2-04 step 5c waits for that.
 - **Old branches left (run 179):** deleting `auto/m2-04-cost-breakdown-tool` and `auto/m2-04-replay-set-8` (PRs #350, #351 closed, replaced) was refused by the session's permission check. Delete them when convenient.
 - **Cost allocation tags: activated 2026-11-26** (resource tags `stage` and `env` Active; `iamPrincipal/*` left inactive). They apply to new billing data only. Autopilot: from 2026-11-27, check that new FOCUS lines carry `stage`, then that the PG-8 finops card shows more than one stage; then drop this item.
@@ -34,7 +33,7 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-1. **Finish PR #364** (CI green on 44d2412; merge refused, see Waiting for owner). Then open a PR for `auto/m6-04-kpi01-counterfactual` (ops realized-check prints KPI-01 approved vs counterfactual; checked locally on the base run).
+1. **Finish the PR for `auto/m6-04-kpi01-counterfactual-r2`** (ops realized-check prints KPI-01 approved vs counterfactual).
 2. **M6-04 case study:** run ops `realized-check` and `verify-backfill` (both free), then write `docs/case-study/` from their numbers. Counterfactual (local, seed 42, synthetic): AI gross margin 49.33% in the first 30 days, 54.42% in the last 30, 51.55% over the window.
 3. **KPI-09 misses its 10% target (revenue 22.9%, margin 0.6%; synthetic).** Fix candidates: an explicit ACT-2 effective date that both sides use, and the ACT-2 churn response.
 4. **KPI-13:** after the next backfill, ops `verify-backfill` (free) shows `roi.json`.
@@ -45,6 +44,12 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 Done recently: M5-04 ticked (#363), KPI-09 backtest in ops realized-check (#362), KPI-09 prediction (#361), ACT-2 plan revenue side (#360), ACT-2 plan target effect (#359).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed.
 Notes: Ops eval results are in the job log; fixtures are base64 between FIXTURE-BEGIN/END lines. Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1; local replays need it too or everything drifts). Ops `ev06_graph: true` adds the graph runs (opt-in, about $0.15; the ops job ends `failure` while the graph gate is unmet, which is expected). Flaky github.com 504s during image builds: re-run the failed job. Only commit the graph fixtures from a record run; the other fixture sets change only in tool-use IDs. AG-05 prompt is at the cost-cap edge (`test_unsupported_figure_retries_then_fails_closed` sums $0.009965 of $0.01): keep it no longer than v8. Gh-created PR bodies get a footer: remove it with the GitHub MCP `update_pull_request` (gh api PATCH gets it re-added).
+
+## 2026-11-26 (autopilot run 184)
+
+- **Start:** main `ci` 45738355747 (bb09e82) green. PR #364 (run 183) green on 405f55c: merged (fast-forward accepted this run); main `ci` 45746983304 incl. `deploy to dev` green.
+- **Task 1:** M6-04 step 2, ops `realized-check` prints KPI-01 approved vs counterfactual. Branch from run 183 was behind main: rebuilt as `auto/m6-04-kpi01-counterfactual-r2` (cherry-pick). Tests 4 passed, ruff clean.
+- **Cost:** $0 (no ops runs).
 
 ## 2026-11-26 (autopilot run 183)
 
