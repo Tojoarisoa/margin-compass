@@ -21,3 +21,16 @@ Order: effects first (no AWS, testable offline), auth last (needs owner steps).
 ## M5-04 Realized margin
 
 `fct_realized_margin` = counterfactual run minus approved run per action x day; KPI-01, -02, -09, -13 go live from it. Blocked on M5-03 steps 1-3.
+
+### M5-04 remaining steps (autopilot run 181, auto-decided under AGENTS.md §8.2)
+
+KPI-01 and KPI-02 are live (realized card, `realized.json`). Left:
+
+4a. **KPI-13 owner record.** The M2 build writes `gold/_quality/roi.json` (private lake, not published): synthetic
+    realized margin vs the real AWS bill to date (FOCUS export, before credits), ROI in bps. Owner 2026-11-12: kept off
+    the public card. Options: budget cap as cost (rejected: the owner asked for the real bill), latest month only
+    (rejected: the realized total spans the window, so the bill to date is the fairer denominator).
+4b. **Ops `verify-backfill` prints `roi.json`**, so the owner sees KPI-13 in the job summary.
+4c. **KPI-09 backtest (local, free).** In ops `realized-check`, approve one ACT-2 plan change, compare the calc-spec
+    pricing prediction (revenue, margin, churn) with the observed counterfactual difference; report the error against
+    the 10% target. Then tick M5-04.

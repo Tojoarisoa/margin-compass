@@ -461,6 +461,38 @@ def publish_finops(data_root: Path, run_id: str) -> list[str]:
     return ["publish/latest/finops.json"]
 
 
+def write_roi(data_root: Path, run_id: str) -> list[str]:
+    """KPI-13 owner record: gold/_quality/roi.json (private lake, never published).
+
+    ROI = (realized margin - platform cost) / platform cost, in bps (10000 = 1.0x). Realized margin is the synthetic
+    `fct_realized_margin` total (status realized); platform cost is the real AWS bill to date from the FOCUS export
+    (MC_FINOPS_FOCUS_GLOB, before credits, all months). The two labels differ, so the record carries both. Owner
+    2026-11-12: kept off the public card. Without the mart: nothing; without a bill: status `awaiting_bill`.
+    """
+    root = Path(data_root)
+    mart = root / "gold" / "fct_realized_margin.parquet"
+    if not mart.exists():
+        return []
+    recovered = Decimal(duckdb.sql(
+        f"select coalesce(sum(realized_margin_usd) filter (where status = 'realized'), 0)::varchar from read_parquet('{mart}')"
+    ).fetchall()[0][0]).quantize(CENT)
+    fin = build_finops(os.environ.get("MC_FINOPS_FOCUS_GLOB"), run_id)
+    cost = sum((Decimal(str(m["cost_usd"])) for m in fin.get("by_month", [])), Decimal("0")).quantize(CENT)
+    body: dict = {"schema_version": "roi.v0", "run_id": run_id, "kpi": "KPI-13",
+                  "realized_margin_usd": str(recovered), "realized_margin_label": "synthetic",
+                  "platform_cost_usd": str(cost), "platform_cost_label": "real", "cost_basis": "before credits, bill to date",
+                  "bill_months": [m["key"] for m in fin.get("by_month", [])]}
+    if cost <= 0:
+        body.update(status="awaiting_bill", roi_bps=None, net_usd=None)
+    else:
+        net = recovered - cost
+        body.update(status="ok", net_usd=str(net), roi_bps=int((net * 10000 / cost).quantize(Decimal("1"), ROUND_HALF_UP)))
+    out = root / "gold" / "_quality" / "roi.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(body, indent=2, sort_keys=True) + "\n")
+    return ["gold/_quality/roi.json"]
+
+
 def publish_dogfood(data_root: Path, run_id: str) -> list[str]:
     """Write publish/latest/dogfood.json (PG-8 dogfood card) from telemetry/dogfood.parquet, when it exists."""
     dog = Path(data_root) / "telemetry" / "dogfood.parquet"

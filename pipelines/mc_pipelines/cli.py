@@ -240,6 +240,12 @@ def run_m2_dbt(landing: Path, data_root: Path, run_id: str, transform_dir: Path 
             summary["published"] += publish_realized(root, run_id)
         except Exception as exc:  # noqa: BLE001
             summary["realized_error"] = str(exc)[:200]
+        try:  # M5-04 KPI-13: owner-only ROI record against the real bill (gold/_quality, not published)
+            from .publish import write_roi
+
+            summary["quality_files"] = summary.get("quality_files", []) + write_roi(root, run_id)
+        except Exception as exc:  # noqa: BLE001
+            summary["roi_error"] = str(exc)[:200]
         try:  # PG-1 from the M2 marts (pg1.json, explore.parquet, pg2.json); never fails the data build
             from .publish import publish_m2_pg1
 
