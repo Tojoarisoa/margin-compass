@@ -74,6 +74,7 @@ def apply_act1(rows: list[TelemetryRow], approvals: list[Approval], seed: int) -
 # ACT-2 / ACT-3 demand responses (assumptions, synthetic). Revenue is not in telemetry, so these change usage volume;
 # the revenue side is computed from the volume change in M5-04.
 ACT2_MAX_REDUCTION = 0.12  # share of a feature's requests that go away at full effect after a price/allowance change
+ACT2_ADDON_UPLIFT = 0.10  # ACT-2 "plan/<plan>": AI add-on price on that plan rises 10% from approval plus lag
 ACT3_MAX_REDUCTION = 0.30  # share of a tenant's requests that go away under a fair-use cap
 ACT3_CHURN_PROB = 0.06  # chance the account churns after the action (seeded per action)
 ACT3_CHURN_DELAY_DAYS = 45

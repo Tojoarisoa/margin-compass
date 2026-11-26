@@ -2,7 +2,7 @@ from dataclasses import replace
 from datetime import date, datetime, timedelta
 
 from booncore_sim.m2_telemetry import TelemetryRow
-from booncore_sim.m5_effects import Approval
+from booncore_sim.m5_effects import Approval, lag_days
 from booncore_sim.m5_realized import MEASUREMENT_WINDOW_DAYS, realized_by_action
 
 A = Approval("act-1", "ACT-1", "F4/cost", date(2026, 3, 1))
@@ -90,7 +90,11 @@ def test_act2_plan_target_realizes_savings_for_that_plan():
 
     a2 = Approval("act2-plan", "ACT-2", "plan/growth", date(2026, 3, 1))
     ts = [SimpleNamespace(tenant_id=f"t{i}", plan="growth" if i < 2 else "starter", arr_usd=Decimal("36500"),
-                          discount_pct=Decimal("0")) for i in range(5)]
+                          ai_addon_arr_usd=Decimal("3650"), discount_pct=Decimal("0")) for i in range(5)]
     out = realized_by_action(_rows(), [a2], 42, ts)
-    assert out and all(r.saved_usd > 0 for r in out)
+    assert out and all(r.saved_usd >= 0 for r in out) and any(r.saved_usd > 0 for r in out)
+    start = a2.approved_on + timedelta(days=lag_days(42, a2))
+    # Add-on price +10% on the two growth tenants: 2 * 3650 * 0.10 / 365 = $2.00 a day from approval plus lag.
+    assert {r.revenue_delta_usd for r in out if r.day >= start} == {2.0}
+    assert all(r.revenue_delta_usd == 0 for r in out if r.day < start)
     assert realized_by_action(_rows(), [a2], 42) == []  # without tenants the plan is unknown

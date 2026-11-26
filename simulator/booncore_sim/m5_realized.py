@@ -3,7 +3,9 @@
 For each approval the effect is measured against the same rows without it (same seed, so the only difference is the
 action). Cost side only: `saved_usd` = counterfactual cost - actual cost (negative when the action raised cost).
 `revenue_delta_usd` is the revenue side: the AI add-on is flat, so volume cuts change no revenue; only an ACT-3 churn
-loses the account's net daily revenue (ARR after discount / 365, current price; assumption) from the churn day. Savings count as realized only after the 14-day measurement
+loses the account's net daily revenue (ARR after discount / 365, current price; assumption) from the churn day. An ACT-2
+"plan/<plan>" raises the AI add-on price of that plan's tenants by `ACT2_ADDON_UPLIFT` (net of discount, / 365) from
+approval plus lag (M5-04 step 4c-2; KPI-09 observes it). Savings count as realized only after the 14-day measurement
 window since approval; before that the row is `pending_verification` (PLAN.md §8.4). Synthetic.
 """
 
@@ -15,7 +17,7 @@ from datetime import date, timedelta
 
 from .m2_patterns import row_cost
 from .m2_telemetry import TelemetryRow
-from .m5_effects import Approval, apply_effects, churn_day
+from .m5_effects import ACT2_ADDON_UPLIFT, Approval, apply_effects, churn_day, lag_days, plan_of
 
 MEASUREMENT_WINDOW_DAYS = 14
 
@@ -27,7 +29,7 @@ class RealizedRow:
     counterfactual_cost_usd: float
     actual_cost_usd: float
     saved_usd: float
-    revenue_delta_usd: float  # <= 0: revenue lost to churn; 0 when no tenants are given
+    revenue_delta_usd: float  # ACT-3 churn: <= 0; ACT-2 plan price: >= 0; 0 when no tenants are given
     status: str  # realized | pending_verification
     approval_date_simulated: bool = False  # the approval date was placed before the data date (owner 2026-11-26, (b))
 
@@ -57,10 +59,16 @@ def realized_by_action(
         cd = churn_day(seed, a) if a.action_type == "ACT-3" else None
         if cd is not None:
             lost = revenue.get(a.target.split("/")[0], 0.0)
+        plan = plan_of(a)
+        uplift = ACT2_ADDON_UPLIFT * sum(float(t.ai_addon_arr_usd * (1 - t.discount_pct)) / 365
+                                         for t in tenants or [] if plan and getattr(t, "plan", None) == plan)
+        price_from = a.approved_on + timedelta(days=lag_days(seed, a))
         cutoff = a.approved_on + timedelta(days=MEASUREMENT_WINDOW_DAYS)
         for day in sorted(base):
             cf, ac = base[day], actual.get(day, 0.0)
             rev = -round(lost, 6) if cd is not None and day >= cd else 0.0
+            if uplift and day >= price_from:
+                rev = round(uplift, 6)
             if abs(cf - ac) < 1e-9 and rev == 0.0:
                 continue
             status = "realized" if day >= cutoff else "pending_verification"
