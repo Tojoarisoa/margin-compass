@@ -4,7 +4,9 @@ At approval time, each tenant on the plan is priced before and after the change 
 (`price_scenario`: pricing engine v1 + churn-adjusted revenue v1), using the tool's own churn assumption, not the
 simulator's hidden response parameters (that would make the backtest circular). The result is the predicted revenue
 and margin change per month after the change takes effect; step 4c-4 compares it with the observed counterfactual
-difference. The calc-spec has no demand response, so the predicted cost change is 0 and margin moves with revenue.
+difference. The calc-spec has no demand response, so the predicted cost change is 0 and margin moves with revenue,
+unless the action declares an expected volume change (run 186): then each tenant's pre-period monthly AI cost is
+priced after the change at (1 - volume_change) through the same tool, so margin also carries the cost side.
 
 Money in cents, rates in basis points, integer arithmetic only (no new formula). Synthetic inputs only.
 """
@@ -36,16 +38,24 @@ def tenant_plan(t: dict[str, Any]) -> dict[str, int]:
     }
 
 
+def _bps(name: str, v: Any, hi: int | None = None) -> None:
+    if isinstance(v, bool) or not isinstance(v, int) or v < 0 or (hi is not None and v > hi):
+        raise ValueError(f"{name} must be a non-negative integer" + (f" at most {hi}" if hi is not None else ""))
+
+
 def predict_plan_change(
-    tenants: list[dict[str, Any]], uplift_bps: int, months: int, churn_bps: int = DEFAULT_CHURN_BPS
+    tenants: list[dict[str, Any]], uplift_bps: int, months: int, churn_bps: int = DEFAULT_CHURN_BPS,
+    volume_change_bps: int = 0,
 ) -> dict[str, Any]:
     """Predicted change of an add-on price uplift of `uplift_bps` on every tenant given, for months 1..`months`.
 
+    `volume_change_bps` is the action's declared expected drop in AI usage after the change (0 = no demand response):
+    a tenant's monthly `cost_cents` becomes cost * (10000 - volume_change_bps) / 10000 in the "after" plan.
     Month k's change is the churn-adjusted change over k months minus that over k - 1 months, so the series sums to
     the tool's `churn.delta` over the whole horizon.
     """
-    if isinstance(uplift_bps, bool) or not isinstance(uplift_bps, int) or uplift_bps < 0:
-        raise ValueError("uplift_bps must be a non-negative integer")
+    _bps("uplift_bps", uplift_bps)
+    _bps("volume_change_bps", volume_change_bps, 10000)
     if not tenants:
         raise ValueError("no tenants on the plan")
     monthly_rev = [0] * months
@@ -53,6 +63,8 @@ def predict_plan_change(
     for t in tenants:
         plan = tenant_plan(t)
         after = {"addon_cents": round_div(plan["addon_cents"] * (10000 + uplift_bps), 10000)}
+        if volume_change_bps and plan["cost_cents"]:
+            after["cost_cents"] = round_div(plan["cost_cents"] * (10000 - volume_change_bps), 10000)
         prev_rev = prev_margin = 0
         for k in range(1, months + 1):
             d = price_scenario({**plan, "after": after, "churn_bps": churn_bps, "months": k})["churn"]["delta"]
@@ -61,7 +73,7 @@ def predict_plan_change(
             prev_rev, prev_margin = d["adj_revenue_cents_change"], d["adj_margin_cents_change"]
     return {
         "tool": "price_plan", "tenants": len(tenants), "uplift_bps": uplift_bps, "churn_bps": churn_bps,
-        "months": months, "monthly_revenue_delta_cents": monthly_rev, "monthly_margin_delta_cents": monthly_margin,
+        "months": months, "volume_change_bps": volume_change_bps, "monthly_revenue_delta_cents": monthly_rev, "monthly_margin_delta_cents": monthly_margin,
         "revenue_delta_cents": sum(monthly_rev), "margin_delta_cents": sum(monthly_margin), "synthetic": True,
     }
 
@@ -92,11 +104,15 @@ def kpi09_report(prediction: dict[str, Any], observed_revenue_cents: int, observ
     }
 
 
-def tenants_on_plan(tenants: list, plan: str) -> list[dict[str, Any]]:
-    """Simulator tenants (`arr_usd`, `ai_addon_arr_usd`, `discount_pct` as Decimal) on `plan`, as cents and bps."""
-    return [{"tenant_id": t.tenant_id, "arr_cents": int(round(t.arr_usd * 100)),
-             "addon_arr_cents": int(round(t.ai_addon_arr_usd * 100)), "discount_bps": int(round(t.discount_pct * 10000))}
-            for t in tenants if t.plan == plan]
+def tenants_on_plan(tenants: list, plan: str, cost_cents: dict[str, int] | None = None) -> list[dict[str, Any]]:
+    """Simulator tenants (`arr_usd`, `ai_addon_arr_usd`, `discount_pct` as Decimal) on `plan`, as cents and bps.
+    `cost_cents` (tenant_id -> monthly AI cost in cents, measured before the change) adds `cost_cents` per tenant."""
+    out = [{"tenant_id": t.tenant_id, "arr_cents": int(round(t.arr_usd * 100)),
+            "addon_arr_cents": int(round(t.ai_addon_arr_usd * 100)), "discount_bps": int(round(t.discount_pct * 10000))}
+           for t in tenants if t.plan == plan]
+    if cost_cents is not None:
+        out = [{**t, "cost_cents": int(cost_cents.get(t["tenant_id"], 0))} for t in out]
+    return out
 
 
 def months_covered(start: Any, end: Any) -> int:
@@ -105,13 +121,21 @@ def months_covered(start: Any, end: Any) -> int:
 
 
 def backtest_plan_change(tenants: list, plan: str, uplift_bps: int, effective_on: Any, window_end: Any,
-                         observed_revenue_usd: float, observed_margin_usd: float) -> dict[str, Any]:
+                         observed_revenue_usd: float, observed_margin_usd: float, volume_change_bps: int = 0,
+                         monthly_cost_cents: dict[str, int] | None = None) -> dict[str, Any]:
     """KPI-09 for one ACT-2 "plan/<plan>": prediction from the action's explicit effective date (the same date the
     simulator prices from, `booncore_sim.m5_effects.effective_on`) to the window end vs the observed difference.
     The prediction counts whole calendar months, so pick an effective date on the first of a month.
     Observed figures are the action's summed `revenue_delta_usd` and `saved_usd + revenue_delta_usd` over all its days
-    (measurement status ignored: the prediction covers every day from the effective date)."""
-    pred = predict_plan_change(tenants_on_plan(tenants, plan), uplift_bps, months_covered(effective_on, window_end))
+    (measurement status ignored: the prediction covers every day from the effective date).
+    `volume_change_bps` is the action's declared demand response and `monthly_cost_cents` each tenant's AI cost in the
+    calendar month before the effective date (known at approval); both default to no cost side."""
+    if volume_change_bps and monthly_cost_cents is None:
+        raise ValueError("volume_change_bps needs monthly_cost_cents (the pre-period AI cost per tenant)")
+    pred = predict_plan_change(tenants_on_plan(tenants, plan, monthly_cost_cents), uplift_bps,
+                               months_covered(effective_on, window_end), volume_change_bps=volume_change_bps)
     out = kpi09_report(pred, int(round(observed_revenue_usd * 100)), int(round(observed_margin_usd * 100)))
     return {**out, "plan": plan, "tenants": pred["tenants"], "months": pred["months"], "churn_bps": pred["churn_bps"],
-            "monthly_predicted_revenue_cents": pred["monthly_revenue_delta_cents"]}
+            "volume_change_bps": volume_change_bps,
+            "monthly_predicted_revenue_cents": pred["monthly_revenue_delta_cents"],
+            "monthly_predicted_margin_cents": pred["monthly_margin_delta_cents"]}

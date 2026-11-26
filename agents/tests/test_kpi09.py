@@ -83,3 +83,36 @@ def test_backtest_plan_change_from_simulator_tenants():
     r = backtest_plan_change(ts, "growth", 1000, date(2026, 9, 1), date(2026, 10, 31), 36.0, 40.0)
     assert r["tenants"] == 1 and r["months"] == 2 and r["observed_revenue_cents"] == 3600
     assert r["predicted_revenue_cents"] == sum(r["monthly_predicted_revenue_cents"])
+
+
+def test_declared_volume_change_adds_cost_saving_to_margin():
+    # T2: cost 5,000/month; 10% fewer requests -> cost 4,500, saving 500/month on top of the revenue uplift.
+    no = predict_plan_change([T2], 1000, 2, churn_bps=0)
+    yes = predict_plan_change([T2], 1000, 2, churn_bps=0, volume_change_bps=1000)
+    assert yes["monthly_revenue_delta_cents"] == no["monthly_revenue_delta_cents"] == [1000, 1000]
+    assert yes["monthly_margin_delta_cents"] == [1500, 1500] and yes["volume_change_bps"] == 1000
+    # Without a cost (T1 has none) the volume change moves nothing.
+    assert predict_plan_change([T1], 1000, 2, churn_bps=0, volume_change_bps=1000)["margin_delta_cents"] == 3600
+
+
+@pytest.mark.parametrize("bad", [-1, True, 10001, 0.5])
+def test_bad_volume_change_rejected(bad):
+    with pytest.raises(ValueError):
+        predict_plan_change([T2], 1000, 2, volume_change_bps=bad)
+
+
+def test_backtest_with_pre_period_cost():
+    from datetime import date
+    from decimal import Decimal
+    from types import SimpleNamespace
+
+    from mc_agents.kpi09 import backtest_plan_change, tenants_on_plan
+    ts = [SimpleNamespace(tenant_id="bc-t0002", plan="growth", arr_usd=Decimal("6000.00"), ai_addon_arr_usd=Decimal("1200.00"),
+                          discount_pct=Decimal("0"))]
+    assert tenants_on_plan(ts, "growth", {"bc-t0002": 5000}) == [T2]
+    assert tenants_on_plan(ts, "growth", {})[0]["cost_cents"] == 0
+    r = backtest_plan_change(ts, "growth", 1000, date(2026, 9, 1), date(2026, 10, 31), 20.0, 30.0, 1000, {"bc-t0002": 5000})
+    assert r["volume_change_bps"] == 1000 and r["predicted_margin_cents"] > r["predicted_revenue_cents"]
+    assert r["predicted_margin_cents"] == sum(r["monthly_predicted_margin_cents"])
+    with pytest.raises(ValueError):
+        backtest_plan_change(ts, "growth", 1000, date(2026, 9, 1), date(2026, 10, 31), 20.0, 30.0, 1000)

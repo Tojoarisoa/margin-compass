@@ -72,6 +72,17 @@ realized revenue side treats every plan as a flat add-on. KPI-09 needs a plan ch
   Options: (a) predict from approval plus the simulator's lag (rejected: circular); (b) score only full-effect months
   (rejected: hides the start-up gap instead of fixing the dates); (c) explicit effective date (recommended).
 
+- **4c-6 Declared demand response (run 186, auto-decided under AGENTS.md §8.2).** After 4c-5 the margin error was
+  16.2%: the observed margin includes the demand cut's LLM cost saving, the prediction had none. Now the ACT-2 declares
+  an expected usage drop (`volume_change_bps`; realized-check: 1000 = unit price elasticity on the 10% uplift, an
+  assumption) and the prediction prices each plan tenant's LLM cost of the calendar month before the effective date
+  (base run, known at approval) at (1 - drop) through the same `price_plan` tool (`after.cost_cents`), churn-adjusted.
+  Local (seed 42, growth, 2026-09-01..10-31, synthetic): revenue $46,890.96 vs $47,494.27, **error 1.3%**; margin
+  $59,018.64 vs $55,966.26, **error 5.5%, passes**. The prediction overshoots because it applies the full drop from
+  day one; the simulator ramps it in. Options: (a) score margin net of the cost side (rejected: weakens KPI-09 to the
+  revenue error); (b) predict with the simulator's 12% and lag (rejected: circular); (c) a declared, independent
+  demand assumption on the pre-period cost (recommended).
+
 Options considered: (a) backtest on the existing feature-level ACT-2 (rejected: no revenue moves, so the revenue
 error is undefined); (b) predict with the simulator's own parameters (rejected: circular, the error would be ~0);
 (c) the steps above (recommended: independent prediction, closed-loop observation, no cost).
