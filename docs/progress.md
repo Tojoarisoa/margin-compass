@@ -33,15 +33,23 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-1. **Refresh KPI-01 and the case study:** ops `realized-check` (free) on main 273c578 (churned ACT-3 no longer invoiced, so KPI-01 moves), then update `docs/case-study.md` (still says +1.98 pts and "no ACT-2 revenue"; last run said +3.56 pts) and add KPI-09 1.3% / 5.5%.
-2. **KPI-13:** after the next backfill, ops `verify-backfill` (free) shows `roi.json`.
-3. **M2-04 step 5c:** one Haiku 4.5 recording (about $0.05). **Blocked by spend** until 2026-12-01; then cost-report first ($3 rules).
-4. **Haiku 5.5 probe:** paused (spend) until 2026-12-01.
-5. **On or after 2026-12-01:** delete the temporary spend-limit paragraph in AGENTS.md §8.3 (back to $3).
+1. **M2-04 step 5c:** one Haiku 4.5 recording (about $0.05). **Blocked by spend** until 2026-12-01; then cost-report first ($3 rules).
+2. **Haiku 5.5 probe:** paused (spend) until 2026-12-01.
+3. **On or after 2026-12-01:** delete the temporary spend-limit paragraph in AGENTS.md §8.3 (back to $3).
+4. **From 2026-11-27:** cost tags check (Waiting for owner item): new FOCUS lines carry `stage`, then the finops card shows more than one stage.
 
-Done recently: ACT-3 churn ends invoices (#370), KPI-09 demand response (#369), invoices carry ACT-2 uplift (#368), ACT-2 effective date (#367), M6-04 ticked.
+Done recently: case study refreshed +3.56 pts (#371), KPI-13 shown by verify-backfill, ACT-3 churn ends invoices (#370), KPI-09 demand response (#369), invoices carry ACT-2 uplift (#368), ACT-2 effective date (#367), M6-04 ticked.
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed.
 Notes: Ops eval results are in the job log; fixtures are base64 between FIXTURE-BEGIN/END lines. Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1; local replays need it too or everything drifts). Ops `ev06_graph: true` adds the graph runs (opt-in, about $0.15; the ops job ends `failure` while the graph gate is unmet, which is expected). Flaky github.com 504s during image builds: re-run the failed job. Only commit the graph fixtures from a record run; the other fixture sets change only in tool-use IDs. AG-05 prompt is at the cost-cap edge (`test_unsupported_figure_retries_then_fails_closed` sums $0.009965 of $0.01): keep it no longer than v8. Gh-created PR bodies get a footer: remove it with the GitHub MCP `update_pull_request` (gh api PATCH gets it re-added).
+
+## 2026-11-26 (autopilot run 187)
+
+- **Start:** main `ci` 45765084704 (176c95c) green; no open PR.
+- **Task 1:** ops `realized-check` 45766158041 (free, 176c95c): KPI-01 last 30 days 54.42% -> **57.98% (+3.56 pts)**, window +0.41; revenue now differs (ACT-2 in invoices); KPI-09 revenue 1.3%, margin 5.5%, passes. `docs/case-study.md` rewritten from it. PR #371 merged (70fa816); main `ci` 45767813481 incl. `deploy to dev` green.
+- **Task 2:** KPI-13. Ops `start-backfill` approvals 45768650376 SUCCEEDED (EV-02/03/11 pass, 38 objects); `verify-backfill` 45769436873: `roi.json` ok, realized $1,713.91 (synthetic, 1 live action) vs real bill $6.67, net $1,707.24, ROI 2,559,580 bps. Next item done.
+- **Decisions:** none needed. PT-06 left as is (earlier §8.2 decision: too small vs noise).
+- **Cost:** MTD bill $6.67 before credits (Haiku 4.5 $3.50, ECR $3.00, S3 $0.14, Cost Explorer $0.03); this run about $0.01 (one backfill). No paid ops runs.
+- **Ended at ~32 min:** every remaining task is blocked (spend until 12-01, tags from 11-27).
 
 ## 2026-11-26 (autopilot run 186)
 
