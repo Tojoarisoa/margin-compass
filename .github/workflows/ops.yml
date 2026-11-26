@@ -385,7 +385,7 @@ jobs:
           from booncore_sim.m5_effects import ACT2_ADDON_UPLIFT, DECISION_LEAD_DAYS
           from datetime import timedelta
           from mc_agents.kpi09 import backtest_plan_change
-          rev, mar = duckdb.sql(f"select coalesce(sum(revenue_delta_usd), 0), coalesce(sum(saved_usd + revenue_delta_usd), 0) from read_parquet('{root}/approved/gold/fct_realized_margin.parquet') where action_id = '{kpi09_id}'").fetchone()
+          rev, mar = duckdb.sql(f"select coalesce(sum(revenue_delta_usd), 0), coalesce(sum(saved_usd + revenue_delta_usd), 0) from read_parquet('{root}/approved/gold/fct_realized_margin.parquet') where action_id = '{kpi09_id}'").fetchall()[0]
           kpi09 = backtest_plan_change(generate_m2_tenants(42)[0], kpi09_plan, int(round(ACT2_ADDON_UPLIFT * 10000)), WINDOW_END - timedelta(days=DECISION_LEAD_DAYS), WINDOW_END, float(rev), float(mar))
           out = {"approved": len(picked), "by_status": rows, "kpi09": kpi09}
           print(json.dumps(out, default=str))

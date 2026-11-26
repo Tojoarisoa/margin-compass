@@ -53,6 +53,14 @@ realized revenue side treats every plan as a flat add-on. KPI-09 needs a plan ch
   response), so margin moves with revenue.
 - **4c-4 KPI-09.** In ops `realized-check` (local, free): approve one ACT-2, compare predicted vs observed revenue
   and margin; error = |predicted - observed| / |observed|, target <= 10%; report it, then tick M5-04.
+  Built (run 182): ops `realized-check` approves `plan/growth` (+10% add-on, id `act-kpi09-growth`) next to the
+  ACT-1/ACT-3 picks and prints `kpi09` (`mc_agents.kpi09.backtest_plan_change`); observed = the action's summed
+  `revenue_delta_usd` and `saved_usd + revenue_delta_usd` over all its days. Local result (seed 42, 150 tenants,
+  2026-09-01..10-31): revenue predicted $46,890.96 vs observed $38,151.13, **error 22.9% (misses 10%)**; margin
+  $46,890.96 vs $46,623.12, error 0.6%. Cause: the prediction starts at approval, the simulated price takes effect
+  after the adoption lag (2026-09-18); October alone is within 4%. The margin match is partly luck (the demand cut's
+  cost saving offsets the lag). Not tuned: using the simulator's lag would make the backtest circular. Churn is not
+  compared: the simulator has no ACT-2 churn response yet (4c-1 left it out).
 
 Options considered: (a) backtest on the existing feature-level ACT-2 (rejected: no revenue moves, so the revenue
 error is undefined); (b) predict with the simulator's own parameters (rejected: circular, the error would be ~0);
