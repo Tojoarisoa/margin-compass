@@ -49,9 +49,10 @@ def realized_by_action(
     """`rows` is the baseline (no approvals). One output row per action and day on which its cost or revenue differs."""
     base = _daily_cost(rows)
     revenue = _daily_revenue(tenants or [])
+    plans = {t.tenant_id: t.plan for t in tenants or [] if getattr(t, "plan", None)}
     out: list[RealizedRow] = []
     for a in sorted(approvals, key=lambda x: x.action_id):
-        actual = _daily_cost(apply_effects(rows, [a], seed))
+        actual = _daily_cost(apply_effects(rows, [a], seed, plans))
         lost = 0.0
         cd = churn_day(seed, a) if a.action_type == "ACT-3" else None
         if cd is not None:

@@ -104,3 +104,18 @@ def test_window_mapping_places_decisions_60_days_before_the_data_date(tmp_path):
     [mapped] = load_approvals(f, data_date=WINDOW_END)
     assert DECISION_LEAD_DAYS == 60 and mapped.approved_on == date(2026, 9, 1) and mapped.simulated_date
     assert mapped.approved_on > WINDOW_END - timedelta(days=90)  # inside the window, with room to realize
+
+
+def test_act2_plan_target_cuts_only_tenants_on_that_plan():
+    """The nightly review drafts ACT-2 as "plan/<plan>"; it must reach that plan's tenants (M5-04 step 4c-1)."""
+    a = Approval("act-2p", "ACT-2", "plan/growth", date(2026, 3, 1))
+    rows = _rows()
+    plans = {"t0": "growth", "t1": "growth", "t2": "starter", "t3": "enterprise", "t4": "starter"}
+    out = apply_act2_act3(rows, [a], 42, plans)
+    assert out == apply_act2_act3(rows, [a], 42, plans)
+    changed = {o.tenant_id for o, r in zip(out, rows, strict=True) if o != r}
+    assert changed == {"t0", "t1"}
+    start = a.approved_on + timedelta(days=lag_days(42, a))
+    assert all(o == r for o, r in zip(out, rows, strict=True) if o.usage_ts.date() < start)
+    assert apply_act2_act3(rows, [a], 42) == rows  # no plan map: nothing to target
+    assert apply_effects(rows, [a], 42, plans) == out

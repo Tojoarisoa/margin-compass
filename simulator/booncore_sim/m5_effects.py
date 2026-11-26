@@ -96,18 +96,33 @@ def _scale(r: TelemetryRow, keep: float) -> TelemetryRow:
     )
 
 
-def apply_act2_act3(rows: list[TelemetryRow], approvals: list[Approval], seed: int) -> list[TelemetryRow]:
-    """ACT-2 target "<feature_id>/price" cuts that feature's volume for all tenants; ACT-3 target "<tenant_id>/cap"
-    cuts one tenant's volume and may churn it (rows dropped from the churn day)."""
-    a2 = [(a, a.target.split("/")[0]) for a in approvals if a.action_type == "ACT-2"]
+def plan_of(a: Approval) -> str | None:
+    """Plan name of an ACT-2 "plan/<plan>" target (the nightly review's form), else None."""
+    head, _, rest = a.target.partition("/")
+    return rest if a.action_type == "ACT-2" and head == "plan" and rest else None
+
+
+def apply_act2_act3(
+    rows: list[TelemetryRow], approvals: list[Approval], seed: int, plans: dict[str, str] | None = None
+) -> list[TelemetryRow]:
+    """ACT-2 target "<feature_id>/price" cuts that feature's volume for all tenants; ACT-2 target "plan/<plan>" (the
+    nightly review's form) cuts the volume of the tenants on that plan (`plans`: tenant_id -> plan; without it the plan
+    target changes nothing); ACT-3 target "<tenant_id>/cap" cuts one tenant's volume and may churn it (rows dropped
+    from the churn day)."""
+    a2 = [(a, a.target.split("/")[0]) for a in approvals if a.action_type == "ACT-2" and plan_of(a) is None]
+    a2p = [(a, plan_of(a)) for a in approvals if plan_of(a) is not None]
+    plans = plans or {}
     a3 = [(a, a.target.split("/")[0], churn_day(seed, a)) for a in approvals if a.action_type == "ACT-3"]
-    if not a2 and not a3:
+    if not a2 and not a2p and not a3:
         return rows
     out = []
     for r in rows:
         day, keep, gone = r.usage_ts.date(), 1.0, False
         for a, feature in a2:
             if r.feature_id == feature:
+                keep *= 1 - ACT2_MAX_REDUCTION * share(seed, a, day)
+        for a, plan in a2p:
+            if plans.get(r.tenant_id) == plan:
                 keep *= 1 - ACT2_MAX_REDUCTION * share(seed, a, day)
         for a, tenant, cd in a3:
             if r.tenant_id == tenant:
@@ -119,9 +134,12 @@ def apply_act2_act3(rows: list[TelemetryRow], approvals: list[Approval], seed: i
     return out
 
 
-def apply_effects(rows: list[TelemetryRow], approvals: list[Approval], seed: int) -> list[TelemetryRow]:
-    """All effects in a fixed order. No approvals returns the same list."""
-    return apply_act2_act3(apply_act1(rows, approvals, seed), approvals, seed)
+def apply_effects(
+    rows: list[TelemetryRow], approvals: list[Approval], seed: int, plans: dict[str, str] | None = None
+) -> list[TelemetryRow]:
+    """All effects in a fixed order. No approvals returns the same list. `plans` (tenant_id -> plan) lets an ACT-2
+    "plan/<plan>" target find its tenants."""
+    return apply_act2_act3(apply_act1(rows, approvals, seed), approvals, seed, plans)
 
 
 def load_approvals(path: Path | str, data_date: date | None = None) -> list[Approval]:

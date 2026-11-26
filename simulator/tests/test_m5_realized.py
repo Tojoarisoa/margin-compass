@@ -82,3 +82,15 @@ def test_churn_loses_revenue_only_from_churn_day():
     assert all((r.revenue_delta_usd < 0) == (r.day >= cd) for r in out)
     assert {r.revenue_delta_usd for r in out if r.day >= cd} == {-90.0}  # 36500 * 0.9 / 365
     assert all(r.revenue_delta_usd == 0 for r in realized_by_action(_rows(), [a3], 42))
+
+
+def test_act2_plan_target_realizes_savings_for_that_plan():
+    from decimal import Decimal
+    from types import SimpleNamespace
+
+    a2 = Approval("act2-plan", "ACT-2", "plan/growth", date(2026, 3, 1))
+    ts = [SimpleNamespace(tenant_id=f"t{i}", plan="growth" if i < 2 else "starter", arr_usd=Decimal("36500"),
+                          discount_pct=Decimal("0")) for i in range(5)]
+    out = realized_by_action(_rows(), [a2], 42, ts)
+    assert out and all(r.saved_usd > 0 for r in out)
+    assert realized_by_action(_rows(), [a2], 42) == []  # without tenants the plan is unknown

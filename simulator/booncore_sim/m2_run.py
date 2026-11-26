@@ -46,7 +46,7 @@ def patterned_month(
     rows, raw = m2_telemetry.generate_month(seed, tenants, month_index)
     rows = _transform(rows, tenants)[0]
     if approvals:
-        rows = apply_effects(rows, approvals, seed)
+        rows = apply_effects(rows, approvals, seed, {t.tenant_id: t.plan for t in tenants})
     return rows, raw
 
 
@@ -72,7 +72,7 @@ def generate_patterned(seed: int, approvals: list[Approval] | None = None) -> Pa
     pt11 = m2_patterns_b.pt11_unused_cheaper_option(base, tenants)
     rows, labels = _transform(base, tenants)
     if approvals:
-        rows = apply_effects(rows, approvals, seed)
+        rows = apply_effects(rows, approvals, seed, {t.tenant_id: t.plan for t in tenants})
     events, pt14 = m2_patterns_b.pt14_churn_events(seed, tenants, outcomes)
     labels += [pt08, pt09, pt11, pt12_label(), m2_patterns_b.pt13_seasonality_and_growth(), pt14]
     labels.sort(key=lambda x: x.pattern_id)

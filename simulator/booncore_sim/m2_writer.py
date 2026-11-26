@@ -53,7 +53,7 @@ def write_month(
     `s5_realized/month=<key>/` from the same month's baseline rows, so a chunked backfill lands it too."""
     key = month_days(month_index)[0].strftime("%Y-%m")
     base, raw = patterned_month(seed, tenants, month_index)
-    rows = apply_effects(base, approvals, seed) if approvals else base
+    rows = apply_effects(base, approvals, seed, {t.tenant_id: t.plan for t in tenants}) if approvals else base
     daily, tickets = m2_outcomes.generate_month(seed, tenants, month_index)
     return [
         _write(out_dir, f"s1_llm_telemetry/month={key}/telemetry.parquet", rows, seed, "telemetry"),

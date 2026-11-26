@@ -34,3 +34,22 @@ KPI-01 and KPI-02 are live (realized card, `realized.json`). Left:
 4c. **KPI-09 backtest (local, free).** In ops `realized-check`, approve one ACT-2 plan change, compare the calc-spec
     pricing prediction (revenue, margin, churn) with the observed counterfactual difference; report the error against
     the 10% target. Then tick M5-04.
+
+#### Step 4c split: KPI-09 pricing simulator accuracy (autopilot run 181, auto-decided under AGENTS.md §8.2)
+
+Found: the nightly review drafts ACT-2 with target `plan/<plan>`, but the simulator's ACT-2 effect reads
+`<feature_id>/price` (`m5_effects.apply_act2_act3`). An approved nightly ACT-2 therefore changes nothing, and the
+realized revenue side treats every plan as a flat add-on. KPI-09 needs a plan change that moves revenue.
+
+- **4c-1 Simulator: ACT-2 on `plan/<plan>`.** For tenants on that plan: price uplift on the AI add-on (fixed
+  assumption), demand response on volume, seeded churn; all labelled synthetic. Keep `<feature_id>/price` working.
+- **4c-2 Revenue side.** `m5_realized` / `fct_realized_margin`: ACT-2 revenue delta = uplift on surviving tenants
+  minus lost ARR of churned ones (same basis as ACT-3).
+- **4c-3 Prediction.** At approval time, price the plan before/after with the calc-spec `price_plan` tool and its
+  churn assumption (not the simulator's hidden response parameters), per month.
+- **4c-4 KPI-09.** In ops `realized-check` (local, free): approve one ACT-2, compare predicted vs observed revenue
+  and margin; error = |predicted - observed| / |observed|, target <= 10%; report it, then tick M5-04.
+
+Options considered: (a) backtest on the existing feature-level ACT-2 (rejected: no revenue moves, so the revenue
+error is undefined); (b) predict with the simulator's own parameters (rejected: circular, the error would be ~0);
+(c) the steps above (recommended: independent prediction, closed-loop observation, no cost).
