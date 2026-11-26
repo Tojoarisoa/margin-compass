@@ -33,15 +33,14 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-1. **Finish the PR for `auto/m6-04-kpi01-counterfactual-r2`** (ops realized-check prints KPI-01 approved vs counterfactual).
-2. **M6-04 case study:** run ops `realized-check` and `verify-backfill` (both free), then write `docs/case-study/` from their numbers. Counterfactual (local, seed 42, synthetic): AI gross margin 49.33% in the first 30 days, 54.42% in the last 30, 51.55% over the window.
-3. **KPI-09 misses its 10% target (revenue 22.9%, margin 0.6%; synthetic).** Fix candidates: an explicit ACT-2 effective date that both sides use, and the ACT-2 churn response.
-4. **KPI-13:** after the next backfill, ops `verify-backfill` (free) shows `roi.json`.
-5. **M2-04 step 5c:** one Haiku 4.5 recording (about $0.05). **Blocked by spend** until 2026-12-01; then cost-report first ($3 rules).
-6. **Haiku 5.5 probe:** paused (spend) until 2026-12-01.
-7. **On or after 2026-12-01:** delete the temporary spend-limit paragraph in AGENTS.md §8.3 (back to $3).
+1. **KPI-09 misses its 10% target (revenue 22.9%, margin 0.6%; synthetic).** Fix candidates: an explicit ACT-2 effective date that both sides use, and the ACT-2 churn response.
+2. **KPI-01 has no ACT-2 revenue:** AI revenue is identical in both realized-check runs, so the price uplift shows only in realized rows. Check why the invoices do not carry it (case study, "What did not work").
+3. **KPI-13:** after the next backfill, ops `verify-backfill` (free) shows `roi.json`.
+4. **M2-04 step 5c:** one Haiku 4.5 recording (about $0.05). **Blocked by spend** until 2026-12-01; then cost-report first ($3 rules).
+5. **Haiku 5.5 probe:** paused (spend) until 2026-12-01.
+6. **On or after 2026-12-01:** delete the temporary spend-limit paragraph in AGENTS.md §8.3 (back to $3).
 
-Done recently: M5-04 ticked (#363), KPI-09 backtest in ops realized-check (#362), KPI-09 prediction (#361), ACT-2 plan revenue side (#360), ACT-2 plan target effect (#359).
+Done recently: M6-04 ticked (case study), KPI-01 counterfactual (#365), KPI-01 summary (#364), M5-04 ticked (#363), KPI-09 backtest in ops realized-check (#362), KPI-09 prediction (#361), ACT-2 plan revenue side (#360), ACT-2 plan target effect (#359).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed.
 Notes: Ops eval results are in the job log; fixtures are base64 between FIXTURE-BEGIN/END lines. Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1; local replays need it too or everything drifts). Ops `ev06_graph: true` adds the graph runs (opt-in, about $0.15; the ops job ends `failure` while the graph gate is unmet, which is expected). Flaky github.com 504s during image builds: re-run the failed job. Only commit the graph fixtures from a record run; the other fixture sets change only in tool-use IDs. AG-05 prompt is at the cost-cap edge (`test_unsupported_figure_retries_then_fails_closed` sums $0.009965 of $0.01): keep it no longer than v8. Gh-created PR bodies get a footer: remove it with the GitHub MCP `update_pull_request` (gh api PATCH gets it re-added).
 
@@ -49,7 +48,10 @@ Notes: Ops eval results are in the job log; fixtures are base64 between FIXTURE-
 
 - **Start:** main `ci` 45738355747 (bb09e82) green. PR #364 (run 183) green on 405f55c: merged (fast-forward accepted this run); main `ci` 45746983304 incl. `deploy to dev` green.
 - **Task 1:** M6-04 step 2, ops `realized-check` prints KPI-01 approved vs counterfactual. Branch from run 183 was behind main: rebuilt as `auto/m6-04-kpi01-counterfactual-r2` (cherry-pick). Tests 4 passed, ruff clean.
-- **Cost:** $0 (no ops runs).
+- **Merged:** #365 (914b6a7), all checks green. Ops `realized-check` 45749151067 (free): KPI-01 last 30 days 54.42% counterfactual vs 56.40% with 7 approved actions, **+1.98 pts** (window +0.17); revenue identical in both runs (Next 2).
+- **Task 2:** M6-04 case study `docs/case-study.md`, M6-04 ticked. PR: see below.
+- **Decisions (auto-decided under §8.2):** N = last-30-days difference (window is diluted by months before the actions).
+- **Cost:** $0 (realized-check is free).
 
 ## 2026-11-26 (autopilot run 183)
 
