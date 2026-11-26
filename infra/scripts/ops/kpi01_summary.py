@@ -35,6 +35,25 @@ def summary(pg1: dict) -> dict:
             "tenants": (pg1.get("headline") or {}).get("tenants")}
 
 
+def compare(base: dict, approved: dict) -> dict:
+    """KPI-01 margin points recovered: approved run minus counterfactual run, same seed (ops realized-check).
+
+    Both inputs are pg1 snapshots. The change is taken over the last 30 days (effects start after approval) and over the
+    whole window; positive means the approved actions raised the AI gross margin.
+    """
+    b, a = summary(base), summary(approved)
+    if "error" in b or "error" in a:
+        return {"error": b.get("error") or a.get("error")}
+
+    def pts(key: str) -> str | None:
+        x, y = b[key]["ai_gross_margin_pct"], a[key]["ai_gross_margin_pct"]
+        return None if x is None or y is None else str(Decimal(y) - Decimal(x))
+
+    return {"data_label": approved.get("data_label"), "counterfactual": {k: b[k] for k in ("window", "last_30_days")},
+            "approved": {k: a[k] for k in ("window", "last_30_days")},
+            "recovered_pts_last_30_days": pts("last_30_days"), "recovered_pts_window": pts("window")}
+
+
 def main(path: str) -> int:
     with open(path) as f:
         out = summary(json.load(f))
