@@ -10,6 +10,9 @@ Not simulated yet: overage charges (every tenant bills a flat add-on, so overage
 M5-04: an approved ACT-2 "plan/<plan>" raises the AI add-on line of that plan's tenants by `ACT2_ADDON_UPLIFT` from
 the action's explicit effective date (`m5_effects.effective_on`); a month the date falls inside is prorated by day
 (assumption), so the invoices carry the same uplift the realized rows count. Without approvals nothing changes.
+An approved ACT-3 whose account churns (`m5_effects.churn_day`, seeded) stops that tenant's invoices from the churn
+day: no invoice for a month starting on or after it, the month it falls inside billed for the days before it
+(prorated by day, assumption), as the realized rows count the loss from that day.
 """
 
 from __future__ import annotations
@@ -19,7 +22,7 @@ from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
 
 from .m2_tenants import CENT, MONTHS, M2Tenant, TenantVersion, _month_start
-from .m5_effects import ACT2_ADDON_UPLIFT, Approval, effective_on, plan_of
+from .m5_effects import ACT2_ADDON_UPLIFT, Approval, churn_day, effective_on, plan_of
 
 
 @dataclass(frozen=True)
@@ -56,24 +59,44 @@ def uplift_share(approvals: list[Approval], plan: str, start: date, end: date) -
     return total
 
 
+def churned_on(approvals: list[Approval], seed: int) -> dict[str, date]:
+    """tenant_id -> first day without service, for approved ACT-3 actions whose account churns (earliest wins)."""
+    out: dict[str, date] = {}
+    for a in approvals:
+        if a.action_type == "ACT-3":
+            cd = churn_day(seed, a)
+            tenant = a.target.split("/")[0]
+            if cd is not None and (tenant not in out or cd < out[tenant]):
+                out[tenant] = cd
+    return out
+
+
 def generate_invoices(
-    tenants: list[M2Tenant], history: list[TenantVersion], approvals: list[Approval] | None = None
+    tenants: list[M2Tenant], history: list[TenantVersion], approvals: list[Approval] | None = None, seed: int = 0
 ) -> list[M2InvoiceLine]:
     """One invoice per tenant per month, from the month containing onboarding (assumption: the first month is
-    billed in full, no proration). `approvals` (M5-04): ACT-2 plan price changes raise the add-on line."""
+    billed in full, no proration). `approvals` (M5-04): ACT-2 plan price changes raise the add-on line; an ACT-3
+    churn (seeded with `seed`, as in the telemetry) ends the tenant's invoices from the churn day."""
     by_tenant: dict[str, list[TenantVersion]] = {}
     for v in history:
         by_tenant.setdefault(v.tenant_id, []).append(v)
+    gone = churned_on(approvals or [], seed)
     lines: list[M2InvoiceLine] = []
     for i in range(MONTHS):
         start, end = _month_start(i), _month_end(_month_start(i))
         for t in tenants:
             if t.onboarded_on >= end:
                 continue
+            cd = gone.get(t.tenant_id)
+            if cd is not None and cd <= start:
+                continue
             v = _version_on(by_tenant[t.tenant_id], max(start, t.onboarded_on))
             seat = ((v.arr_usd - v.ai_addon_arr_usd) / 12).quantize(CENT, ROUND_HALF_UP)
             up = uplift_share(approvals or [], t.plan, start, end)
             addon = (v.ai_addon_arr_usd * (1 + up) / 12).quantize(CENT, ROUND_HALF_UP)
+            if cd is not None and cd < end:
+                part = Decimal((cd - start).days) / Decimal((end - start).days)
+                seat, addon = (seat * part).quantize(CENT, ROUND_HALF_UP), (addon * part).quantize(CENT, ROUND_HALF_UP)
             discount = -((seat + addon) * v.discount_pct).quantize(CENT, ROUND_HALF_UP)
             invoice_id = f"inv-{start:%Y%m}-{t.tenant_id}"
             for line_type, amount in (("subscription", seat), ("ai_addon", addon), ("discount", discount)):
@@ -81,4 +104,4 @@ def generate_invoices(
     return lines
 
 
-__all__ = ["M2InvoiceLine", "generate_invoices"]
+__all__ = ["M2InvoiceLine", "churned_on", "generate_invoices"]

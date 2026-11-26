@@ -82,8 +82,8 @@ def write_revenue(
     out_dir: Path, seed: int, tenants: list[M2Tenant], history: list[TenantVersion], approvals: list | None = None
 ) -> list[dict]:
     """S3: monthly invoice lines (subscription, AI add-on, discount) for the whole window; approved ACT-2 plan price
-    changes raise the add-on line (M5-04)."""
-    invoices = m2_revenue.generate_invoices(tenants, history, approvals)
+    changes raise the add-on line, ACT-3 churns end a tenant's invoices (M5-04)."""
+    invoices = m2_revenue.generate_invoices(tenants, history, approvals, seed)
     return [_write(out_dir, "s3_revenue/invoices.parquet", invoices, seed, "invoice lines")]
 
 

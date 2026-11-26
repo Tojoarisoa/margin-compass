@@ -83,6 +83,12 @@ realized revenue side treats every plan as a flat add-on. KPI-09 needs a plan ch
   revenue error); (b) predict with the simulator's 12% and lag (rejected: circular); (c) a declared, independent
   demand assumption on the pre-period cost (recommended).
 
+- **4c-7 ACT-3 churn ends invoices (run 186, auto-decided under AGENTS.md §8.2).** A churned ACT-3 account stopped
+  producing telemetry and the realized rows counted its lost revenue, but it was still invoiced, so KPI-01 AI revenue
+  kept it. Now `m2_revenue.generate_invoices` (seeded like the telemetry) bills no month starting on or after the churn
+  day and prorates the churn month by day (assumption, like #368). Options: end at the next full month (rejected:
+  differs from the realized rows' daily loss); prorate (recommended).
+
 Options considered: (a) backtest on the existing feature-level ACT-2 (rejected: no revenue moves, so the revenue
 error is undefined); (b) predict with the simulator's own parameters (rejected: circular, the error would be ~0);
 (c) the steps above (recommended: independent prediction, closed-loop observation, no cost).

@@ -89,3 +89,28 @@ def test_act2_plan_price_raises_only_that_plans_addon_lines_from_the_effective_d
     assert abs(new[oct_inv] - base[oct_inv] * Decimal("1.10")) <= Decimal("0.01")
     assert abs(new[sep_inv] - base[sep_inv] * Decimal("1.05")) <= Decimal("0.01")
     assert rev.generate_invoices(tenants, history, []) == rev.generate_invoices(tenants, history)
+
+
+def test_act3_churn_ends_that_tenants_invoices_from_the_churn_day(data):
+    """M5-04: a churned ACT-3 account is not invoiced from its churn day (the month it churns in is prorated)."""
+    from booncore_sim.m5_effects import Approval, churn_day
+    tenants, history, _ = data
+    t = next(t for t in tenants if t.onboarded_on < date(2025, 6, 1))
+    a = next(a for i in range(2000)
+             if churn_day(SEED, a := Approval(f"act3-{i}", "ACT-3", f"{t.tenant_id}/cap", date(2026, 7, 1))) is not None)
+    cd = churn_day(SEED, a)
+    assert rev.churned_on([a], SEED) == {t.tenant_id: cd}
+    base = rev.generate_invoices(tenants, history, seed=SEED)
+    new = rev.generate_invoices(tenants, history, [a], SEED)
+    others = [x for x in base if x.tenant_id != t.tenant_id]
+    assert [x for x in new if x.tenant_id != t.tenant_id] == others
+    mine = {(x.billing_period_start, x.line_type): x.amount_usd for x in new if x.tenant_id == t.tenant_id}
+    was = {(x.billing_period_start, x.line_type): x.amount_usd for x in base if x.tenant_id == t.tenant_id}
+    first = cd.replace(day=1)
+    assert all(m < cd for m, _ in mine) and all(was[k] == v for k, v in mine.items() if k[0] < first)
+    if cd > first:  # the churn month is billed for the days before the churn day
+        assert Decimal(0) < mine[(first, "ai_addon")] < was[(first, "ai_addon")]
+    # A staying account (or no seed match) changes nothing.
+    stay = next(a for i in range(2000)
+                if churn_day(SEED, a := Approval(f"act3s-{i}", "ACT-3", f"{t.tenant_id}/cap", date(2026, 7, 1))) is None)
+    assert rev.generate_invoices(tenants, history, [stay], SEED) == base
