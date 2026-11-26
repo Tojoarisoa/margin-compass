@@ -68,3 +68,24 @@ def test_landing_is_deterministic_and_synthetic(data, tmp_path):
     b = w.write_revenue(tmp_path / "b", SEED, tenants, history)
     assert a == b and a[0]["path"] == "s3_revenue/invoices.parquet"
     assert pq.read_schema(tmp_path / "a" / a[0]["path"]).metadata[b"synthetic"] == b"true"
+
+
+def test_act2_plan_price_raises_only_that_plans_addon_lines_from_the_effective_date(data):
+    """M5-04: invoices carry the ACT-2 uplift the realized rows count (whole months after, prorated inside)."""
+    from booncore_sim.m5_effects import Approval
+    tenants, history, _ = data
+    plan = tenants[0].plan
+    a = Approval("act2", "ACT-2", f"plan/{plan}", date(2026, 9, 16))  # September: 15 of 30 days at the new price
+    base = {(x.invoice_id, x.line_type): x.amount_usd for x in rev.generate_invoices(tenants, history)}
+    new = {(x.invoice_id, x.line_type): x.amount_usd for x in rev.generate_invoices(tenants, history, [a])}
+    assert base.keys() == new.keys()
+    changed = {k for k in base if base[k] != new[k]}
+    on_plan = {t.tenant_id for t in tenants if t.plan == plan}
+    assert changed and all(k[1] in ("ai_addon", "discount") for k in changed)
+    assert all(k[0].split("-", 2)[2] in on_plan for k in changed)
+    assert all(k[0][4:10] in ("202609", "202610") for k in changed)
+    t = next(t for t in tenants if t.plan == plan and t.onboarded_on < date(2026, 9, 1))
+    oct_inv, sep_inv = (f"inv-202610-{t.tenant_id}", "ai_addon"), (f"inv-202609-{t.tenant_id}", "ai_addon")
+    assert abs(new[oct_inv] - base[oct_inv] * Decimal("1.10")) <= Decimal("0.01")
+    assert abs(new[sep_inv] - base[sep_inv] * Decimal("1.05")) <= Decimal("0.01")
+    assert rev.generate_invoices(tenants, history, []) == rev.generate_invoices(tenants, history)

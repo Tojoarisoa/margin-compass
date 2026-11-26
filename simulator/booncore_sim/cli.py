@@ -79,7 +79,7 @@ def run_m2(
 
     def whole_window(tenants: list) -> list[dict]:  # month-independent sources: FOCUS, invoices, dimensions
         history = generate_m2_tenants(seed)[1]
-        return (m2_writer.write_focus(out_dir, seed, tenants) + m2_writer.write_revenue(out_dir, seed, tenants, history)
+        return (m2_writer.write_focus(out_dir, seed, tenants) + m2_writer.write_revenue(out_dir, seed, tenants, history, approvals)
                 + m2_writer.write_dimensions(out_dir, seed, history))
 
     if mode == "month":

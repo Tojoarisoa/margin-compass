@@ -78,9 +78,12 @@ def write_focus(out_dir: Path, seed: int, tenants: list[M2Tenant]) -> list[dict]
     return [_write(out_dir, "s2_focus/focus.parquet", m2_focus.generate_all(seed, tenants), seed, "focus rows")]
 
 
-def write_revenue(out_dir: Path, seed: int, tenants: list[M2Tenant], history: list[TenantVersion]) -> list[dict]:
-    """S3: monthly invoice lines (subscription, AI add-on, discount) for the whole window."""
-    invoices = m2_revenue.generate_invoices(tenants, history)
+def write_revenue(
+    out_dir: Path, seed: int, tenants: list[M2Tenant], history: list[TenantVersion], approvals: list | None = None
+) -> list[dict]:
+    """S3: monthly invoice lines (subscription, AI add-on, discount) for the whole window; approved ACT-2 plan price
+    changes raise the add-on line (M5-04)."""
+    invoices = m2_revenue.generate_invoices(tenants, history, approvals)
     return [_write(out_dir, "s3_revenue/invoices.parquet", invoices, seed, "invoice lines")]
 
 

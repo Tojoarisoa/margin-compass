@@ -6,6 +6,10 @@ The price in force on the first day of a billing month comes from the SCD2 plan 
 (assumption) are labeled inputs. Not wired into the CLI. All output is synthetic.
 
 Not simulated yet: overage charges (every tenant bills a flat add-on, so overage is 0).
+
+M5-04: an approved ACT-2 "plan/<plan>" raises the AI add-on line of that plan's tenants by `ACT2_ADDON_UPLIFT` from
+the action's explicit effective date (`m5_effects.effective_on`); a month the date falls inside is prorated by day
+(assumption), so the invoices carry the same uplift the realized rows count. Without approvals nothing changes.
 """
 
 from __future__ import annotations
@@ -15,6 +19,7 @@ from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
 
 from .m2_tenants import CENT, MONTHS, M2Tenant, TenantVersion, _month_start
+from .m5_effects import ACT2_ADDON_UPLIFT, Approval, effective_on, plan_of
 
 
 @dataclass(frozen=True)
@@ -38,9 +43,24 @@ def _version_on(versions: list[TenantVersion], day: date) -> TenantVersion:
     raise KeyError(f"no tenant version on {day}")
 
 
-def generate_invoices(tenants: list[M2Tenant], history: list[TenantVersion]) -> list[M2InvoiceLine]:
+def uplift_share(approvals: list[Approval], plan: str, start: date, end: date) -> Decimal:
+    """Add-on uplift factor for one billing period [start, end) of a tenant on `plan`: the sum over approved ACT-2
+    "plan/<plan>" actions of uplift x share of the period's days on or after the effective date."""
+    days = (end - start).days
+    total = Decimal(0)
+    for a in approvals:
+        if plan_of(a) == plan:
+            on = (end - max(start, effective_on(a))).days
+            if on > 0:
+                total += Decimal(str(ACT2_ADDON_UPLIFT)) * Decimal(min(on, days)) / Decimal(days)
+    return total
+
+
+def generate_invoices(
+    tenants: list[M2Tenant], history: list[TenantVersion], approvals: list[Approval] | None = None
+) -> list[M2InvoiceLine]:
     """One invoice per tenant per month, from the month containing onboarding (assumption: the first month is
-    billed in full, no proration)."""
+    billed in full, no proration). `approvals` (M5-04): ACT-2 plan price changes raise the add-on line."""
     by_tenant: dict[str, list[TenantVersion]] = {}
     for v in history:
         by_tenant.setdefault(v.tenant_id, []).append(v)
@@ -52,7 +72,8 @@ def generate_invoices(tenants: list[M2Tenant], history: list[TenantVersion]) -> 
                 continue
             v = _version_on(by_tenant[t.tenant_id], max(start, t.onboarded_on))
             seat = ((v.arr_usd - v.ai_addon_arr_usd) / 12).quantize(CENT, ROUND_HALF_UP)
-            addon = (v.ai_addon_arr_usd / 12).quantize(CENT, ROUND_HALF_UP)
+            up = uplift_share(approvals or [], t.plan, start, end)
+            addon = (v.ai_addon_arr_usd * (1 + up) / 12).quantize(CENT, ROUND_HALF_UP)
             discount = -((seat + addon) * v.discount_pct).quantize(CENT, ROUND_HALF_UP)
             invoice_id = f"inv-{start:%Y%m}-{t.tenant_id}"
             for line_type, amount in (("subscription", seat), ("ai_addon", addon), ("discount", discount)):
