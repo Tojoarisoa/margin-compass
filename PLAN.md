@@ -7,7 +7,7 @@
 | --- | --- |
 | Document | Master plan (single source of truth) |
 | Version | **0.4**: BoonCore vertical set to medtech/imaging technical support (see §20) |
-| Status | **M6: Harden & Launch** (current). All items of M0, M1, M3 and M4 are ticked; M2-04 and M5-04 are still open (§17) |
+| Status | **M6: Harden & Launch** (current). All items of M0, M1, M3 and M4 are ticked; M2-04 is still open (§17) |
 | Owner | tojoarisoa |
 | Updated | 2026-11-12 |
 | Audience | Humans (recruiters, reviewers, engineers) **and** AI coding agents (see `AGENTS.md`) |
@@ -1020,7 +1020,7 @@ Each milestone ends with a demoable increment and exit criteria. Effort assumes 
 - [x] M5-01 Nightly margin review graph → `fct_actions` + daily margin brief
 - [x] M5-02 PG-7 Action Center with visitor-sandbox approvals and role-based queues
 - [x] M5-03 Owner mode (Cognito) → the simulator applies ACT-1/2/3 effects
-- [ ] M5-04 `fct_realized_margin` (counterfactual method); KPI-01, -02, -09, -13 go live
+- [x] M5-04 `fct_realized_margin` (counterfactual method); KPI-01, -02, -09, -13 go live
 
 **Exit:** a leak → RCA → ACT-1 → approval → recovered-margin path, and a renewal → ACT-3 → churn-adjusted outcome path, are both visible end to end.
 
@@ -1269,3 +1269,4 @@ Status: all ADRs are written up in `docs/adr/` and **accepted** (ADR-017 on 2026
 | 2026-11-26 | 0.4 | Owner decision (2026-11-26, option (b)): owner approvals are dated after the simulation window, so the M2 run places each approved action 60 days before its data date (the window end, 2026-10-31, so effects start from 2026-09-01 plus the adoption lag). Approvals carry `simulated_date`; `fct_realized_margin` gains `approval_date_simulated`, and `realized.json` and the dashboard card say the approval dates are simulated. Without the M2 window (tests, direct calls) the real decision date is used. Unblocks M5-04 KPI-09/KPI-13 and the M6-04 case study. Cost $0 |
 | 2026-11-26 | 0.4 | M6-03 ticked (owner 2026-11-26: scoped grant, then the game day; details **auto-decided under AGENTS.md §8.2**): ops role may attach/detach only the kill-switch deny policy, only on itself (#346); ops `kill-switch-drill` (fix #348: Step Functions validates input before authorization, so the denied probe sends a valid input). Drill run 45698384245 (2026-11-25 20:48-20:50 UTC): before = allowed, while attached Bedrock and `StartExecution` both `AccessDenied`, after detach allowed again, 0 attached. The API-role step stays manual for the owner (not in the grant); G2 covers the API's denied path. Also spend fix (a): ops `ecr-cleanup` (#347, scoped to the CDK asset repository, dry run by default). Cost $0 |
 | 2026-11-26 | 0.4 | M5-04 steps 4a-4c-1 (**auto-decided under AGENTS.md §8.2**, docs/plans/m5-plan.md): KPI-13 owner record `gold/_quality/roi.json` (synthetic realized margin vs the real AWS bill to date, before credits; private, not published), shown in ops `verify-backfill`; ACT-2 `plan/<plan>` approvals now reach that plan's tenants in the simulation (before, the nightly ACT-2 form changed nothing). KPI-09 plan: independent calc-spec prediction vs closed-loop observation (options rejected: feature-level ACT-2, no revenue moves; simulator's own parameters, circular). Cost $0 |
+| 2026-11-26 | 0.4 | M5-04 ticked, steps 4c-2..4c-4 (**auto-decided under AGENTS.md §8.2**, docs/plans/m5-plan.md): ACT-2 plan uplift lands as revenue in realized rows; KPI-09 prediction with the calc-spec `price_plan` tool (churn 200 bps/month, no demand response); ops `realized-check` backtests ACT-2 `plan/growth` +10% (ops 45736843051, synthetic): revenue error 22.9% (misses the 10% target: the prediction ignores the adoption lag), margin error 0.6%; churn not compared (no ACT-2 churn in the simulator). KPI-01, -02, -09, -13 are live; the KPI-09 miss is reported, not tuned. Cost $0 |

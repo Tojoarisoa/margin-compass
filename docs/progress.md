@@ -33,17 +33,25 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-1. **Finish PR #360** (M5-04 4c-2, ACT-2 plan revenue side): check CI on its head, merge, wait for `deploy to dev`.
-2. **M5-04 4c-3:** KPI-09 prediction: price the approved plan before/after with the calc-spec `price_plan` tool (its own churn assumption) per month (docs/plans/m5-plan.md).
-3. **M5-04 4c-4:** ops `realized-check` approves one ACT-2 `plan/<plan>`, reports predicted vs observed revenue and margin error (target <= 10%); then tick M5-04. Then the M6-04 case study.
-4. **KPI-13:** after the next backfill, ops `verify-backfill` (free) shows `roi.json`.
-5. **M2-04 step 5c:** one Haiku 4.5 recording of the 8-question set (about $0.05). **Blocked by spend** until 2026-12-01; then cost-report first ($3 rules).
-6. **Haiku 5.5 probe:** paused (spend) until 2026-12-01.
-7. **On or after 2026-12-01:** delete the temporary spend-limit paragraph in AGENTS.md §8.3 (back to $3).
+1. **KPI-09 misses its 10% target (revenue 22.9%, margin 0.6%; synthetic).** The calc-spec prediction starts at approval, the simulated price after the adoption lag. Fix candidates for a later step (not tuning to the simulator): give ACT-2 an explicit effective date that both sides use, or compare from the effective date. Also add the ACT-2 churn response (4c-1 left it out) so churn can be compared.
+2. **M6-04 case study**, now that M5-04 is ticked (KPI-01, -02, -09, -13 live).
+3. **KPI-13:** after the next backfill, ops `verify-backfill` (free) shows `roi.json`.
+4. **M2-04 step 5c:** one Haiku 4.5 recording of the 8-question set (about $0.05). **Blocked by spend** until 2026-12-01; then cost-report first ($3 rules).
+5. **Haiku 5.5 probe:** paused (spend) until 2026-12-01.
+6. **On or after 2026-12-01:** delete the temporary spend-limit paragraph in AGENTS.md §8.3 (back to $3).
 
-Done recently: ACT-2 plan target effect (#359), roi.json in verify-backfill (#358), KPI-13 roi.json (#357), realized effect in backfill month chunks (#356).
+Done recently: M5-04 ticked (#363), KPI-09 backtest in ops realized-check (#362), KPI-09 prediction (#361), ACT-2 plan revenue side (#360), ACT-2 plan target effect (#359).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed.
 Notes: Ops eval results are in the job log; fixtures are base64 between FIXTURE-BEGIN/END lines. Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1; local replays need it too or everything drifts). Ops `ev06_graph: true` adds the graph runs (opt-in, about $0.15; the ops job ends `failure` while the graph gate is unmet, which is expected). Flaky github.com 504s during image builds: re-run the failed job. Only commit the graph fixtures from a record run; the other fixture sets change only in tool-use IDs. AG-05 prompt is at the cost-cap edge (`test_unsupported_figure_retries_then_fails_closed` sums $0.009965 of $0.01): keep it no longer than v8. Gh-created PR bodies get a footer: remove it with the GitHub MCP `update_pull_request` (gh api PATCH gets it re-added).
+
+## 2026-11-26 (autopilot run 182)
+
+- **Start:** main `ci` 45730986776 (0ff5b9f) green; open PR #360 (run 181) green on 6c07a0a: merged, main `ci` 45733790565 incl. `deploy to dev` green.
+- **Task 1:** M5-04 4c-3, KPI-09 prediction with the calc-spec `price_plan` tool (`mc_agents/kpi09.py`). PR #361 merged; main `ci` 45735162464 incl. `deploy to dev` green (6724d28).
+- **Task 2:** M5-04 4c-4, ops `realized-check` approves ACT-2 `plan/growth` +10% and prints KPI-09. PR #362 merged (cc1ae8b). Ops `realized-check` 45736843051 (free): revenue predicted $46,890.96 vs observed $38,151.13, **error 22.9%, misses 10%**; margin $46,890.96 vs $46,623.12, error 0.6%. Synthetic.
+- **Task 3:** tick M5-04 (KPI-09 is live; the miss is reported, not tuned). PR #363.
+- **Decisions (auto-decided under §8.2):** prediction churn 200 bps/month (AG-05 default); no demand response in the prediction (calc-spec has none); plan `growth`; observed over all the action's days; realized-check reports KPI-09 and does not fail on a miss.
+- **Cost:** $0 (no paid ops runs).
 
 ## 2026-11-26 (autopilot run 181)
 
