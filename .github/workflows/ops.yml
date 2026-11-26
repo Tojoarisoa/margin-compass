@@ -377,7 +377,9 @@ jobs:
           kpi09_id, kpi09_plan = "act-kpi09-growth", "growth"
           picked.append((kpi09_id, "ACT-2", f"plan/{kpi09_plan}"))
           ap = root / "approvals.jsonl"
-          ap.write_text("".join(json.dumps({"action_id": a, "action_type": t, "target": g, "decision": "approved", "decided_at": "2025-07-01T00:00:00Z"}) + "\n" for a, t, g in picked))
+          # The ACT-2 carries an explicit effective date (approval + notice_days) that the simulator and the prediction share.
+          kpi09_notice = 0
+          ap.write_text("".join(json.dumps({"action_id": a, "action_type": t, "target": g, "decision": "approved", "decided_at": "2025-07-01T00:00:00Z", **({"notice_days": kpi09_notice} if a == kpi09_id else {})}) + "\n" for a, t, g in picked))
           run_m2(42, root / "approved" / "landing", "all", None, ap)
           summary = run_m2_dbt(root / "approved" / "landing", root / "approved", "approved")
           print(json.dumps(summary)[:1500])
@@ -388,7 +390,7 @@ jobs:
           from datetime import timedelta
           from mc_agents.kpi09 import backtest_plan_change
           rev, mar = duckdb.sql(f"select coalesce(sum(revenue_delta_usd), 0), coalesce(sum(saved_usd + revenue_delta_usd), 0) from read_parquet('{root}/approved/gold/fct_realized_margin.parquet') where action_id = '{kpi09_id}'").fetchall()[0]
-          kpi09 = backtest_plan_change(generate_m2_tenants(42)[0], kpi09_plan, int(round(ACT2_ADDON_UPLIFT * 10000)), WINDOW_END - timedelta(days=DECISION_LEAD_DAYS), WINDOW_END, float(rev), float(mar))
+          kpi09 = backtest_plan_change(generate_m2_tenants(42)[0], kpi09_plan, int(round(ACT2_ADDON_UPLIFT * 10000)), WINDOW_END - timedelta(days=DECISION_LEAD_DAYS - kpi09_notice), WINDOW_END, float(rev), float(mar))
           # KPI-01 (M6-04 case study): AI gross margin of the approved run vs the counterfactual (same seed), pg1 shape.
           import importlib.util
           from mc_pipelines.publish import build_pg1_m2

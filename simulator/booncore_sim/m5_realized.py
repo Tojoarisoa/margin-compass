@@ -5,7 +5,7 @@ action). Cost side only: `saved_usd` = counterfactual cost - actual cost (negati
 `revenue_delta_usd` is the revenue side: the AI add-on is flat, so volume cuts change no revenue; only an ACT-3 churn
 loses the account's net daily revenue (ARR after discount / 365, current price; assumption) from the churn day. An ACT-2
 "plan/<plan>" raises the AI add-on price of that plan's tenants by `ACT2_ADDON_UPLIFT` (net of discount, / 365) from
-approval plus lag (M5-04 step 4c-2; KPI-09 observes it). Savings count as realized only after the 14-day measurement
+its explicit effective date (approval + `notice_days`, no lag; M5-04 step 4c-2; KPI-09 observes it). Savings count as realized only after the 14-day measurement
 window since approval; before that the row is `pending_verification` (PLAN.md §8.4). Synthetic.
 """
 
@@ -17,7 +17,7 @@ from datetime import date, timedelta
 
 from .m2_patterns import row_cost
 from .m2_telemetry import TelemetryRow
-from .m5_effects import ACT2_ADDON_UPLIFT, Approval, apply_effects, churn_day, lag_days, plan_of
+from .m5_effects import ACT2_ADDON_UPLIFT, Approval, apply_effects, churn_day, effective_on, plan_of
 
 MEASUREMENT_WINDOW_DAYS = 14
 
@@ -62,7 +62,7 @@ def realized_by_action(
         plan = plan_of(a)
         uplift = ACT2_ADDON_UPLIFT * sum(float(t.ai_addon_arr_usd * (1 - t.discount_pct)) / 365
                                          for t in tenants or [] if plan and getattr(t, "plan", None) == plan)
-        price_from = a.approved_on + timedelta(days=lag_days(seed, a))
+        price_from = effective_on(a)
         cutoff = a.approved_on + timedelta(days=MEASUREMENT_WINDOW_DAYS)
         for day in sorted(base):
             cf, ac = base[day], actual.get(day, 0.0)

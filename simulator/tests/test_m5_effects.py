@@ -119,3 +119,21 @@ def test_act2_plan_target_cuts_only_tenants_on_that_plan():
     assert all(o == r for o, r in zip(out, rows, strict=True) if o.usage_ts.date() < start)
     assert apply_act2_act3(rows, [a], 42) == rows  # no plan map: nothing to target
     assert apply_effects(rows, [a], 42, plans) == out
+
+
+def test_load_approvals_reads_notice_days_and_rejects_bad_values(tmp_path):
+    import json
+
+    import pytest
+
+    from booncore_sim.m5_effects import effective_on
+    f = tmp_path / "a.jsonl"
+    rec = {"action_id": "a2", "action_type": "ACT-2", "target": "plan/growth", "decision": "approved",
+           "decided_at": "2026-03-01T00:00:00Z", "notice_days": 14}
+    f.write_text(json.dumps(rec) + "\n")
+    [a] = load_approvals(f)
+    assert a.notice_days == 14 and effective_on(a) == date(2026, 3, 15)
+    for bad in (-1, 1.5, True, "7"):
+        f.write_text(json.dumps({**rec, "notice_days": bad}) + "\n")
+        with pytest.raises(ValueError):
+            load_approvals(f)

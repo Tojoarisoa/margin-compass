@@ -104,12 +104,14 @@ def months_covered(start: Any, end: Any) -> int:
     return (end.year - start.year) * 12 + end.month - start.month + 1
 
 
-def backtest_plan_change(tenants: list, plan: str, uplift_bps: int, approved_on: Any, window_end: Any,
+def backtest_plan_change(tenants: list, plan: str, uplift_bps: int, effective_on: Any, window_end: Any,
                          observed_revenue_usd: float, observed_margin_usd: float) -> dict[str, Any]:
-    """KPI-09 for one ACT-2 "plan/<plan>": prediction from approval to the window end vs the observed difference.
+    """KPI-09 for one ACT-2 "plan/<plan>": prediction from the action's explicit effective date (the same date the
+    simulator prices from, `booncore_sim.m5_effects.effective_on`) to the window end vs the observed difference.
+    The prediction counts whole calendar months, so pick an effective date on the first of a month.
     Observed figures are the action's summed `revenue_delta_usd` and `saved_usd + revenue_delta_usd` over all its days
-    (measurement status ignored: the prediction covers every day from approval)."""
-    pred = predict_plan_change(tenants_on_plan(tenants, plan), uplift_bps, months_covered(approved_on, window_end))
+    (measurement status ignored: the prediction covers every day from the effective date)."""
+    pred = predict_plan_change(tenants_on_plan(tenants, plan), uplift_bps, months_covered(effective_on, window_end))
     out = kpi09_report(pred, int(round(observed_revenue_usd * 100)), int(round(observed_margin_usd * 100)))
     return {**out, "plan": plan, "tenants": pred["tenants"], "months": pred["months"], "churn_bps": pred["churn_bps"],
             "monthly_predicted_revenue_cents": pred["monthly_revenue_delta_cents"]}

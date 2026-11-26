@@ -31,6 +31,13 @@ class Approval:
     target: str  # for ACT-1: "<feature_id>/<metric>", for example "F4/cost"
     approved_on: date  # the day effects can start from (simulated when `simulated_date`)
     simulated_date: bool = False  # True: approved_on = data date - DECISION_LEAD_DAYS, not the owner's decision date
+    notice_days: int = 0  # explicit effective date = approved_on + notice_days (the action's declared notice period)
+
+
+def effective_on(a: Approval) -> date:
+    """The action's declared effective date. An ACT-2 plan price applies on invoices from this day (no lag); demand
+    responses ramp in from it plus the adoption lag. Both the simulator and the KPI-09 prediction use it."""
+    return a.approved_on + timedelta(days=a.notice_days)
 
 
 def _unit(*parts: object) -> float:
@@ -48,8 +55,8 @@ def realization(seed: int, a: Approval) -> float:
 
 
 def share(seed: int, a: Approval, day: date) -> float:
-    """Fraction of the affected traffic that has switched on `day`: 0 before approval plus lag, then a linear ramp."""
-    start = a.approved_on + timedelta(days=lag_days(seed, a))
+    """Fraction of the affected traffic that has switched on `day`: 0 before the effective date plus lag, then a ramp."""
+    start = effective_on(a) + timedelta(days=lag_days(seed, a))
     if day < start:
         return 0.0
     return realization(seed, a) * min(1.0, (day - start).days / RAMP_DAYS)
@@ -74,7 +81,7 @@ def apply_act1(rows: list[TelemetryRow], approvals: list[Approval], seed: int) -
 # ACT-2 / ACT-3 demand responses (assumptions, synthetic). Revenue is not in telemetry, so these change usage volume;
 # the revenue side is computed from the volume change in M5-04.
 ACT2_MAX_REDUCTION = 0.12  # share of a feature's requests that go away at full effect after a price/allowance change
-ACT2_ADDON_UPLIFT = 0.10  # ACT-2 "plan/<plan>": AI add-on price on that plan rises 10% from approval plus lag
+ACT2_ADDON_UPLIFT = 0.10  # ACT-2 "plan/<plan>": AI add-on price on that plan rises 10% from its effective date
 ACT3_MAX_REDUCTION = 0.30  # share of a tenant's requests that go away under a fair-use cap
 ACT3_CHURN_PROB = 0.06  # chance the account churns after the action (seeded per action)
 ACT3_CHURN_DELAY_DAYS = 45
@@ -147,7 +154,8 @@ def load_approvals(path: Path | str, data_date: date | None = None) -> list[Appr
     """Read approvals.jsonl (action_id, action_type, target, decision, decided_at, ...). A missing file means no
     approvals. Only `approved` decisions with a known action type and a target produce effects; other lines are
     skipped. The latest line per action_id wins. With `data_date` (the last day of data the actions were proposed
-    from), each approval takes effect from `data_date - DECISION_LEAD_DAYS` and is marked `simulated_date`."""
+    from), each approval takes effect from `data_date - DECISION_LEAD_DAYS` and is marked `simulated_date`. An optional
+    non-negative integer `notice_days` sets the effective date relative to the approval (default 0)."""
     p = Path(path)
     if not p.exists():
         return []
@@ -158,7 +166,15 @@ def load_approvals(path: Path | str, data_date: date | None = None) -> list[Appr
             latest[d["action_id"]] = d
     on = None if data_date is None else data_date - timedelta(days=DECISION_LEAD_DAYS)
     return [
-        Approval(d["action_id"], d["action_type"], d["target"], on or date.fromisoformat(d["decided_at"][:10]), on is not None)
+        Approval(d["action_id"], d["action_type"], d["target"], on or date.fromisoformat(d["decided_at"][:10]), on is not None,
+                 _notice(d))
         for d in latest.values()
         if d.get("decision") == "approved" and d.get("action_type") in ("ACT-1", "ACT-2", "ACT-3") and d.get("target")
     ]
+
+
+def _notice(d: dict) -> int:
+    n = d.get("notice_days", 0)
+    if isinstance(n, bool) or not isinstance(n, int) or n < 0:
+        raise ValueError(f"notice_days must be a non-negative integer: {d.get('action_id')}")
+    return n

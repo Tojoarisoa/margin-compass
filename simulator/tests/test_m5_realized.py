@@ -93,8 +93,23 @@ def test_act2_plan_target_realizes_savings_for_that_plan():
                           ai_addon_arr_usd=Decimal("3650"), discount_pct=Decimal("0")) for i in range(5)]
     out = realized_by_action(_rows(), [a2], 42, ts)
     assert out and all(r.saved_usd >= 0 for r in out) and any(r.saved_usd > 0 for r in out)
-    start = a2.approved_on + timedelta(days=lag_days(42, a2))
-    # Add-on price +10% on the two growth tenants: 2 * 3650 * 0.10 / 365 = $2.00 a day from approval plus lag.
+    start = a2.approved_on  # explicit effective date (notice_days 0): the price applies from it, no adoption lag
+    # Add-on price +10% on the two growth tenants: 2 * 3650 * 0.10 / 365 = $2.00 a day from the effective date.
     assert {r.revenue_delta_usd for r in out if r.day >= start} == {2.0}
     assert all(r.revenue_delta_usd == 0 for r in out if r.day < start)
     assert realized_by_action(_rows(), [a2], 42) == []  # without tenants the plan is unknown
+
+
+def test_act2_plan_price_starts_on_the_explicit_effective_date():
+    from decimal import Decimal
+    from types import SimpleNamespace
+
+    a2 = Approval("act2-plan", "ACT-2", "plan/growth", date(2026, 3, 1), notice_days=10)
+    ts = [SimpleNamespace(tenant_id=f"t{i}", plan="growth", arr_usd=Decimal("36500"), ai_addon_arr_usd=Decimal("3650"),
+                          discount_pct=Decimal("0")) for i in range(2)]
+    out = realized_by_action(_rows(), [a2], 42, ts)
+    eff = date(2026, 3, 11)
+    assert all(r.revenue_delta_usd == 2.0 for r in out if r.day >= eff)
+    assert all(r.revenue_delta_usd == 0 for r in out if r.day < eff)
+    # Demand responds from the effective date plus the adoption lag, not from the approval.
+    assert all(r.saved_usd == 0 for r in out if r.day < eff + timedelta(days=lag_days(42, a2)))

@@ -62,6 +62,16 @@ realized revenue side treats every plan as a flat add-on. KPI-09 needs a plan ch
   cost saving offsets the lag). Not tuned: using the simulator's lag would make the backtest circular. Churn is not
   compared: the simulator has no ACT-2 churn response yet (4c-1 left it out).
 
+- **4c-5 Explicit effective date (run 185, auto-decided under AGENTS.md §8.2).** An ACT-2 approval carries
+  `notice_days` (record field, default 0); its effective date = approval + notice (`m5_effects.effective_on`). The plan
+  price applies on invoices from that day with no adoption lag (a price change is dated, not adopted); demand responses
+  ramp in from it plus the lag. The KPI-09 prediction starts on the same date, so both sides price the same days. Not
+  circular: the date is a declared field of the action, known at approval; the hidden lag, realization and demand
+  parameters stay out of the prediction. Expected (local, seed 42, growth, 2026-09-01..10-31): predicted $46,890.96 vs
+  about $47,494 observed, error about 1.3% (the prediction's 200 bps/month churn; the simulator has no ACT-2 churn).
+  Options: (a) predict from approval plus the simulator's lag (rejected: circular); (b) score only full-effect months
+  (rejected: hides the start-up gap instead of fixing the dates); (c) explicit effective date (recommended).
+
 Options considered: (a) backtest on the existing feature-level ACT-2 (rejected: no revenue moves, so the revenue
 error is undefined); (b) predict with the simulator's own parameters (rejected: circular, the error would be ~0);
 (c) the steps above (recommended: independent prediction, closed-loop observation, no cost).
