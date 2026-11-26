@@ -35,3 +35,13 @@ def test_zero_revenue_and_empty_trend():
     out = k.summary({"trend": [_day(0, 0.0, 5.0)]})
     assert out["window"]["ai_gross_margin_pct"] is None and out["change_pts"] is None
     assert "error" in k.summary({"trend": []})
+
+
+def test_compare_counterfactual_and_approved_runs():
+    base = {"trend": [_day(i, 100.0, 40.0) for i in range(40)]}
+    appr = {"data_label": "synthetic", "trend": [_day(i, 100.0, 40.0 if i < 10 else 35.0) for i in range(40)]}
+    out = k.compare(base, appr)
+    assert out["recovered_pts_last_30_days"] == "5.00"
+    assert out["recovered_pts_window"] == "3.75"  # 30 of 40 days at +5 pts
+    assert out["data_label"] == "synthetic" and out["counterfactual"]["last_30_days"]["ai_gross_margin_pct"] == "60.00"
+    assert "error" in k.compare({"trend": []}, appr)

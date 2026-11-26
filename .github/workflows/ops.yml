@@ -389,7 +389,14 @@ jobs:
           from mc_agents.kpi09 import backtest_plan_change
           rev, mar = duckdb.sql(f"select coalesce(sum(revenue_delta_usd), 0), coalesce(sum(saved_usd + revenue_delta_usd), 0) from read_parquet('{root}/approved/gold/fct_realized_margin.parquet') where action_id = '{kpi09_id}'").fetchall()[0]
           kpi09 = backtest_plan_change(generate_m2_tenants(42)[0], kpi09_plan, int(round(ACT2_ADDON_UPLIFT * 10000)), WINDOW_END - timedelta(days=DECISION_LEAD_DAYS), WINDOW_END, float(rev), float(mar))
-          out = {"approved": len(picked), "by_status": rows, "kpi09": kpi09}
+          # KPI-01 (M6-04 case study): AI gross margin of the approved run vs the counterfactual (same seed), pg1 shape.
+          import importlib.util
+          from mc_pipelines.publish import build_pg1_m2
+          spec = importlib.util.spec_from_file_location("kpi01_summary", "../infra/scripts/ops/kpi01_summary.py")
+          k01 = importlib.util.module_from_spec(spec); spec.loader.exec_module(k01)
+          pg1 = {n: build_pg1_m2(root / n / "gold", root / n / "silver", n) for n in ("base", "approved")}
+          kpi01 = k01.compare(pg1["base"], pg1["approved"])
+          out = {"approved": len(picked), "by_status": rows, "kpi09": kpi09, "kpi01": kpi01}
           print(json.dumps(out, default=str))
           Path("realized-check.json").write_text(json.dumps(out, default=str))
           assert rows, "fct_realized_margin is empty"
