@@ -47,6 +47,10 @@ realized revenue side treats every plan as a flat add-on. KPI-09 needs a plan ch
   minus lost ARR of churned ones (same basis as ACT-3).
 - **4c-3 Prediction.** At approval time, price the plan before/after with the calc-spec `price_plan` tool and its
   churn assumption (not the simulator's hidden response parameters), per month.
+  Done (run 182): `agents/mc_agents/kpi09.py` `predict_plan_change`: each tenant as a calc-spec plan (non-add-on
+  ARR as one seat, add-on as `addon_cents`), churn 200 bps/month (AG-05's default assumption), monthly series =
+  differences of the tool's churn-adjusted delta over k months; predicted cost change 0 (the calc-spec has no demand
+  response), so margin moves with revenue.
 - **4c-4 KPI-09.** In ops `realized-check` (local, free): approve one ACT-2, compare predicted vs observed revenue
   and margin; error = |predicted - observed| / |observed|, target <= 10%; report it, then tick M5-04.
 
