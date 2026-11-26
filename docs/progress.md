@@ -33,15 +33,27 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-1. **M5-04: KPI-09 / KPI-13 and the M6-04 case study**, now that `realized.json` is live (run 180: 1 action realized, $1,713.91 saved, synthetic, simulated approval dates). Check what M5-04 still needs in PLAN.md §17 and docs/plans, then tick it.
-2. **M2-04 step 5c:** one Haiku 4.5 recording of the 8-question set (about $0.05), commit q6-q8 fixtures, drop `pending_fixture`, CI test 5 -> 8; then tick M2-04. **Blocked by spend** until 2026-12-01; then cost-report first ($3 rules).
-3. **Haiku 5.5 probe:** paused (spend) until 2026-12-01.
-4. **Dogfood card:** after new API traffic re-run ops `export-telemetry`, `start-backfill` (`approvals: true`, so realized.json stays), `verify-backfill` (free).
-5. **On or after 2026-12-01:** delete the temporary spend-limit paragraph in AGENTS.md §8.3 (back to $3).
+1. **Finish PR #360** (M5-04 4c-2, ACT-2 plan revenue side): check CI on its head, merge, wait for `deploy to dev`.
+2. **M5-04 4c-3:** KPI-09 prediction: price the approved plan before/after with the calc-spec `price_plan` tool (its own churn assumption) per month (docs/plans/m5-plan.md).
+3. **M5-04 4c-4:** ops `realized-check` approves one ACT-2 `plan/<plan>`, reports predicted vs observed revenue and margin error (target <= 10%); then tick M5-04. Then the M6-04 case study.
+4. **KPI-13:** after the next backfill, ops `verify-backfill` (free) shows `roi.json`.
+5. **M2-04 step 5c:** one Haiku 4.5 recording of the 8-question set (about $0.05). **Blocked by spend** until 2026-12-01; then cost-report first ($3 rules).
+6. **Haiku 5.5 probe:** paused (spend) until 2026-12-01.
+7. **On or after 2026-12-01:** delete the temporary spend-limit paragraph in AGENTS.md §8.3 (back to $3).
 
-Done recently: realized effect in backfill month chunks (#356), analyst `cost_breakdown` tool (#353), replay set 8 questions (#354), verify-backfill shows realized.json (#355), kill-switch drill and M6-03 (#346, #348, #349), ECR clean-up task (#347).
+Done recently: ACT-2 plan target effect (#359), roi.json in verify-backfill (#358), KPI-13 roi.json (#357), realized effect in backfill month chunks (#356).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed.
 Notes: Ops eval results are in the job log; fixtures are base64 between FIXTURE-BEGIN/END lines. Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1; local replays need it too or everything drifts). Ops `ev06_graph: true` adds the graph runs (opt-in, about $0.15; the ops job ends `failure` while the graph gate is unmet, which is expected). Flaky github.com 504s during image builds: re-run the failed job. Only commit the graph fixtures from a record run; the other fixture sets change only in tool-use IDs. AG-05 prompt is at the cost-cap edge (`test_unsupported_figure_retries_then_fails_closed` sums $0.009965 of $0.01): keep it no longer than v8. Gh-created PR bodies get a footer: remove it with the GitHub MCP `update_pull_request` (gh api PATCH gets it re-added).
+
+## 2026-11-26 (autopilot run 181)
+
+- **Start:** main `ci` 45723806482 (5e89184) green; no open PR.
+- **Task 1:** M5-04 4a, KPI-13 owner record `gold/_quality/roi.json` (synthetic realized margin vs real AWS bill to date, before credits; private). PR #357 merged; main `ci` incl. `deploy to dev` green (dbf6923).
+- **Task 2:** M5-04 4b, ops `verify-backfill` prints `roi.json`. PR #358 merged; deploy green (1613858).
+- **Task 3:** M5-04 4c-1. Found: nightly ACT-2 target `plan/<plan>` had no effect in the simulation (effect read `<feature>/price`). Fixed; KPI-09 plan 4c-1..4c-4 in docs/plans/m5-plan.md. PR #359 merged; main `ci` 45730986776 incl. `deploy to dev` green (0ff5b9f).
+- **Task 4:** M5-04 4c-2, ACT-2 plan price +10% on the add-on as revenue in realized rows. PR #360 open (CI green on 75e38f5; left open at 49 min, this entry re-runs it; Next 1).
+- **Decisions (auto-decided under §8.2):** ROI denominator = bill to date (not budget cap, not latest month); KPI-09 = independent calc-spec prediction vs closed-loop observation (rejected: feature-level ACT-2, no revenue moves; simulator's own parameters, circular); ACT-2 uplift 10% (assumption, synthetic).
+- **Cost:** $0 (no ops runs).
 
 ## 2026-11-25 (autopilot run 180)
 
