@@ -33,16 +33,27 @@ Dated entries, newest first. Unattended runs read this file first and append to 
 
 ## Next
 
-1. **KPI-09 misses its 10% target (revenue 22.9%, margin 0.6%; synthetic).** Fix candidates: an explicit ACT-2 effective date that both sides use, and the ACT-2 churn response.
-2. **KPI-01 has no ACT-2 revenue:** AI revenue is identical in both realized-check runs, so the price uplift shows only in realized rows. Check why the invoices do not carry it (case study, "What did not work").
-3. **KPI-13:** after the next backfill, ops `verify-backfill` (free) shows `roi.json`.
-4. **M2-04 step 5c:** one Haiku 4.5 recording (about $0.05). **Blocked by spend** until 2026-12-01; then cost-report first ($3 rules).
-5. **Haiku 5.5 probe:** paused (spend) until 2026-12-01.
-6. **On or after 2026-12-01:** delete the temporary spend-limit paragraph in AGENTS.md §8.3 (back to $3).
+1. **KPI-09 margin error 16.2% (revenue now 1.3%, passes; synthetic).** The observed margin includes the demand cut's cost saving ($9,072); the calc-spec prediction has no demand response. Options: add a demand-response assumption to the prediction (calc-spec change, parity tests), or score margin net of the cost side. Don't use the simulator's own parameters (circular).
+2. **Case study refresh:** `docs/case-study.md` still says +1.98 pts and "no ACT-2 revenue". Ops `realized-check` 45756180373 now gives **+3.56 pts** last 30 days (54.42% vs 57.98%), AI revenue moves ($677,417.53 vs $702,820.61).
+3. **ACT-3 churn vs invoices:** a churned ACT-3 tenant keeps being invoiced (realized rows count the loss). Stop its invoices from the churn day, like #368.
+4. **KPI-13:** after the next backfill, ops `verify-backfill` (free) shows `roi.json`.
+5. **M2-04 step 5c:** one Haiku 4.5 recording (about $0.05). **Blocked by spend** until 2026-12-01; then cost-report first ($3 rules).
+6. **Haiku 5.5 probe:** paused (spend) until 2026-12-01.
+7. **On or after 2026-12-01:** delete the temporary spend-limit paragraph in AGENTS.md §8.3 (back to $3).
 
-Done recently: M6-04 ticked (case study), KPI-01 counterfactual (#365), KPI-01 summary (#364), M5-04 ticked (#363), KPI-09 backtest in ops realized-check (#362), KPI-09 prediction (#361), ACT-2 plan revenue side (#360), ACT-2 plan target effect (#359).
+Done recently: invoices carry ACT-2 uplift (#368), ACT-2 effective date (#367), M6-04 ticked (case study), KPI-01 counterfactual (#365), KPI-01 summary (#364), M5-04 ticked (#363).
 Optional later: M3-02 PT-06 (one small F2 tenant, x6 requests) is still missed.
 Notes: Ops eval results are in the job log; fixtures are base64 between FIXTURE-BEGIN/END lines. Record fixtures with ops `cache: true` (CI replays with MC_CACHE_PROMPT=1; local replays need it too or everything drifts). Ops `ev06_graph: true` adds the graph runs (opt-in, about $0.15; the ops job ends `failure` while the graph gate is unmet, which is expected). Flaky github.com 504s during image builds: re-run the failed job. Only commit the graph fixtures from a record run; the other fixture sets change only in tool-use IDs. AG-05 prompt is at the cost-cap edge (`test_unsupported_figure_retries_then_fails_closed` sums $0.009965 of $0.01): keep it no longer than v8. Gh-created PR bodies get a footer: remove it with the GitHub MCP `update_pull_request` (gh api PATCH gets it re-added).
+
+## 2026-11-26 (autopilot run 185)
+
+- **Start:** main `ci` 45751218352 (c0d496a) green; no open PR.
+- **Task 1:** KPI-09 fix, ACT-2 explicit effective date (`notice_days`, `m5_effects.effective_on`) used by the simulator price and the prediction. PR #367 merged (fc5b096); main `ci` 45755034397 incl. `deploy to dev` green.
+- **Task 2:** KPI-01 ACT-2 revenue. Cause: invoices were written without approvals. Now the add-on line carries the uplift from the effective date (prorated). PR #368 merged (1bdce6e); main `ci` 45756173927 incl. `deploy to dev` green.
+- **Ops `realized-check` 45756180373 (free):** KPI-09 revenue $46,890.96 predicted vs $47,494.27 observed, **error 1.3%** (was 22.9%); margin $46,890.96 vs $55,966.26, **error 16.2%, misses** (Next 1). KPI-01 last 30 days **+3.56 pts** (was +1.98). Synthetic.
+- **Decisions (auto-decided under §8.2):** effective date = approval + declared notice (default 0). Price applies from that date with no lag; demand ramps from it plus the lag. Rejected: predicting with the simulator's lag (circular), scoring only full months. Invoices prorate a month the date falls inside.
+- **Cost:** $0 (no paid ops runs).
+- **Ended at 38 min** (time budget); next is Next 1.
 
 ## 2026-11-26 (autopilot run 184)
 
