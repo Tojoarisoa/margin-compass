@@ -222,6 +222,7 @@ jobs:
           curl -s "$url/publish/latest/runs.json" > runs.json || true
           dog_code="$(curl -s -o dogfood.json -w '%{http_code}' "$url/publish/latest/dogfood.json" || true)"  # M2-04 S7: PG-8 dogfood card
           real_code="$(curl -s -o realized.json -w '%{http_code}' "$url/publish/latest/realized.json" || true)"  # M5-04: realized margin card (approval dates label)
+          pg1_code="$(curl -s -o pg1.json -w '%{http_code}' "$url/publish/latest/pg1.json" || true)"  # M6-04: KPI-01 first vs last 30 days (case study)
           {
             echo "## Backfill check"
             echo '```json'; cat exec.json; echo; echo '```'
@@ -230,6 +231,7 @@ jobs:
             echo "dogfood.json (HTTP $dog_code):"; echo '```json'; head -c 1000 dogfood.json || true; echo; echo '```'
             echo "realized.json (HTTP $real_code):"; echo '```json'; head -c 1500 realized.json || true; echo; echo '```'
             echo "approval_dates: $(python3 -c "import json; print(json.load(open('realized.json')).get('approval_dates', 'missing'))" 2>/dev/null || echo unreadable)"
+            echo "AI gross margin from pg1.json (HTTP $pg1_code):"; echo '```json'; python3 infra/scripts/ops/kpi01_summary.py pg1.json 2>&1 || true; echo '```'
           } | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: verify-backfill (row counts)
