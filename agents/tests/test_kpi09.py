@@ -66,3 +66,20 @@ def test_error_bps_and_report():
     bad = kpi09_report(pred, 950, 1300)
     assert bad["margin_error_bps"] == 2308 and bad["passed"] is False
     assert kpi09_report(pred, 0, 1000)["passed"] is False
+
+
+def test_backtest_plan_change_from_simulator_tenants():
+    from datetime import date
+    from decimal import Decimal
+    from types import SimpleNamespace
+
+    from mc_agents.kpi09 import backtest_plan_change, months_covered, tenants_on_plan
+    ts = [SimpleNamespace(tenant_id="bc-t0001", plan="growth", arr_usd=Decimal("12000.00"), ai_addon_arr_usd=Decimal("2400.00"),
+                          discount_pct=Decimal("0.10")),
+          SimpleNamespace(tenant_id="b", plan="starter", arr_usd=Decimal("6000.00"), ai_addon_arr_usd=Decimal("1200.00"),
+                          discount_pct=Decimal("0"))]
+    assert tenants_on_plan(ts, "growth") == [T1]
+    assert months_covered(date(2026, 9, 1), date(2026, 10, 31)) == 2
+    r = backtest_plan_change(ts, "growth", 1000, date(2026, 9, 1), date(2026, 10, 31), 36.0, 40.0)
+    assert r["tenants"] == 1 and r["months"] == 2 and r["observed_revenue_cents"] == 3600
+    assert r["predicted_revenue_cents"] == sum(r["monthly_predicted_revenue_cents"])

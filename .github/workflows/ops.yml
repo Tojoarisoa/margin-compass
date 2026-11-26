@@ -371,6 +371,9 @@ jobs:
           acts = duckdb.sql(f"select action_id, action_type, target from read_parquet('{base}/gold/fct_actions.parquet') order by score desc").fetchall()
           picked = [a for a in acts if a[1] in ("ACT-1", "ACT-3")][:6]
           assert picked, "no ACT-1/ACT-3 actions to approve"
+          # KPI-09 (M5-04 step 4c-4): also approve one ACT-2 plan price change (the nightly review's plan/<plan> form).
+          kpi09_id, kpi09_plan = "act-kpi09-growth", "growth"
+          picked.append((kpi09_id, "ACT-2", f"plan/{kpi09_plan}"))
           ap = root / "approvals.jsonl"
           ap.write_text("".join(json.dumps({"action_id": a, "action_type": t, "target": g, "decision": "approved", "decided_at": "2025-07-01T00:00:00Z"}) + "\n" for a, t, g in picked))
           run_m2(42, root / "approved" / "landing", "all", None, ap)
@@ -378,7 +381,13 @@ jobs:
           print(json.dumps(summary)[:1500])
           assert summary["success"]
           rows = duckdb.sql(f"select status, count(*), round(sum(saved_usd),2), round(sum(revenue_delta_usd),2), round(sum(realized_margin_usd),2) from read_parquet('{root}/approved/gold/fct_realized_margin.parquet') group by 1").fetchall()
-          out = {"approved": len(picked), "by_status": rows}
+          from booncore_sim.m2_tenants import WINDOW_END, generate_m2_tenants
+          from booncore_sim.m5_effects import ACT2_ADDON_UPLIFT, DECISION_LEAD_DAYS
+          from datetime import timedelta
+          from mc_agents.kpi09 import backtest_plan_change
+          rev, mar = duckdb.sql(f"select coalesce(sum(revenue_delta_usd), 0), coalesce(sum(saved_usd + revenue_delta_usd), 0) from read_parquet('{root}/approved/gold/fct_realized_margin.parquet') where action_id = '{kpi09_id}'").fetchone()
+          kpi09 = backtest_plan_change(generate_m2_tenants(42)[0], kpi09_plan, int(round(ACT2_ADDON_UPLIFT * 10000)), WINDOW_END - timedelta(days=DECISION_LEAD_DAYS), WINDOW_END, float(rev), float(mar))
+          out = {"approved": len(picked), "by_status": rows, "kpi09": kpi09}
           print(json.dumps(out, default=str))
           Path("realized-check.json").write_text(json.dumps(out, default=str))
           assert rows, "fct_realized_margin is empty"

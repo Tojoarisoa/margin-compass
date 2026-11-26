@@ -90,3 +90,26 @@ def kpi09_report(prediction: dict[str, Any], observed_revenue_cents: int, observ
         "passed": rev is not None and mar is not None and rev <= KPI09_TARGET_BPS and mar <= KPI09_TARGET_BPS,
         "synthetic": True,
     }
+
+
+def tenants_on_plan(tenants: list, plan: str) -> list[dict[str, Any]]:
+    """Simulator tenants (`arr_usd`, `ai_addon_arr_usd`, `discount_pct` as Decimal) on `plan`, as cents and bps."""
+    return [{"tenant_id": t.tenant_id, "arr_cents": int(round(t.arr_usd * 100)),
+             "addon_arr_cents": int(round(t.ai_addon_arr_usd * 100)), "discount_bps": int(round(t.discount_pct * 10000))}
+            for t in tenants if t.plan == plan]
+
+
+def months_covered(start: Any, end: Any) -> int:
+    """Calendar months from `start` to `end` (dates), both included: 2026-09-01 .. 2026-10-31 -> 2."""
+    return (end.year - start.year) * 12 + end.month - start.month + 1
+
+
+def backtest_plan_change(tenants: list, plan: str, uplift_bps: int, approved_on: Any, window_end: Any,
+                         observed_revenue_usd: float, observed_margin_usd: float) -> dict[str, Any]:
+    """KPI-09 for one ACT-2 "plan/<plan>": prediction from approval to the window end vs the observed difference.
+    Observed figures are the action's summed `revenue_delta_usd` and `saved_usd + revenue_delta_usd` over all its days
+    (measurement status ignored: the prediction covers every day from approval)."""
+    pred = predict_plan_change(tenants_on_plan(tenants, plan), uplift_bps, months_covered(approved_on, window_end))
+    out = kpi09_report(pred, int(round(observed_revenue_usd * 100)), int(round(observed_margin_usd * 100)))
+    return {**out, "plan": plan, "tenants": pred["tenants"], "months": pred["months"], "churn_bps": pred["churn_bps"],
+            "monthly_predicted_revenue_cents": pred["monthly_revenue_delta_cents"]}
